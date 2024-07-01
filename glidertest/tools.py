@@ -26,7 +26,7 @@ def grid2d(x, y, v, xi=1, yi=1):
     return grid, XI, YI
 
 
-def test_updown_bias(ds, axis, var='PSAL', v_res=0, return_val=False):
+def updown_bias(ds, axis, var='PSAL', v_res=0, return_val=False):
     p = 1  # Horizontal resolution
     z = v_res  # Vertical resolution
     varG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
