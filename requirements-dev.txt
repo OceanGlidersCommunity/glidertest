@@ -3,3 +3,4 @@ matplotlib
 netcdf4
 pooch
 xarray
+pytest
