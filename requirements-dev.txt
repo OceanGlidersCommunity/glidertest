@@ -1,5 +1,13 @@
-jupyterlab
-matplotlib
 netcdf4
 pooch
 xarray
+numpy
+matplotlib
+pandas
+seaborn
+scipy
+cmocean
+skyfield
+tqdm
+jupyterlab
+pytest
