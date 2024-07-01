@@ -26,7 +26,7 @@ def grid2d(x, y, v, xi=1, yi=1):
     return grid, XI, YI
 
 
-def test_updown_bias(ds, axis, var='PSAL', v_res=0, return_val=False):
+def updown_bias(ds, axis, var='PSAL', v_res=0, return_val=False):
     p = 1  # Horizontal resolution
     z = v_res  # Vertical resolution
     varG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
@@ -164,7 +164,7 @@ def chl_first_check(ds):
         print(
             'Data from the deepest 10% of data has been analysed and data seems stable. These deep values can be used to re-assess the dark count if the no chlorophyll at depth assumption is valid in this site and this depth')
 def sunset_sunrise(time, lat, lon):
-     """
+    """
     Calculates the local sunrise/sunset of the glider location from GliderTools.
     [https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/optics.py]
 
@@ -191,7 +191,6 @@ def sunset_sunrise(time, lat, lon):
         An array of the sunset times.
 
     """
-
     ts = api.load.timescale()
     eph = api.load("de421.bsp")
 
@@ -288,7 +287,7 @@ def sunset_sunrise(time, lat, lon):
 
 
 def check_npq(ds, offset=np.timedelta64(1, "h"), start_time='2024-04-18', end_time='2024-04-20', sel_day=6):
-     """
+    """
     Calculates day and night chlorophyll averages to check if data is affected by NPQ.
 
     We separate day and night using the GliderTools sunset/sunrise function. 
