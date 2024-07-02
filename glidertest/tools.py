@@ -12,6 +12,24 @@ from tqdm import tqdm
 
 
 def grid2d(x, y, v, xi=1, yi=1):
+    """
+    Function to grid data
+    
+    Parameters
+    ----------
+    x: data with data for the x dimension
+    y: data with data for the y dimension
+    z: data with data for the z dimension
+    xi: Horizontal resolution for the gridding
+    yi: Vertical resolution for the gridding
+                
+    Returns
+    -------
+    grid: z data gridded in x and y space with xi and yi resolution
+    XI: x data gridded in x and y space with xi and yi resolution
+    YI: y data gridded in x and y space with xi and yi resolution
+
+    """
     if np.size(xi) == 1:
         xi = np.arange(np.nanmin(x), np.nanmax(x) + xi, xi)
     if np.size(yi) == 1:
@@ -26,7 +44,22 @@ def grid2d(x, y, v, xi=1, yi=1):
     return grid, XI, YI
 
 
-def updown_bias(ds, axis, var='PSAL', v_res=0, return_val=False):
+def updown_bias(ds, var='PSAL', v_res=1):
+    """
+    This function computes up and downcast averages for a specific variable
+
+    Parameters
+    ----------
+    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. 
+        Data should not be gridded.
+    var: Selected variable
+    v_res: Vertical resolution for the gridding
+                
+    Returns
+    -------
+    df: pandas dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth
+
+    """
     p = 1  # Horizontal resolution
     z = v_res  # Vertical resolution
     varG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
@@ -35,24 +68,63 @@ def updown_bias(ds, axis, var='PSAL', v_res=0, return_val=False):
 
     dc = np.nanmean(grad[0::2, :], axis=0)  # Dive - CLimb
     cd = np.nanmean(grad[1::2, :], axis=0)  # Climb - Dive
-    axis.plot(dc, depthG[0, :], label='Dive-Climb')
-    axis.plot(cd, depthG[0, :], label='Climb-Dive')
+
+    df = pd.DataFrame(data={'dc' : dc, 'cd' : cd,'depth': depthG[0,:]})
+    return df
+    
+def plot_updown_bias(df, axis,  xlabel='Temperature [C]'):
+    """
+    This function can be used to plot the up and downcast differences computed with the updown_bias function
+    
+    Parameters
+    ----------
+    df: pandas datframe contaning containing dc (Dive - Climb average), cd (Climb - Dive average) and depth
+    axis: axis to plot the data
+    xlabel: label for the x axis           
+    
+    Returns
+    -------
+    A line plot comparing the day and night average over depth for the selcted day
+
+    """    
+    axis.plot(df.dc,df.depth, label='Climb-Dive')
+    axis.plot(df.cd,df.depth, label='Climb-Dive')
     axis.legend(loc=3)
-    lims = np.abs(dc)
+    lims = np.abs(df.dc)
     axis.set_xlim(-np.nanpercentile(lims, 99.5), np.nanpercentile(lims, 99.5))
-    axis.set_xlabel(ds[var].attrs['long_name'])
-    axis.set_ylim(depthG.max() + 10, -5)
+    axis.set_xlabel(xlabel)
+    axis.set_ylim(df.depth.max() + 10, -df.depth.max()/30)
     axis.grid()
-    if return_val:
-        return dc, cd
 
 
 def find_cline(var, depth_array):
+    '''
+    Find the depth of the maximum vertical difference for a specified variables
+    Input data has to be gridded
+    '''
     clin = np.where(np.abs(np.diff(np.nanmean(var, axis=0))) == np.nanmax(np.abs(np.diff(np.nanmean(var, axis=0)))))
     return np.round( depth_array[0, clin[0]], 1)
 
 
 def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
+    """
+    This function plots the basic oceanographic variables temperature, salinity and density. A second plot is created and filled with oxygen and 
+    chlorophyll data if available.
+    
+    Parameters
+    ----------
+    ds: xarray in OG1 format containing at least temperature, salinity and density and depth
+    v_res; vertical resolution for the gridding. Horizontal resolution (by profile) is assumed to be 1
+    start_prof: start profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large time scale 
+                or region and subsections want to be plotted-1     
+    end_prof: end profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large time scale 
+              or region and subsections want to be plotted-1          
+    
+    Returns
+    -------
+    Line plots for the averages of the different variables. 
+    Thermo, halo and pycnocline are computed and plotted. A sentence stating the depth of the clines is printed too
+    """
     p = 1
     z = v_res
     tempG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.TEMP, p, z)
@@ -123,8 +195,12 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     [a.grid() for a in ax]
 
 
-# Check if there is any negative scaled data and/or raw data
 def chl_first_check(ds):
+    """
+    Function to asses any drift in deep chlorophyll data and the presence of any possible negative data
+    This function returns plots and text
+    """
+    
     # Check how much negative data there is
     neg_chl = np.round((len(np.where(ds.CHLA < 0)[0]) * 100) / len(ds.CHLA), 1)
     if neg_chl > 0:
@@ -287,30 +363,33 @@ def sunset_sunrise(time, lat, lon):
     return sunrise, sunset
 
 
-def check_npq(ds, offset=np.timedelta64(1, "h"), start_time='2024-04-18', end_time='2024-04-20', sel_day=6):
+def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04-20'):
     """
-    Calculates day and night chlorophyll averages to check if data is affected by NPQ.
-
-    We separate day and night using the GliderTools sunset/sunrise function. 
-    We plot a section of chlorophyll for a selected slice of data to observe any NPQ effetcs.
-    We then plot the day and night average for a specific day for a more detailed view.
-
-
+    This function computes night and day averages for a selected variable over a specific period of time
+    Data in divided into day and night using the sunset and sunrise time as described in the above function sunset_sunrise from GliderTools
     Parameters
     ----------
-    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and chlorophyll. 
+    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. 
         Data should not be gridded.
-    offset: The delayed onset and recovery of quenching in hours.
     start_time: Start date of the data selection. As missions can be long and came make it hard to visualise NPQ effetc, 
                 we reccomend selecting small section of few days to few weeks.
     end_time: End date of the data selection. As missions can be long and came make it hard to visualise NPQ effetc, 
                 we reccomend selecting small section of few days to few weeks.
-    sel_day: Selected day (int) for the detailed plot comparing day and night averages. 
-             The integer value refers to the first, second, third day etc. of the slected time period.
-
+                
     Returns
     -------
-    Two plots: a chlorphyll section and a comparison of day and night average chlorphyll over depth for the selcted day
+    day_av: pandas.Dataframe
+        A dataframe with the day averages of the selected variable with the follwoing columns:
+            batch: Number representing the grouping for each day. This number can represent the number of the day in chronological order
+            depth: Depth values for the average
+            dat: Average value for the selected variable
+            day: Actual date for the batch 
+    night_av: pandas.Dataframe
+        A dataframe with the night averages of the selected variable with the follwoing columns:
+            batch: Number representing the grouping for each day. This number can represent the number of the day in chronological order
+            depth: Depth values for the average
+            dat: Average value for the selected variable
+            day: Actual date for the batch 
 
     """
     if not "TIME" in ds.indexes.keys():
@@ -318,36 +397,82 @@ def check_npq(ds, offset=np.timedelta64(1, "h"), start_time='2024-04-18', end_ti
     ds_sel = ds.sel(TIME=slice(start_time, end_time))
     sunrise, sunset = sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
 
-    # creating quenching correction batches, where a batch is a night and the following day
-    day = (ds_sel.TIME > (sunrise + offset)) & (ds_sel.TIME < (sunset + offset))
+    # creating batches where one bacth is a night and the following day
+    day = (ds_sel.TIME > (sunrise)) & (ds_sel.TIME < (sunset))
     # find day and night transitions
     daynight_transitions = np.abs(np.diff(day.astype(int)))
     # get the cumulative sum of daynight to generate separate batches for day and night
     daynight_batches = daynight_transitions.cumsum()
     batch = np.r_[0, (daynight_batches) // 2]
 
-    fig, ax = plt.subplots(1, 1, figsize=(10, 8), sharex='all')
-    c = ax.scatter(ds_sel.TIME, ds_sel.DEPTH, c=ds_sel.CHLA, s=10, vmin=np.nanpercentile(ds_sel.CHLA, 0.5),
-                   vmax=np.nanpercentile(ds_sel.CHLA, 99.5))
-    ax.set_ylim(30, -2)
+    # Create day and night avergaes to then have easy to plot
+    df = pd.DataFrame(np.c_[ds_sel[sel_var], day, batch, ds_sel['DEPTH']], columns=['dat', 'day', 'batch', 'depth'])
+    ave = df.dat.groupby([df.day, df.batch, np.around(df.depth)]).mean()
+    day_av = ave[1].to_frame().reset_index()
+    night_av = ave[0].to_frame().reset_index()
+    #Assign date value
+
+    for i in np.unique(day_av.batch):
+        date_val = str(ds_sel.TIME.where(batch == i).dropna(dim='N_MEASUREMENTS')[-1].values)[:10]
+        day_av.loc[np.where(day_av.batch==i)[0],'date'] = date_val
+        night_av.loc[np.where(night_av.batch==i)[0],'date'] = date_val
+    return day_av, night_av
+
+def plot_daynight_avg(day, night, ax, sel_day='2023-09-09', xlabel='Chlorophyll [mg m-3]'):
+    """
+    This function can be used to plot the day and night averages computed with the day_night_avg function
+    
+    Parameters
+    ----------
+    day: pandas datframe contaning the day averages
+    night: pandas datframe contaning the night averages
+    ax: axis to plot the data
+    sel_day: seleted day to plot
+    xlabel: label for the x axis           
+    
+    Returns
+    -------
+    A line plot comparing the day and night average over depth for the selcted day
+
+    """
+    ax.plot(night.where(night.date==sel_day).dropna().dat, night.where(night.date==sel_day).dropna().depth, label='Night time average')
+    ax.plot(day.where(day.date==sel_day).dropna().dat, day.where(day.date==sel_day).dropna().depth, label='Daytime average')
+    ax.legend()
+    ax.invert_yaxis()
+    ax.grid()
+    ax.set(xlabel= xlabel, ylabel='Depth [m]')
+    ax.set_title(sel_day)
+    
+def plot_section_with_srss(ax, ds, sel_var='TEMP',start_time = '2023-09-06', end_time = '2023-09-10', ylim=45):
+    """
+    This function can be used to plot sections for any variable with the sunrise and sunset plotted over
+    
+    Parameters
+    ----------
+    ax: axis to plot the data
+    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. 
+        Data should not be gridded.
+    sel_var: seleted variable to plot
+    start_time: Start date of the data selection. As missions can be long and came make it hard to visualise NPQ effetc, 
+    end_time: End date of the data selection. As missions can be long and came make it hard to visualise NPQ effetc, 
+    ylim: specified limit for the maximum y axis value. The minumum is computed as ylim/30        
+    
+    Returns
+    -------
+    A section showing the variability of the selcted data over time and depth
+
+    """
+    if not "TIME" in ds.indexes.keys():
+            ds = ds.set_xindex('TIME')
+    ds_sel = ds.sel(TIME=slice(start_time, end_time))
+    sunrise, sunset = sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
+    
+    c = ax.scatter(ds_sel.TIME, ds_sel.DEPTH, c=ds_sel[sel_var], s=10, vmin=np.nanpercentile(ds_sel[sel_var], 0.5),
+                   vmax=np.nanpercentile(ds_sel[sel_var], 99.5))
+    ax.set_ylim(ylim, -ylim/30)
     for n in np.unique(sunset):
         ax.axvline(np.unique(n), c='blue')
     for m in np.unique(sunrise):
         ax.axvline(np.unique(m), c='orange')
     ax.set_ylabel('Depth [m]')
-    plt.colorbar(c, label='Chlorophyll [mg m-3]')
-    
-    # Create day and night avergaes to then have easy to plot
-    df = pd.DataFrame(np.c_[ds_sel['CHLA'], day, batch, ds_sel['DEPTH']], columns=['flr', 'day', 'batch', 'depth'])
-    ave = df.flr.groupby([df.day, df.batch, np.around(df.depth)]).mean()
-    day_av = ave[1]
-    night_av = ave[0]
-    fig, ax = plt.subplots(1, 1, figsize=(5, 5), sharex='all')
-
-    ax.plot(night_av[sel_day], night_av[sel_day].index, label='Night time average')
-    ax.plot(day_av[sel_day], day_av[sel_day].index, label='Daytime average')
-    ax.legend()
-    ax.invert_yaxis()
-    ax.grid()
-    ax.set(xlabel='Chlorophyll [mg m-3]', ylabel='Depth [m]')
-    ax.set_title(str(ds_sel.TIME.where(batch == sel_day).dropna(dim='N_MEASUREMENTS')[-1].values)[:10])
+    plt.colorbar(c, label=f'{sel_var} [{ds[sel_var].units}]')
