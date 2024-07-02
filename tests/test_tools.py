@@ -21,8 +21,10 @@ def test_quench_sequence():
     ds = fetchers.load_sample_dataset()
     if not "TIME" in ds.indexes.keys():
         ds = ds.set_xindex('TIME')
+    fig, ax = plt.subplots()
     tools.plot_section_with_srss(ax, ds, sel_var='CHLA',start_time = '2023-09-06', end_time = '2023-09-10', ylim=35)
     dayT, nightT = tools.day_night_avg(ds, sel_var='TEMP',start_time = '2023-09-06', end_time = '2023-09-10')
+    fig, ax = plt.subplots()
     tools.plot_daynight_avg( dayT, nightT,ax,sel_day='2023-09-08', xlabel='Temperature [C]') 
     
     
