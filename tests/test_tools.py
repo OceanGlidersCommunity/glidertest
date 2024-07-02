@@ -17,8 +17,7 @@ def test_chl():
     ds = fetchers.load_sample_dataset()
     tools.chl_first_check(ds)
 
-
-   def test_quench_sequence():
+def test_quench_sequence():
     ds = fetchers.load_sample_dataset()
     if not "TIME" in ds.indexes.keys():
         ds = ds.set_xindex('TIME')
