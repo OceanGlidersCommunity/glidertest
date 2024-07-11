@@ -194,51 +194,55 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     [a.set_ylim(depthG.max() + 10, -5) for a in ax]
     [a.grid() for a in ax]
 
-
-def chl_first_check(ds):
+def optics_first_check(ds, var='CHLA'):
     """
-    Function to asses any drift in deep chlorophyll data and the presence of any possible negative data
+    Function to asses any drift in deep optics data and the presence of any possible negative data
     This function returns plots and text
     """
     
     # Check how much negative data there is
-    neg_chl = np.round((len(np.where(ds.CHLA < 0)[0]) * 100) / len(ds.CHLA), 1)
+    neg_chl = np.round((len(np.where(ds[var] < 0)[0]) * 100) / len(ds[var]), 1)
     if neg_chl > 0:
-        print(f'{neg_chl}% of scaled chlorophyll data is negative, consider recalibrating data')
+        print(f'{neg_chl}% of scaled {var} data is negative, consider recalibrating data')
         # Check where the negative values occur and if we just see them at specific time of the mission or not
-        start = ds.TIME[np.where(ds.CHLA < 0)][0]
-        end = ds.TIME[np.where(ds.CHLA < 0)][-1]
-        min_z = (np.round(ds.DEPTH[np.where(ds.CHLA < 0)].min().values, 1))
-        max_z = (np.round(ds.DEPTH[np.where(ds.CHLA < 0)].max().values, 1))
+        start = ds.TIME[np.where(ds[var] < 0)][0]
+        end = ds.TIME[np.where(ds[var] < 0)][-1]
+        min_z = ds.DEPTH[np.where(ds[var] < 0)].min().values
+        max_z = ds.DEPTH[np.where(ds[var] < 0)].max().values
         print(f'Negative data in present from {str(start.values)[:16]} to {str(end.values)[:16]}')
-        print(f'Negative data is present between {min_z} and {max_z} ')
+        print(f'Negative data is present between {"%.1f" % np.round(min_z, 1)} and {"%.1f" % np.round(max_z, 1)} ')
     else:
         print('There is no negative scaled chlorophyll data, recalibration and further checks are still recommended ')
     # Check if there is any missing data throughout the mission
-    if len(ds.TIME) != len(ds.CHLA.dropna(dim='N_MEASUREMENTS').TIME):
+    if len(ds.TIME) != len(ds[var].dropna(dim='N_MEASUREMENTS').TIME):
         print('Chlorophyll data is missing for part of the mission')  # Add to specify where the gaps are
     else:
         print('Chlorophyll data is present for the entire mission duration')
     # Check bottom dark count and any drift there
-    bottom_chl_data = ds.CHLA.where(ds.CHLA.DEPTH > ds.DEPTH.max() - (ds.DEPTH.max() * 0.1)).dropna(
+    bottom_opt_data = ds[var].where(ds[var].DEPTH > ds.DEPTH.max() - (ds.DEPTH.max() * 0.1)).dropna(
         dim='N_MEASUREMENTS')
-    slope, intercept, r_value, p_value, std_err = stats.linregress(np.arange(0, len(bottom_chl_data)), bottom_chl_data)
-    ax = sns.regplot(data=ds, x=np.arange(0, len(bottom_chl_data)), y=bottom_chl_data,
+    slope, intercept, r_value, p_value, std_err = stats.linregress(np.arange(0, len(bottom_opt_data)), bottom_opt_data)
+    ax = sns.regplot(data=ds, x=np.arange(0, len(bottom_opt_data)), y=bottom_opt_data,
                      scatter_kws={"color": "grey"},
-                     line_kws={"color": "red", "label": "y={0:.6f}x+{1:.3f}".format(slope, intercept)},
+                     line_kws={"color": "red", "label": "y={0:.8f}x+{1:.5f}".format(slope, intercept)},
                      )
     ax.legend(loc=2)
     ax.grid()
-    ax.set(ylim=(np.nanpercentile(bottom_chl_data, 0.1), np.nanpercentile(bottom_chl_data, 99.9)),
+    ax.set(ylim=(np.nanpercentile(bottom_opt_data, 0.5), np.nanpercentile(bottom_opt_data, 99.5)),
            xlabel='Measurements',
-           ylabel='Chla')
-
-    if slope >= 0.00001:
+           ylabel=var)
+    percentage_change = (((slope*len(bottom_opt_data)+intercept) - intercept) / abs(intercept))* 100
+    
+    if abs(percentage_change) >= 1:
         print(
-            'Data from the deepest 10% of data has been analysed and data does not seem stable. An alternative solution for dark counts has to be considered. \nMoreover, it is recommended to check the sensor has this may suggest issues with the sensor (i.e water inside the sensor, temporal drift etc)')
+            'Data from the deepest 10% of data has been analysed and data does not seem perfectly stable. An alternative solution for dark counts has to be considered. \nMoreover, it is recommended to check the sensor has this may suggest issues with the sensor (i.e water inside the sensor, temporal drift etc)')
+        print(f'Data changed (increased or decreased) by {"%.1f" % np.round(percentage_change, 1)}% from the beginning to the end of the mission')
     else:
         print(
             'Data from the deepest 10% of data has been analysed and data seems stable. These deep values can be used to re-assess the dark count if the no chlorophyll at depth assumption is valid in this site and this depth')
+
+
+
 def sunset_sunrise(time, lat, lon):
     """
     Calculates the local sunrise/sunset of the glider location from GliderTools.
@@ -371,10 +375,10 @@ def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04
     ----------
     ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. 
         Data should not be gridded.
-    start_time: Start date of the data selection. As missions can be long and came make it hard to visualise NPQ effetc, 
-                we reccomend selecting small section of few days to few weeks.
-    end_time: End date of the data selection. As missions can be long and came make it hard to visualise NPQ effetc, 
-                we reccomend selecting small section of few days to few weeks.
+    start_time: Start date of the data selection. As missions can be long and can make it hard to visualise NPQ effetc, 
+                we recommend end selecting small section of few days to few weeks.
+    end_time: End date of the data selection. As missions can be long and can make it hard to visualise NPQ effetc, 
+                we recommend selecting small section of few days to few weeks.
                 
     Returns
     -------

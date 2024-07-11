@@ -15,7 +15,7 @@ def test_up_down_bias():
 
 def test_chl():
     ds = fetchers.load_sample_dataset()
-    tools.chl_first_check(ds)
+    tools.optics_first_check(ds)
 
 def test_quench_sequence():
     ds = fetchers.load_sample_dataset()
