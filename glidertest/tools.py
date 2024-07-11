@@ -194,12 +194,15 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     [a.set_ylim(depthG.max() + 10, -5) for a in ax]
     [a.grid() for a in ax]
 
+
 def optics_first_check(ds, var='CHLA'):
     """
     Function to asses any drift in deep optics data and the presence of any possible negative data
     This function returns plots and text
     """
-    
+    if var not in ds.variables:
+        print(f"{var} does not exist in the dataset. Make sure the spelling is correct or add this variable to your dataset")
+        return
     # Check how much negative data there is
     neg_chl = np.round((len(np.where(ds[var] < 0)[0]) * 100) / len(ds[var]), 1)
     if neg_chl > 0:
@@ -239,8 +242,7 @@ def optics_first_check(ds, var='CHLA'):
         print(f'Data changed (increased or decreased) by {"%.1f" % np.round(percentage_change, 1)}% from the beginning to the end of the mission')
     else:
         print(
-            'Data from the deepest 10% of data has been analysed and data seems stable. These deep values can be used to re-assess the dark count if the no chlorophyll at depth assumption is valid in this site and this depth')
-
+            f'Data from the deepest 10% of data has been analysed and data seems stable. These deep values can be used to re-assess the dark count if the no {var} at depth assumption is valid in this site and this depth')
 
 
 def sunset_sunrise(time, lat, lon):
