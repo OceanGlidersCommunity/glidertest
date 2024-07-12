@@ -73,7 +73,7 @@ def updown_bias(ds, var='PSAL', v_res=1):
     df = pd.DataFrame(data={'dc' : dc, 'cd' : cd,'depth': depthG[0,:]})
     return df
     
-def plot_updown_bias(df, axis,  xlabel='Temperature [C]'):
+def plot_updown_bias(df, ax,  xlabel='Temperature [C]'):
     """
     This function can be used to plot the up and downcast differences computed with the updown_bias function
     
@@ -88,14 +88,15 @@ def plot_updown_bias(df, axis,  xlabel='Temperature [C]'):
     A line plot comparing the day and night average over depth for the selcted day
 
     """    
-    axis.plot(df.dc,df.depth, label='Climb-Dive')
-    axis.plot(df.cd,df.depth, label='Climb-Dive')
-    axis.legend(loc=3)
+    ax.plot(df.dc,df.depth, label='Climb-Dive')
+    ax.plot(df.cd,df.depth, label='Climb-Dive')
+    ax.legend(loc=3)
     lims = np.abs(df.dc)
-    axis.set_xlim(-np.nanpercentile(lims, 99.5), np.nanpercentile(lims, 99.5))
-    axis.set_xlabel(xlabel)
-    axis.set_ylim(df.depth.max() + 10, -df.depth.max()/30)
-    axis.grid()
+    ax.set_xlim(-np.nanpercentile(lims, 99.5), np.nanpercentile(lims, 99.5))
+    ax.set_xlabel(xlabel)
+    ax.set_ylim(df.depth.max() + 10, -df.depth.max()/30)
+    ax.grid()
+    return ax
 
 
 def find_cline(var, depth_array):
@@ -194,6 +195,7 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
 
     [a.set_ylim(depthG.max() + 10, -5) for a in ax]
     [a.grid() for a in ax]
+    return fig, ax
 
 
 def optics_first_check(ds, var='CHLA'):
@@ -244,7 +246,7 @@ def optics_first_check(ds, var='CHLA'):
     else:
         print(
             f'Data from the deepest 10% of data has been analysed and data seems stable. These deep values can be used to re-assess the dark count if the no {var} at depth assumption is valid in this site and this depth')
-
+    return ax
 
 def sunset_sunrise(time, lat, lon):
     """
@@ -449,8 +451,9 @@ def plot_daynight_avg(day, night, ax, sel_day='2023-09-09', xlabel='Chlorophyll 
     ax.grid()
     ax.set(xlabel= xlabel, ylabel='Depth [m]')
     ax.set_title(sel_day)
+    return ax
     
-def plot_section_with_srss(ax, ds, sel_var='TEMP',start_time = '2023-09-06', end_time = '2023-09-10', ylim=45):
+def plot_section_with_srss(ds, ax, sel_var='TEMP',start_time = '2023-09-06', end_time = '2023-09-10', ylim=45):
     """
     This function can be used to plot sections for any variable with the sunrise and sunset plotted over
     
@@ -483,8 +486,9 @@ def plot_section_with_srss(ax, ds, sel_var='TEMP',start_time = '2023-09-06', end
         ax.axvline(np.unique(m), c='orange')
     ax.set_ylabel('Depth [m]')
     plt.colorbar(c, label=f'{sel_var} [{ds[sel_var].units}]')
+    return ax 
  
-def check_temporal_drift(ax1, ax2, ds, var='DOXY'):
+def check_temporal_drift(ds, ax1, ax2, var='DOXY'):
     ax1.scatter(mdates.date2num(ds.TIME),ds[var], s=10)
     ax1.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
     ax1.set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
@@ -495,3 +499,4 @@ def check_temporal_drift(ax1, ax2, ds, var='DOXY'):
     
     [a.grid() for a in [ax1, ax2]]
     plt.colorbar(c, format=DateFormatter('%b %d'))
+    return ax1, ax2

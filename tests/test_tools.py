@@ -10,7 +10,8 @@ def test_plots():
 def test_up_down_bias():
     ds = fetchers.load_sample_dataset()
     fig, ax = plt.subplots()
-    tools.updown_bias(ds, var='PSAL', v_res=1)
+    df = tools.updown_bias(ds, var='PSAL', v_res=1)
+    tools.plot_updown_bias(df, ax,  xlabel='Salinity')
 
 
 def test_chl():
@@ -25,7 +26,7 @@ def test_quench_sequence():
     if not "TIME" in ds.indexes.keys():
         ds = ds.set_xindex('TIME')
     fig, ax = plt.subplots()
-    tools.plot_section_with_srss(ax, ds, sel_var='CHLA',start_time = '2023-09-06', end_time = '2023-09-10', ylim=35)
+    tools.plot_section_with_srss(ds, ax, sel_var='CHLA',start_time = '2023-09-06', end_time = '2023-09-10', ylim=35)
     dayT, nightT = tools.day_night_avg(ds, sel_var='TEMP',start_time = '2023-09-06', end_time = '2023-09-10')
     fig, ax = plt.subplots()
     tools.plot_daynight_avg( dayT, nightT,ax,sel_day='2023-09-08', xlabel='Temperature [C]') 
@@ -34,6 +35,6 @@ def test_temporal_drift():
     ds = fetchers.load_sample_dataset()
     fig, ax = plt.subplots(1, 2)
     if 'DOXY' in ds.variables:
-        tools.check_temporal_drift(ax[0], ax[1], ds, var='DOXY')
+        tools.check_temporal_drift(ds,ax[0], ax[1], var='DOXY')
     if 'CHLA' in ds.variables:
-        tools.check_temporal_drift(ax[0], ax[1], ds, var='CHLA')
+        tools.check_temporal_drift(ds,ax[0], ax[1], var='CHLA')
