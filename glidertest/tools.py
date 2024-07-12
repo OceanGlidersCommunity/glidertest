@@ -486,7 +486,7 @@ def plot_section_with_srss(ax, ds, sel_var='TEMP',start_time = '2023-09-06', end
  
 def check_temporal_drift(ax1, ax2, ds, var='DOXY'):
     ax1.scatter(mdates.date2num(ds.TIME),ds[var], s=10)
-    ax1.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m-%d'))
+    ax1.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
     ax1.set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
     
     c=ax2.scatter(ds[var],ds.DEPTH,c=mdates.date2num(ds.TIME), s=10)
