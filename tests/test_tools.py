@@ -33,6 +33,6 @@ def test_quench_sequence():
 def test_temporal_drift():
     fig, ax = plt.subplots(1, 2)
     if 'DOXY' in ds.variables:
-        check_temporal_drift(ax[0], ax[1], ds, var='DOXY')
+        tools.check_temporal_drift(ax[0], ax[1], ds, var='DOXY')
     if 'CHLA' in ds.variables:
-        check_temporal_drift(ax[0], ax[1], ds, var='CHLA')
+        tools.check_temporal_drift(ax[0], ax[1], ds, var='CHLA')
