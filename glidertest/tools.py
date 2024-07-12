@@ -215,12 +215,12 @@ def optics_first_check(ds, var='CHLA'):
         print(f'Negative data in present from {str(start.values)[:16]} to {str(end.values)[:16]}')
         print(f'Negative data is present between {"%.1f" % np.round(min_z, 1)} and {"%.1f" % np.round(max_z, 1)} ')
     else:
-        print('There is no negative scaled chlorophyll data, recalibration and further checks are still recommended ')
+        print(f'There is no negative scaled {var} data, recalibration and further checks are still recommended ')
     # Check if there is any missing data throughout the mission
     if len(ds.TIME) != len(ds[var].dropna(dim='N_MEASUREMENTS').TIME):
-        print('Chlorophyll data is missing for part of the mission')  # Add to specify where the gaps are
+        print(f'{var} data is missing for part of the mission')  # Add to specify where the gaps are
     else:
-        print('Chlorophyll data is present for the entire mission duration')
+        print(f'{var} data is present for the entire mission duration')
     # Check bottom dark count and any drift there
     bottom_opt_data = ds[var].where(ds[var].DEPTH > ds.DEPTH.max() - (ds.DEPTH.max() * 0.1)).dropna(
         dim='N_MEASUREMENTS')
@@ -482,3 +482,15 @@ def plot_section_with_srss(ax, ds, sel_var='TEMP',start_time = '2023-09-06', end
         ax.axvline(np.unique(m), c='orange')
     ax.set_ylabel('Depth [m]')
     plt.colorbar(c, label=f'{sel_var} [{ds[sel_var].units}]')
+ 
+def check_temporal_drift(ax1, ax2, ds, var='DOXY'):
+    ax1.scatter(mdates.date2num(ds.TIME),ds[var], s=10)
+    ax1.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m-%d'))
+    ax1.set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
+    
+    c=ax2.scatter(ds[var],ds.DEPTH,c=mdates.date2num(ds.TIME), s=10)
+    ax2.set(xlim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)),ylabel='Depth (m)', xlabel=var)
+    ax2.invert_yaxis()
+    
+    [a.grid() for a in [ax1, ax2]]
+    plt.colorbar(c, format=DateFormatter('%b %d'))

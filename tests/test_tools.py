@@ -15,7 +15,10 @@ def test_up_down_bias():
 
 def test_chl():
     ds = fetchers.load_sample_dataset()
-    tools.optics_first_check(ds)
+    if 'CHLA' in ds.variables:
+        tools.optics_first_check(ds, var='CHLA')
+    if 'BBP700' in ds.variables:
+        tools.optics_first_check(ds, var='BBP700')
 
 def test_quench_sequence():
     ds = fetchers.load_sample_dataset()
@@ -26,5 +29,10 @@ def test_quench_sequence():
     dayT, nightT = tools.day_night_avg(ds, sel_var='TEMP',start_time = '2023-09-06', end_time = '2023-09-10')
     fig, ax = plt.subplots()
     tools.plot_daynight_avg( dayT, nightT,ax,sel_day='2023-09-08', xlabel='Temperature [C]') 
-    
-    
+
+def test_temporal_drift():
+    fig, ax = plt.subplots(1, 2)
+    if 'DOXY' in ds.variables:
+        check_temporal_drift(ax[0], ax[1], ds, var='DOXY')
+    if 'CHLA' in ds.variables:
+        check_temporal_drift(ax[0], ax[1], ds, var='CHLA')
