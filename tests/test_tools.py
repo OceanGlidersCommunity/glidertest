@@ -31,6 +31,7 @@ def test_quench_sequence():
     tools.plot_daynight_avg( dayT, nightT,ax,sel_day='2023-09-08', xlabel='Temperature [C]') 
 
 def test_temporal_drift():
+    ds = fetchers.load_sample_dataset()
     fig, ax = plt.subplots(1, 2)
     if 'DOXY' in ds.variables:
         tools.check_temporal_drift(ax[0], ax[1], ds, var='DOXY')
