@@ -88,7 +88,7 @@ def plot_updown_bias(df, ax,  xlabel='Temperature [C]'):
     A line plot comparing the day and night average over depth for the selcted day
 
     """    
-    ax.plot(df.dc,df.depth, label='Climb-Dive')
+    ax.plot(df.dc,df.depth, label='Dive-Climb')
     ax.plot(df.cd,df.depth, label='Climb-Dive')
     ax.legend(loc=3)
     lims = np.abs(df.dc)
