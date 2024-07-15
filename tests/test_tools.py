@@ -35,6 +35,6 @@ def test_temporal_drift():
     ds = fetchers.load_sample_dataset()
     fig, ax = plt.subplots(1, 2)
     if 'DOXY' in ds.variables:
-        tools.check_temporal_drift(ds,ax[0], ax[1], var='DOXY')
+        tools.check_temporal_drift(ds,'DOXY', ax)
     if 'CHLA' in ds.variables:
-        tools.check_temporal_drift(ds,ax[0], ax[1], var='CHLA')
+        tools.check_temporal_drift(ds,var='CHLA')

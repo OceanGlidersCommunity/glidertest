@@ -488,15 +488,22 @@ def plot_section_with_srss(ds, ax, sel_var='TEMP',start_time = '2023-09-06', end
     plt.colorbar(c, label=f'{sel_var} [{ds[sel_var].units}]')
     return ax 
  
-def check_temporal_drift(ds, ax1, ax2, var='DOXY'):
-    ax1.scatter(mdates.date2num(ds.TIME),ds[var], s=10)
-    ax1.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
-    ax1.set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
+def check_temporal_drift(ds: pd.DataFrame, var: str,ax: plt.Axes = None, **kw: dict,)-> tuple({plt.Figure, plt.Axes}):
+    fignums = plt.get_fignums()
+    if ax is None and not fignums:
+        fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+    else:
+        ax = ax
+        fig = plt.gcf()
+        
+    ax[0].scatter(mdates.date2num(ds.TIME),ds[var], s=10)
+    ax[0].xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
+    ax[0].set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
     
-    c=ax2.scatter(ds[var],ds.DEPTH,c=mdates.date2num(ds.TIME), s=10)
-    ax2.set(xlim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)),ylabel='Depth (m)', xlabel=var)
-    ax2.invert_yaxis()
+    c=ax[1].scatter(ds[var],ds.DEPTH,c=mdates.date2num(ds.TIME), s=10)
+    ax[1].set(xlim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)),ylabel='Depth (m)', xlabel=var)
+    ax[1].invert_yaxis()
     
-    [a.grid() for a in [ax1, ax2]]
+    [a.grid() for a in ax]
     plt.colorbar(c, format=DateFormatter('%b %d'))
-    return ax1, ax2
+    return fig, ax
