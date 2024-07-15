@@ -10,6 +10,7 @@ from pandas import DataFrame
 from skyfield import api
 from skyfield import almanac
 from tqdm import tqdm
+import xarray as xr
 
 
 def grid2d(x, y, v, xi=1, yi=1):
