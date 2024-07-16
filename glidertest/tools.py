@@ -74,7 +74,11 @@ def updown_bias(ds, var='PSAL', v_res=1):
     df = pd.DataFrame(data={'dc' : dc, 'cd' : cd,'depth': depthG[0,:]})
     return df
     
-def plot_updown_bias(df, ax,  xlabel='Temperature [C]'):
+def plot_updown_bias(df: pd.DataFrame,ax: plt.Axes = None, xlabel='Temperature [C]', **kw: dict,)-> tuple({plt.Figure, plt.Axes}):
+    if ax is None:
+        fig, ax = plt.subplots( figsize=(5,5))
+    else:
+        fig = plt.gcf()    
     """
     This function can be used to plot the up and downcast differences computed with the updown_bias function
     
@@ -97,7 +101,7 @@ def plot_updown_bias(df, ax,  xlabel='Temperature [C]'):
     ax.set_xlabel(xlabel)
     ax.set_ylim(df.depth.max() + 10, -df.depth.max()/30)
     ax.grid()
-    return ax
+    return fig, ax
 
 
 def find_cline(var, depth_array):
@@ -428,7 +432,7 @@ def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04
         night_av.loc[np.where(night_av.batch==i)[0],'date'] = date_val
     return day_av, night_av
 
-def plot_daynight_avg(day, night, ax, sel_day='2023-09-09', xlabel='Chlorophyll [mg m-3]'):
+def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = None, sel_day='2023-09-09', xlabel='Chlorophyll [mg m-3]', **kw: dict,) -> tuple({plt.Figure, plt.Axes}):
     """
     This function can be used to plot the day and night averages computed with the day_night_avg function
     
@@ -445,6 +449,10 @@ def plot_daynight_avg(day, night, ax, sel_day='2023-09-09', xlabel='Chlorophyll 
     A line plot comparing the day and night average over depth for the selcted day
 
     """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(5,5))
+    else:
+        fig = plt.gcf()
     ax.plot(night.where(night.date==sel_day).dropna().dat, night.where(night.date==sel_day).dropna().depth, label='Night time average')
     ax.plot(day.where(day.date==sel_day).dropna().dat, day.where(day.date==sel_day).dropna().depth, label='Daytime average')
     ax.legend()
@@ -452,18 +460,18 @@ def plot_daynight_avg(day, night, ax, sel_day='2023-09-09', xlabel='Chlorophyll 
     ax.grid()
     ax.set(xlabel= xlabel, ylabel='Depth [m]')
     ax.set_title(sel_day)
-    return ax
+    return fig, ax
     
-def plot_section_with_srss(ds, ax, sel_var='TEMP',start_time = '2023-09-06', end_time = '2023-09-10', ylim=45):
+def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_time = '2023-09-06', end_time = '2023-09-10', ylim=45, **kw: dict,) -> tuple({plt.Figure, plt.Axes}):   
     """
     This function can be used to plot sections for any variable with the sunrise and sunset plotted over
     
     Parameters
     ----------
-    ax: axis to plot the data
     ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. 
         Data should not be gridded.
     sel_var: seleted variable to plot
+    ax: axis to plot the data
     start_time: Start date of the data selection. As missions can be long and came make it hard to visualise NPQ effetc, 
     end_time: End date of the data selection. As missions can be long and came make it hard to visualise NPQ effetc, 
     ylim: specified limit for the maximum y axis value. The minumum is computed as ylim/30        
@@ -471,8 +479,12 @@ def plot_section_with_srss(ds, ax, sel_var='TEMP',start_time = '2023-09-06', end
     Returns
     -------
     A section showing the variability of the selcted data over time and depth
-
     """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(5,5))
+    else:
+        fig = plt.gcf()
+
     if not "TIME" in ds.indexes.keys():
             ds = ds.set_xindex('TIME')
     ds_sel = ds.sel(TIME=slice(start_time, end_time))
@@ -487,7 +499,7 @@ def plot_section_with_srss(ds, ax, sel_var='TEMP',start_time = '2023-09-06', end
         ax.axvline(np.unique(m), c='orange')
     ax.set_ylabel('Depth [m]')
     plt.colorbar(c, label=f'{sel_var} [{ds[sel_var].units}]')
-    return ax 
+    return fig, ax  
  
 def check_temporal_drift(ds: xr.Dataset, var: str,ax: plt.Axes = None, **kw: dict,)-> tuple({plt.Figure, plt.Axes}):
     if ax is None:
