@@ -37,3 +37,8 @@ jobs:
       run: >
         micromamba activate TEST
         && python -m pytest -rxs tests/
+    - name: run notebook
+      shell: bash -l {0}
+      run: >
+        micromamba activate TEST
+        && jupyter nbconvert --to notebook --execute notebooks/demo.ipynb --output=fname-output.ipynb
