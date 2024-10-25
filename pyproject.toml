@@ -47,3 +47,13 @@ readme = { file = "README.md", content-type = "text/markdown" }
 write_to = "glidertest/_version.py"
 write_to_template = "__version__ = '{version}'"
 tag_regex = "^(?P<prefix>v)?(?P<version>[^\\+]+)(?P<suffix>.*)?$"
+
+[tool.check-manifest]
+ignore = [
+  "docs",
+  "docs/*",
+  "notebooks",
+  "notebooks/*",
+  "tests",
+  "tests/*",
+]
