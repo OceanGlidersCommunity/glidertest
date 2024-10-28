@@ -10,3 +10,4 @@ cmocean
 skyfield 
 tqdm
 gsw
+sgp4>=2.14
