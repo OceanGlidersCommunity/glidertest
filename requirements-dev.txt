@@ -9,5 +9,7 @@ scipy
 cmocean
 skyfield
 tqdm
-jupyterlab
 pytest
+gsw
+sgp4>=2.14
+jupyterlab
