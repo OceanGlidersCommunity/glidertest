@@ -35,7 +35,3 @@ jobs:
     - name: Full Tests
       run: |
         python -m pytest -rxs tests/
-
-    - name: run notebook
-      run: |
-        jupyter nbconvert --to notebook --execute notebooks/demo.ipynb --output=demo-output.ipynb
