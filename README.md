@@ -10,7 +10,7 @@ This is a work in progress, all contributions welcome!
 Install from PyPI with
 
 ```sh
-python -m pip install erddapy
+python -m pip install glidertest
 ```
 
 Install a local, development version of this by cloning the repo, opening a terminal in the home directory (next to this readme file) and running these commands:
