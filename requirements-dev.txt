@@ -13,3 +13,8 @@ pytest
 gsw
 sgp4>=2.14
 jupyterlab
+pytest
+nbsphinx
+nbconvert
+sphinx
+sphinx-rtd-theme
