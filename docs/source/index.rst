@@ -7,9 +7,11 @@ Welcome to glidertest's documentation!
 ======================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
+   demo-output.ipynb
+   glidertest
 
 
 Indices and tables
