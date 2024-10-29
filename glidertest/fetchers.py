@@ -15,9 +15,20 @@ data_source_og = pooch.create(
 
 
 def load_sample_dataset(dataset_name="sea076_20230906T0852_delayed.nc"):
+    """Download sample datasets for use with glidertest
+
+    Args:
+        dataset_name (str, optional): _description_. Defaults to "sea076_20230906T0852_delayed.nc".
+
+    Raises:
+        ValueError: If the requests dataset is not known, raises a value error
+
+    Returns:
+        xarray.Dataset: Requested sample dataset
+    """
     if dataset_name in data_source_og.registry.keys():
         file_path = data_source_og.fetch(dataset_name)
         return xr.open_dataset(file_path)
     else:
-        msg = f"Requested sample dataset {dataset_name} not known"
+        msg = f"Requested sample dataset {dataset_name} not known. Specify one of the following available datasets: {list(data_source_og.registry.keys())}"
         raise ValueError(msg)

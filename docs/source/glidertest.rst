@@ -4,4 +4,7 @@
 .. automodule:: glidertest.tools
    :members:
    :undoc-members:
-   :show-inheritance:
+
+.. automodule:: glidertest.fetchers
+   :members:
+   :undoc-members:
