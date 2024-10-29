@@ -5,12 +5,15 @@ import pandas as pd
 import seaborn as sns
 import xarray as xr
 from matplotlib.dates import DateFormatter
+import matplotlib.colors as mcolors
 from pandas import DataFrame
 from scipy import stats
 from skyfield import almanac
 from skyfield import api
 from tqdm import tqdm
-
+import gsw
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 
 def grid2d(x, y, v, xi=1, yi=1):
     """
@@ -587,4 +590,212 @@ def plot_profIncrease(ds: xr.DataArray, ax: plt.Axes = None, **kw: dict, ) -> tu
     ax[1].legend()
     ax[1].xaxis.set_major_locator(plt.MaxNLocator(8))
     [a.grid() for a in ax]
+    return fig, ax
+
+
+def plot_glider_track(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
+    """
+    This function plots the glider track on a map, with latitude and longitude colored by time.
+
+    Parameters
+    ----------
+    ds: xarray in OG1 format with at least TIME, LATITUDE, and LONGITUDE.
+    ax: Optional; axis to plot the data.
+    kw: Optional; additional keyword arguments for the scatter plot.
+
+    Returns
+    -------
+    One plot with the map of the glider track.
+    fig: matplotlib.figure.Figure
+    ax: matplotlib.axes._subplots.AxesSubplot
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6), subplot_kw={'projection': ccrs.PlateCarree()})
+    else:
+        fig = plt.gcf()
+
+    latitudes = ds.LATITUDE.values
+    longitudes = ds.LONGITUDE.values
+    times = ds.TIME.values
+
+    # Reduce the number of latitudes, longitudes, and times to no more than 2000
+    if len(latitudes) > 2000:
+        indices = np.linspace(0, len(latitudes) - 1, 2000).astype(int)
+        latitudes = latitudes[indices]
+        longitudes = longitudes[indices]
+        times = times[indices]
+
+    # Convert time to the desired format
+    time_labels = [pd.to_datetime(t).strftime('%Y-%b-%d') for t in times]
+    
+    # Plot latitude and longitude colored by time
+    sc = ax.scatter(longitudes, latitudes, c=times, cmap='viridis', **kw)
+    
+    # Add colorbar with formatted time labels
+    cbar = plt.colorbar(sc, ax=ax) #, label='Time')
+    cbar.ax.set_yticklabels([pd.to_datetime(t).strftime('%Y-%b-%d') for t in cbar.get_ticks()])
+
+    ax.set_extent([np.min(longitudes)-1, np.max(longitudes)+1, np.min(latitudes)-1, np.max(latitudes)+1], crs=ccrs.PlateCarree())
+
+    # Add features to the map
+    ax.add_feature(cfeature.LAND)
+    ax.add_feature(cfeature.OCEAN)
+    ax.add_feature(cfeature.COASTLINE)
+
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+    ax.set_title('Glider Track')
+    gl = ax.gridlines(draw_labels=True, color='black', alpha=0.5, linestyle='--')
+    gl.top_labels = False
+    gl.right_labels = False
+    plt.show()
+
+    return fig, ax
+
+def plot_grid_spacing_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
+    """
+    This function plots histograms of the grid spacing (diff(ds.DEPTH) and diff(ds.TIME)) where only the inner 99% of values are plotted.
+
+    Parameters
+    ----------
+    ds: xarray in OG1 format with at least TIME and DEPTH.
+    ax: Optional; axis to plot the data.
+    kw: Optional; additional keyword arguments for the histograms.
+
+    Returns
+    -------
+    Two histograms showing the distribution of grid spacing for depth and time.
+    fig: matplotlib.figure.Figure
+    ax: matplotlib.axes._subplots.AxesSubplot
+    """
+    if ax is None:
+        fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+    else:
+        fig = plt.gcf()
+
+    depth_diff = np.diff(ds.DEPTH)
+    orig_time_diff = np.diff(ds.TIME) / np.timedelta64(1, 's')  # Convert to seconds
+
+    depth_diff = depth_diff[np.isfinite(depth_diff)]
+    time_diff = orig_time_diff[np.isfinite(orig_time_diff)]
+
+    depth_diff = depth_diff[(depth_diff >= np.nanpercentile(depth_diff, 0.5)) & (depth_diff <= np.nanpercentile(depth_diff, 99.5))]
+    time_diff = time_diff[(time_diff >= np.nanpercentile(time_diff, 0.5)) & (time_diff <= np.nanpercentile(time_diff, 99.5))]
+
+    ax[0].hist(depth_diff, bins=50, **kw)
+    ax[0].set_xlabel('Depth Spacing (m)')
+    ax[0].set_ylabel('Frequency')
+    ax[0].set_title('Histogram of Depth Spacing')
+    ax[0].grid()
+
+    median_neg_depth_diff = np.median(depth_diff[depth_diff < 0])
+    median_pos_depth_diff = np.median(depth_diff[depth_diff > 0])
+    max_depth_diff = np.max(depth_diff)
+    min_depth_diff = np.min(depth_diff)
+
+    annotation_text_left = (
+        f'Median Negative: {median_neg_depth_diff:.2f} m\n'
+        f'Median Positive: {median_pos_depth_diff:.2f} m\n'
+        f'Max: {max_depth_diff:.2f} m\n'
+        f'Min: {min_depth_diff:.2f} m'
+    )
+    ax[0].annotate(annotation_text_left, xy=(0.96, 0.96), xycoords='axes fraction', 
+                   fontsize=12, ha='right', va='top', 
+                   bbox=dict(boxstyle='round,pad=0.3', edgecolor='black', facecolor='white', alpha=.5))
+
+    ax[1].hist(time_diff, bins=50, **kw)
+    ax[1].set_xlabel('Time Spacing (s)')
+    ax[1].set_ylabel('Frequency')
+    ax[1].set_title('Histogram of Time Spacing')
+    ax[1].grid()
+
+    median_time_diff = np.median(orig_time_diff)
+    mean_time_diff = np.mean(orig_time_diff)
+    max_time_diff = np.max(orig_time_diff)
+    min_time_diff = np.min(orig_time_diff)
+    max_time_diff_hrs = max_time_diff/3600
+
+    annotation_text = (
+        f'Median: {median_time_diff:.2f} s\n'
+        f'Mean: {mean_time_diff:.2f} s\n'
+        f'Max: {max_time_diff:.2f} s ({max_time_diff_hrs:.2f} hr)\n'
+        f'Min: {min_time_diff:.2f} s'
+    )
+    ax[1].annotate(annotation_text, xy=(0.96, 0.96), xycoords='axes fraction', 
+                    fontsize=12, ha='right', va='top', 
+                    bbox=dict(boxstyle='round,pad=0.3', edgecolor='black', facecolor='white', alpha=.5))
+
+    return fig, ax
+
+def plot_ts_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
+    """
+    This function plots histograms of temperature and salinity values (middle 95%), and a 2D histogram of salinity and temperature with density contours.
+
+    Parameters
+    ----------
+    ds: xarray in OG1 format with at least TEMP and PSAL.
+    ax: Optional; axis to plot the data.
+    kw: Optional; additional keyword arguments for the histograms.
+
+    Returns
+    -------
+    Three plots: histogram of temperature, histogram of salinity, and 2D histogram of salinity and temperature with density contours.
+    fig: matplotlib.figure.Figure
+    ax: matplotlib.axes._subplots.AxesSubplot
+    """
+
+    if ax is None:
+        fig, ax = plt.subplots(1, 3, figsize=(18, 6))
+    else:
+        fig = plt.gcf()
+
+    temp_orig = ds.TEMP.values
+    sal_orig = ds.PSAL.values
+
+    # Reduce both to where both are finite
+    temp = temp_orig[np.isfinite(temp_orig)&np.isfinite(sal_orig)]
+    sal = sal_orig[np.isfinite(sal_orig)&np.isfinite(temp_orig)]
+    depth = ds.DEPTH[np.isfinite(sal_orig)&np.isfinite(temp_orig)]
+    long = ds.LONGITUDE[np.isfinite(sal_orig)&np.isfinite(temp_orig)]
+    lat = ds.LATITUDE[np.isfinite(sal_orig)&np.isfinite(temp_orig)]
+
+    SA = gsw.SA_from_SP(sal, depth, long, lat)
+    CT = gsw.CT_from_t(SA, temp, depth)
+
+    # Reduce to middle 95% of values
+    temp_filtered = CT[(CT >= np.nanpercentile(temp, 2.5)) & (CT <= np.nanpercentile(CT, 97.5))]
+    sal_filtered = SA[(SA >= np.nanpercentile(sal, 2.5)) & (SA <= np.nanpercentile(sal, 97.5))]
+
+    ax[0].hist(temp_filtered, bins=50, **kw)
+    ax[0].set_xlabel('Conservative Temperature (°C)')
+    ax[0].set_ylabel('Frequency')
+    ax[0].set_title('Histogram of Temperature')
+    ax[0].grid()
+
+    ax[1].hist(sal_filtered, bins=50, **kw)
+    ax[1].set_xlabel('Absolute Salinity ( )')
+    ax[1].set_ylabel('Frequency')
+    ax[1].set_title('Histogram of Salinity')
+    ax[1].grid()
+
+    h = ax[2].hist2d(sal, temp, bins=50, cmap='viridis', norm=mcolors.LogNorm(), **kw)
+    cbar = plt.colorbar(h[3], ax=ax[2])
+    cbar.set_label('Log Counts')
+    ax[2].set_xlabel('Absolute Salinity ( )')
+    ax[2].set_ylabel('Conservative Temperature (°C)')
+    ax[2].set_title('2D Histogram of Salinity and Temperature (Log Scale)')
+
+    # Calculate density and add contours
+    SA = gsw.SA_from_SP(sal, depth, long, lat)
+    CT = gsw.CT_from_t(SA, temp, depth)
+    sigma0 = gsw.sigma0(SA, CT)
+
+    xi = np.linspace(sal.min()-1, sal.max()+1, 100)
+    yi = np.linspace(temp.min()-1, temp.max()+1, 100)
+    xi, yi = np.meshgrid(xi, yi)
+    zi = gsw.sigma0(xi, yi)
+
+    ax[2].contour(xi, yi, zi, colors='black', alpha=0.5, linewidths=0.5)
+    ax[2].clabel(ax[2].contour(xi, yi, zi, colors='black', alpha=0.5, linewidths=0.5), inline=True, fontsize=10)
+
     return fig, ax
