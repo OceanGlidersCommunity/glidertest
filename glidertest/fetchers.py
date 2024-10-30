@@ -10,11 +10,12 @@ data_source_og = pooch.create(
         "sea076_20230906T0852_delayed.nc": "sha256:bd50b2c1019b49f8c14381de8f78aa67d66e9d9e89607bbcedff246be60e6c92",
         "sea055_20220104T1536_R.nc": "sha256:5687c9d7b383713ff730ad4a570689622fe6eb9807e340919d59a83a437773b9",
         "sea055_20220104T1536_delayed.nc": "sha256:7f72f8a0398c3d339687d7b7dcf0311036997f6855ed80cae5bbf877e09975a6",
+        "sea045_20230530T0832_delayed.nc": "sha256:9a97b5b212e9ad751909e175bc01fdc75fd7b7fd784cc59d8e9f29e8bdfb829f",
     },
 )
 
 
-def load_sample_dataset(dataset_name="sea076_20230906T0852_delayed.nc"):
+def load_sample_dataset(dataset_name="sea045_20230530T0832_delayed.nc"):
     """Download sample datasets for use with glidertest
 
     Args:
