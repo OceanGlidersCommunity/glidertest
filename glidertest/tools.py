@@ -552,8 +552,10 @@ def check_monotony(da):
     """
     if not pd.Series(da).is_monotonic_increasing:
         print(f'{da.name} is not always monotonically increasing')
+        return False
     else:
         print(f'{da.name} is always monotonically increasing')
+        return True
 
 
 def plot_profIncrease(ds: xr.DataArray, ax: plt.Axes = None, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):

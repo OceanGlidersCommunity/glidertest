@@ -43,3 +43,11 @@ def test_profile_check():
     ds = fetchers.load_sample_dataset()
     tools.check_monotony(ds.PROFILE_NUMBER)
     tools.plot_profIncrease(ds)
+
+def test_check_monotony():
+    ds = fetchers.load_sample_dataset()
+    profile_number_monotony = tools.check_monotony(ds.PROFILE_NUMBER)
+    temperature_monotony = tools.check_monotony(ds.TEMP)
+    assert profile_number_monotony
+    assert not temperature_monotony
+    
