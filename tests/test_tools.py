@@ -1,3 +1,4 @@
+import pytest
 from glidertest import fetchers, tools
 import matplotlib.pyplot as plt
 
@@ -16,10 +17,11 @@ def test_up_down_bias():
 
 def test_chl():
     ds = fetchers.load_sample_dataset()
-    if 'CHLA' in ds.variables:
-        tools.optics_first_check(ds, var='CHLA')
-    if 'BBP700' in ds.variables:
-        tools.optics_first_check(ds, var='BBP700')
+    tools.optics_first_check(ds, var='CHLA')
+    tools.optics_first_check(ds, var='BBP700')
+    with pytest.raises(KeyError) as e:
+        tools.optics_first_check(ds, var='nonexistent_variable')
+
 
 def test_quench_sequence():
     ds = fetchers.load_sample_dataset()
@@ -34,10 +36,8 @@ def test_quench_sequence():
 def test_temporal_drift():
     ds = fetchers.load_sample_dataset()
     fig, ax = plt.subplots(1, 2)
-    if 'DOXY' in ds.variables:
-        tools.check_temporal_drift(ds,'DOXY', ax)
-    if 'CHLA' in ds.variables:
-        tools.check_temporal_drift(ds,'CHLA')
+    tools.check_temporal_drift(ds,'DOXY', ax)
+    tools.check_temporal_drift(ds,'CHLA')
         
 def test_profile_check():
     ds = fetchers.load_sample_dataset()
