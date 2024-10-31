@@ -482,7 +482,7 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
 
     """
     if not sel_day:
-        dates = list(day.date.values) + list(night.date.values)
+        dates = list(day.date.dropna().values) + list(night.date.dropna().values)
         dates.sort()
         sel_day = dates[int(len(dates)/2)]
     if ax is None:
