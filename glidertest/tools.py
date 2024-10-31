@@ -15,6 +15,33 @@ import gsw
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
+def calculate_vertical_velocity(pressure, time):
+    """
+    Calculate the vertical velocity of a glider using changes in pressure with time.
+
+    Parameters:
+    pressure (array-like): Array of pressure measurements.
+    time (array-like): Array of time measurements corresponding to the pressure measurements.
+
+    Returns:
+    vertical_velocity (array-like): Array of calculated vertical velocities.
+    """
+    # Ensure inputs are numpy arrays
+    pressure = np.array(pressure)
+    time = np.array(time).astype('datetime64[s]').astype('float64')
+
+    # Calculate the centered differences in pressure and time
+    delta_pressure = (pressure[2:] - pressure[:-2]) / 2
+    delta_time = (time[2:] - time[:-2]) / 2
+
+    # Calculate vertical velocity (rate of change of pressure with time)
+    vertical_velocity = delta_pressure / delta_time
+
+    # Pad the result to match the original array length
+    vertical_velocity = - np.pad(vertical_velocity, (1, 1), 'edge') 
+
+    return vertical_velocity
+
 def grid2d(x, y, v, xi=1, yi=1):
     """
     Function to grid data
