@@ -231,9 +231,6 @@ def optics_first_check(ds, var='CHLA'):
     This function returns plots and text
     """
     _necessary_variables_check(ds, [var, 'TIME', 'DEPTH'])
-    if var not in ds.variables:
-        msg = f"{var} does not exist in the dataset. Make sure the spelling is correct or add this variable to your dataset"
-        raise ValueError(msg)
     # Check how much negative data there is
     neg_chl = np.round((len(np.where(ds[var] < 0)[0]) * 100) / len(ds[var]), 1)
     if neg_chl > 0:
