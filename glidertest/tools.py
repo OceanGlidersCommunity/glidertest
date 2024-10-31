@@ -1,5 +1,6 @@
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import datetime
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -399,7 +400,7 @@ def sunset_sunrise(time, lat, lon):
     return sunrise, sunset
 
 
-def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04-20'):
+def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None):
     """
     This function computes night and day averages for a selected variable over a specific period of time
     Data in divided into day and night using the sunset and sunrise time as described in the above function sunset_sunrise from GliderTools
@@ -409,9 +410,9 @@ def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04
         Data should not be gridded.
     sel_var: variable to use to compute the day night averages
     start_time: Start date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,
-                we recommend end selecting small section of few days to few weeks.
+                we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
     end_time: End date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,
-                we recommend selecting small section of few days to few weeks.
+                we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
                 
     Returns
     -------
@@ -429,10 +430,14 @@ def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04
             day: Actual date for the batch 
 
     """
-    if "TIME" in ds.indexes.keys():
-        pass
-    else:
+    if "TIME" not in ds.indexes.keys():
         ds = ds.set_xindex('TIME')
+
+    if not start_time:
+        start_time = ds.TIME.mean() - np.timedelta64(3, 'D')
+    if not end_time:
+        end_time = ds.TIME.mean() + np.timedelta64(3, 'D')
+
     ds_sel = ds.sel(TIME=slice(start_time, end_time))
     sunrise, sunset = sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
 
@@ -458,7 +463,7 @@ def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04
     return day_av, night_av
 
 
-def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = None, sel_day='2023-09-09',
+def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = None, sel_day=None,
                       xlabel='Chlorophyll [mg m-3]', **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
     """
     This function can be used to plot the day and night averages computed with the day_night_avg function
@@ -468,7 +473,7 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
     day: pandas dataframe containing the day averages
     night: pandas dataframe containing the night averages
     ax: axis to plot the data
-    sel_day: selected day to plot
+    sel_day: selected day to plot. Defaults to the median day
     xlabel: label for the x-axis
     
     Returns
@@ -476,6 +481,10 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
     A line plot comparing the day and night average over depth for the selected day
 
     """
+    if not sel_day:
+        dates = list(day.date.values) + list(night.date.values)
+        dates.sort()
+        sel_day = dates[int(len(dates)/2)]
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 5))
     else:
@@ -492,8 +501,8 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
     return fig, ax
 
 
-def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_time='2023-09-06',
-                           end_time='2023-09-10', ylim=45, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
+def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_time=None,
+                           end_time=None, ylim=45, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
     """
     This function can be used to plot sections for any variable with the sunrise and sunset plotted over
     
@@ -503,8 +512,8 @@ def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, st
         Data should not be gridded.
     sel_var: selected variable to plot
     ax: axis to plot the data
-    start_time: Start date of the data selection. As missions can be long and came make it hard to visualise NPQ effect,
-    end_time: End date of the data selection. As missions can be long and came make it hard to visualise NPQ effect,
+    start_time: Start date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days
+    end_time: End date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days
     ylim: specified limit for the maximum y-axis value. The minimum is computed as ylim/30
     
     Returns
@@ -518,7 +527,18 @@ def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, st
 
     if "TIME" not in ds.indexes.keys():
         ds = ds.set_xindex('TIME')
+    
+    if not start_time:
+        start_time = ds.TIME.mean() - np.timedelta64(2, 'D')
+    if not end_time:
+        end_time = ds.TIME.mean() + np.timedelta64(2, 'D')
+    
     ds_sel = ds.sel(TIME=slice(start_time, end_time))
+    
+    if len(ds_sel.TIME) == 0:
+        msg = f"supplied limits start_time: {start_time} end_time: {end_time} do not overlap with dataset TIME range {str(ds.TIME.values.min())[:10]} - {str(ds.TIME.values.max())[:10]}"
+        raise ValueError(msg)
+    
     sunrise, sunset = sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
 
     c = ax.scatter(ds_sel.TIME, ds_sel.DEPTH, c=ds_sel[sel_var], s=10, vmin=np.nanpercentile(ds_sel[sel_var], 0.5),
