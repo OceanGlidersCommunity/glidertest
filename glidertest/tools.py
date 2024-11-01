@@ -887,7 +887,7 @@ def calc_seawater_w(ds):
     vert_sw_speed = ds['GLIDER_VERT_VELO_DZDT'].values - ds['GLIDER_VERT_VELO_MODEL'].values 
 
     # Add vertical seawater velocity to the dataset as a data variable
-    ds = ds.assign(VERT_CURR_FLIGHTMODEL=(('N_MEASUREMENTS'), vert_sw_speed, {'long_name': 'vertical_current_of_seawater_derived_from_glider_flight_model', 'units': 'm s-1'}))
+    ds = ds.assign(VERT_CURR_MODEL=(('N_MEASUREMENTS'), vert_sw_speed, {'long_name': 'vertical_current_of_seawater_derived_from_glider_flight_model', 'units': 'm s-1'}))
     return ds
 
 
@@ -914,7 +914,7 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     -------
     fig, axs (tuple): The figure and axes objects for the plot.
     """
-    required_vars = ['GLIDER_VERT_VELO_MODEL', 'GLIDER_VERT_VELO_DZDT', 'VERT_CURR']
+    required_vars = ['GLIDER_VERT_VELO_MODEL', 'GLIDER_VERT_VELO_DZDT', 'VERT_CURR_MODEL']
     for var in required_vars:
         if var not in ds:
             print(f"Dataset must contain '{var}' to create this plot.")
@@ -930,30 +930,35 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     if end_prof is None:
         end_prof = ds['PROFILE_NUMBER'].values.max() 
 
+    vert_curr = ds.VERT_CURR_MODEL.values * 100  # Convert to cm/s
+    vert_dzdt = ds.GLIDER_VERT_VELO_DZDT.values * 100  # Convert to cm/s
+    vert_model = ds.GLIDER_VERT_VELO_MODEL.values * 100  # Convert to cm/s
+
+
     fig, axs = plt.subplots(2, 2, figsize=(14, 12), gridspec_kw={'width_ratios': [3, 1]})
 
     # Upper left subplot for vertical velocity and glider speed
     ax1 = axs[0, 0]
-    ax1.plot(ds['TIME'], ds['GLIDER_VERT_VELO_DZDT'], label='Vertical Velocity (from dz/dt)')
+    ax1.plot(ds['TIME'], vert_dzdt, label='Vertical Velocity (from dz/dt)')
     ax1.set_xlabel('Time')
     ax1.set_ylabel('Vertical Velocity (cm/s)')
-    ax1.legend(loc='upper left')
+    ax1.legend(loc='lower left')
 
     ax1_twin = ax1.twinx()
-    ax1_twin.plot(ds['TIME'], ds['GLIDER_VERT_VELO_MODEL'], color='r', label='Vertical Glider Speed (model)')
-    ax1_twin.set_ylabel('Vertical Glider Speed (cm/s)')
-    ax1_twin.legend(loc='upper right')
+    ax1_twin.plot(ds['TIME'], vert_model, color='r', label='Vertical Glider Speed (model)')
+    ax1_twin.legend(loc='lower left')
 
-    ax1_twin.plot(ds['TIME'], ds['VERT_CURR'], color='k', label='Vertical Water Speed (calculated)')
+    ax1_twin.plot(ds['TIME'], vert_curr, color='g', label='Vertical Water Speed (calculated)')
     ax1_twin.legend(loc='lower right')
+    # Remove y-axis labels on the right
+    ax1_twin.set_yticklabels([])
 
     # Upper right subplot for histogram of vertical velocity
     ax1_hist = axs[0, 1]
-    ax1_hist.hist(ds['GLIDER_VERT_VELO_DZDT'], bins=50, orientation='horizontal', alpha=0.5, color='blue', label='Vertical Velocity (from dz/dt)')
-    ax1_hist.hist(ds['GLIDER_VERT_VELO_MODEL'], bins=50, orientation='horizontal', alpha=0.5, color='red', label='Vertical Glider Speed (model)')
-    ax1_hist.hist(ds['VERT_CURR'], bins=50, orientation='horizontal', alpha=0.5, color='green', label='Vertical Water Speed (calculated)')
+    ax1_hist.hist(vert_dzdt, bins=50, orientation='horizontal', alpha=0.5, color='blue', label='Vertical Velocity (from dz/dt)')
+    ax1_hist.hist(vert_model, bins=50, orientation='horizontal', alpha=0.5, color='red', label='Vertical Glider Speed (model)')
+    ax1_hist.hist(vert_curr, bins=50, orientation='horizontal', alpha=0.5, color='green', label='Vertical Water Speed (calculated)')
     ax1_hist.set_xlabel('Frequency')
-    ax1_hist.set_yticklabels([])
 
     # Determine the best location for the legend based on the y-axis limits and zero
     y_upper_limit = ax1_hist.get_ylim()[1]
@@ -969,25 +974,24 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     # Lower left subplot for vertical water speed
     ax2 = axs[1, 0]
     ax2.axhline(0, color='darkgray', linestyle='-', linewidth=0.5)  # Add zero horizontal line
-    ax2.plot(ds['TIME'], ds['VERT_CURR'], label='Vertical Water Speed')
+    ax2.plot(ds['TIME'], vert_curr, 'g', label='Vertical Water Speed')
     ax2.set_xlabel('Time')
     ax2.set_ylabel('Vertical Water Speed (cm/s)')
     ax2.legend(loc='upper left')
 
     # Lower right subplot for histogram of vertical water speed
     ax2_hist = axs[1, 1]
-    ax2_hist.hist(ds['VERT_CURR'], bins=50, orientation='horizontal', alpha=0.5, color='green', label='Vertical Water Speed (calculated)')
+    ax2_hist.hist(vert_curr, bins=50, orientation='horizontal', alpha=0.5, color='green', label='Vertical Water Speed (calculated)')
     ax2_hist.set_xlabel('Frequency')
-    ax2_hist.set_yticklabels([])
 
     # Calculate and plot the median line
-    median_vert_sw_speed = np.nanmedian(ds['VERT_CURR'])
+    median_vert_sw_speed = np.nanmedian(vert_curr)
     ax2_hist.axhline(median_vert_sw_speed, color='red', linestyle='dashed', linewidth=1, label=f'Median: {median_vert_sw_speed:.2f} cm/s')
 
     # Determine the best location for the legend based on the y-axis limits and median
     y_upper_limit = ax2_hist.get_ylim()[1]
     y_lower_limit = ax2_hist.get_ylim()[0]
-    median_vert_sw_speed = np.nanmedian(ds['VERT_CURR'])
+    median_vert_sw_speed = np.nanmedian(vert_curr)
 
     if abs(y_upper_limit - median_vert_sw_speed) > abs(y_lower_limit - median_vert_sw_speed):
         legend_loc = 'upper right'
