@@ -819,6 +819,38 @@ def plot_ts_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple
 
     return fig, ax
 
+def calc_Z(ds):
+    """
+    Calculate the depth (Z position) of the glider using the gsw library to convert pressure to depth.
+    
+    Parameters
+    ----------
+    ds (xarray.Dataset): The input dataset containing 'PRES', 'LATITUDE', and 'LONGITUDE' variables.
+    
+    Returns
+    -------
+    xarray.Dataset: The dataset with an additional 'DEPTH' variable.
+    """
+    # Ensure the required variables are present
+    if 'PRES' not in ds.variables or 'LATITUDE' not in ds.variables or 'LONGITUDE' not in ds.variables:
+        raise ValueError("Dataset must contain 'PRES', 'LATITUDE', and 'LONGITUDE' variables.")
+
+    # Initialize the new variable with the same dimensions as dive_num
+    ds['DEPTH_Z'] = (['N_MEASUREMENTS'], np.full(ds.dims['N_MEASUREMENTS'], np.nan))
+
+    # Calculate depth using gsw
+    depth = gsw.z_from_p(ds['PRES'], ds['LATITUDE'])
+    ds['DEPTH_Z'] = depth
+
+    # Assign the calculated depth to a new variable in the dataset
+    ds['DEPTH_Z'].attrs = {
+        "units": "meters",
+        "positive": "up",
+        "standard_name": "depth",
+        "comment": "Depth calculated from pressure using gsw library, positive up.",
+    }
+    
+    return ds
 
 def calc_glider_w_from_depth(ds):
     """
@@ -836,8 +868,10 @@ def calc_glider_w_from_depth(ds):
     - GLIDER_VERT_VELO_DZDT (array-like): with vertical velocities calculated from dz/dt
     """
     # Ensure inputs are numpy arrays
-    depth = ds.DEPTH_Z.values
     time = ds.TIME.values
+    if 'DEPTH_Z' not in ds.variables and all(var in ds.variables for var in ['PRES', 'LATITUDE', 'LONGITUDE']):
+        ds = calc_Z(ds)
+    depth = ds.DEPTH_Z.values
 
     # Calculate the centered differences in pressure and time, i.e. instead of using neighboring points, 
     # use the points two steps away.  This has a couple of advantages: one being a slight smoothing of the
