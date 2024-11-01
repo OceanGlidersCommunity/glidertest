@@ -918,7 +918,7 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
         start_prof = ds['PROFILE_NUMBER'].values.min()
     
     if end_prof is None:
-        end_prof = ds['PROFILE_NUMBER'].values.max()
+        end_prof = ds['PROFILE_NUMBER'].values.max() 
 
     fig, axs = plt.subplots(2, 2, figsize=(14, 12), gridspec_kw={'width_ratios': [3, 1]})
 
