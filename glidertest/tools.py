@@ -887,7 +887,7 @@ def calc_seawater_w(ds):
     vert_sw_speed = ds['GLIDER_VERT_VELO_DZDT'].values - ds['GLIDER_VERT_VELO_MODEL'].values 
 
     # Add vertical seawater velocity to the dataset as a data variable
-    ds = ds.assign(VERT_CURR=(('N_MEASUREMENTS'), vert_sw_speed, {'long_name': 'vertical_currents_from_glider_flight_model', 'units': 'm s-1'}))
+    ds = ds.assign(VERT_CURR_FLIGHTMODEL=(('N_MEASUREMENTS'), vert_sw_speed, {'long_name': 'vertical_current_of_seawater_derived_from_glider_flight_model', 'units': 'm s-1'}))
     return ds
 
 
