@@ -2,14 +2,12 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import xarray as xr
 from matplotlib.dates import DateFormatter
 from pandas import DataFrame
 from scipy import stats
 from skyfield import almanac
 from skyfield import api
-from tqdm import tqdm
 import matplotlib.colors as mcolors
 import gsw
 import cartopy.crs as ccrs
@@ -328,7 +326,7 @@ def sunset_sunrise(time, lat, lon):
 
     sunrise = []
     sunset = []
-    for n in tqdm(range(len(bluffton))):
+    for n in range(len(bluffton)):
 
         f = almanac.sunrise_sunset(eph, bluffton[n])
         t, y = almanac.find_discrete(time_utc[n], time_utc_offset[n], f)
