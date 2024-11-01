@@ -15,33 +15,6 @@ import gsw
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
-def calculate_vertical_velocity(pressure, time):
-    """
-    Calculate the vertical velocity of a glider using changes in pressure with time.
-
-    Parameters:
-    pressure (array-like): Array of pressure measurements.
-    time (array-like): Array of time measurements corresponding to the pressure measurements.
-
-    Returns:
-    vertical_velocity (array-like): Array of calculated vertical velocities.
-    """
-    # Ensure inputs are numpy arrays
-    pressure = np.array(pressure)
-    time = np.array(time).astype('datetime64[s]').astype('float64')
-
-    # Calculate the centered differences in pressure and time
-    delta_pressure = (pressure[2:] - pressure[:-2]) / 2
-    delta_time = (time[2:] - time[:-2]) / 2
-
-    # Calculate vertical velocity (rate of change of pressure with time)
-    vertical_velocity = delta_pressure / delta_time
-
-    # Pad the result to match the original array length
-    vertical_velocity = - np.pad(vertical_velocity, (1, 1), 'edge') 
-
-    return vertical_velocity
-
 def grid2d(x, y, v, xi=1, yi=1):
     """
     Function to grid data
@@ -845,3 +818,169 @@ def plot_ts_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple
     ax[2].clabel(ax[2].contour(xi, yi, zi, colors='black', alpha=0.5, linewidths=0.5), inline=True, fontsize=10)
 
     return fig, ax
+
+
+def calc_glider_w_from_depth(ds):
+    """
+    Calculate the vertical velocity of a glider using changes in pressure with time.
+
+    Parameters:
+    pressure (array-like): Array of pressure measurements.
+    time (array-like): Array of time measurements corresponding to the pressure measurements.
+
+    Returns:
+    vertical_velocity (array-like): Array of calculated vertical velocities.
+    """
+    # Ensure inputs are numpy arrays
+    depth = ds.DEPTH.values
+    time = ds.TIME.values
+
+    # Calculate the centered differences in pressure and time, i.e. instead of using neighboring points, 
+    # use the points two steps away.  This has a couple of advantages: one being a slight smoothing of the
+    # differences, and the other that the calculated speed will be the speed at the midpoint of the two 
+    # points.
+    # For data which are evenly spaced in time, this will be equivalent to a centered difference.
+    # For data which are not evenly spaced in time, i.e. when a Seaglider sample rate changes from 5 
+    # seconds to 10 seconds, there may be some uneven weighting of the differences.
+    delta_z_meters = (depth[2:] - depth[:-2]) 
+    delta_time_datetime64ns = (time[2:] - time[:-2]) 
+    delta_time_sec = delta_time_datetime64ns / np.timedelta64(1, 's')  # Convert to seconds
+
+    # Calculate vertical velocity (rate of change of pressure with time)
+    vertical_velocity = delta_z_meters / delta_time_sec
+
+    # Pad the result to match the original array length
+    vertical_velocity = - np.pad(vertical_velocity, (1, 1), 'edge') 
+
+    # Convert vertical velocity from m/s to cm/s
+    vertical_velocity = vertical_velocity * 100
+
+    # Add vertical velocity to the dataset
+    ds = ds.assign(VERT_SPEED_DZDT=(('N_MEASUREMENTS'), vertical_velocity))
+
+    return ds
+
+def calc_seawater_w(ds):
+    """
+    Calculate the vertical seawater velocity and add it to the dataset.
+
+    Parameters:
+    ds (xarray.Dataset): Dataset containing 'VERT_GLIDER_SPEED' and 'VERT_SPEED_DZDT'.
+
+    Returns:
+    ds (xarray.Dataset): Dataset with the new variable 'VERT_SW_SPEED'.
+
+    Eleanor's note: This could be bundled with calculate_glider_w_from_pressure, but keeping them separate allows for some extra testing/flexibility for the user. 
+    """
+    # Check if 'VERT_GLIDER_SPEED' is in the dataset
+    if 'VERT_GLIDER_SPEED' not in ds:
+        print("Error: 'VERT_GLIDER_SPEED' is not in the dataset.")
+        return ds
+
+    # Calculate the vertical seawater velocity
+    vert_sw_speed = ds['VERT_SPEED_DZDT'].values - ds['VERT_GLIDER_SPEED'].values 
+
+    # Add vertical seawater velocity to the dataset as a data variable
+    ds = ds.assign(VERT_SW_SPEED=(('N_MEASUREMENTS'), vert_sw_speed))
+    return ds
+
+
+def plot_vertical_speeds_with_histograms(ds, start_prof=0, end_prof=-1):
+    """
+    Plot vertical speeds with histograms for diagnostic purposes.
+    This function generates a diagnostic plot for the calculation of vertical seawater velocity.
+    It plots the modelled and computed (from dz/dt) vertical velocities as line plots, where these
+    should be similar. The difference between these velocities is the implied seawater velocity,
+    which should be closer to zero than the vehicle velocities. The histogram provides a visual
+    representation to identify any biases. The final calculation of the median should be close to
+    zero if a large enough sample of dives is input and if the glider flight model is well-tuned.
+    Parameters:
+    ds (xarray.Dataset): The dataset containing the vertical speed data where
+    - VERT_GLIDER_SPEED is the modelled glider speed
+    - VERT_SPEED_DZDT is the computed glider speed from the pressure sensor
+    - VERT_SW_SPEED is the implied seawater velocity.
+    start_prof (int, optional): The starting profile number for subsetting the dataset. Defaults to 0.
+    end_prof (int, optional): The ending profile number for subsetting the dataset. Defaults to -1.
+    Returns:
+    None
+    """
+    required_vars = ['VERT_GLIDER_SPEED', 'VERT_SPEED_DZDT', 'VERT_SW_SPEED']
+    for var in required_vars:
+        if var not in ds:
+            print(f"Dataset must contain '{var}' to create this plot.")
+            return
+
+    if start_prof is not None and end_prof is not None:
+        # Subset the dataset for the given profile range
+        ds = ds.where((ds['PROFILE_NUMBER'] >= start_prof) & (ds['PROFILE_NUMBER'] <= end_prof), drop=True)
+
+    fig, axs = plt.subplots(2, 2, figsize=(14, 12), gridspec_kw={'width_ratios': [3, 1]})
+
+    # Upper left subplot for vertical velocity and glider speed
+    ax1 = axs[0, 0]
+    ax1.plot(ds['TIME'], ds['VERT_SPEED_DZDT'], label='Vertical Velocity (from dz/dt)')
+    ax1.set_xlabel('Time')
+    ax1.set_ylabel('Vertical Velocity (cm/s)')
+    ax1.legend(loc='upper left')
+
+    ax1_twin = ax1.twinx()
+    ax1_twin.plot(ds['TIME'], ds['VERT_GLIDER_SPEED'], color='r', label='Vertical Glider Speed (model)')
+    ax1_twin.set_ylabel('Vertical Glider Speed (cm/s)')
+    ax1_twin.legend(loc='upper right')
+
+    ax1_twin.plot(ds['TIME'], ds['VERT_SW_SPEED'], color='k', label='Vertical Water Speed (calculated)')
+    ax1_twin.legend(loc='lower right')
+
+    # Upper right subplot for histogram of vertical velocity
+    ax1_hist = axs[0, 1]
+    ax1_hist.hist(ds['VERT_SPEED_DZDT'], bins=50, orientation='horizontal', alpha=0.5, color='blue', label='Vertical Velocity (from dz/dt)')
+    ax1_hist.hist(ds['VERT_GLIDER_SPEED'], bins=50, orientation='horizontal', alpha=0.5, color='red', label='Vertical Glider Speed (model)')
+    ax1_hist.hist(ds['VERT_SW_SPEED'], bins=50, orientation='horizontal', alpha=0.5, color='green', label='Vertical Water Speed (calculated)')
+    ax1_hist.set_xlabel('Frequency')
+    ax1_hist.set_yticklabels([])
+
+    # Determine the best location for the legend based on the y-axis limits and zero
+    y_upper_limit = ax1_hist.get_ylim()[1]
+    y_lower_limit = ax1_hist.get_ylim()[0]
+
+    if abs(y_upper_limit) > abs(y_lower_limit):
+        legend_loc = 'upper right'
+    else:
+        legend_loc = 'lower right'
+
+    ax1_hist.legend(loc=legend_loc)
+
+    # Lower left subplot for vertical water speed
+    ax2 = axs[1, 0]
+    ax2.axhline(0, color='darkgray', linestyle='-', linewidth=0.5)  # Add zero horizontal line
+    ax2.plot(ds['TIME'], ds['VERT_SW_SPEED'], label='Vertical Water Speed')
+    ax2.set_xlabel('Time')
+    ax2.set_ylabel('Vertical Water Speed (cm/s)')
+    ax2.legend(loc='upper left')
+
+    # Lower right subplot for histogram of vertical water speed
+    ax2_hist = axs[1, 1]
+    ax2_hist.hist(ds['VERT_SW_SPEED'], bins=50, orientation='horizontal', alpha=0.5, color='green', label='Vertical Water Speed (calculated)')
+    ax2_hist.set_xlabel('Frequency')
+    ax2_hist.set_yticklabels([])
+
+    # Calculate and plot the median line
+    median_vert_sw_speed = np.nanmedian(ds['VERT_SW_SPEED'])
+    ax2_hist.axhline(median_vert_sw_speed, color='red', linestyle='dashed', linewidth=1, label=f'Median: {median_vert_sw_speed:.2f} cm/s')
+
+    # Determine the best location for the legend based on the y-axis limits and median
+    y_upper_limit = ax2_hist.get_ylim()[1]
+    y_lower_limit = ax2_hist.get_ylim()[0]
+    median_vert_sw_speed = np.nanmedian(ds['VERT_SW_SPEED'])
+
+    if abs(y_upper_limit - median_vert_sw_speed) > abs(y_lower_limit - median_vert_sw_speed):
+        legend_loc = 'upper right'
+    else:
+        legend_loc = 'lower right'
+
+    ax2_hist.legend(loc=legend_loc)
+
+    plt.tight_layout()
+    plt.show()
+
+    return fig, axs
