@@ -15,10 +15,10 @@ python -m pip install glidertest
 Install a local, development version of this by cloning the repo, opening a terminal in the home directory (next to this readme file) and running these commands:
 
 ```sh
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 pip install -e . 
 ```
-This installs glidertest locally. -e ensures that any edits you make in the files will be picked up by scripts that import functions from glidertest.
+This installs glidertest locally. `-e` ensures that any edits you make in the files will be picked up by scripts that import functions from glidertest.
 
 ### Documentation
 
