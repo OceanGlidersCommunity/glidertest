@@ -825,9 +825,10 @@ def calc_glider_w_from_depth(ds):
     Calculate the vertical velocity of a glider using changes in pressure with time.
 
     Parameters:
-    pressure (array-like): Array of pressure measurements.
-    time (array-like): Array of time measurements corresponding to the pressure measurements.
-
+    ds (xarray.Dataset): Dataset containing 'DEPTH' and 'TIME'.
+    - DEPTH (array-like): Array of depth measurements
+    - TIME (array-like): Array of time stamps
+    
     Returns:
     vertical_velocity (array-like): Array of calculated vertical velocities.
     """
