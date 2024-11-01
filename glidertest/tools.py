@@ -824,13 +824,16 @@ def calc_glider_w_from_depth(ds):
     """
     Calculate the vertical velocity of a glider using changes in pressure with time.
 
-    Parameters:
+    Parameters
+    ----------
     ds (xarray.Dataset): Dataset containing 'DEPTH' and 'TIME'.
     - DEPTH (array-like): Array of depth measurements
     - TIME (array-like): Array of time stamps
     
-    Returns:
-    vertical_velocity (array-like): Array of calculated vertical velocities.
+    Returns
+    -------
+    ds (xarray.Dataset): Containing the new variable
+    - VERT_SPEED_DZDT (array-like): with vertical velocities calculated from dz/dt
     """
     # Ensure inputs are numpy arrays
     depth = ds.DEPTH.values
@@ -865,13 +868,15 @@ def calc_seawater_w(ds):
     """
     Calculate the vertical seawater velocity and add it to the dataset.
 
-    Parameters:
+    Parameters
+    ----------
     ds (xarray.Dataset): Dataset containing 'VERT_GLIDER_SPEED' and 'VERT_SPEED_DZDT'.
 
-    Returns:
-    ds (xarray.Dataset): Dataset with the new variable 'VERT_SW_SPEED'.
+    Returns
+    -------
+    ds (xarray.Dataset): Dataset with the new variable 'VERT_SW_SPEED', which is the inferred vertical seawater velocity.
 
-    Eleanor's note: This could be bundled with calculate_glider_w_from_pressure, but keeping them separate allows for some extra testing/flexibility for the user. 
+    Eleanor's note: This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. 
     """
     # Check if 'VERT_GLIDER_SPEED' is in the dataset
     if 'VERT_GLIDER_SPEED' not in ds:
@@ -895,15 +900,19 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     which should be closer to zero than the vehicle velocities. The histogram provides a visual
     representation to identify any biases. The final calculation of the median should be close to
     zero if a large enough sample of dives is input and if the glider flight model is well-tuned.
-    Parameters:
+
+    Parameters
+    ----------
     ds (xarray.Dataset): The dataset containing the vertical speed data where
     - VERT_GLIDER_SPEED is the modelled glider speed
     - VERT_SPEED_DZDT is the computed glider speed from the pressure sensor
     - VERT_SW_SPEED is the implied seawater velocity.
-    start_prof (int, optional): The starting profile number for subsetting the dataset. Defaults to 0.
-    end_prof (int, optional): The ending profile number for subsetting the dataset. Defaults to -1.
-    Returns:
-    None
+    start_prof (int, optional): The starting profile number for subsetting the dataset. Defaults to first profile number.
+    end_prof (int, optional): The ending profile number for subsetting the dataset. Defaults to last profile number.
+
+    Returns
+    -------
+    fig, axs (tuple): The figure and axes objects for the plot.
     """
     required_vars = ['VERT_GLIDER_SPEED', 'VERT_SPEED_DZDT', 'VERT_SW_SPEED']
     for var in required_vars:
