@@ -400,9 +400,9 @@ def sunset_sunrise(time, lat, lon):
     return sunrise, sunset
 
 
-def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None):
+def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof=None, end_prof=None):
     """
-    This function computes night and day averages for a selected variable over a specific period of time
+    This function computes night and day averages for a selected variable over a specific period of time or a specific series of dives
     Data in divided into day and night using the sunset and sunrise time as described in the above function sunset_sunrise from GliderTools
     Parameters
     ----------
@@ -413,6 +413,10 @@ def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None):
                 we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
     end_time: End date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,
                 we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
+    start_prof: Start profile of the data selection. If no profile is specified, the specified time selction will be used or the the central week of the deployment.
+                It is important to have a large enough number of dives to have some day and night data otherwise the function will not run
+    end_prof:  End profile of the data selection. If no profile is specified, the specified time selction will be used or the the central week of the deployment.
+            It is important to have a large enough number of dives to have some day and night data otherwise the function will not run
                 
     Returns
     -------
@@ -438,7 +442,12 @@ def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None):
     if not end_time:
         end_time = ds.TIME.mean() + np.timedelta64(3, 'D')
 
-    ds_sel = ds.sel(TIME=slice(start_time, end_time))
+    if start_prof and end_prof:
+        t1 = ds.TIME.where(ds.PROFILE_NUMBER==start_prof).dropna(dim='N_MEASUREMENTS')[0]
+        t2 = ds.TIME.where(ds.PROFILE_NUMBER==end_prof).dropna(dim='N_MEASUREMENTS')[-1]
+        ds_sel = ds.sel(TIME=slice(t1,t2))
+    else:
+        ds_sel = ds.sel(TIME=slice(start_time, end_time))
     sunrise, sunset = sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
 
     # creating batches where one batch is a night and the following day
@@ -502,7 +511,7 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
 
 
 def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_time=None,
-                           end_time=None, ylim=45, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
+                           end_time=None,start_prof=None, end_prof=None, ylim=45, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
     """
     This function can be used to plot sections for any variable with the sunrise and sunset plotted over
     
@@ -514,6 +523,8 @@ def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, st
     ax: axis to plot the data
     start_time: Start date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days
     end_time: End date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days
+    start_prof: Start profile of the data selection. If no profile is specified, the specified time selction will be used or the mid 4 days of the deployment
+    end_prof:  End profile of the data selection. If no profile is specified, the specified time selction will be used or the mid 4 days of the deployment
     ylim: specified limit for the maximum y-axis value. The minimum is computed as ylim/30
     
     Returns
@@ -533,7 +544,12 @@ def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, st
     if not end_time:
         end_time = ds.TIME.mean() + np.timedelta64(2, 'D')
     
-    ds_sel = ds.sel(TIME=slice(start_time, end_time))
+    if start_prof and end_prof:
+        t1 = ds.TIME.where(ds.PROFILE_NUMBER==start_prof).dropna(dim='N_MEASUREMENTS')[0]
+        t2 = ds.TIME.where(ds.PROFILE_NUMBER==end_prof).dropna(dim='N_MEASUREMENTS')[-1]
+        ds_sel = ds.sel(TIME=slice(t1,t2))
+    else:
+        ds_sel = ds.sel(TIME=slice(start_time, end_time))
     
     if len(ds_sel.TIME) == 0:
         msg = f"supplied limits start_time: {start_time} end_time: {end_time} do not overlap with dataset TIME range {str(ds.TIME.values.min())[:10]} - {str(ds.TIME.values.max())[:10]}"
