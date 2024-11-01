@@ -885,7 +885,7 @@ def calc_seawater_w(ds):
     return ds
 
 
-def plot_vertical_speeds_with_histograms(ds, start_prof=0, end_prof=-1):
+def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     """
     Plot vertical speeds with histograms for diagnostic purposes.
     This function generates a diagnostic plot for the calculation of vertical seawater velocity.
@@ -913,6 +913,12 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=0, end_prof=-1):
     if start_prof is not None and end_prof is not None:
         # Subset the dataset for the given profile range
         ds = ds.where((ds['PROFILE_NUMBER'] >= start_prof) & (ds['PROFILE_NUMBER'] <= end_prof), drop=True)
+
+    if start_prof is None:
+        start_prof = ds['PROFILE_NUMBER'].values.min()
+    
+    if end_prof is None:
+        end_prof = ds['PROFILE_NUMBER'].values.max()
 
     fig, axs = plt.subplots(2, 2, figsize=(14, 12), gridspec_kw={'width_ratios': [3, 1]})
 
@@ -984,3 +990,5 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=0, end_prof=-1):
     plt.show()
 
     return fig, axs
+
+
