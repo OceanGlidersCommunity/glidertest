@@ -31,6 +31,7 @@
           
           <a href="../../index.html" class="icon icon-home">
             glidertest
+              <img src="../../_static/glider.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -43,6 +44,7 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../demo-output.html">Glidertest demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html#Basic-statistics-of-dataset">Basic statistics of dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../glidertest.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">API</span></code></a></li>
 </ul>
 
@@ -73,6 +75,7 @@
   <h1>Source code for glidertest.tools</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">matplotlib.dates</span> <span class="k">as</span> <span class="nn">mdates</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
@@ -83,7 +86,27 @@
 <span class="kn">from</span> <span class="nn">skyfield</span> <span class="kn">import</span> <span class="n">almanac</span>
 <span class="kn">from</span> <span class="nn">skyfield</span> <span class="kn">import</span> <span class="n">api</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
+<span class="kn">import</span> <span class="nn">gsw</span>
+<span class="kn">import</span> <span class="nn">cartopy.crs</span> <span class="k">as</span> <span class="nn">ccrs</span>
+<span class="kn">import</span> <span class="nn">cartopy.feature</span> <span class="k">as</span> <span class="nn">cfeature</span>
 
+
+<span class="k">def</span> <span class="nf">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks that all of a list of variables are present in a dataset</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ds (xarray.Dataset): _description_</span>
+<span class="sd">        vars (list): _description_</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: Raises an error if all vars not present in ds</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">missing_vars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">missing_vars</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Required variables </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">missing_vars</span><span class="p">)</span><span class="si">}</span><span class="s2"> do not exist in the suppllied dataset.&quot;</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    
 
 <div class="viewcode-block" id="grid2d">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.grid2d">[docs]</a>
@@ -139,16 +162,22 @@
 <span class="sd">    df: pandas dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
     <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Horizontal resolution</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">v_res</span>  <span class="c1"># Vertical resolution</span>
-    <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">grid2d</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+        <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">grid2d</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
 
-    <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">varG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Horizontal gradients</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">varG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Horizontal gradients</span>
 
-    <span class="n">dc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Dive - CLimb</span>
-    <span class="n">cd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Climb - Dive</span>
+        <span class="n">dc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Dive - CLimb</span>
+        <span class="n">cd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Climb - Dive</span>
 
-    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;dc&#39;</span><span class="p">:</span> <span class="n">dc</span><span class="p">,</span> <span class="s1">&#39;cd&#39;</span><span class="p">:</span> <span class="n">cd</span><span class="p">,</span> <span class="s1">&#39;depth&#39;</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;dc&#39;</span><span class="p">:</span> <span class="n">dc</span><span class="p">,</span> <span class="s1">&#39;cd&#39;</span><span class="p">:</span> <span class="n">cd</span><span class="p">,</span> <span class="s1">&#39;depth&#39;</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> is not in the dataset&#39;</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
     <span class="k">return</span> <span class="n">df</span></div>
 
 
@@ -174,13 +203,17 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
 
-    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dc</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Dive-Climb&#39;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">cd</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Climb-Dive&#39;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-    <span class="n">lims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dc</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">lims</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">lims</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;dc&#39;</span><span class="p">,</span> <span class="s1">&#39;depth&#39;</span><span class="p">]):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="n">xlabel</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">,</span> <span class="s1">&#39;data unavailable&#39;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dc</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Dive-Climb&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">cd</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Climb-Dive&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">lims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dc</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">lims</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">lims</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">depth</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">df</span><span class="o">.</span><span class="n">depth</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="mi">30</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">depth</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="n">df</span><span class="o">.</span><span class="n">depth</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="mi">30</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
 
@@ -219,10 +252,18 @@
 <span class="sd">    Line plots for the averages of the different variables. </span>
 <span class="sd">    Thermo, halo and pycnocline are computed and plotted. A sentence stating the depth of the clines is printed too</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;TEMP&#39;</span><span class="p">,</span> <span class="s1">&#39;PSAL&#39;</span><span class="p">])</span>
     <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">v_res</span>
     <span class="n">tempG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">grid2d</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">TEMP</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
     <span class="n">salG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">grid2d</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">PSAL</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;DENSITY&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+        <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DENSITY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">dims</span><span class="p">[</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+        <span class="n">SA</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">SA_from_SP</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PSAL</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">LONGITUDE</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">LATITUDE</span><span class="p">)</span>
+        <span class="n">CT</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">CT_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">TEMP</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">)</span>
+        <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DENSITY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">rho</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">)</span>
+
     <span class="n">denG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">grid2d</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DENSITY</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
 
     <span class="n">tempG</span> <span class="o">=</span> <span class="n">tempG</span><span class="p">[</span><span class="n">start_prof</span><span class="p">:</span><span class="n">end_prof</span><span class="p">,</span> <span class="p">:]</span>
@@ -298,10 +339,7 @@
 <span class="sd">    Function to assess any drift in deep optics data and the presence of any possible negative data</span>
 <span class="sd">    This function returns plots and text</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2"> does not exist in the dataset. Make sure the spelling is correct or add this variable to your dataset&quot;</span><span class="p">)</span>
-        <span class="k">return</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="c1"># Check how much negative data there is</span>
     <span class="n">neg_chl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">neg_chl</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -476,9 +514,9 @@
 
 <div class="viewcode-block" id="day_night_avg">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.day_night_avg">[docs]</a>
-<span class="k">def</span> <span class="nf">day_night_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sel_var</span><span class="o">=</span><span class="s1">&#39;CHLA&#39;</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="s1">&#39;2024-04-18&#39;</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="s1">&#39;2024-04-20&#39;</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">day_night_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sel_var</span><span class="o">=</span><span class="s1">&#39;CHLA&#39;</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function computes night and day averages for a selected variable over a specific period of time</span>
+<span class="sd">    This function computes night and day averages for a selected variable over a specific period of time or a specific series of dives</span>
 <span class="sd">    Data in divided into day and night using the sunset and sunrise time as described in the above function sunset_sunrise from GliderTools</span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -486,9 +524,13 @@
 <span class="sd">        Data should not be gridded.</span>
 <span class="sd">    sel_var: variable to use to compute the day night averages</span>
 <span class="sd">    start_time: Start date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,</span>
-<span class="sd">                we recommend end selecting small section of few days to few weeks.</span>
+<span class="sd">                we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment</span>
 <span class="sd">    end_time: End date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,</span>
-<span class="sd">                we recommend selecting small section of few days to few weeks.</span>
+<span class="sd">                we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment</span>
+<span class="sd">    start_prof: Start profile of the data selection. If no profile is specified, the specified time selction will be used or the the central week of the deployment.</span>
+<span class="sd">                It is important to have a large enough number of dives to have some day and night data otherwise the function will not run</span>
+<span class="sd">    end_prof:  End profile of the data selection. If no profile is specified, the specified time selction will be used or the the central week of the deployment.</span>
+<span class="sd">            It is important to have a large enough number of dives to have some day and night data otherwise the function will not run</span>
 <span class="sd">                </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -506,11 +548,21 @@
 <span class="sd">            day: Actual date for the batch </span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;TIME&quot;</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">pass</span>
-    <span class="k">else</span><span class="p">:</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s2">&quot;TIME&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_xindex</span><span class="p">(</span><span class="s1">&#39;TIME&#39;</span><span class="p">)</span>
-    <span class="n">ds_sel</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">TIME</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">start_time</span><span class="p">:</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">end_time</span><span class="p">:</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">start_prof</span> <span class="ow">and</span> <span class="n">end_prof</span><span class="p">:</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">==</span><span class="n">start_prof</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">==</span><span class="n">end_prof</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ds_sel</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">TIME</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ds_sel</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">TIME</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">))</span>
     <span class="n">sunrise</span><span class="p">,</span> <span class="n">sunset</span> <span class="o">=</span> <span class="n">sunset_sunrise</span><span class="p">(</span><span class="n">ds_sel</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">ds_sel</span><span class="o">.</span><span class="n">LATITUDE</span><span class="p">,</span> <span class="n">ds_sel</span><span class="o">.</span><span class="n">LONGITUDE</span><span class="p">)</span>
 
     <span class="c1"># creating batches where one batch is a night and the following day</span>
@@ -538,7 +590,7 @@
 
 <div class="viewcode-block" id="plot_daynight_avg">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.plot_daynight_avg">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_daynight_avg</span><span class="p">(</span><span class="n">day</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">night</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_day</span><span class="o">=</span><span class="s1">&#39;2023-09-09&#39;</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">plot_daynight_avg</span><span class="p">(</span><span class="n">day</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">night</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_day</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Chlorophyll [mg m-3]&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function can be used to plot the day and night averages computed with the day_night_avg function</span>
@@ -548,7 +600,7 @@
 <span class="sd">    day: pandas dataframe containing the day averages</span>
 <span class="sd">    night: pandas dataframe containing the night averages</span>
 <span class="sd">    ax: axis to plot the data</span>
-<span class="sd">    sel_day: selected day to plot</span>
+<span class="sd">    sel_day: selected day to plot. Defaults to the median day</span>
 <span class="sd">    xlabel: label for the x-axis</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
@@ -556,6 +608,10 @@
 <span class="sd">    A line plot comparing the day and night average over depth for the selected day</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sel_day</span><span class="p">:</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">day</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">night</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">dates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">sel_day</span> <span class="o">=</span> <span class="n">dates</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
     <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
@@ -575,8 +631,8 @@
 
 <div class="viewcode-block" id="plot_section_with_srss">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.plot_section_with_srss">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_section_with_srss</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="s1">&#39;2023-09-06&#39;</span><span class="p">,</span>
-                           <span class="n">end_time</span><span class="o">=</span><span class="s1">&#39;2023-09-10&#39;</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span> <span class="nf">plot_section_with_srss</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function can be used to plot sections for any variable with the sunrise and sunset plotted over</span>
 <span class="sd">    </span>
@@ -586,14 +642,17 @@
 <span class="sd">        Data should not be gridded.</span>
 <span class="sd">    sel_var: selected variable to plot</span>
 <span class="sd">    ax: axis to plot the data</span>
-<span class="sd">    start_time: Start date of the data selection. As missions can be long and came make it hard to visualise NPQ effect,</span>
-<span class="sd">    end_time: End date of the data selection. As missions can be long and came make it hard to visualise NPQ effect,</span>
+<span class="sd">    start_time: Start date of the data selection format &#39;YYYY-MM-DD&#39;. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days</span>
+<span class="sd">    end_time: End date of the data selection format &#39;YYYY-MM-DD&#39;. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days</span>
+<span class="sd">    start_prof: Start profile of the data selection. If no profile is specified, the specified time selction will be used or the mid 4 days of the deployment</span>
+<span class="sd">    end_prof:  End profile of the data selection. If no profile is specified, the specified time selction will be used or the mid 4 days of the deployment</span>
 <span class="sd">    ylim: specified limit for the maximum y-axis value. The minimum is computed as ylim/30</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    A section showing the variability of the selected data over time and depth</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
@@ -601,7 +660,23 @@
 
     <span class="k">if</span> <span class="s2">&quot;TIME&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_xindex</span><span class="p">(</span><span class="s1">&#39;TIME&#39;</span><span class="p">)</span>
-    <span class="n">ds_sel</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">TIME</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">start_time</span><span class="p">:</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">end_time</span><span class="p">:</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">start_prof</span> <span class="ow">and</span> <span class="n">end_prof</span><span class="p">:</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">==</span><span class="n">start_prof</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">==</span><span class="n">end_prof</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ds_sel</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">TIME</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ds_sel</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">TIME</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ds_sel</span><span class="o">.</span><span class="n">TIME</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;supplied limits start_time: </span><span class="si">{</span><span class="n">start_time</span><span class="si">}</span><span class="s2"> end_time: </span><span class="si">{</span><span class="n">end_time</span><span class="si">}</span><span class="s2"> do not overlap with dataset TIME range </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">min</span><span class="p">())[:</span><span class="mi">10</span><span class="p">]</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">max</span><span class="p">())[:</span><span class="mi">10</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    
     <span class="n">sunrise</span><span class="p">,</span> <span class="n">sunset</span> <span class="o">=</span> <span class="n">sunset_sunrise</span><span class="p">(</span><span class="n">ds_sel</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">ds_sel</span><span class="o">.</span><span class="n">LATITUDE</span><span class="p">,</span> <span class="n">ds_sel</span><span class="o">.</span><span class="n">LONGITUDE</span><span class="p">)</span>
 
     <span class="n">c</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ds_sel</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">ds_sel</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">ds_sel</span><span class="p">[</span><span class="n">sel_var</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">ds_sel</span><span class="p">[</span><span class="n">sel_var</span><span class="p">],</span> <span class="mf">0.5</span><span class="p">),</span>
@@ -620,21 +695,25 @@
 <div class="viewcode-block" id="check_temporal_drift">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.check_temporal_drift">[docs]</a>
 <span class="k">def</span> <span class="nf">check_temporal_drift</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
 
-    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">mdates</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="p">),</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">))</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="mf">0.01</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="mf">99.99</span><span class="p">)),</span> <span class="n">ylabel</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> does not exist in the dataset. Make sure the spelling is correct or add this variable to your dataset&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">mdates</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="p">),</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">))</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="mf">0.01</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="mf">99.99</span><span class="p">)),</span> <span class="n">ylabel</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
 
-    <span class="n">c</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">mdates</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="p">),</span> <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="mf">0.01</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="mf">99.99</span><span class="p">)),</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Depth (m)&#39;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">mdates</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="p">),</span> <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="mf">0.01</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="mf">99.99</span><span class="p">)),</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Depth (m)&#39;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
 
-    <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ax</span><span class="p">]</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;%b </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">))</span>
+        <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ax</span><span class="p">]</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;%b </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
 
 
@@ -657,8 +736,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">da</span><span class="p">)</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is not always monotonically increasing&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is always monotonically increasing&#39;</span><span class="p">)</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is always monotonically increasing&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
 
 
@@ -679,6 +760,7 @@
 <span class="sd">    difference was neither 0 nor 1 (meaning there are possibly issues with how the profile index was assigned)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -700,6 +782,459 @@
     <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ax</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
 
+
+
+<div class="viewcode-block" id="plot_glider_track">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.plot_glider_track">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_glider_track</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function plots the glider track on a map, with latitude and longitude colored by time.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds: xarray in OG1 format with at least TIME, LATITUDE, and LONGITUDE.</span>
+<span class="sd">    ax: Optional; axis to plot the data.</span>
+<span class="sd">    kw: Optional; additional keyword arguments for the scatter plot.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    One plot with the map of the glider track.</span>
+<span class="sd">    fig: matplotlib.figure.Figure</span>
+<span class="sd">    ax: matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">subplot_kw</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;projection&#39;</span><span class="p">:</span> <span class="n">ccrs</span><span class="o">.</span><span class="n">PlateCarree</span><span class="p">()})</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+
+    <span class="n">latitudes</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">LATITUDE</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">longitudes</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">LONGITUDE</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="c1"># Reduce the number of latitudes, longitudes, and times to no more than 2000</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">latitudes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2000</span><span class="p">:</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">latitudes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">latitudes</span> <span class="o">=</span> <span class="n">latitudes</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="n">longitudes</span> <span class="o">=</span> <span class="n">longitudes</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+
+    <span class="c1"># Convert time to the desired format</span>
+    <span class="n">time_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">times</span><span class="p">]</span>
+    
+    <span class="c1"># Plot latitude and longitude colored by time</span>
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">longitudes</span><span class="p">,</span> <span class="n">latitudes</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">times</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    
+    <span class="c1"># Add colorbar with formatted time labels</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">sc</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span> <span class="c1">#, label=&#39;Time&#39;)</span>
+    <span class="n">cbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">cbar</span><span class="o">.</span><span class="n">get_ticks</span><span class="p">()])</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_extent</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">longitudes</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">longitudes</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">latitudes</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">latitudes</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="n">ccrs</span><span class="o">.</span><span class="n">PlateCarree</span><span class="p">())</span>
+
+    <span class="c1"># Add features to the map</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">cfeature</span><span class="o">.</span><span class="n">LAND</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">cfeature</span><span class="o">.</span><span class="n">OCEAN</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">cfeature</span><span class="o">.</span><span class="n">COASTLINE</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Longitude&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Latitude&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Glider Track&#39;</span><span class="p">)</span>
+    <span class="n">gl</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">gridlines</span><span class="p">(</span><span class="n">draw_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+    <span class="n">gl</span><span class="o">.</span><span class="n">top_labels</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">gl</span><span class="o">.</span><span class="n">right_labels</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+<div class="viewcode-block" id="plot_grid_spacing_histograms">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.plot_grid_spacing_histograms">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_grid_spacing_histograms</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function plots histograms of the grid spacing (diff(ds.DEPTH) and diff(ds.TIME)) where only the inner 99% of values are plotted.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds: xarray in OG1 format with at least TIME and DEPTH.</span>
+<span class="sd">    ax: Optional; axis to plot the data.</span>
+<span class="sd">    kw: Optional; additional keyword arguments for the histograms.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Two histograms showing the distribution of grid spacing for depth and time.</span>
+<span class="sd">    fig: matplotlib.figure.Figure</span>
+<span class="sd">    ax: matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+
+    <span class="n">depth_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">)</span>
+    <span class="n">orig_time_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">)</span>  <span class="c1"># Convert to seconds</span>
+
+    <span class="n">depth_diff</span> <span class="o">=</span> <span class="n">depth_diff</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">depth_diff</span><span class="p">)]</span>
+    <span class="n">time_diff</span> <span class="o">=</span> <span class="n">orig_time_diff</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">orig_time_diff</span><span class="p">)]</span>
+
+    <span class="n">depth_diff</span> <span class="o">=</span> <span class="n">depth_diff</span><span class="p">[(</span><span class="n">depth_diff</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">depth_diff</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">depth_diff</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">depth_diff</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">))]</span>
+    <span class="n">time_diff</span> <span class="o">=</span> <span class="n">time_diff</span><span class="p">[(</span><span class="n">time_diff</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">time_diff</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">time_diff</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">time_diff</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">))]</span>
+
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">depth_diff</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Depth Spacing (m)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Histogram of Depth Spacing&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+    <span class="n">median_neg_depth_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">depth_diff</span><span class="p">[</span><span class="n">depth_diff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">median_pos_depth_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">depth_diff</span><span class="p">[</span><span class="n">depth_diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">max_depth_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">depth_diff</span><span class="p">)</span>
+    <span class="n">min_depth_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">depth_diff</span><span class="p">)</span>
+
+    <span class="n">annotation_text_left</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;Median Negative: </span><span class="si">{</span><span class="n">median_neg_depth_diff</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> m</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="sa">f</span><span class="s1">&#39;Median Positive: </span><span class="si">{</span><span class="n">median_pos_depth_diff</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> m</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="sa">f</span><span class="s1">&#39;Max: </span><span class="si">{</span><span class="n">max_depth_diff</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> m</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="sa">f</span><span class="s1">&#39;Min: </span><span class="si">{</span><span class="n">min_depth_diff</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> m&#39;</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">annotation_text_left</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.96</span><span class="p">,</span> <span class="mf">0.96</span><span class="p">),</span> <span class="n">xycoords</span><span class="o">=</span><span class="s1">&#39;axes fraction&#39;</span><span class="p">,</span> 
+                   <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> 
+                   <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s1">&#39;round,pad=0.3&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">.5</span><span class="p">))</span>
+
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">time_diff</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time Spacing (s)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Histogram of Time Spacing&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+    <span class="n">median_time_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">orig_time_diff</span><span class="p">)</span>
+    <span class="n">mean_time_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">orig_time_diff</span><span class="p">)</span>
+    <span class="n">max_time_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">orig_time_diff</span><span class="p">)</span>
+    <span class="n">min_time_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">orig_time_diff</span><span class="p">)</span>
+    <span class="n">max_time_diff_hrs</span> <span class="o">=</span> <span class="n">max_time_diff</span><span class="o">/</span><span class="mi">3600</span>
+
+    <span class="n">annotation_text</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;Median: </span><span class="si">{</span><span class="n">median_time_diff</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> s</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="sa">f</span><span class="s1">&#39;Mean: </span><span class="si">{</span><span class="n">mean_time_diff</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> s</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="sa">f</span><span class="s1">&#39;Max: </span><span class="si">{</span><span class="n">max_time_diff</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> s (</span><span class="si">{</span><span class="n">max_time_diff_hrs</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> hr)</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="sa">f</span><span class="s1">&#39;Min: </span><span class="si">{</span><span class="n">min_time_diff</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> s&#39;</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">annotation_text</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.96</span><span class="p">,</span> <span class="mf">0.96</span><span class="p">),</span> <span class="n">xycoords</span><span class="o">=</span><span class="s1">&#39;axes fraction&#39;</span><span class="p">,</span> 
+                    <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> 
+                    <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s1">&#39;round,pad=0.3&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">.5</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+<div class="viewcode-block" id="plot_ts_histograms">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.plot_ts_histograms">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_ts_histograms</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function plots histograms of temperature and salinity values (middle 95%), and a 2D histogram of salinity and temperature with density contours.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds: xarray in OG1 format with at least TEMP and PSAL.</span>
+<span class="sd">    ax: Optional; axis to plot the data.</span>
+<span class="sd">    kw: Optional; additional keyword arguments for the histograms.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Three plots: histogram of temperature, histogram of salinity, and 2D histogram of salinity and temperature with density contours.</span>
+<span class="sd">    fig: matplotlib.figure.Figure</span>
+<span class="sd">    ax: matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_necessary_variables_check</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="s1">&#39;TEMP&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+
+    <span class="n">temp_orig</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TEMP</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">sal_orig</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">PSAL</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="c1"># Reduce both to where both are finite</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">temp_orig</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">temp_orig</span><span class="p">)</span><span class="o">&amp;</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sal_orig</span><span class="p">)]</span>
+    <span class="n">sal</span> <span class="o">=</span> <span class="n">sal_orig</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sal_orig</span><span class="p">)</span><span class="o">&amp;</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">temp_orig</span><span class="p">)]</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sal_orig</span><span class="p">)</span><span class="o">&amp;</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">temp_orig</span><span class="p">)]</span>
+    <span class="n">long</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">LONGITUDE</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sal_orig</span><span class="p">)</span><span class="o">&amp;</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">temp_orig</span><span class="p">)]</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">LATITUDE</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sal_orig</span><span class="p">)</span><span class="o">&amp;</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">temp_orig</span><span class="p">)]</span>
+
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">SA_from_SP</span><span class="p">(</span><span class="n">sal</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">long</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="n">CT</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">CT_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
+
+    <span class="c1"># Reduce to middle 95% of values</span>
+    <span class="n">temp_filtered</span> <span class="o">=</span> <span class="n">CT</span><span class="p">[(</span><span class="n">CT</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">CT</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">CT</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">CT</span><span class="p">,</span> <span class="mf">97.5</span><span class="p">))]</span>
+    <span class="n">sal_filtered</span> <span class="o">=</span> <span class="n">SA</span><span class="p">[(</span><span class="n">SA</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">SA</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="mf">97.5</span><span class="p">))]</span>
+
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">temp_filtered</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Conservative Temperature (°C)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Histogram of Temperature&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">sal_filtered</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Absolute Salinity ( )&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Histogram of Salinity&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+    <span class="n">h</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span><span class="n">sal</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">mcolors</span><span class="o">.</span><span class="n">LogNorm</span><span class="p">(),</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s1">&#39;Log Counts&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Absolute Salinity ( )&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Conservative Temperature (°C)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;2D Histogram of Salinity and Temperature (Log Scale)&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Calculate density and add contours</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">SA_from_SP</span><span class="p">(</span><span class="n">sal</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">long</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="n">CT</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">CT_from_t</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
+    <span class="n">sigma0</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">sigma0</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+
+    <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">sal</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">sal</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="n">yi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">temp</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="n">xi</span><span class="p">,</span> <span class="n">yi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
+    <span class="n">zi</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">sigma0</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">clabel</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="calc_DEPTH_Z">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calc_DEPTH_Z">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_DEPTH_Z</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the depth (Z position) of the glider using the gsw library to convert pressure to depth.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds (xarray.Dataset): The input dataset containing &#39;PRES&#39;, &#39;LATITUDE&#39;, and &#39;LONGITUDE&#39; variables.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xarray.Dataset: The dataset with an additional &#39;DEPTH_Z&#39; variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure the required variables are present</span>
+    <span class="k">if</span> <span class="s1">&#39;PRES&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span> <span class="ow">or</span> <span class="s1">&#39;LATITUDE&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span> <span class="ow">or</span> <span class="s1">&#39;LONGITUDE&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dataset must contain &#39;PRES&#39;, &#39;LATITUDE&#39;, and &#39;LONGITUDE&#39; variables.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Initialize the new variable with the same dimensions as dive_num</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DEPTH_Z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">dims</span><span class="p">[</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+
+    <span class="c1"># Calculate depth using gsw</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">z_from_p</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;PRES&#39;</span><span class="p">],</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">])</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DEPTH_Z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">depth</span>
+
+    <span class="c1"># Assign the calculated depth to a new variable in the dataset</span>
+    <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DEPTH_Z&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;meters&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;positive&quot;</span><span class="p">:</span> <span class="s2">&quot;up&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;standard_name&quot;</span><span class="p">:</span> <span class="s2">&quot;depth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;Depth calculated from pressure using gsw library, positive up.&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">ds</span></div>
+
+
+<div class="viewcode-block" id="calc_glider_w_from_depth">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calc_glider_w_from_depth">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_glider_w_from_depth</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the vertical velocity of a glider using changes in pressure with time.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds (xarray.Dataset): Dataset containing &#39;DEPTH&#39; and &#39;TIME&#39;.</span>
+<span class="sd">    - DEPTH (array-like): Array of depth measurements</span>
+<span class="sd">    - TIME (array-like): Array of time stamps</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ds (xarray.Dataset): Containing the new variable</span>
+<span class="sd">    - GLIDER_VERT_VELO_DZDT (array-like): with vertical velocities calculated from dz/dt</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure inputs are numpy arrays</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="s1">&#39;DEPTH_Z&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">var</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;PRES&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">]):</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">calc_DEPTH_Z</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH_Z</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="c1"># Calculate the centered differences in pressure and time, i.e. instead of using neighboring points, </span>
+    <span class="c1"># use the points two steps away.  This has a couple of advantages: one being a slight smoothing of the</span>
+    <span class="c1"># differences, and the other that the calculated speed will be the speed at the midpoint of the two </span>
+    <span class="c1"># points.</span>
+    <span class="c1"># For data which are evenly spaced in time, this will be equivalent to a centered difference.</span>
+    <span class="c1"># For data which are not evenly spaced in time, i.e. when a Seaglider sample rate changes from 5 </span>
+    <span class="c1"># seconds to 10 seconds, there may be some uneven weighting of the differences.</span>
+    <span class="n">delta_z_meters</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">depth</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> 
+    <span class="n">delta_time_datetime64ns</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">time</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> 
+    <span class="n">delta_time_sec</span> <span class="o">=</span> <span class="n">delta_time_datetime64ns</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">)</span>  <span class="c1"># Convert to seconds</span>
+
+    <span class="c1"># Calculate vertical velocity (rate of change of pressure with time)</span>
+    <span class="n">vertical_velocity</span> <span class="o">=</span> <span class="n">delta_z_meters</span> <span class="o">/</span> <span class="n">delta_time_sec</span>
+
+    <span class="c1"># Pad the result to match the original array length</span>
+    <span class="n">vertical_velocity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">vertical_velocity</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;edge&#39;</span><span class="p">)</span> 
+
+    <span class="c1"># No - Convert vertical velocity from m/s to cm/s</span>
+    <span class="n">vertical_velocity</span> <span class="o">=</span> <span class="n">vertical_velocity</span> 
+
+    <span class="c1"># Add vertical velocity to the dataset</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">GLIDER_VERT_VELO_DZDT</span><span class="o">=</span><span class="p">((</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">),</span> <span class="n">vertical_velocity</span><span class="p">,</span>  <span class="p">{</span><span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;glider_vertical_speed_from_pressure&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;m s-1&#39;</span><span class="p">}))</span>
+
+    <span class="k">return</span> <span class="n">ds</span></div>
+
+
+<div class="viewcode-block" id="calc_seawater_w">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calc_seawater_w">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_seawater_w</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the vertical seawater velocity and add it to the dataset.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds (xarray.Dataset): Dataset containing &#39;VERT_GLIDER_SPEED&#39; and &#39;VERT_SPEED_DZDT&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ds (xarray.Dataset): Dataset with the new variable &#39;VERT_SW_SPEED&#39;, which is the inferred vertical seawater velocity.</span>
+
+<span class="sd">    Eleanor&#39;s note: This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check if &#39;VERT_GLIDER_SPEED&#39; is in the dataset</span>
+    <span class="k">if</span> <span class="s1">&#39;GLIDER_VERT_VELO_MODEL&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: &#39;GLIDER_VERT_VELO_MODEL&#39; is not in the dataset.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ds</span>
+
+    <span class="c1"># Calculate the vertical seawater velocity</span>
+    <span class="n">vert_sw_speed</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;GLIDER_VERT_VELO_DZDT&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;GLIDER_VERT_VELO_MODEL&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> 
+
+    <span class="c1"># Add vertical seawater velocity to the dataset as a data variable</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">VERT_CURR_MODEL</span><span class="o">=</span><span class="p">((</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">),</span> <span class="n">vert_sw_speed</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;vertical_current_of_seawater_derived_from_glider_flight_model&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;m s-1&#39;</span><span class="p">}))</span>
+    <span class="k">return</span> <span class="n">ds</span></div>
+
+
+
+<div class="viewcode-block" id="plot_vertical_speeds_with_histograms">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.plot_vertical_speeds_with_histograms">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_vertical_speeds_with_histograms</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot vertical speeds with histograms for diagnostic purposes.</span>
+<span class="sd">    This function generates a diagnostic plot for the calculation of vertical seawater velocity.</span>
+<span class="sd">    It plots the modelled and computed (from dz/dt) vertical velocities as line plots, where these</span>
+<span class="sd">    should be similar. The difference between these velocities is the implied seawater velocity,</span>
+<span class="sd">    which should be closer to zero than the vehicle velocities. The histogram provides a visual</span>
+<span class="sd">    representation to identify any biases. The final calculation of the median should be close to</span>
+<span class="sd">    zero if a large enough sample of dives is input and if the glider flight model is well-tuned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds (xarray.Dataset): The dataset containing the vertical speed data where</span>
+<span class="sd">    - VERT_GLIDER_SPEED is the modelled glider speed</span>
+<span class="sd">    - VERT_SPEED_DZDT is the computed glider speed from the pressure sensor</span>
+<span class="sd">    - VERT_SW_SPEED is the implied seawater velocity.</span>
+<span class="sd">    start_prof (int, optional): The starting profile number for subsetting the dataset. Defaults to first profile number.</span>
+<span class="sd">    end_prof (int, optional): The ending profile number for subsetting the dataset. Defaults to last profile number.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig, axs (tuple): The figure and axes objects for the plot.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GLIDER_VERT_VELO_MODEL&#39;</span><span class="p">,</span> <span class="s1">&#39;GLIDER_VERT_VELO_DZDT&#39;</span><span class="p">,</span> <span class="s1">&#39;VERT_CURR_MODEL&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">required_vars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset must contain &#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">&#39; to create this plot.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">start_prof</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">end_prof</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Subset the dataset for the given profile range</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">start_prof</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">end_prof</span><span class="p">),</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">start_prof</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">start_prof</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">end_prof</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">end_prof</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> 
+
+    <span class="n">vert_curr</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">VERT_CURR_MODEL</span><span class="o">.</span><span class="n">values</span> <span class="o">*</span> <span class="mi">100</span>  <span class="c1"># Convert to cm/s</span>
+    <span class="n">vert_dzdt</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GLIDER_VERT_VELO_DZDT</span><span class="o">.</span><span class="n">values</span> <span class="o">*</span> <span class="mi">100</span>  <span class="c1"># Convert to cm/s</span>
+    <span class="n">vert_model</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GLIDER_VERT_VELO_MODEL</span><span class="o">.</span><span class="n">values</span> <span class="o">*</span> <span class="mi">100</span>  <span class="c1"># Convert to cm/s</span>
+
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">gridspec_kw</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;width_ratios&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]})</span>
+
+    <span class="c1"># Upper left subplot for vertical velocity and glider speed</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">],</span> <span class="n">vert_dzdt</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Vertical Velocity (from dz/dt)&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Vertical Velocity (cm/s)&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower left&#39;</span><span class="p">)</span>
+
+    <span class="n">ax1_twin</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+    <span class="n">ax1_twin</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">],</span> <span class="n">vert_model</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Vertical Glider Speed (model)&#39;</span><span class="p">)</span>
+    <span class="n">ax1_twin</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower left&#39;</span><span class="p">)</span>
+
+    <span class="n">ax1_twin</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">],</span> <span class="n">vert_curr</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Vertical Water Speed (calculated)&#39;</span><span class="p">)</span>
+    <span class="n">ax1_twin</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+    <span class="c1"># Remove y-axis labels on the right</span>
+    <span class="n">ax1_twin</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([])</span>
+
+    <span class="c1"># Upper right subplot for histogram of vertical velocity</span>
+    <span class="n">ax1_hist</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">ax1_hist</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">vert_dzdt</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Vertical Velocity (from dz/dt)&#39;</span><span class="p">)</span>
+    <span class="n">ax1_hist</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">vert_model</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Vertical Glider Speed (model)&#39;</span><span class="p">)</span>
+    <span class="n">ax1_hist</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">vert_curr</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Vertical Water Speed (calculated)&#39;</span><span class="p">)</span>
+    <span class="n">ax1_hist</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Determine the best location for the legend based on the y-axis limits and zero</span>
+    <span class="n">y_upper_limit</span> <span class="o">=</span> <span class="n">ax1_hist</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">y_lower_limit</span> <span class="o">=</span> <span class="n">ax1_hist</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_upper_limit</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_lower_limit</span><span class="p">):</span>
+        <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;upper right&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;lower right&#39;</span>
+
+    <span class="n">ax1_hist</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">legend_loc</span><span class="p">)</span>
+
+    <span class="c1"># Lower left subplot for vertical water speed</span>
+    <span class="n">ax2</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkgray&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>  <span class="c1"># Add zero horizontal line</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">],</span> <span class="n">vert_curr</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Vertical Water Speed&#39;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time&#39;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Vertical Water Speed (cm/s)&#39;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Lower right subplot for histogram of vertical water speed</span>
+    <span class="n">ax2_hist</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">ax2_hist</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">vert_curr</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Vertical Water Speed (calculated)&#39;</span><span class="p">)</span>
+    <span class="n">ax2_hist</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Calculate and plot the median line</span>
+    <span class="n">median_vert_sw_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">vert_curr</span><span class="p">)</span>
+    <span class="n">ax2_hist</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">median_vert_sw_speed</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Median: </span><span class="si">{</span><span class="n">median_vert_sw_speed</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> cm/s&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Determine the best location for the legend based on the y-axis limits and median</span>
+    <span class="n">y_upper_limit</span> <span class="o">=</span> <span class="n">ax2_hist</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">y_lower_limit</span> <span class="o">=</span> <span class="n">ax2_hist</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">median_vert_sw_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">vert_curr</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_upper_limit</span> <span class="o">-</span> <span class="n">median_vert_sw_speed</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_lower_limit</span> <span class="o">-</span> <span class="n">median_vert_sw_speed</span><span class="p">):</span>
+        <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;upper right&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;lower right&#39;</span>
+
+    <span class="n">ax2_hist</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">legend_loc</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span></div>
+
 </pre></div>
 
            </div>
@@ -709,7 +1244,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Callum Rollo.</p>
+    <p>&#169; Copyright 2024, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
