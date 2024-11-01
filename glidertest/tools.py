@@ -782,8 +782,8 @@ def plot_ts_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple
     CT = gsw.CT_from_t(SA, temp, depth)
 
     # Reduce to middle 95% of values
-    temp_filtered = CT[(CT >= np.nanpercentile(temp, 2.5)) & (CT <= np.nanpercentile(CT, 97.5))]
-    sal_filtered = SA[(SA >= np.nanpercentile(sal, 2.5)) & (SA <= np.nanpercentile(sal, 97.5))]
+    temp_filtered = CT[(CT >= np.nanpercentile(CT, 2.5)) & (CT <= np.nanpercentile(CT, 97.5))]
+    sal_filtered = SA[(SA >= np.nanpercentile(SA, 2.5)) & (SA <= np.nanpercentile(SA, 97.5))]
 
     ax[0].hist(temp_filtered, bins=50, **kw)
     ax[0].set_xlabel('Conservative Temperature (°C)')
@@ -887,7 +887,7 @@ def calc_seawater_w(ds):
     vert_sw_speed = ds['GLIDER_VERT_VELO_DZDT'].values - ds['GLIDER_VERT_VELO_MODEL'].values 
 
     # Add vertical seawater velocity to the dataset as a data variable
-    ds = ds.assign(VERT_CURR=(('N_MEASUREMENTS'), vert_sw_speed), {'long_name': 'vertical_currents_from_glider_flight_model', 'units': 'm s-1'})
+    ds = ds.assign(VERT_CURR=(('N_MEASUREMENTS'), vert_sw_speed, {'long_name': 'vertical_currents_from_glider_flight_model', 'units': 'm s-1'}))
     return ds
 
 
