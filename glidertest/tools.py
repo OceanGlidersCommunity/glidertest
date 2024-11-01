@@ -1,5 +1,6 @@
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import datetime
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -84,14 +85,19 @@ def updown_bias(ds, var='PSAL', v_res=1):
     _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', var])
     p = 1  # Horizontal resolution
     z = v_res  # Vertical resolution
-    varG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
+    if var in ds.variables:
+        varG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
 
-    grad = np.diff(varG, axis=0)  # Horizontal gradients
+        grad = np.diff(varG, axis=0)  # Horizontal gradients
 
-    dc = np.nanmean(grad[0::2, :], axis=0)  # Dive - CLimb
-    cd = np.nanmean(grad[1::2, :], axis=0)  # Climb - Dive
+        dc = np.nanmean(grad[0::2, :], axis=0)  # Dive - CLimb
+        cd = np.nanmean(grad[1::2, :], axis=0)  # Climb - Dive
 
-    df = pd.DataFrame(data={'dc': dc, 'cd': cd, 'depth': depthG[0, :]})
+        df = pd.DataFrame(data={'dc': dc, 'cd': cd, 'depth': depthG[0, :]})
+    else:
+        print(f'{var} is not in the dataset')
+        df = pd.DataFrame()
+
     return df
 
 
@@ -114,13 +120,17 @@ def plot_updown_bias(df: pd.DataFrame, ax: plt.Axes = None, xlabel='Temperature 
     else:
         fig = plt.gcf()
 
-    ax.plot(df.dc, df.depth, label='Dive-Climb')
-    ax.plot(df.cd, df.depth, label='Climb-Dive')
-    ax.legend(loc=3)
-    lims = np.abs(df.dc)
-    ax.set_xlim(-np.nanpercentile(lims, 99.5), np.nanpercentile(lims, 99.5))
+    if not all(hasattr(df, attr) for attr in ['dc', 'depth']):
+        ax.text(0.5, 0.55, xlabel, va='center', ha='center', transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5, edgecolor='none'))
+        ax.text(0.5, 0.45, 'data unavailable', va='center', ha='center', transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5, edgecolor='none'))
+    else:
+        ax.plot(df.dc, df.depth, label='Dive-Climb')
+        ax.plot(df.cd, df.depth, label='Climb-Dive')
+        ax.legend(loc=3)
+        lims = np.abs(df.dc)
+        ax.set_xlim(-np.nanpercentile(lims, 99.5), np.nanpercentile(lims, 99.5))
+        ax.set_ylim(df.depth.max() + 1, -df.depth.max() / 30)
     ax.set_xlabel(xlabel)
-    ax.set_ylim(df.depth.max() + 10, -df.depth.max() / 30)
     ax.grid()
     return fig, ax
 
@@ -158,6 +168,13 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     z = v_res
     tempG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.TEMP, p, z)
     salG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.PSAL, p, z)
+
+    if 'DENSITY' not in ds.variables:
+        ds['DENSITY'] = (('N_MEASUREMENTS'), np.full(ds.dims['N_MEASUREMENTS'], np.nan))
+        SA = gsw.SA_from_SP(ds.PSAL, ds.DEPTH, ds.LONGITUDE, ds.LATITUDE)
+        CT = gsw.CT_from_t(SA, ds.TEMP, ds.DEPTH)
+        ds['DENSITY'] = gsw.rho(SA, CT, ds.DEPTH)
+
     denG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DENSITY, p, z)
 
     tempG = tempG[start_prof:end_prof, :]
@@ -399,9 +416,9 @@ def sunset_sunrise(time, lat, lon):
     return sunrise, sunset
 
 
-def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04-20'):
+def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof=None, end_prof=None):
     """
-    This function computes night and day averages for a selected variable over a specific period of time
+    This function computes night and day averages for a selected variable over a specific period of time or a specific series of dives
     Data in divided into day and night using the sunset and sunrise time as described in the above function sunset_sunrise from GliderTools
     Parameters
     ----------
@@ -409,9 +426,13 @@ def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04
         Data should not be gridded.
     sel_var: variable to use to compute the day night averages
     start_time: Start date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,
-                we recommend end selecting small section of few days to few weeks.
+                we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
     end_time: End date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,
-                we recommend selecting small section of few days to few weeks.
+                we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
+    start_prof: Start profile of the data selection. If no profile is specified, the specified time selction will be used or the the central week of the deployment.
+                It is important to have a large enough number of dives to have some day and night data otherwise the function will not run
+    end_prof:  End profile of the data selection. If no profile is specified, the specified time selction will be used or the the central week of the deployment.
+            It is important to have a large enough number of dives to have some day and night data otherwise the function will not run
                 
     Returns
     -------
@@ -430,11 +451,20 @@ def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04
 
     """
     _necessary_variables_check(ds, ['TIME', sel_var, 'DEPTH'])
-    if "TIME" in ds.indexes.keys():
-        pass
-    else:
+    if "TIME" not in ds.indexes.keys():
         ds = ds.set_xindex('TIME')
-    ds_sel = ds.sel(TIME=slice(start_time, end_time))
+
+    if not start_time:
+        start_time = ds.TIME.mean() - np.timedelta64(3, 'D')
+    if not end_time:
+        end_time = ds.TIME.mean() + np.timedelta64(3, 'D')
+
+    if start_prof and end_prof:
+        t1 = ds.TIME.where(ds.PROFILE_NUMBER==start_prof).dropna(dim='N_MEASUREMENTS')[0]
+        t2 = ds.TIME.where(ds.PROFILE_NUMBER==end_prof).dropna(dim='N_MEASUREMENTS')[-1]
+        ds_sel = ds.sel(TIME=slice(t1,t2))
+    else:
+        ds_sel = ds.sel(TIME=slice(start_time, end_time))
     sunrise, sunset = sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
 
     # creating batches where one batch is a night and the following day
@@ -459,7 +489,7 @@ def day_night_avg(ds, sel_var='CHLA', start_time='2024-04-18', end_time='2024-04
     return day_av, night_av
 
 
-def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = None, sel_day='2023-09-09',
+def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = None, sel_day=None,
                       xlabel='Chlorophyll [mg m-3]', **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
     """
     This function can be used to plot the day and night averages computed with the day_night_avg function
@@ -469,7 +499,7 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
     day: pandas dataframe containing the day averages
     night: pandas dataframe containing the night averages
     ax: axis to plot the data
-    sel_day: selected day to plot
+    sel_day: selected day to plot. Defaults to the median day
     xlabel: label for the x-axis
     
     Returns
@@ -477,6 +507,10 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
     A line plot comparing the day and night average over depth for the selected day
 
     """
+    if not sel_day:
+        dates = list(day.date.dropna().values) + list(night.date.dropna().values)
+        dates.sort()
+        sel_day = dates[int(len(dates)/2)]
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 5))
     else:
@@ -493,8 +527,8 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
     return fig, ax
 
 
-def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_time='2023-09-06',
-                           end_time='2023-09-10', ylim=45, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
+def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_time=None,
+                           end_time=None,start_prof=None, end_prof=None, ylim=45, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
     """
     This function can be used to plot sections for any variable with the sunrise and sunset plotted over
     
@@ -504,8 +538,10 @@ def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, st
         Data should not be gridded.
     sel_var: selected variable to plot
     ax: axis to plot the data
-    start_time: Start date of the data selection. As missions can be long and came make it hard to visualise NPQ effect,
-    end_time: End date of the data selection. As missions can be long and came make it hard to visualise NPQ effect,
+    start_time: Start date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days
+    end_time: End date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days
+    start_prof: Start profile of the data selection. If no profile is specified, the specified time selction will be used or the mid 4 days of the deployment
+    end_prof:  End profile of the data selection. If no profile is specified, the specified time selction will be used or the mid 4 days of the deployment
     ylim: specified limit for the maximum y-axis value. The minimum is computed as ylim/30
     
     Returns
@@ -520,7 +556,23 @@ def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, st
 
     if "TIME" not in ds.indexes.keys():
         ds = ds.set_xindex('TIME')
-    ds_sel = ds.sel(TIME=slice(start_time, end_time))
+    
+    if not start_time:
+        start_time = ds.TIME.mean() - np.timedelta64(2, 'D')
+    if not end_time:
+        end_time = ds.TIME.mean() + np.timedelta64(2, 'D')
+    
+    if start_prof and end_prof:
+        t1 = ds.TIME.where(ds.PROFILE_NUMBER==start_prof).dropna(dim='N_MEASUREMENTS')[0]
+        t2 = ds.TIME.where(ds.PROFILE_NUMBER==end_prof).dropna(dim='N_MEASUREMENTS')[-1]
+        ds_sel = ds.sel(TIME=slice(t1,t2))
+    else:
+        ds_sel = ds.sel(TIME=slice(start_time, end_time))
+    
+    if len(ds_sel.TIME) == 0:
+        msg = f"supplied limits start_time: {start_time} end_time: {end_time} do not overlap with dataset TIME range {str(ds.TIME.values.min())[:10]} - {str(ds.TIME.values.max())[:10]}"
+        raise ValueError(msg)
+    
     sunrise, sunset = sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
 
     c = ax.scatter(ds_sel.TIME, ds_sel.DEPTH, c=ds_sel[sel_var], s=10, vmin=np.nanpercentile(ds_sel[sel_var], 0.5),
@@ -542,16 +594,19 @@ def check_temporal_drift(ds: xr.Dataset, var: str, ax: plt.Axes = None, **kw: di
     else:
         fig = plt.gcf()
 
-    ax[0].scatter(mdates.date2num(ds.TIME), ds[var], s=10)
-    ax[0].xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
-    ax[0].set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
+    if var not in ds.variables:
+        print(f'{var} does not exist in the dataset. Make sure the spelling is correct or add this variable to your dataset')
+    else:
+        ax[0].scatter(mdates.date2num(ds.TIME), ds[var], s=10)
+        ax[0].xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
+        ax[0].set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
 
-    c = ax[1].scatter(ds[var], ds.DEPTH, c=mdates.date2num(ds.TIME), s=10)
-    ax[1].set(xlim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel='Depth (m)', xlabel=var)
-    ax[1].invert_yaxis()
+        c = ax[1].scatter(ds[var], ds.DEPTH, c=mdates.date2num(ds.TIME), s=10)
+        ax[1].set(xlim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel='Depth (m)', xlabel=var)
+        ax[1].invert_yaxis()
 
-    [a.grid() for a in ax]
-    plt.colorbar(c, format=DateFormatter('%b %d'))
+        [a.grid() for a in ax]
+        plt.colorbar(c, format=DateFormatter('%b %d'))
     return fig, ax
 
 
@@ -571,8 +626,10 @@ def check_monotony(da):
     """
     if not pd.Series(da).is_monotonic_increasing:
         print(f'{da.name} is not always monotonically increasing')
+        return False
     else:
         print(f'{da.name} is always monotonically increasing')
+        return True
 
 
 def plot_profIncrease(ds: xr.DataArray, ax: plt.Axes = None, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
@@ -786,8 +843,8 @@ def plot_ts_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple
     CT = gsw.CT_from_t(SA, temp, depth)
 
     # Reduce to middle 95% of values
-    temp_filtered = CT[(CT >= np.nanpercentile(temp, 2.5)) & (CT <= np.nanpercentile(CT, 97.5))]
-    sal_filtered = SA[(SA >= np.nanpercentile(sal, 2.5)) & (SA <= np.nanpercentile(sal, 97.5))]
+    temp_filtered = CT[(CT >= np.nanpercentile(CT, 2.5)) & (CT <= np.nanpercentile(CT, 97.5))]
+    sal_filtered = SA[(SA >= np.nanpercentile(SA, 2.5)) & (SA <= np.nanpercentile(SA, 97.5))]
 
     ax[0].hist(temp_filtered, bins=50, **kw)
     ax[0].set_xlabel('Conservative Temperature (°C)')
@@ -822,3 +879,224 @@ def plot_ts_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple
     ax[2].clabel(ax[2].contour(xi, yi, zi, colors='black', alpha=0.5, linewidths=0.5), inline=True, fontsize=10)
 
     return fig, ax
+
+
+def calc_DEPTH_Z(ds):
+    """
+    Calculate the depth (Z position) of the glider using the gsw library to convert pressure to depth.
+    
+    Parameters
+    ----------
+    ds (xarray.Dataset): The input dataset containing 'PRES', 'LATITUDE', and 'LONGITUDE' variables.
+    
+    Returns
+    -------
+    xarray.Dataset: The dataset with an additional 'DEPTH_Z' variable.
+    """
+    # Ensure the required variables are present
+    if 'PRES' not in ds.variables or 'LATITUDE' not in ds.variables or 'LONGITUDE' not in ds.variables:
+        raise ValueError("Dataset must contain 'PRES', 'LATITUDE', and 'LONGITUDE' variables.")
+
+    # Initialize the new variable with the same dimensions as dive_num
+    ds['DEPTH_Z'] = (['N_MEASUREMENTS'], np.full(ds.dims['N_MEASUREMENTS'], np.nan))
+
+    # Calculate depth using gsw
+    depth = gsw.z_from_p(ds['PRES'], ds['LATITUDE'])
+    ds['DEPTH_Z'] = depth
+
+    # Assign the calculated depth to a new variable in the dataset
+    ds['DEPTH_Z'].attrs = {
+        "units": "meters",
+        "positive": "up",
+        "standard_name": "depth",
+        "comment": "Depth calculated from pressure using gsw library, positive up.",
+    }
+    
+    return ds
+
+def calc_glider_w_from_depth(ds):
+    """
+    Calculate the vertical velocity of a glider using changes in pressure with time.
+
+    Parameters
+    ----------
+    ds (xarray.Dataset): Dataset containing 'DEPTH' and 'TIME'.
+    - DEPTH (array-like): Array of depth measurements
+    - TIME (array-like): Array of time stamps
+    
+    Returns
+    -------
+    ds (xarray.Dataset): Containing the new variable
+    - GLIDER_VERT_VELO_DZDT (array-like): with vertical velocities calculated from dz/dt
+    """
+    # Ensure inputs are numpy arrays
+    time = ds.TIME.values
+    if 'DEPTH_Z' not in ds.variables and all(var in ds.variables for var in ['PRES', 'LATITUDE', 'LONGITUDE']):
+        ds = calc_DEPTH_Z(ds)
+    depth = ds.DEPTH_Z.values
+
+    # Calculate the centered differences in pressure and time, i.e. instead of using neighboring points, 
+    # use the points two steps away.  This has a couple of advantages: one being a slight smoothing of the
+    # differences, and the other that the calculated speed will be the speed at the midpoint of the two 
+    # points.
+    # For data which are evenly spaced in time, this will be equivalent to a centered difference.
+    # For data which are not evenly spaced in time, i.e. when a Seaglider sample rate changes from 5 
+    # seconds to 10 seconds, there may be some uneven weighting of the differences.
+    delta_z_meters = (depth[2:] - depth[:-2]) 
+    delta_time_datetime64ns = (time[2:] - time[:-2]) 
+    delta_time_sec = delta_time_datetime64ns / np.timedelta64(1, 's')  # Convert to seconds
+
+    # Calculate vertical velocity (rate of change of pressure with time)
+    vertical_velocity = delta_z_meters / delta_time_sec
+
+    # Pad the result to match the original array length
+    vertical_velocity = np.pad(vertical_velocity, (1, 1), 'edge') 
+
+    # No - Convert vertical velocity from m/s to cm/s
+    vertical_velocity = vertical_velocity 
+
+    # Add vertical velocity to the dataset
+    ds = ds.assign(GLIDER_VERT_VELO_DZDT=(('N_MEASUREMENTS'), vertical_velocity,  {'long_name': 'glider_vertical_speed_from_pressure', 'units': 'm s-1'}))
+
+    return ds
+
+def calc_seawater_w(ds):
+    """
+    Calculate the vertical seawater velocity and add it to the dataset.
+
+    Parameters
+    ----------
+    ds (xarray.Dataset): Dataset containing 'VERT_GLIDER_SPEED' and 'VERT_SPEED_DZDT'.
+
+    Returns
+    -------
+    ds (xarray.Dataset): Dataset with the new variable 'VERT_SW_SPEED', which is the inferred vertical seawater velocity.
+
+    Eleanor's note: This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. 
+    """
+    # Check if 'VERT_GLIDER_SPEED' is in the dataset
+    if 'GLIDER_VERT_VELO_MODEL' not in ds:
+        print("Error: 'GLIDER_VERT_VELO_MODEL' is not in the dataset.")
+        return ds
+
+    # Calculate the vertical seawater velocity
+    vert_sw_speed = ds['GLIDER_VERT_VELO_DZDT'].values - ds['GLIDER_VERT_VELO_MODEL'].values 
+
+    # Add vertical seawater velocity to the dataset as a data variable
+    ds = ds.assign(VERT_CURR_MODEL=(('N_MEASUREMENTS'), vert_sw_speed, {'long_name': 'vertical_current_of_seawater_derived_from_glider_flight_model', 'units': 'm s-1'}))
+    return ds
+
+
+def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
+    """
+    Plot vertical speeds with histograms for diagnostic purposes.
+    This function generates a diagnostic plot for the calculation of vertical seawater velocity.
+    It plots the modelled and computed (from dz/dt) vertical velocities as line plots, where these
+    should be similar. The difference between these velocities is the implied seawater velocity,
+    which should be closer to zero than the vehicle velocities. The histogram provides a visual
+    representation to identify any biases. The final calculation of the median should be close to
+    zero if a large enough sample of dives is input and if the glider flight model is well-tuned.
+
+    Parameters
+    ----------
+    ds (xarray.Dataset): The dataset containing the vertical speed data where
+    - VERT_GLIDER_SPEED is the modelled glider speed
+    - VERT_SPEED_DZDT is the computed glider speed from the pressure sensor
+    - VERT_SW_SPEED is the implied seawater velocity.
+    start_prof (int, optional): The starting profile number for subsetting the dataset. Defaults to first profile number.
+    end_prof (int, optional): The ending profile number for subsetting the dataset. Defaults to last profile number.
+
+    Returns
+    -------
+    fig, axs (tuple): The figure and axes objects for the plot.
+    """
+    required_vars = ['GLIDER_VERT_VELO_MODEL', 'GLIDER_VERT_VELO_DZDT', 'VERT_CURR_MODEL']
+    for var in required_vars:
+        if var not in ds:
+            print(f"Dataset must contain '{var}' to create this plot.")
+            return
+
+    if start_prof is not None and end_prof is not None:
+        # Subset the dataset for the given profile range
+        ds = ds.where((ds['PROFILE_NUMBER'] >= start_prof) & (ds['PROFILE_NUMBER'] <= end_prof), drop=True)
+
+    if start_prof is None:
+        start_prof = ds['PROFILE_NUMBER'].values.min()
+    
+    if end_prof is None:
+        end_prof = ds['PROFILE_NUMBER'].values.max() 
+
+    vert_curr = ds.VERT_CURR_MODEL.values * 100  # Convert to cm/s
+    vert_dzdt = ds.GLIDER_VERT_VELO_DZDT.values * 100  # Convert to cm/s
+    vert_model = ds.GLIDER_VERT_VELO_MODEL.values * 100  # Convert to cm/s
+
+
+    fig, axs = plt.subplots(2, 2, figsize=(14, 12), gridspec_kw={'width_ratios': [3, 1]})
+
+    # Upper left subplot for vertical velocity and glider speed
+    ax1 = axs[0, 0]
+    ax1.plot(ds['TIME'], vert_dzdt, label='Vertical Velocity (from dz/dt)')
+    ax1.set_xlabel('Time')
+    ax1.set_ylabel('Vertical Velocity (cm/s)')
+    ax1.legend(loc='lower left')
+
+    ax1_twin = ax1.twinx()
+    ax1_twin.plot(ds['TIME'], vert_model, color='r', label='Vertical Glider Speed (model)')
+    ax1_twin.legend(loc='lower left')
+
+    ax1_twin.plot(ds['TIME'], vert_curr, color='g', label='Vertical Water Speed (calculated)')
+    ax1_twin.legend(loc='lower right')
+    # Remove y-axis labels on the right
+    ax1_twin.set_yticklabels([])
+
+    # Upper right subplot for histogram of vertical velocity
+    ax1_hist = axs[0, 1]
+    ax1_hist.hist(vert_dzdt, bins=50, orientation='horizontal', alpha=0.5, color='blue', label='Vertical Velocity (from dz/dt)')
+    ax1_hist.hist(vert_model, bins=50, orientation='horizontal', alpha=0.5, color='red', label='Vertical Glider Speed (model)')
+    ax1_hist.hist(vert_curr, bins=50, orientation='horizontal', alpha=0.5, color='green', label='Vertical Water Speed (calculated)')
+    ax1_hist.set_xlabel('Frequency')
+
+    # Determine the best location for the legend based on the y-axis limits and zero
+    y_upper_limit = ax1_hist.get_ylim()[1]
+    y_lower_limit = ax1_hist.get_ylim()[0]
+
+    if abs(y_upper_limit) > abs(y_lower_limit):
+        legend_loc = 'upper right'
+    else:
+        legend_loc = 'lower right'
+
+    ax1_hist.legend(loc=legend_loc)
+
+    # Lower left subplot for vertical water speed
+    ax2 = axs[1, 0]
+    ax2.axhline(0, color='darkgray', linestyle='-', linewidth=0.5)  # Add zero horizontal line
+    ax2.plot(ds['TIME'], vert_curr, 'g', label='Vertical Water Speed')
+    ax2.set_xlabel('Time')
+    ax2.set_ylabel('Vertical Water Speed (cm/s)')
+    ax2.legend(loc='upper left')
+
+    # Lower right subplot for histogram of vertical water speed
+    ax2_hist = axs[1, 1]
+    ax2_hist.hist(vert_curr, bins=50, orientation='horizontal', alpha=0.5, color='green', label='Vertical Water Speed (calculated)')
+    ax2_hist.set_xlabel('Frequency')
+
+    # Calculate and plot the median line
+    median_vert_sw_speed = np.nanmedian(vert_curr)
+    ax2_hist.axhline(median_vert_sw_speed, color='red', linestyle='dashed', linewidth=1, label=f'Median: {median_vert_sw_speed:.2f} cm/s')
+
+    # Determine the best location for the legend based on the y-axis limits and median
+    y_upper_limit = ax2_hist.get_ylim()[1]
+    y_lower_limit = ax2_hist.get_ylim()[0]
+    median_vert_sw_speed = np.nanmedian(vert_curr)
+
+    if abs(y_upper_limit - median_vert_sw_speed) > abs(y_lower_limit - median_vert_sw_speed):
+        legend_loc = 'upper right'
+    else:
+        legend_loc = 'lower right'
+
+    ax2_hist.legend(loc=legend_loc)
+
+    plt.tight_layout()
+    plt.show()
+
+    return fig, axs

@@ -5,6 +5,14 @@ authors:
   given-names: Callum
   orcid: https://orcid.org/0000-0002-5134-7886
   affiliation: Voice of the Ocean Foundation. Skeppet Ärans väg 19, 426 71 Västra Frölunda, Sweden
+- family-names: Frajka-Williams
+  given-names: Eleanor
+  orcid: https://orcid.org/0000-0001-8773-7838
+  affiliation: Institute of Oceanography, University of Hamburg, Bundesstraße 53, 20146 Hamburg, Germany
+- family-names: Monforte
+  given-names: Chiara
+  orcid: https://orcid.org/0009-0003-5019-3410
+  affiliation: Institute of Oceanography, University of Hamburg, Bundesstraße 53, 20146 Hamburg, Germany
 title: glidertest
 version: 0.0.1
 date-released: 2024-10-28
