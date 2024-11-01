@@ -1,17 +1,6 @@
-netcdf4
-pooch
-sgp4>=2.14
-xarray
-numpy
-matplotlib
-pandas
-scipy
-skyfield
-jupyterlab
+-r requirements.txt
 pytest
 nbsphinx
 nbconvert
 sphinx
 sphinx-rtd-theme
-cartopy
-gsw

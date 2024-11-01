@@ -5,6 +5,7 @@ numpy
 matplotlib
 pandas  
 scipy 
+seaborn
 skyfield 
 gsw
 sgp4>=2.14
