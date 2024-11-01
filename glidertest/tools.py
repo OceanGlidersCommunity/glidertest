@@ -819,7 +819,7 @@ def plot_ts_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple
 
     return fig, ax
 
-def calc_Z(ds):
+def calc_DEPTH_Z(ds):
     """
     Calculate the depth (Z position) of the glider using the gsw library to convert pressure to depth.
     
@@ -829,7 +829,7 @@ def calc_Z(ds):
     
     Returns
     -------
-    xarray.Dataset: The dataset with an additional 'DEPTH' variable.
+    xarray.Dataset: The dataset with an additional 'DEPTH_Z' variable.
     """
     # Ensure the required variables are present
     if 'PRES' not in ds.variables or 'LATITUDE' not in ds.variables or 'LONGITUDE' not in ds.variables:
@@ -870,7 +870,7 @@ def calc_glider_w_from_depth(ds):
     # Ensure inputs are numpy arrays
     time = ds.TIME.values
     if 'DEPTH_Z' not in ds.variables and all(var in ds.variables for var in ['PRES', 'LATITUDE', 'LONGITUDE']):
-        ds = calc_Z(ds)
+        ds = calc_DEPTH_Z(ds)
     depth = ds.DEPTH_Z.values
 
     # Calculate the centered differences in pressure and time, i.e. instead of using neighboring points, 
