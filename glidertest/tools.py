@@ -1040,14 +1040,11 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     ax1.set_ylabel('Vertical Velocity (cm/s)')
     ax1.legend(loc='lower left')
 
-    ax1_twin = ax1.twinx()
-    ax1_twin.plot(ds['TIME'], vert_model, color='r', label='Vertical Glider Speed (model)')
-    ax1_twin.legend(loc='lower left')
+    ax1.plot(ds['TIME'], vert_model, color='r', label='Vertical Glider Speed (model)')
+    ax1.legend(loc='lower left')
 
-    ax1_twin.plot(ds['TIME'], vert_curr, color='g', label='Vertical Water Speed (calculated)')
-    ax1_twin.legend(loc='lower right')
-    # Remove y-axis labels on the right
-    ax1_twin.set_yticklabels([])
+    ax1.plot(ds['TIME'], vert_curr, color='g', label='Vertical Water Speed (calculated)')
+    ax1.legend(loc='lower right')
 
     # Upper right subplot for histogram of vertical velocity
     ax1_hist = axs[0, 1]
@@ -1100,3 +1097,161 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     plt.show()
 
     return fig, axs
+
+def ramsey_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
+    """
+    Calculate the bin average of vertical velocities within specified depth ranges.
+    This function computes the bin average of all vertical velocities within depth ranges,
+    accounting for the uneven vertical spacing of seaglider data in depth (but regular in time).
+    It uses the pressure data to calculate depth and then averages the vertical velocities
+    within each depth bin.
+
+    Parameters
+    ----------
+    - ds using the variables PRES and VERT_SW_SPEED
+    - zgrid (array-like, optional): Depth grid for binning. If None, a default grid is created.
+    - dz (float, optional): Interval for creating depth grid if zgrid is not provided.
+
+    Returns
+    -------
+    - meanw (array-like): Bin-averaged vertical velocities for each depth bin.
+
+    Note
+    ----
+    I know this is a non-sensical name.  We should re-name, but is based on advice from Ramsey Harcourt.
+    """
+
+    press = ds.PRES.values
+    ww = ds[var].values
+
+    # Calculate depth from pressure using gsw
+    if 'DEPTH_Z' in ds:
+        depth = ds.DEPTH_Z.values
+    else:
+        latmean = np.nanmean(ds.LATITUDE)
+        depth = gsw.z_from_p(press, lat=latmean)  # Assuming latitude is 0, adjust as necessary
+
+    if zgrid is None:
+        if dz is None:
+            dz = 5  # Default interval if neither zgrid nor dz is provided
+        zgrid = np.arange(np.floor(np.nanmin(depth)/10)*10, np.ceil(np.nanmax(depth) / 10) * 10 + 1, dz)
+
+    def findbetw(arr, bounds):
+        return np.where((arr > bounds[0]) & (arr <= bounds[1]))[0]
+
+    # Calculate bin edges from zgrid centers
+    bin_edges = np.zeros(len(zgrid) + 1)
+    bin_edges[1:-1] = (zgrid[:-1] + zgrid[1:]) / 2
+    bin_edges[0] = zgrid[0] - (zgrid[1] - zgrid[0]) / 2
+    bin_edges[-1] = zgrid[-1] + (zgrid[-1] - zgrid[-2]) / 2
+
+    meanw = np.zeros(len(zgrid))
+    NNz = np.zeros(len(zgrid))
+    w_lower = np.zeros(len(zgrid))
+    w_upper = np.zeros(len(zgrid))
+
+    # Cycle through the bins and calculate the mean vertical velocity
+    for zdo in range(len(zgrid)):
+        z1 = bin_edges[zdo]
+        z2 = bin_edges[zdo + 1]
+        ifind = findbetw(depth, [z1, z2])
+
+        CIlimits = .95 # Could be passed as a variable. 0.95 for 95% confidence intervals
+        if len(ifind):
+            meanw[zdo] = np.nanmean(ww[ifind])
+
+            # Confidence intervals
+            # Number of data points used in the mean at this depth (zgrid[zdo])
+            NNz[zdo] = len(ifind)
+            if NNz[zdo] > 1:
+                se = np.nanstd(ww[ifind]) / np.sqrt(NNz[zdo])  # Standard error
+                ci = se * t.ppf((1 + CIlimits) / 2, NNz[zdo] - 1)  # Confidence interval based on CIlimits
+                w_lower[zdo] = meanw[zdo] - ci
+                w_upper[zdo] = meanw[zdo] + ci
+            else:
+                w_lower[zdo] = np.nan
+                w_upper[zdo] = np.nan
+
+        else:
+            meanw[zdo] = np.nan
+
+
+    # Package the outputs into an xarray dataset
+    ds_out = xr.Dataset(
+        {
+            "meanw": (["zgrid"], meanw),
+            "w_lower": (["zgrid"], w_lower),
+            "w_upper": (["zgrid"], w_upper),
+            "NNz": (["zgrid"], NNz),
+        },
+        coords={
+            "zgrid": zgrid
+        },
+        attrs={
+            "CIlimits": CIlimits
+        }
+    )
+    return ds_out
+
+def plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs):
+    """
+    Plots combined vertical velocity profiles for dives and climbs.
+
+    Replicates Fig 3 in Frajka-Williams et al. 2011, but using an updated dataset from Jim Bennett (2013), 
+    now in OG1 format as sg014_20040924T182454_delayed.nc.  Note that flight model parameters may differ from those in the paper.
+
+    Parameters
+    ----------
+    ds_out_dives (xarray.Dataset): Dataset containing dive profiles with variables 'zgrid', 'meanw', 'w_lower', and 'w_upper'.
+    ds_out_climbs (xarray.Dataset): Dataset containing climb profiles with variables 'zgrid', 'meanw', 'w_lower', and 'w_upper'.
+
+    The function converts vertical velocities from m/s to cm/s, plots the mean vertical velocities and their ranges for both dives and climbs, and customizes the plot with labels, legends, and axis settings.
+
+    Note
+    ----
+    Assumes that the vertical velocities are in m/s and the depth grid is in meters.
+    """
+
+    conv_factor = 100  # Convert m/s to cm/s
+    depth_negative = ds_out_dives.zgrid.values * -1
+    meanw_dives = ds_out_dives.meanw.values * conv_factor
+    zgrid_dives = depth_negative
+    w_lower_dives = ds_out_dives.w_lower.values * conv_factor
+    w_upper_dives = ds_out_dives.w_upper.values * conv_factor
+
+    meanw_climbs = ds_out_climbs.meanw.values * conv_factor
+    zgrid_climbs = ds_out_climbs.zgrid.values * -1
+    w_lower_climbs = ds_out_climbs.w_lower.values * conv_factor
+    w_upper_climbs = ds_out_climbs.w_upper.values * conv_factor
+
+    fig, ax = plt.subplots(1, 1, figsize=(4.8, 4.8))
+
+
+    ax.xaxis.label.set_size(14)
+    ax.yaxis.label.set_size(14)
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.legend(fontsize=14)
+
+    # Plot dives
+    ax.fill_betweenx(zgrid_dives, w_lower_dives, w_upper_dives, color='black', alpha=0.3)
+    ax.plot(meanw_dives, zgrid_dives, color='black', label='w$_d$')
+
+    # Plot climbs
+    ax.fill_betweenx(zgrid_climbs, w_lower_climbs, w_upper_climbs, color='red', alpha=0.3)
+    ax.plot(meanw_climbs, zgrid_climbs, color='red', label='w$_c$')
+
+    ax.invert_yaxis()  # Invert y-axis to show depth increasing downwards
+    ax.axvline(x=0, color='darkgray', linestyle='-', linewidth=0.5)  # Add vertical line through 0
+    ax.set_xlabel('Vertical Velocity w (cm s$^{-1}$)')
+    ax.set_ylabel('Depth (m)')
+    ax.set_ylim(top=0, bottom=1000)  # Set y-limit maximum to zero
+    ax.legend()
+#    ax.set_title('Combined Vertical Velocity Profiles')
+
+    ax.set_xlim(-1, 1.5)
+    ax.set_xticks([-1, -0.5, 0, 0.5, 1.0, 1.5])
+    plt.tight_layout()
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    plt.show()
+    ax.tick_params(axis='both', which='major', labelsize=12)
