@@ -1165,7 +1165,7 @@ def ramsey_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
             NNz[zdo] = len(ifind)
             if NNz[zdo] > 1:
                 se = np.nanstd(ww[ifind]) / np.sqrt(NNz[zdo])  # Standard error
-                ci = se * t.ppf((1 + CIlimits) / 2, NNz[zdo] - 1)  # Confidence interval based on CIlimits
+                ci = se * stats.t.ppf((1 + CIlimits) / 2, NNz[zdo] - 1)  # Confidence interval based on CIlimits
                 w_lower[zdo] = meanw[zdo] - ci
                 w_upper[zdo] = meanw[zdo] + ci
             else:
