@@ -66,7 +66,7 @@ def test_vert_vel():
     ds_sg014 = fetchers.load_sample_dataset(dataset_name="sg014_20040924T182454_delayed_subset.nc")
     ds_sg014 = tools.calc_glider_w_from_depth(ds_sg014)
     ds_sg014 = tools.calc_seawater_w(ds_sg014)
-    tools.plot_vertical_speeds_with_histograms(ds_sg014, start_prof, end_prof)
+    tools.plot_vertical_speeds_with_histograms(ds_sg014)
     ds_dives = ds_sg014.sel(N_MEASUREMENTS=ds_sg014.PHASE == 2)
     ds_climbs = ds_sg014.sel(N_MEASUREMENTS=ds_sg014.PHASE == 1)
     ds_out_dives = tools.ramsey_binavg(ds_dives, var = 'VERT_CURR_MODEL', dz=10)
