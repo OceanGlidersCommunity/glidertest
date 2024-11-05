@@ -57,9 +57,9 @@ def test_check_monotony():
 
 def test_basic_statistics():
     ds = fetchers.load_sample_dataset()
-    plot_glider_track(ds)
-    plot_grid_spacing_histograms(ds)
-    plot_ts_histograms(ds)
+    tools.plot_glider_track(ds)
+    tools.plot_grid_spacing_histograms(ds)
+    tools.plot_ts_histograms(ds)
 
 
 def test_vert_vel():
