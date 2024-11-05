@@ -33,16 +33,19 @@ def test_quench_sequence():
     fig, ax = plt.subplots()
     tools.plot_daynight_avg(dayT, nightT, ax, xlabel='Temperature [C]') 
 
+
 def test_temporal_drift():
     ds = fetchers.load_sample_dataset()
     fig, ax = plt.subplots(1, 2)
     tools.check_temporal_drift(ds,'DOXY', ax)
     tools.check_temporal_drift(ds,'CHLA')
-        
+
+
 def test_profile_check():
     ds = fetchers.load_sample_dataset()
     tools.check_monotony(ds.PROFILE_NUMBER)
     tools.plot_profIncrease(ds)
+
 
 def test_check_monotony():
     ds = fetchers.load_sample_dataset()
@@ -50,4 +53,23 @@ def test_check_monotony():
     temperature_monotony = tools.check_monotony(ds.TEMP)
     assert profile_number_monotony
     assert not temperature_monotony
-    
+
+
+def test_basic_statistics():
+    ds = fetchers.load_sample_dataset()
+    plot_glider_track(ds)
+    plot_grid_spacing_histograms(ds)
+    plot_ts_histograms(ds)
+
+
+def test_vert_vel():
+    ds_sg014 = fetchers.load_sample_dataset(dataset_name="sg014_20040924T182454_delayed_subset.nc")
+    ds_sg014 = tools.calc_glider_w_from_depth(ds_sg014)
+    ds_sg014 = tools.calc_seawater_w(ds_sg014)
+    tools.plot_vertical_speeds_with_histograms(ds_sg014, start_prof, end_prof)
+    ds_dives = ds_sg014.sel(N_MEASUREMENTS=ds_sg014.PHASE == 2)
+    ds_climbs = ds_sg014.sel(N_MEASUREMENTS=ds_sg014.PHASE == 1)
+    ds_out_dives = tools.ramsey_binavg(ds_dives, var = 'VERT_CURR_MODEL', dz=10)
+    ds_out_climbs = tools.ramsey_binavg(ds_climbs, var = 'VERT_CURR_MODEL', dz=10)
+    tools.plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs)
+
