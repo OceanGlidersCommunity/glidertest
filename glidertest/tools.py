@@ -15,6 +15,7 @@ import matplotlib.colors as mcolors
 import gsw
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import warnings
 
 
 def _necessary_variables_check(ds: xr.Dataset, vars: list):
@@ -89,9 +90,10 @@ def updown_bias(ds, var='PSAL', v_res=1):
         varG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
 
         grad = np.diff(varG, axis=0)  # Horizontal gradients
-
-        dc = np.nanmean(grad[0::2, :], axis=0)  # Dive - CLimb
-        cd = np.nanmean(grad[1::2, :], axis=0)  # Climb - Dive
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            dc = np.nanmean(grad[0::2, :], axis=0)  # Dive - CLimb
+            cd = np.nanmean(grad[1::2, :], axis=0)  # Climb - Dive
 
         df = pd.DataFrame(data={'dc': dc, 'cd': cd, 'depth': depthG[0, :]})
     else:
@@ -140,7 +142,9 @@ def find_cline(var, depth_array):
     Find the depth of the maximum vertical difference for a specified variables
     Input data has to be gridded
     """
-    clin = np.where(np.abs(np.diff(np.nanmean(var, axis=0))) == np.nanmax(np.abs(np.diff(np.nanmean(var, axis=0)))))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        clin = np.where(np.abs(np.diff(np.nanmean(var, axis=0))) == np.nanmax(np.abs(np.diff(np.nanmean(var, axis=0)))))
     return np.round(depth_array[0, clin[0]], 1)
 
 
@@ -163,7 +167,7 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     Line plots for the averages of the different variables. 
     Thermo, halo and pycnocline are computed and plotted. A sentence stating the depth of the clines is printed too
     """
-    _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', 'TEMP', 'PSAL'])
+    _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', 'TEMP', 'PSAL', 'LATITUDE', 'LONGITUDE'])
     p = 1
     z = v_res
     tempG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.TEMP, p, z)
@@ -187,55 +191,56 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     pycno = find_cline(denG, depthG)
     print(
         f'The thermocline, halocline and pycnocline are located at respectively {thermo}, {halo} and {pycno}m as shown in the plots as well')
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        fig, ax = plt.subplots(1, 2, figsize=(15, 5))
+        ax1 = ax[0].twiny()
+        ax2 = ax[0].twiny()
+        ax2.spines["top"].set_position(("axes", 1.2))
+        ax[0].plot(np.nanmean(tempG, axis=0), depthG[0, :], c='blue')
+        ax1.plot(np.nanmean(salG, axis=0), depthG[0, :], c='red')
+        ax2.plot(np.nanmean(denG, axis=0), depthG[0, :], c='black')
+        ax[0].axhline(thermo, linestyle='dashed', c='blue')
+        ax1.axhline(halo, linestyle='dashed', c='red')
+        ax2.axhline(pycno, linestyle='dashed', c='black')
 
-    fig, ax = plt.subplots(1, 2, figsize=(15, 5))
-    ax1 = ax[0].twiny()
-    ax2 = ax[0].twiny()
-    ax2.spines["top"].set_position(("axes", 1.2))
-    ax[0].plot(np.nanmean(tempG, axis=0), depthG[0, :], c='blue')
-    ax1.plot(np.nanmean(salG, axis=0), depthG[0, :], c='red')
-    ax2.plot(np.nanmean(denG, axis=0), depthG[0, :], c='black')
-    ax[0].axhline(thermo, linestyle='dashed', c='blue')
-    ax1.axhline(halo, linestyle='dashed', c='red')
-    ax2.axhline(pycno, linestyle='dashed', c='black')
+        ax[0].set(xlabel=f'Average Temperature [C] \nbetween profile {start_prof} and {end_prof}', ylabel='Depth (m)')
+        ax[0].tick_params(axis='x', colors='blue')
+        ax[0].xaxis.label.set_color('blue')
+        ax1.spines['bottom'].set_color('blue')
+        ax1.set(xlabel=f'Average Salinity [PSU] \nbetween profile {start_prof} and {end_prof}')
+        ax1.xaxis.label.set_color('red')
+        ax1.spines['top'].set_color('red')
+        ax1.tick_params(axis='x', colors='red')
+        ax2.spines['bottom'].set_color('black')
+        ax2.set(xlabel=f'Average Density [kg m-3] \nbetween profile {start_prof} and {end_prof}')
+        ax2.xaxis.label.set_color('black')
+        ax2.spines['top'].set_color('black')
+        ax2.tick_params(axis='x', colors='black')
 
-    ax[0].set(xlabel=f'Average Temperature [C] \nbetween profile {start_prof} and {end_prof}', ylabel='Depth (m)')
-    ax[0].tick_params(axis='x', colors='blue')
-    ax[0].xaxis.label.set_color('blue')
-    ax1.spines['bottom'].set_color('blue')
-    ax1.set(xlabel=f'Average Salinity [PSU] \nbetween profile {start_prof} and {end_prof}')
-    ax1.xaxis.label.set_color('red')
-    ax1.spines['top'].set_color('red')
-    ax1.tick_params(axis='x', colors='red')
-    ax2.spines['bottom'].set_color('black')
-    ax2.set(xlabel=f'Average Density [kg m-3] \nbetween profile {start_prof} and {end_prof}')
-    ax2.xaxis.label.set_color('black')
-    ax2.spines['top'].set_color('black')
-    ax2.tick_params(axis='x', colors='black')
+        if 'CHLA' in ds.variables:
+            chlaG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.CHLA, p, z)
+            chlaG = chlaG[start_prof:end_prof, :]
+            ax2_1 = ax[1].twiny()
+            ax2_1.plot(np.nanmean(chlaG, axis=0), depthG[0, :], c='green')
+            ax2_1.set(xlabel=f'Average Chlorophyll-a [mg m-3] \nbetween profile {start_prof} and {end_prof}')
+            ax2_1.xaxis.label.set_color('green')
+            ax2_1.spines['top'].set_color('green')
+            ax2_1.tick_params(axis='x', colors='green')
+        else:
+            ax[1].text(0.3, 0.7, 'Chlorophyll data unavailable', va='top', transform=ax[1].transAxes)
 
-    if 'CHLA' in ds.variables:
-        chlaG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.CHLA, p, z)
-        chlaG = chlaG[start_prof:end_prof, :]
-        ax2_1 = ax[1].twiny()
-        ax2_1.plot(np.nanmean(chlaG, axis=0), depthG[0, :], c='green')
-        ax2_1.set(xlabel=f'Average Chlorophyll-a [mg m-3] \nbetween profile {start_prof} and {end_prof}')
-        ax2_1.xaxis.label.set_color('green')
-        ax2_1.spines['top'].set_color('green')
-        ax2_1.tick_params(axis='x', colors='green')
-    else:
-        ax[1].text(0.3, 0.7, 'Chlorophyll data unavailable', va='top', transform=ax[1].transAxes)
-
-    if 'DOXY' in ds.variables:
-        oxyG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DOXY, p, z)
-        oxyG = oxyG[start_prof:end_prof, :]
-        ax[1].plot(np.nanmean(oxyG, axis=0), depthG[0, :], c='orange')
-        ax[1].set(xlabel=f'Average Oxygen [mmol m-3] \nbetween profile {start_prof} and {end_prof}')
-        ax[1].xaxis.label.set_color('orange')
-        ax[1].spines['top'].set_color('orange')
-        ax[1].tick_params(axis='x', colors='orange')
-        ax[1].spines['bottom'].set_color('orange')
-    else:
-        ax[1].text(0.3, 0.5, 'Oxygen data unavailable', va='top', transform=ax[1].transAxes)
+        if 'DOXY' in ds.variables:
+            oxyG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DOXY, p, z)
+            oxyG = oxyG[start_prof:end_prof, :]
+            ax[1].plot(np.nanmean(oxyG, axis=0), depthG[0, :], c='orange')
+            ax[1].set(xlabel=f'Average Oxygen [mmol m-3] \nbetween profile {start_prof} and {end_prof}')
+            ax[1].xaxis.label.set_color('orange')
+            ax[1].spines['top'].set_color('orange')
+            ax[1].tick_params(axis='x', colors='orange')
+            ax[1].spines['bottom'].set_color('orange')
+        else:
+            ax[1].text(0.3, 0.5, 'Oxygen data unavailable', va='top', transform=ax[1].transAxes)
 
     [a.set_ylim(depthG.max() + 10, -5) for a in ax]
     [a.grid() for a in ax]
@@ -340,7 +345,7 @@ def sunset_sunrise(time, lat, lon):
 
     bluffton = []
     for i in range(len(grp_avg.lat)):
-        bluffton.append(api.wgs84.latlon(grp_avg.lat[i], grp_avg.lon[i]))
+        bluffton.append(api.wgs84.latlon(grp_avg.lat.iloc[i], grp_avg.lon.iloc[i]))
     bluffton = np.array(bluffton)
 
     sunrise = []
@@ -662,9 +667,9 @@ def plot_profIncrease(ds: xr.DataArray, ax: plt.Axes = None, **kw: dict, ) -> tu
         ax[1].scatter(ds.TIME[np.where((np.diff(ds.PROFILE_NUMBER) != 0) & (np.diff(ds.PROFILE_NUMBER) != 1))],
                       ds.DEPTH[np.where((np.diff(ds.PROFILE_NUMBER) != 0) & (np.diff(ds.PROFILE_NUMBER) != 1))],
                       s=10, c='red', label='Depth at which we have issues \n with the profile number assigned')
+        ax[1].legend()
     ax[1].set(ylabel='Depth')
     ax[1].invert_yaxis()
-    ax[1].legend()
     ax[1].xaxis.set_major_locator(plt.MaxNLocator(8))
     [a.grid() for a in ax]
     return fig, ax
@@ -929,6 +934,7 @@ def calc_glider_w_from_depth(ds):
     ds (xarray.Dataset): Containing the new variable
     - GLIDER_VERT_VELO_DZDT (array-like): with vertical velocities calculated from dz/dt
     """
+    _necessary_variables_check(ds, ['TIME'])
     # Ensure inputs are numpy arrays
     time = ds.TIME.values
     if 'DEPTH_Z' not in ds.variables and all(var in ds.variables for var in ['PRES', 'LATITUDE', 'LONGITUDE']):
@@ -974,11 +980,8 @@ def calc_seawater_w(ds):
 
     Eleanor's note: This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. 
     """
-    # Check if 'VERT_GLIDER_SPEED' is in the dataset
-    if 'GLIDER_VERT_VELO_MODEL' not in ds:
-        print("Error: 'GLIDER_VERT_VELO_MODEL' is not in the dataset.")
-        return ds
-
+    _necessary_variables_check(ds, ['GLIDER_VERT_VELO_MODEL', 'GLIDER_VERT_VELO_DZDT'])
+    
     # Calculate the vertical seawater velocity
     vert_sw_speed = ds['GLIDER_VERT_VELO_DZDT'].values - ds['GLIDER_VERT_VELO_MODEL'].values 
 
@@ -1010,11 +1013,7 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     -------
     fig, axs (tuple): The figure and axes objects for the plot.
     """
-    required_vars = ['GLIDER_VERT_VELO_MODEL', 'GLIDER_VERT_VELO_DZDT', 'VERT_CURR_MODEL']
-    for var in required_vars:
-        if var not in ds:
-            print(f"Dataset must contain '{var}' to create this plot.")
-            return
+    _necessary_variables_check(ds, ['GLIDER_VERT_VELO_MODEL', 'GLIDER_VERT_VELO_DZDT', 'VERT_CURR_MODEL','PROFILE_NUMBER'])
 
     if start_prof is None:
         start_prof = int(ds['PROFILE_NUMBER'].values.mean())-10
@@ -1117,16 +1116,19 @@ def ramsey_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
     ----
     I know this is a non-sensical name.  We should re-name, but is based on advice from Ramsey Harcourt.
     """
-
+    _necessary_variables_check(ds, [var, 'PRES'])
     press = ds.PRES.values
     ww = ds[var].values
 
     # Calculate depth from pressure using gsw
     if 'DEPTH_Z' in ds:
         depth = ds.DEPTH_Z.values
-    else:
+    elif 'LATITUDE' in ds:
         latmean = np.nanmean(ds.LATITUDE)
         depth = gsw.z_from_p(press, lat=latmean)  # Assuming latitude is 0, adjust as necessary
+    else: 
+        msg = f"DEPTH_Z and LATITUDE are missing. At least one of the two variables is needed."
+        raise KeyError(msg)
 
     if zgrid is None:
         if dz is None:
@@ -1148,29 +1150,31 @@ def ramsey_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
     w_upper = np.zeros(len(zgrid))
 
     # Cycle through the bins and calculate the mean vertical velocity
-    for zdo in range(len(zgrid)):
-        z1 = bin_edges[zdo]
-        z2 = bin_edges[zdo + 1]
-        ifind = findbetw(depth, [z1, z2])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        for zdo in range(len(zgrid)):
+            z1 = bin_edges[zdo]
+            z2 = bin_edges[zdo + 1]
+            ifind = findbetw(depth, [z1, z2])
 
-        CIlimits = .95 # Could be passed as a variable. 0.95 for 95% confidence intervals
-        if len(ifind):
-            meanw[zdo] = np.nanmean(ww[ifind])
+            CIlimits = .95 # Could be passed as a variable. 0.95 for 95% confidence intervals
+            if len(ifind):
+                meanw[zdo] = np.nanmean(ww[ifind])
 
-            # Confidence intervals
-            # Number of data points used in the mean at this depth (zgrid[zdo])
-            NNz[zdo] = len(ifind)
-            if NNz[zdo] > 1:
-                se = np.nanstd(ww[ifind]) / np.sqrt(NNz[zdo])  # Standard error
-                ci = se * stats.t.ppf((1 + CIlimits) / 2, NNz[zdo] - 1)  # Confidence interval based on CIlimits
-                w_lower[zdo] = meanw[zdo] - ci
-                w_upper[zdo] = meanw[zdo] + ci
+                # Confidence intervals
+                # Number of data points used in the mean at this depth (zgrid[zdo])
+                NNz[zdo] = len(ifind)
+                if NNz[zdo] > 1:
+                    se = np.nanstd(ww[ifind]) / np.sqrt(NNz[zdo])  # Standard error
+                    ci = se * stats.t.ppf((1 + CIlimits) / 2, NNz[zdo] - 1)  # Confidence interval based on CIlimits
+                    w_lower[zdo] = meanw[zdo] - ci
+                    w_upper[zdo] = meanw[zdo] + ci
+                else:
+                    w_lower[zdo] = np.nan
+                    w_upper[zdo] = np.nan
+
             else:
-                w_lower[zdo] = np.nan
-                w_upper[zdo] = np.nan
-
-        else:
-            meanw[zdo] = np.nan
+                meanw[zdo] = np.nan
 
 
     # Package the outputs into an xarray dataset
@@ -1208,7 +1212,6 @@ def plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs):
     ----
     Assumes that the vertical velocities are in m/s and the depth grid is in meters.
     """
-
     conv_factor = 100  # Convert m/s to cm/s
     depth_negative = ds_out_dives.zgrid.values * -1
     meanw_dives = ds_out_dives.meanw.values * conv_factor
