@@ -10,7 +10,6 @@ def test_plots(start_prof=0, end_prof=100):
     fig, ax = tools.plot_basic_vars(ds,start_prof=start_prof, end_prof=end_prof)
     assert ax[0].get_ylabel() == 'Depth (m)'
     assert ax[0].get_xlabel() == f'Average Temperature [C] \nbetween profile {start_prof} and {end_prof}'
-    return fig
 
 
 def test_up_down_bias(v_res=1, xlabel='Salinity'):
@@ -75,3 +74,17 @@ def test_check_monotony():
     assert profile_number_monotony
     assert not temperature_monotony
     
+
+def test_vert_vel():
+    ds_sg014 = fetchers.load_sample_dataset(dataset_name="sg014_20040924T182454_delayed_subset.nc")
+    ds_sg014 = tools.calc_glider_w_from_depth(ds_sg014)
+    ds_sg014 = tools.calc_seawater_w(ds_sg014)
+    tools.plot_vertical_speeds_with_histograms(ds_sg014)
+    ds_dives = ds_sg014.sel(N_MEASUREMENTS=ds_sg014.PHASE == 2)
+    ds_climbs = ds_sg014.sel(N_MEASUREMENTS=ds_sg014.PHASE == 1)
+    ds_out_dives = tools.ramsey_binavg(ds_dives, var = 'VERT_CURR_MODEL', dz=10)
+    ds_out_climbs = tools.ramsey_binavg(ds_climbs, var = 'VERT_CURR_MODEL', dz=10)
+    tools.plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs)
+    plt.close('all')
+
+
