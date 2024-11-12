@@ -16,7 +16,7 @@ def test_plots(start_prof=0, end_prof=100):
 def test_up_down_bias(v_res=1, xlabel='Salinity'):
     ds = fetchers.load_sample_dataset()
     fig, ax = plt.subplots()
-    df = tools.updown_bias(ds, var='PSAL', v_res=v_res)
+    df = tools.compute_updown_bias(ds, var='PSAL', v_res=v_res)
     bins = np.unique(np.round(ds.DEPTH,0))
     ncell = math.ceil(len(bins)/v_res)
     assert len(df) == ncell
@@ -29,12 +29,12 @@ def test_up_down_bias(v_res=1, xlabel='Salinity'):
 
 def test_chl(var1='CHLA', var2='BBP700'):
     ds = fetchers.load_sample_dataset()
-    ax = tools.optics_first_check(ds, var=var1)
+    ax = tools.process_optics_assess(ds, var=var1)
     assert ax.get_ylabel() == var1
-    ax = tools.optics_first_check(ds, var=var2)
+    ax = tools.process_optics_assess(ds, var=var2)
     assert ax.get_ylabel() == var2
     with pytest.raises(KeyError) as e:
-        tools.optics_first_check(ds, var='nonexistent_variable')
+        tools.process_optics_assess(ds, var='nonexistent_variable')
 
 
 def test_quench_sequence(xlabel='Temperature [C]',ylim=45):
@@ -42,11 +42,11 @@ def test_quench_sequence(xlabel='Temperature [C]',ylim=45):
     if not "TIME" in ds.indexes.keys():
         ds = ds.set_xindex('TIME')
     fig, ax = plt.subplots()
-    tools.plot_section_with_srss(ds, 'CHLA', ax,ylim=ylim)
+    tools.plot_quench_assess(ds, 'CHLA', ax,ylim=ylim)
     assert ax.get_ylabel() == 'Depth [m]'
     assert ax.get_ylim() == (ylim, -ylim / 30)
     
-    dayT, nightT = tools.day_night_avg(ds, sel_var='TEMP')
+    dayT, nightT = tools.compute_daynight_avg(ds, sel_var='TEMP')
     assert len(nightT.dat.dropna()) > 0
     assert len(dayT.dat.dropna()) > 0
     
@@ -68,7 +68,7 @@ def test_temporal_drift(var='DOXY'):
 def test_profile_check():
     ds = fetchers.load_sample_dataset()
     tools.check_monotony(ds.PROFILE_NUMBER)
-    tools.plot_profIncrease(ds)
+    tools.plot_prof_monotony(ds)
 
 
 def test_check_monotony():
@@ -82,17 +82,17 @@ def test_check_monotony():
 def test_basic_statistics():
     ds = fetchers.load_sample_dataset()
     tools.plot_glider_track(ds)
-    tools.plot_grid_spacing_histograms(ds)
-    tools.plot_ts_histograms(ds)
+    tools.plot_grid_spacing(ds)
+    tools.plot_ts(ds)
 
 
 def test_vert_vel():
     ds_sg014 = fetchers.load_sample_dataset(dataset_name="sg014_20040924T182454_delayed_subset.nc")
-    ds_sg014 = tools.calc_glider_w_from_depth(ds_sg014)
-    ds_sg014 = tools.calc_seawater_w(ds_sg014)
+    ds_sg014 = tools.calc_w_meas(ds_sg014)
+    ds_sg014 = tools.calc_w_sw(ds_sg014)
     tools.plot_vertical_speeds_with_histograms(ds_sg014)
     ds_dives = ds_sg014.sel(N_MEASUREMENTS=ds_sg014.PHASE == 2)
     ds_climbs = ds_sg014.sel(N_MEASUREMENTS=ds_sg014.PHASE == 1)
-    ds_out_dives = tools.ramsey_binavg(ds_dives, var = 'VERT_CURR_MODEL', dz=10)
-    ds_out_climbs = tools.ramsey_binavg(ds_climbs, var = 'VERT_CURR_MODEL', dz=10)
+    ds_out_dives = tools.compute_ramsey_binavg(ds_dives, var = 'VERT_CURR_MODEL', dz=10)
+    ds_out_climbs = tools.compute_ramsey_binavg(ds_climbs, var = 'VERT_CURR_MODEL', dz=10)
     tools.plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs)
