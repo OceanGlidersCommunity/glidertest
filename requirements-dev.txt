@@ -12,6 +12,7 @@ skyfield
 tqdm
 jupyterlab
 pytest
+pytest-cov
 nbsphinx
 nbconvert
 sphinx
