@@ -344,7 +344,6 @@ def process_optics_assess(ds, var='CHLA'):
 def compute_sunset_sunrise(time, lat, lon):
     """
     Calculates the local sunrise/sunset of the glider location from GliderTools.
-    [https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/optics.py]
 
     The function uses the Skyfield package to calculate the sunrise and sunset
     times using the date, latitude and longitude. The times are returned
@@ -370,7 +369,7 @@ def compute_sunset_sunrise(time, lat, lon):
 
     Original author
     ----------------
-    Function from GliderTools
+    Function from GliderTools (https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/optics.py)
 
     """
 
