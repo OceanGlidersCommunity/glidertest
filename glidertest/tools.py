@@ -86,20 +86,14 @@ def updown_bias(ds, var='PSAL', v_res=1):
     _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', var])
     p = 1  # Horizontal resolution
     z = v_res  # Vertical resolution
-    if var in ds.variables:
-        varG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
+    varG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
 
-        grad = np.diff(varG, axis=0)  # Horizontal gradients
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=RuntimeWarning)
-            dc = np.nanmean(grad[0::2, :], axis=0)  # Dive - CLimb
-            cd = np.nanmean(grad[1::2, :], axis=0)  # Climb - Dive
-
-        df = pd.DataFrame(data={'dc': dc, 'cd': cd, 'depth': depthG[0, :]})
-    else:
-        print(f'{var} is not in the dataset')
-        df = pd.DataFrame()
-
+    grad = np.diff(varG, axis=0)  # Horizontal gradients
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        dc = np.nanmean(grad[0::2, :], axis=0)  # Dive - CLimb
+        cd = np.nanmean(grad[1::2, :], axis=0)  # Climb - Dive
+    df = pd.DataFrame(data={'dc': dc, 'cd': cd, 'depth': depthG[0, :]})
     return df
 
 
