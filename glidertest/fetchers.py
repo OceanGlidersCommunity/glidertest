@@ -32,4 +32,4 @@ def load_sample_dataset(dataset_name="sea045_20230530T0832_delayed.nc"):
         return xr.open_dataset(file_path)
     else:
         msg = f"Requested sample dataset {dataset_name} not known. Specify one of the following available datasets: {list(data_source_og.registry.keys())}"
-        raise ValueError(msg)
+        raise KeyError(msg)

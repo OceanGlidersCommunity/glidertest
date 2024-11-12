@@ -6,9 +6,7 @@ matplotlib
 pandas  
 seaborn 
 scipy 
-cmocean 
 skyfield 
-tqdm
 gsw
 sgp4>=2.14
 cartopy

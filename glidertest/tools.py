@@ -1,6 +1,5 @@
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import datetime
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -10,7 +9,6 @@ from pandas import DataFrame
 from scipy import stats
 from skyfield import almanac
 from skyfield import api
-from tqdm import tqdm
 import matplotlib.colors as mcolors
 import gsw
 import cartopy.crs as ccrs
@@ -41,7 +39,7 @@ def _necessary_variables_check(ds: xr.Dataset, vars: list):
         raise KeyError(msg)
         
 
-def grid2d(x, y, v, xi=1, yi=1):
+def compute_grid2d(x, y, v, xi=1, yi=1):
     """
     Function to grid data
     
@@ -78,7 +76,7 @@ def grid2d(x, y, v, xi=1, yi=1):
     return grid, XI, YI
 
 
-def updown_bias(ds, var='PSAL', v_res=1):
+def compute_updown_bias(ds, var='PSAL', v_res=1):
     """
     This function computes up and downcast averages for a specific variable
 
@@ -100,8 +98,9 @@ def updown_bias(ds, var='PSAL', v_res=1):
     _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', var])
     p = 1  # Horizontal resolution
     z = v_res  # Vertical resolution
+
     if var in ds.variables:
-        varG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
+        varG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
 
         grad = np.diff(varG, axis=0)  # Horizontal gradients
         with warnings.catch_warnings():
@@ -113,7 +112,6 @@ def updown_bias(ds, var='PSAL', v_res=1):
     else:
         print(f'{var} is not in the dataset')
         df = pd.DataFrame()
-
     return df
 
 
@@ -155,7 +153,7 @@ def plot_updown_bias(df: pd.DataFrame, ax: plt.Axes = None, xlabel='Temperature 
     return fig, ax
 
 
-def find_cline(var, depth_array):
+def compute_cline(var, depth_array):
     """
     Find the depth of the maximum vertical difference for a specified variables
     
@@ -203,8 +201,8 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1):
     _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', 'TEMP', 'PSAL', 'LATITUDE', 'LONGITUDE'])
     p = 1
     z = v_res
-    tempG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.TEMP, p, z)
-    salG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.PSAL, p, z)
+    tempG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.TEMP, p, z)
+    salG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.PSAL, p, z)
 
     if 'DENSITY' not in ds.variables:
         ds['DENSITY'] = (('N_MEASUREMENTS'), np.full(ds.dims['N_MEASUREMENTS'], np.nan))
@@ -212,16 +210,16 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1):
         CT = gsw.CT_from_t(SA, ds.TEMP, ds.DEPTH)
         ds['DENSITY'] = gsw.rho(SA, CT, ds.DEPTH)
 
-    denG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DENSITY, p, z)
+    denG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DENSITY, p, z)
 
     tempG = tempG[start_prof:end_prof, :]
     salG = salG[start_prof:end_prof, :]
     denG = denG[start_prof:end_prof, :]
     depthG = depthG[start_prof:end_prof, :]
 
-    halo = find_cline(salG, depthG)
-    thermo = find_cline(tempG, depthG)
-    pycno = find_cline(denG, depthG)
+    halo = compute_cline(salG, depthG)
+    thermo = compute_cline(tempG, depthG)
+    pycno = compute_cline(denG, depthG)
     print(
         f'The thermocline, halocline and pycnocline are located at respectively {thermo}, {halo} and {pycno}m as shown in the plots as well')
     with warnings.catch_warnings():
@@ -252,7 +250,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1):
         ax2.tick_params(axis='x', colors='black')
 
         if 'CHLA' in ds.variables:
-            chlaG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.CHLA, p, z)
+            chlaG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.CHLA, p, z)
             chlaG = chlaG[start_prof:end_prof, :]
             ax2_1 = ax[1].twiny()
             ax2_1.plot(np.nanmean(chlaG, axis=0), depthG[0, :], c='green')
@@ -264,7 +262,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1):
             ax[1].text(0.3, 0.7, 'Chlorophyll data unavailable', va='top', transform=ax[1].transAxes)
 
         if 'DOXY' in ds.variables:
-            oxyG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DOXY, p, z)
+            oxyG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DOXY, p, z)
             oxyG = oxyG[start_prof:end_prof, :]
             ax[1].plot(np.nanmean(oxyG, axis=0), depthG[0, :], c='orange')
             ax[1].set(xlabel=f'Average Oxygen [mmol m-3] \nbetween profile {start_prof} and {end_prof}')
@@ -280,7 +278,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1):
     return fig, ax
 
 
-def optics_first_check(ds: xr.Dataset , var='CHLA'):
+def process_optics_assess(ds, var='CHLA'):
     """
     Function to assess visually any drift in deep optics data and the presence of any possible negative data. This function returns  both plots and text
     
@@ -343,7 +341,7 @@ def optics_first_check(ds: xr.Dataset , var='CHLA'):
     return ax
 
 
-def sunset_sunrise(time, lat, lon):
+def compute_sunset_sunrise(time, lat, lon):
     """
     Calculates the local sunrise/sunset of the glider location from GliderTools.
     [https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/optics.py]
@@ -400,7 +398,7 @@ def sunset_sunrise(time, lat, lon):
 
     sunrise = []
     sunset = []
-    for n in tqdm(range(len(bluffton))):
+    for n in range(len(bluffton)):
 
         f = almanac.sunrise_sunset(eph, bluffton[n])
         t, y = almanac.find_discrete(time_utc[n], time_utc_offset[n], f)
@@ -471,7 +469,7 @@ def sunset_sunrise(time, lat, lon):
     return sunrise, sunset
 
 
-def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof=None, end_prof=None):
+def compute_daynight_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof=None, end_prof=None):
     """
     This function computes night and day averages for a selected variable over a specific period of time or a specific series of dives
     Data in divided into day and night using the sunset and sunrise time as described in the above function sunset_sunrise from GliderTools
@@ -526,7 +524,7 @@ def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof
         ds_sel = ds.sel(TIME=slice(t1,t2))
     else:
         ds_sel = ds.sel(TIME=slice(start_time, end_time))
-    sunrise, sunset = sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
+    sunrise, sunset = compute_sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
 
     # creating batches where one batch is a night and the following day
     day = (ds_sel.TIME > sunrise) & (ds_sel.TIME < sunset)
@@ -592,7 +590,7 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
     return fig, ax
 
 
-def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_time=None,
+def plot_quench_assess(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_time=None,
                            end_time=None,start_prof=None, end_prof=None, ylim=45, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
     """
     This function can be used to plot sections for any variable with the sunrise and sunset plotted over
@@ -644,7 +642,7 @@ def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, st
         msg = f"supplied limits start_time: {start_time} end_time: {end_time} do not overlap with dataset TIME range {str(ds.TIME.values.min())[:10]} - {str(ds.TIME.values.max())[:10]}"
         raise ValueError(msg)
     
-    sunrise, sunset = sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
+    sunrise, sunset = compute_sunset_sunrise(ds_sel.TIME, ds_sel.LATITUDE, ds_sel.LONGITUDE)
 
     c = ax.scatter(ds_sel.TIME, ds_sel.DEPTH, c=ds_sel[sel_var], s=10, vmin=np.nanpercentile(ds_sel[sel_var], 0.5),
                    vmax=np.nanpercentile(ds_sel[sel_var], 99.5))
@@ -726,7 +724,7 @@ def check_monotony(da):
         return True
 
 
-def plot_profIncrease(ds: xr.DataArray, ax: plt.Axes = None, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
+def plot_prof_monotony(ds: xr.DataArray, ax: plt.Axes = None, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
     """
     This function can be used to plot the profile number and check for any possible issues with the profile index assigned.
 
@@ -833,7 +831,7 @@ def plot_glider_track(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
 
     return fig, ax
 
-def plot_grid_spacing_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
+def plot_grid_spacing(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
     """
     This function plots histograms of the grid spacing (diff(ds.DEPTH) and diff(ds.TIME)) where only the inner 99% of values are plotted.
 
@@ -913,7 +911,7 @@ def plot_grid_spacing_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict
 
     return fig, ax
 
-def plot_ts_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
+def plot_ts(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
     """
     This function plots histograms of temperature and salinity values (middle 95%), and a 2D histogram of salinity and temperature with density contours.
 
@@ -1029,7 +1027,7 @@ def calc_DEPTH_Z(ds):
     
     return ds
 
-def calc_glider_w_from_depth(ds):
+def calc_w_meas(ds):
     """
     Calculate the vertical velocity of a glider using changes in pressure with time.
 
@@ -1080,7 +1078,7 @@ def calc_glider_w_from_depth(ds):
 
     return ds
 
-def calc_seawater_w(ds):
+def calc_w_sw(ds):
     """
     Calculate the vertical seawater velocity and add it to the dataset.
 
@@ -1218,7 +1216,7 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
 
     return fig, axs
 
-def ramsey_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
+def compute_ramsey_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
     """
     Calculate the bin average of vertical velocities within specified depth ranges.
     This function computes the bin average of all vertical velocities within depth ranges,
