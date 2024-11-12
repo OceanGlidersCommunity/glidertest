@@ -19,20 +19,27 @@ import warnings
 
 
 def _necessary_variables_check(ds: xr.Dataset, vars: list):
-    """Checks that all of a list of variables are present in a dataset
+    """
+    Checks that all of a list of variables are present in a dataset
 
-    Args:
-        ds (xarray.Dataset): _description_
-        vars (list): _description_
+    Parameters
+    ----------
+    ds (xarray.Dataset): _description_
+    vars (list): _description_
 
-    Raises:
-        KeyError: Raises an error if all vars not present in ds
+    Raises
+    ----------
+    KeyError: Raises an error if all vars not present in ds
+
+    Original author
+    ----------------
+    Callum Rollo
     """
     missing_vars = set(vars).difference(set(ds.variables))
     if missing_vars:
-        msg = f"Required variables {list(missing_vars)} do not exist in the suppllied dataset."
+        msg = f"Required variables {list(missing_vars)} do not exist in the supplied dataset."
         raise KeyError(msg)
-    
+        
 
 def grid2d(x, y, v, xi=1, yi=1):
     """
@@ -52,6 +59,10 @@ def grid2d(x, y, v, xi=1, yi=1):
     XI: x data gridded in x and y space with xi and yi resolution
     YI: y data gridded in x and y space with xi and yi resolution
 
+    Original author
+    ----------------
+    Bastien Queste (https://github.com/search?q=owner%3Abastienqueste%20grid2d&type=code)
+    
     """
     if np.size(xi) == 1:
         xi = np.arange(np.nanmin(x), np.nanmax(x) + xi, xi)
@@ -82,6 +93,9 @@ def updown_bias(ds, var='PSAL', v_res=1):
     -------
     df: pandas dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth
 
+    Original author
+    ----------------
+    Chiara Monforte
     """
     _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', var])
     p = 1  # Horizontal resolution
@@ -116,6 +130,10 @@ def plot_updown_bias(df: pd.DataFrame, ax: plt.Axes = None, xlabel='Temperature 
     Returns
     -------
     A line plot comparing the day and night average over depth for the selected day
+
+    Original author
+    ----------------
+    Chiara Monforte
     """
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 5))
@@ -140,7 +158,18 @@ def plot_updown_bias(df: pd.DataFrame, ax: plt.Axes = None, xlabel='Temperature 
 def find_cline(var, depth_array):
     """
     Find the depth of the maximum vertical difference for a specified variables
-    Input data has to be gridded
+    
+    Parameters
+    ----------
+    var: 2D array containing data from a selected variable gridded over time/profile/distance etc. and depth (y-axis))
+    depth_array: 2D array containing pressure/depth data gridded over time/profile/distance etc. and depth (y-axis))
+    
+    Returns
+    -------
+    1D array containing the depth of the cline at each timestamp/profile/distance etc.
+    Original author
+    ----------------
+    Chiara Monforte
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -148,7 +177,7 @@ def find_cline(var, depth_array):
     return np.round(depth_array[0, clin[0]], 1)
 
 
-def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
+def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1):
     """
     This function plots the basic oceanographic variables temperature, salinity and density. A second plot is created and filled with oxygen and 
     chlorophyll data if available.
@@ -166,6 +195,10 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     -------
     Line plots for the averages of the different variables. 
     Thermo, halo and pycnocline are computed and plotted. A sentence stating the depth of the clines is printed too
+    
+    Original author
+    ----------------
+    Chiara Monforte
     """
     _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', 'TEMP', 'PSAL', 'LATITUDE', 'LONGITUDE'])
     p = 1
@@ -247,10 +280,23 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     return fig, ax
 
 
-def optics_first_check(ds, var='CHLA'):
+def optics_first_check(ds: xr.Dataset , var='CHLA'):
     """
-    Function to assess any drift in deep optics data and the presence of any possible negative data
-    This function returns plots and text
+    Function to assess visually any drift in deep optics data and the presence of any possible negative data. This function returns  both plots and text
+    
+    Parameters
+    ----------
+    ds: xarray in OG1 format containing at least time, depth and the selected optical variable
+    var: name of the selected variable         
+    
+    Returns
+    -------
+    Text giving info on where and when negative data was observed
+    Plot showing bottom data with a linear regression line to highlight any drift 
+
+    Original author
+    ----------------
+    Chiara Monforte
     """
     _necessary_variables_check(ds, [var, 'TIME', 'DEPTH'])
     # Check how much negative data there is
@@ -323,6 +369,10 @@ def sunset_sunrise(time, lat, lon):
         An array of the sunrise times.
     sunset: numpy.ndarray
         An array of the sunset times.
+
+    Original author
+    ----------------
+    Function from GliderTools
 
     """
 
@@ -434,10 +484,12 @@ def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof
                 we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
     end_time: End date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,
                 we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
-    start_prof: Start profile of the data selection. If no profile is specified, the specified time selction will be used or the the central week of the deployment.
+    start_prof: Start profile of the data selection. If no profile is specified, the specified time selection will be used
+                or the the central week of the   deployment.
                 It is important to have a large enough number of dives to have some day and night data otherwise the function will not run
-    end_prof:  End profile of the data selection. If no profile is specified, the specified time selction will be used or the the central week of the deployment.
-            It is important to have a large enough number of dives to have some day and night data otherwise the function will not run
+    end_prof:  End profile of the data selection. If no profile is specified, the specified time selection will be used
+            or the the central week of the deployment.
+    It is important to have a large enough number of dives to have some day and night data otherwise the function will not run
                 
     Returns
     -------
@@ -453,6 +505,10 @@ def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof
             depth: Depth values for the average
             dat: Average value for the selected variable
             day: Actual date for the batch 
+    
+    Original author
+    ----------------
+    Chiara Monforte
 
     """
     _necessary_variables_check(ds, ['TIME', sel_var, 'DEPTH'])
@@ -511,6 +567,10 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
     -------
     A line plot comparing the day and night average over depth for the selected day
 
+    Original author
+    ----------------
+    Chiara Monforte
+
     """
     if not sel_day:
         dates = list(day.date.dropna().values) + list(night.date.dropna().values)
@@ -543,15 +603,21 @@ def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, st
         Data should not be gridded.
     sel_var: selected variable to plot
     ax: axis to plot the data
-    start_time: Start date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days
-    end_time: End date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. Defaults to mid 4 days
-    start_prof: Start profile of the data selection. If no profile is specified, the specified time selction will be used or the mid 4 days of the deployment
-    end_prof:  End profile of the data selection. If no profile is specified, the specified time selction will be used or the mid 4 days of the deployment
+    start_time: Start date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. 
+                Defaults to mid 4 days
+    end_time: End date of the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect. 
+                Defaults to mid 4 days
+    start_prof: Start profile of the data selection. If no profile is specified, the specified time selection will be used or the mid 4 days of the deployment
+    end_prof:  End profile of the data selection. If no profile is specified, the specified time selection will be used or the mid 4 days of the deployment
     ylim: specified limit for the maximum y-axis value. The minimum is computed as ylim/30
     
     Returns
     -------
     A section showing the variability of the selected data over time and depth
+
+    Original author
+    ----------------
+    Chiara Monforte
     """
     _necessary_variables_check(ds, ['TIME', sel_var, 'DEPTH'])
     if ax is None:
@@ -593,6 +659,25 @@ def plot_section_with_srss(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, st
 
 
 def check_temporal_drift(ds: xr.Dataset, var: str, ax: plt.Axes = None, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
+    """
+    This function can be used to plot sections for any variable with the sunrise and sunset plotted over
+    
+    Parameters
+    ----------
+    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. 
+        Data should not be gridded.
+    var: selected variable to plot
+    ax: axis to plot the data
+    
+    Returns
+    -------
+    A figure with two subplots. One is a section containing the data over time and depth. The other one is a scatter of data from the variable
+    over depth and colored by date
+
+    Original author
+    ----------------
+    Chiara Monforte
+    """
     _necessary_variables_check(ds, ['TIME', var, 'DEPTH'])
     if ax is None:
         fig, ax = plt.subplots(1, 2, figsize=(14, 6))
@@ -618,7 +703,7 @@ def check_temporal_drift(ds: xr.Dataset, var: str, ax: plt.Axes = None, **kw: di
 def check_monotony(da):
     """
     This function check weather the selected variable over the mission is monotonically increasing or not. This is developed in particular for profile number.
-    If the profile number is not monotonically increasing, this may mean that whatever function was used to assign the profile number may have misassigned some points.
+    If the profile number is not monotonically increasing, this may mean that whatever function was used to assign the profile number may have misassigned at some points.
     
     Parameters
     ----------
@@ -627,6 +712,10 @@ def check_monotony(da):
     Returns
     -------
     It will print a sentence stating whether data is
+
+    Original author
+    ----------------
+    Chiara Monforte
 
     """
     if not pd.Series(da).is_monotonic_increasing:
@@ -646,10 +735,15 @@ def plot_profIncrease(ds: xr.DataArray, ax: plt.Axes = None, **kw: dict, ) -> tu
     ds: xarray in OG1 format with at least PROFILE_NUMBER, TIME, DEPTH. Data should not be gridded
     ax: axis to plot the data
 
-    Returns -------
+    Returns 
+    -------
     Two plots, one line plot with the profile number over time (expected to be always increasing). A
     second plot which is a scatter plot showing at which depth over time there was a profile index where the
-    difference was neither 0 nor 1 (meaning there are possibly issues with how the profile index was assigned)
+    difference was neither 0 nor 1 (meaning there are possibly issues with how the profile index was assigned).
+
+    Original author
+    ----------------
+    Chiara Monforte
 
     """
     _necessary_variables_check(ds, ['TIME', 'PROFILE_NUMBER', 'DEPTH'])
@@ -690,6 +784,10 @@ def plot_glider_track(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
     One plot with the map of the glider track.
     fig: matplotlib.figure.Figure
     ax: matplotlib.axes._subplots.AxesSubplot
+
+    Original author
+    ----------------
+    Eleanor Frajka-Williams
     """
     _necessary_variables_check(ds, ['TIME', 'LONGITUDE', 'LATITUDE'])
     if ax is None:
@@ -750,6 +848,10 @@ def plot_grid_spacing_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict
     Two histograms showing the distribution of grid spacing for depth and time.
     fig: matplotlib.figure.Figure
     ax: matplotlib.axes._subplots.AxesSubplot
+
+    Original author
+    ----------------
+    Eleanor Frajka-Williams
     """
     _necessary_variables_check(ds, ['TIME', 'DEPTH'])
     if ax is None:
@@ -826,6 +928,10 @@ def plot_ts_histograms(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple
     Three plots: histogram of temperature, histogram of salinity, and 2D histogram of salinity and temperature with density contours.
     fig: matplotlib.figure.Figure
     ax: matplotlib.axes._subplots.AxesSubplot
+
+    Original author
+    ----------------
+    Eleanor Frajka-Williams
     """
     _necessary_variables_check(ds, ['DEPTH', 'LONGITUDE', 'LATITUDE', 'PSAL', 'TEMP'])
 
@@ -897,6 +1003,10 @@ def calc_DEPTH_Z(ds):
     Returns
     -------
     xarray.Dataset: The dataset with an additional 'DEPTH_Z' variable.
+
+    Original author
+    ----------------
+    Eleanor Frajka-Williams
     """
     # Ensure the required variables are present
     if 'PRES' not in ds.variables or 'LATITUDE' not in ds.variables or 'LONGITUDE' not in ds.variables:
@@ -933,6 +1043,10 @@ def calc_glider_w_from_depth(ds):
     -------
     ds (xarray.Dataset): Containing the new variable
     - GLIDER_VERT_VELO_DZDT (array-like): with vertical velocities calculated from dz/dt
+
+    Original author
+    ----------------
+    Eleanor Frajka-Williams
     """
     _necessary_variables_check(ds, ['TIME'])
     # Ensure inputs are numpy arrays
@@ -978,7 +1092,13 @@ def calc_seawater_w(ds):
     -------
     ds (xarray.Dataset): Dataset with the new variable 'VERT_SW_SPEED', which is the inferred vertical seawater velocity.
 
-    Eleanor's note: This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. 
+    Note
+    -----
+    This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. 
+
+    Original author
+    ----------------
+    Eleanor Frajka-Williams
     """
     _necessary_variables_check(ds, ['GLIDER_VERT_VELO_MODEL', 'GLIDER_VERT_VELO_DZDT'])
     
@@ -1012,6 +1132,10 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     Returns
     -------
     fig, axs (tuple): The figure and axes objects for the plot.
+
+    Original author
+    ----------------
+    Eleanor Frajka-Williams
     """
     _necessary_variables_check(ds, ['GLIDER_VERT_VELO_MODEL', 'GLIDER_VERT_VELO_DZDT', 'VERT_CURR_MODEL','PROFILE_NUMBER'])
 
@@ -1115,6 +1239,10 @@ def ramsey_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
     Note
     ----
     I know this is a non-sensical name.  We should re-name, but is based on advice from Ramsey Harcourt.
+
+    Original author
+    ----------------
+    Eleanor Frajka-Williams
     """
     _necessary_variables_check(ds, [var, 'PRES'])
     press = ds.PRES.values
@@ -1194,7 +1322,7 @@ def ramsey_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
     )
     return ds_out
 
-def plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs):
+def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.Dataset):
     """
     Plots combined vertical velocity profiles for dives and climbs.
 
@@ -1211,6 +1339,10 @@ def plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs):
     Note
     ----
     Assumes that the vertical velocities are in m/s and the depth grid is in meters.
+
+    Original author
+    ----------------
+    Eleanor Frajka-Williams
     """
     conv_factor = 100  # Convert m/s to cm/s
     depth_negative = ds_out_dives.zgrid.values * -1
