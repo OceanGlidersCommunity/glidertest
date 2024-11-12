@@ -103,10 +103,10 @@ def test_vert_vel():
     tools.plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs)
     # extra tests for ramsey calculations of DEPTH_Z
     ds_climbs = ds_climbs.drop_vars(['DEPTH_Z'])
-    tools.ramsey_binavg(ds_climbs, var='VERT_CURR_MODEL', dz=10)
+    tools.compute_ramsey_binavg(ds_climbs, var='VERT_CURR_MODEL', dz=10)
     ds_climbs = ds_climbs.drop_vars(['LATITUDE'])
     with pytest.raises(KeyError) as e:
-        tools.ramsey_binavg(ds_climbs, var='VERT_CURR_MODEL', dz=10)
+        tools.compute_ramsey_binavg(ds_climbs, var='VERT_CURR_MODEL', dz=10)
 
 
 def test_depth_z():
