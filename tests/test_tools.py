@@ -4,10 +4,12 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import matplotlib
-matplotlib.use('agg') # use agg backend to prevent creating plot windows during tests
+matplotlib.use('agg')  # use agg backend to prevent creating plot windows during tests
+
 
 def test_plots(start_prof=0, end_prof=100):
     ds = fetchers.load_sample_dataset()
+    ds = ds.drop_vars(['DENSITY'])
     fig, ax = tools.plot_basic_vars(ds,start_prof=start_prof, end_prof=end_prof)
     assert ax[0].get_ylabel() == 'Depth (m)'
     assert ax[0].get_xlabel() == f'Average Temperature [C] \nbetween profile {start_prof} and {end_prof}'

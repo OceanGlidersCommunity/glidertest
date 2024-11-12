@@ -30,7 +30,21 @@ def _necessary_variables_check(ds: xr.Dataset, vars: list):
     if missing_vars:
         msg = f"Required variables {list(missing_vars)} do not exist in the suppllied dataset."
         raise KeyError(msg)
-    
+
+
+def _calc_teos10_variables(ds):
+    """
+    Calculates TEOS 10 variables not present in the dataset
+    :param ds:
+    :return:
+    """
+    _necessary_variables_check(ds, ['DEPTH', 'LONGITUDE', 'LATITUDE', 'TEMP', 'PSAL'])
+    if 'DENSITY' not in ds.variables:
+        SA = gsw.SA_from_SP(ds.PSAL, ds.DEPTH, ds.LONGITUDE, ds.LATITUDE)
+        CT = gsw.CT_from_t(SA, ds.TEMP, ds.DEPTH)
+        ds['DENSITY'] = ('N_MEASUREMENTS', gsw.rho(SA, CT, ds.DEPTH).values)
+    return ds
+
 
 def grid2d(x, y, v, xi=1, yi=1):
     """
@@ -160,17 +174,11 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     Thermo, halo and pycnocline are computed and plotted. A sentence stating the depth of the clines is printed too
     """
     _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', 'TEMP', 'PSAL', 'LATITUDE', 'LONGITUDE'])
+    ds = _calc_teos10_variables(ds)
     p = 1
     z = v_res
     tempG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.TEMP, p, z)
     salG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.PSAL, p, z)
-
-    if 'DENSITY' not in ds.variables:
-        ds['DENSITY'] = (('N_MEASUREMENTS'), np.full(ds.dims['N_MEASUREMENTS'], np.nan))
-        SA = gsw.SA_from_SP(ds.PSAL, ds.DEPTH, ds.LONGITUDE, ds.LATITUDE)
-        CT = gsw.CT_from_t(SA, ds.TEMP, ds.DEPTH)
-        ds['DENSITY'] = gsw.rho(SA, CT, ds.DEPTH)
-
     denG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DENSITY, p, z)
 
     tempG = tempG[start_prof:end_prof, :]
@@ -591,19 +599,16 @@ def check_temporal_drift(ds: xr.Dataset, var: str, ax: plt.Axes = None, **kw: di
     else:
         fig = plt.gcf()
 
-    if var not in ds.variables:
-        print(f'{var} does not exist in the dataset. Make sure the spelling is correct or add this variable to your dataset')
-    else:
-        ax[0].scatter(mdates.date2num(ds.TIME), ds[var], s=10)
-        ax[0].xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
-        ax[0].set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
+    ax[0].scatter(mdates.date2num(ds.TIME), ds[var], s=10)
+    ax[0].xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
+    ax[0].set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
 
-        c = ax[1].scatter(ds[var], ds.DEPTH, c=mdates.date2num(ds.TIME), s=10)
-        ax[1].set(xlim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel='Depth (m)', xlabel=var)
-        ax[1].invert_yaxis()
+    c = ax[1].scatter(ds[var], ds.DEPTH, c=mdates.date2num(ds.TIME), s=10)
+    ax[1].set(xlim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel='Depth (m)', xlabel=var)
+    ax[1].invert_yaxis()
 
-        [a.grid() for a in ax]
-        plt.colorbar(c, format=DateFormatter('%b %d'))
+    [a.grid() for a in ax]
+    plt.colorbar(c, format=DateFormatter('%b %d'))
     return fig, ax
 
 
@@ -629,13 +634,13 @@ def check_monotony(da):
         return True
 
 
-def plot_profIncrease(ds: xr.DataArray, ax: plt.Axes = None, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
+def plot_profIncrease(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
     """
     This function can be used to plot the profile number and check for any possible issues with the profile index assigned.
 
     Parameters
     ----------
-    ds: xarray in OG1 format with at least PROFILE_NUMBER, TIME, DEPTH. Data should not be gridded
+    ds: xarray dataset in OG1 format with at least PROFILE_NUMBER, TIME, DEPTH. Data should not be gridded
     ax: axis to plot the data
 
     Returns -------
@@ -890,9 +895,7 @@ def calc_DEPTH_Z(ds):
     -------
     xarray.Dataset: The dataset with an additional 'DEPTH_Z' variable.
     """
-    # Ensure the required variables are present
-    if 'PRES' not in ds.variables or 'LATITUDE' not in ds.variables or 'LONGITUDE' not in ds.variables:
-        raise ValueError("Dataset must contain 'PRES', 'LATITUDE', and 'LONGITUDE' variables.")
+    _necessary_variables_check(ds, ['PRES', 'LONGITUDE', 'LATITUDE'])
 
     # Initialize the new variable with the same dimensions as dive_num
     ds['DEPTH_Z'] = (['N_MEASUREMENTS'], np.full(ds.dims['N_MEASUREMENTS'], np.nan))
