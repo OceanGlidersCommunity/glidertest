@@ -183,9 +183,9 @@ def plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1):
     ds = _calc_teos10_variables(ds)
     p = 1
     z = v_res
-    tempG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.TEMP, p, z)
-    salG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.PSAL, p, z)
-    denG, profG, depthG = grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DENSITY, p, z)
+    tempG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.TEMP, p, z)
+    salG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.PSAL, p, z)
+    denG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds.DENSITY, p, z)
 
 
     tempG = tempG[start_prof:end_prof, :]

@@ -75,7 +75,7 @@ def test_temporal_drift(var='DOXY'):
 def test_profile_check():
     ds = fetchers.load_sample_dataset()
     tools.check_monotony(ds.PROFILE_NUMBER)
-    tools.plot_prof_monotony(ds)
+    tools.plot_profIncrease(ds)
 
 
 def test_check_monotony():
