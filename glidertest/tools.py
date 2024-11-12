@@ -61,7 +61,7 @@ def grid2d(x, y, v, xi=1, yi=1):
 
     Original author
     ----------------
-    Bastien Queste (https://github.com/search?q=owner%3Abastienqueste%20grid2d&type=code)
+    Bastien Queste (https://github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140)
     
     """
     if np.size(xi) == 1:
@@ -286,7 +286,7 @@ def optics_first_check(ds: xr.Dataset , var='CHLA'):
     
     Parameters
     ----------
-    ds: xarray in OG1 format containing at least time, depth and the selected optical variable
+    ds: xarray dataset in OG1 format containing at least time, depth and the selected optical variable
     var: name of the selected variable         
     
     Returns
@@ -485,7 +485,7 @@ def day_night_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof
     end_time: End date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,
                 we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
     start_prof: Start profile of the data selection. If no profile is specified, the specified time selection will be used
-                or the the central week of the   deployment.
+                or the the central week of the deployment.
                 It is important to have a large enough number of dives to have some day and night data otherwise the function will not run
     end_prof:  End profile of the data selection. If no profile is specified, the specified time selection will be used
             or the the central week of the deployment.
