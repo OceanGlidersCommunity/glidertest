@@ -3,14 +3,14 @@ from glidertest import fetchers, tools
 import matplotlib.pyplot as plt
 import math
 import numpy as np
-
+import matplotlib
+matplotlib.use('agg') # use agg backend to prevent creating plot windows during tests
 
 def test_plots(start_prof=0, end_prof=100):
     ds = fetchers.load_sample_dataset()
     fig, ax = tools.plot_basic_vars(ds,start_prof=start_prof, end_prof=end_prof)
     assert ax[0].get_ylabel() == 'Depth (m)'
     assert ax[0].get_xlabel() == f'Average Temperature [C] \nbetween profile {start_prof} and {end_prof}'
-    return fig
 
 
 def test_up_down_bias(v_res=1, xlabel='Salinity'):
@@ -96,4 +96,3 @@ def test_vert_vel():
     ds_out_dives = tools.ramsey_binavg(ds_dives, var = 'VERT_CURR_MODEL', dz=10)
     ds_out_climbs = tools.ramsey_binavg(ds_climbs, var = 'VERT_CURR_MODEL', dz=10)
     tools.plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs)
- 
