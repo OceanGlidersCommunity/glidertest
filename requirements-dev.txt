@@ -7,11 +7,10 @@ matplotlib
 pandas
 seaborn
 scipy
-cmocean
 skyfield
-tqdm
 jupyterlab
 pytest
+pytest-cov
 nbsphinx
 nbconvert
 sphinx

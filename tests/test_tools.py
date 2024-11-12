@@ -25,7 +25,12 @@ def test_up_down_bias(v_res=1, xlabel='Salinity'):
     assert ax.get_xlim() == (-np.nanpercentile(lims, 99.5), np.nanpercentile(lims, 99.5))
     assert ax.get_ylim() == (df.depth.max() + 1, -df.depth.max() / 30)
     assert ax.get_xlabel() == xlabel
- 
+    # check without passing axis
+    new_fig, new_ax = tools.plot_updown_bias(df, xlabel=xlabel)
+    assert new_ax.get_xlim() == (-np.nanpercentile(lims, 99.5), np.nanpercentile(lims, 99.5))
+    assert new_ax.get_ylim() == (df.depth.max() + 1, -df.depth.max() / 30)
+    assert new_ax.get_xlabel() == xlabel
+
 
 def test_chl(var1='CHLA', var2='BBP700'):
     ds = fetchers.load_sample_dataset()
@@ -96,3 +101,18 @@ def test_vert_vel():
     ds_out_dives = tools.compute_ramsey_binavg(ds_dives, var = 'VERT_CURR_MODEL', dz=10)
     ds_out_climbs = tools.compute_ramsey_binavg(ds_climbs, var = 'VERT_CURR_MODEL', dz=10)
     tools.plot_combined_velocity_profiles(ds_out_dives, ds_out_climbs)
+    # extra tests for ramsey calculations of DEPTH_Z
+    ds_climbs = ds_climbs.drop_vars(['DEPTH_Z'])
+    tools.ramsey_binavg(ds_climbs, var='VERT_CURR_MODEL', dz=10)
+    ds_climbs = ds_climbs.drop_vars(['LATITUDE'])
+    with pytest.raises(KeyError) as e:
+        tools.ramsey_binavg(ds_climbs, var='VERT_CURR_MODEL', dz=10)
+
+
+def test_depth_z():
+    ds = fetchers.load_sample_dataset()
+    assert 'DEPTH_Z' not in ds.variables
+    ds = tools.calc_DEPTH_Z(ds)
+    assert 'DEPTH_Z' in ds.variables
+    assert ds.DEPTH_Z.min() < -50
+    assert ds.DEPTH_Z.max() < 0

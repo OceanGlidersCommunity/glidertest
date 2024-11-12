@@ -1,6 +1,5 @@
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import datetime
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -10,7 +9,6 @@ from pandas import DataFrame
 from scipy import stats
 from skyfield import almanac
 from skyfield import api
-from tqdm import tqdm
 import matplotlib.colors as mcolors
 import gsw
 import cartopy.crs as ccrs
@@ -86,6 +84,7 @@ def compute_updown_bias(ds, var='PSAL', v_res=1):
     _necessary_variables_check(ds, ['PROFILE_NUMBER', 'DEPTH', var])
     p = 1  # Horizontal resolution
     z = v_res  # Vertical resolution
+
     if var in ds.variables:
         varG, profG, depthG = compute_grid2d(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
 
@@ -99,7 +98,6 @@ def compute_updown_bias(ds, var='PSAL', v_res=1):
     else:
         print(f'{var} is not in the dataset')
         df = pd.DataFrame()
-
     return df
 
 
@@ -350,7 +348,7 @@ def compute_sunset_sunrise(time, lat, lon):
 
     sunrise = []
     sunset = []
-    for n in tqdm(range(len(bluffton))):
+    for n in range(len(bluffton)):
 
         f = almanac.sunrise_sunset(eph, bluffton[n])
         t, y = almanac.find_discrete(time_utc[n], time_utc_offset[n], f)
