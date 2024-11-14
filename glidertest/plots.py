@@ -38,8 +38,10 @@ def plot_updown_bias(df: pd.DataFrame, ax: plt.Axes = None, xlabel='Temperature 
     with plt.style.context(glidertest_style_file):
         if ax is None:
             fig, ax = plt.subplots()
+            force_plot = True
         else:
             fig = plt.gcf()
+            force_plot = False
 
         if not all(hasattr(df, attr) for attr in ['dc', 'depth']):
             ax.text(0.5, 0.55, xlabel, va='center', ha='center', transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5, edgecolor='none'))
@@ -53,6 +55,8 @@ def plot_updown_bias(df: pd.DataFrame, ax: plt.Axes = None, xlabel='Temperature 
             ax.set_ylim(df.depth.max() + 1, -df.depth.max() / 30)
         ax.set_xlabel(xlabel)
         ax.grid()
+        if force_plot:
+            plt.show()
     return fig, ax
 
 def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1):
@@ -150,7 +154,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1):
                 ax[1].text(0.3, 0.5, 'Oxygen data unavailable', va='top', transform=ax[1].transAxes)
             [a.set_ylim(depthG.max() + 10, -5) for a in ax]
             [a.grid() for a in ax]
-
+            plt.show()
     return fig, ax
 
 
@@ -205,6 +209,7 @@ def process_optics_assess(ds, var='CHLA'):
         ax.set(ylim=(np.nanpercentile(bottom_opt_data, 0.5), np.nanpercentile(bottom_opt_data, 99.5)),
                xlabel='Measurements',
                ylabel=var)
+        plt.show()
     percentage_change = (((slope * len(bottom_opt_data) + intercept) - intercept) / abs(intercept)) * 100
 
     if abs(percentage_change) >= 1:
@@ -247,8 +252,10 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
     with plt.style.context(glidertest_style_file):
         if ax is None:
             fig, ax = plt.subplots()
+            force_plot = True
         else:
             fig = plt.gcf()
+            force_plot = False
         ax.plot(night.where(night.date == sel_day).dropna().dat, night.where(night.date == sel_day).dropna().depth,
                 label='Night time average')
         ax.plot(day.where(day.date == sel_day).dropna().dat, day.where(day.date == sel_day).dropna().depth,
@@ -258,6 +265,8 @@ def plot_daynight_avg(day: pd.DataFrame, night: pd.DataFrame, ax: plt.Axes = Non
         ax.grid()
         ax.set(xlabel=xlabel, ylabel='Depth [m]')
         ax.set_title(sel_day)
+        if force_plot:
+            plt.show()
     return fig, ax
 
 
@@ -325,6 +334,7 @@ def plot_quench_assess(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_
             ax.axvline(np.unique(m), c='orange')
         ax.set_ylabel('Depth [m]')
         plt.colorbar(c, label=f'{sel_var} [{ds[sel_var].units}]')
+        plt.show()
     return fig, ax
 
 
@@ -365,6 +375,7 @@ def check_temporal_drift(ds: xr.Dataset, var: str, ax: plt.Axes = None, **kw: di
 
         [a.grid() for a in ax]
         plt.colorbar(c, format=DateFormatter('%b %d'))
+        plt.show()
     return fig, ax
 
 
@@ -580,6 +591,7 @@ def plot_grid_spacing(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
             axes.tick_params(axis='both', which='major')
             # More subtle grid lines
             axes.grid(True, which='both', linestyle='--', linewidth=0.5, color='grey')
+        plt.show()
 
     return fig, ax
 
@@ -659,7 +671,7 @@ def plot_ts(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figur
         cbar.set_label('Log Counts')
         ax[2].set_xlabel('Absolute Salinity ( )')
         ax[2].set_ylabel('Conservative Temperature (°C)')
-        ax[2].set_title('2D Histogram (Log Scale)')
+        ax[2].set_title('2D Histogram \n (Log Scale)')
         # Set x-limits based on salinity plot and y-limits based on temperature plot
         ax[2].set_xlim(ax[1].get_xlim())
         ax[2].set_ylim(ax[0].get_xlim())
@@ -685,6 +697,7 @@ def plot_ts(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figur
         fig_width, fig_height = fig.get_size_inches()
         new_height = box0.width *  fig_width / fig_height
         ax[2].set_position([box2.x0, box2.y0, box2.width, new_height])
+        plt.show()
 
     return fig, ax
 
@@ -767,8 +780,9 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
             legend_loc = 'upper right'
         else:
             legend_loc = 'lower right'
+        plt.rcParams['legend.fontsize'] = 12
         ax1_hist.legend(loc=legend_loc)
-
+        plt.rcParams['legend.fontsize'] = 15
         # Lower left subplot for vertical water speed
         ax2 = axs[1, 0]
         ax2.axhline(0, color='gray', linestyle='-', linewidth=0.5)  # Add zero horizontal line
@@ -896,6 +910,6 @@ def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.
         plt.tight_layout()
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
-        plt.show()
         ax.tick_params(axis='both', which='major')
+        plt.show()
         return fig, ax
