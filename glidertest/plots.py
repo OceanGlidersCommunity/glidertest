@@ -366,7 +366,7 @@ def check_temporal_drift(ds: xr.Dataset, var: str, ax: plt.Axes = None, **kw: di
             fig = plt.gcf()
 
         ax[0].scatter(mdates.date2num(ds.TIME), ds[var], s=10)
-        #ax[0].xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
+        ax[0].xaxis.set_major_formatter(DateFormatter('%d-%b'))
         ax[0].set(ylim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel=var)
 
         c = ax[1].scatter(ds[var], ds.DEPTH, c=mdates.date2num(ds.TIME), s=10)
@@ -911,5 +911,6 @@ def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
         ax.tick_params(axis='both', which='major')
+        ax.legend()
         plt.show()
         return fig, ax
