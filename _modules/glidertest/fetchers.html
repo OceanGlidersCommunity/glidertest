@@ -44,7 +44,6 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../demo-output.html">Glidertest demo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html#Basic-statistics-of-dataset">Basic statistics of dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../glidertest.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">API</span></code></a></li>
 </ul>
 
@@ -84,6 +83,8 @@
         <span class="s2">&quot;sea055_20220104T1536_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:7f72f8a0398c3d339687d7b7dcf0311036997f6855ed80cae5bbf877e09975a6&quot;</span><span class="p">,</span>
         <span class="s2">&quot;sea045_20230530T0832_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:9a97b5b212e9ad751909e175bc01fdc75fd7b7fd784cc59d8e9f29e8bdfb829f&quot;</span><span class="p">,</span>
         <span class="s2">&quot;sg015_20050213T230253_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:ca64e33e9f317e1fc3442e74485a9bf5bb1b4a81b5728e9978847b436e0586ab&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;sg014_20040924T182454_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:c9fca08ce676573224c04512f4d5bfe251d0419478ee433dfefa03aa70e2eb9a&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;sg014_20040924T182454_delayed_subset.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:0e97a4107364d27364d076ed8007f08c891b2015b439cf524a44612de0a1a2ea&quot;</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">)</span>
 
@@ -94,7 +95,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Download sample datasets for use with glidertest</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        dataset_name (str, optional): _description_. Defaults to &quot;sea076_20230906T0852_delayed.nc&quot;.</span>
+<span class="sd">        dataset_name (str, optional): _description_. Defaults to &quot;sea045_20230530T0832_delayed.nc&quot;.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: If the requests dataset is not known, raises a value error</span>
@@ -107,7 +108,7 @@
         <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Requested sample dataset </span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s2"> not known. Specify one of the following available datasets: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">data_source_og</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 </pre></div>
 

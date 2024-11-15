@@ -48,7 +48,6 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="demo-output.html">Glidertest demo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo-output.html#Basic-statistics-of-dataset">Basic statistics of dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glidertest.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">API</span></code></a></li>
 </ul>
 
@@ -78,6 +77,21 @@
              
   <section id="welcome-to-glidertest-s-documentation">
 <h1>Welcome to glidertest’s documentation!<a class="headerlink" href="#welcome-to-glidertest-s-documentation" title="Link to this heading"></a></h1>
+<p>Glidertest is a Python package aiming to diagnose possible issues with your glider dataset. The package takes as input data from any glider in <a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OG1 format</a>.
+At the moment, we have implemented functions ranging from basic visualization of your glider data (location, gridding in the dataset, water mass properties, water column structure, etc.) to more complex analysis such as flight model performance when you work with vertical velocities or non-photochemical quenching when you work with optical data.
+This package serves solely as a diagnostic tool. We occasionally have suggestions for packages or tools that aim to address and solve a particular issue or link to SOP where more processing info can be found.</p>
+<p>We recommend consulting best practice guides like the <a class="reference external" href="https://oceangliderscommunity.github.io/Oxygen_SOP/README.html">Oxygen SOP</a> and the other OceanGliders SOPs. We also recommend the <a class="reference external" href="https://glidertools.readthedocs.io/en/latest/">GliderTools</a> Python package for processing and to possibly address some common issues with glider data.</p>
+<dl class="simple">
+<dt>We use work from the following papers:</dt><dd><ul class="simple">
+<li><p>Bennett, J., Stahr, F., and Eriksen, C. (2019). Determining Seaglider Velocities Automatically. <a class="reference external" href="http://hdl.handle.net/1773/44948">http://hdl.handle.net/1773/44948</a></p></li>
+<li><p>Frajka-Williams, E., Eriksen, C. C., Rhines, P. B., and Harcourt, R. R. (2011). Determining vertical water velocities from Seaglider. Journal of Atmospheric and Oceanic Technology, 28(12), 1641-1656. <a class="reference external" href="https://doi.org/10.1175/2011JTECHO830.1">https://doi.org/10.1175/2011JTECHO830.1</a></p></li>
+<li><p>Thomalla, S.J., Moutier, W., Ryan-Keogh, T.J., Gregor, L. and Schütt, J. (2018), An optimized method for correcting fluorescence quenching using optical backscattering on autonomous platforms. Limnol. Oceanogr. Methods, 16: 132-144. <a class="reference external" href="https://doi.org/10.1002/lom3.10234">https://doi.org/10.1002/lom3.10234</a></p></li>
+</ul>
+</dd>
+</dl>
+<p>We provide an example notebook to demonstrate the purpose of the various function and test datasets from SeaExplorer data in the Baltic and Seaglider data in the Labrador Sea.</p>
+<p>For recommendations or bug reports, please visit <a class="reference external" href="https://github.com/callumrollo/glidertest/issues/new">https://github.com/callumrollo/glidertest/issues/new</a></p>
+<hr class="docutils" />
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -85,42 +99,27 @@
 <li class="toctree-l2"><a class="reference internal" href="demo-output.html#Load-dataset">Load dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo-output.html#Other-example-datasets">Other example datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo-output.html#Vertical-velocity">Vertical velocity</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="demo-output.html#Basic-statistics-of-dataset">Basic statistics of dataset</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="demo-output.html#Check-basic-data-and-water-column-structure-first">Check basic data and water column structure first</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="demo-output.html#Check-if-the-profile-number-was-assigned-well">Check if the profile number was assigned well</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="demo-output.html#Basic-statistics-of-dataset">Basic statistics of dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo-output.html#Check-basic-data-and-water-column-structure-first">Check basic data and water column structure first</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo-output.html#Check-if-the-profile-number-was-assigned-well">Check if the profile number was assigned well</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo-output.html#Check-for-up-downcast-bias-in-Salinity,-Temperature,-Chlorophyll-and-Oxygen">Check for up-downcast bias in Salinity, Temperature, Chlorophyll and Oxygen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo-output.html#CTD">CTD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="demo-output.html#Chlorophyll-fluorescence">Chlorophyll fluorescence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo-output.html#Chlorophyll-fluorescence">Chlorophyll fluorescence</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="demo-output.html#Non-photochemical-quenching-corrections">Non photochemical quenching corrections</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="demo-output.html#Photosyntetically-Active-Radiation-(PAR)">Photosyntetically Active Radiation (PAR)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo-output.html#Optical-Backscatter">Optical Backscatter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demo-output.html#Oxygen">Oxygen</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="glidertest.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">API</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.calc_DEPTH_Z"><code class="docutils literal notranslate"><span class="pre">calc_DEPTH_Z()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.calc_glider_w_from_depth"><code class="docutils literal notranslate"><span class="pre">calc_glider_w_from_depth()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.calc_seawater_w"><code class="docutils literal notranslate"><span class="pre">calc_seawater_w()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.calc_w_meas"><code class="docutils literal notranslate"><span class="pre">calc_w_meas()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.calc_w_sw"><code class="docutils literal notranslate"><span class="pre">calc_w_sw()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.check_monotony"><code class="docutils literal notranslate"><span class="pre">check_monotony()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.check_temporal_drift"><code class="docutils literal notranslate"><span class="pre">check_temporal_drift()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.day_night_avg"><code class="docutils literal notranslate"><span class="pre">day_night_avg()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.find_cline"><code class="docutils literal notranslate"><span class="pre">find_cline()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.grid2d"><code class="docutils literal notranslate"><span class="pre">grid2d()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.optics_first_check"><code class="docutils literal notranslate"><span class="pre">optics_first_check()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.plot_basic_vars"><code class="docutils literal notranslate"><span class="pre">plot_basic_vars()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.plot_daynight_avg"><code class="docutils literal notranslate"><span class="pre">plot_daynight_avg()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.plot_glider_track"><code class="docutils literal notranslate"><span class="pre">plot_glider_track()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.plot_grid_spacing_histograms"><code class="docutils literal notranslate"><span class="pre">plot_grid_spacing_histograms()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.plot_profIncrease"><code class="docutils literal notranslate"><span class="pre">plot_profIncrease()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.plot_section_with_srss"><code class="docutils literal notranslate"><span class="pre">plot_section_with_srss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.plot_ts_histograms"><code class="docutils literal notranslate"><span class="pre">plot_ts_histograms()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.plot_updown_bias"><code class="docutils literal notranslate"><span class="pre">plot_updown_bias()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.plot_vertical_speeds_with_histograms"><code class="docutils literal notranslate"><span class="pre">plot_vertical_speeds_with_histograms()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.sunset_sunrise"><code class="docutils literal notranslate"><span class="pre">sunset_sunrise()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.updown_bias"><code class="docutils literal notranslate"><span class="pre">updown_bias()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.compute_daynight_avg"><code class="docutils literal notranslate"><span class="pre">compute_daynight_avg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.quant_binavg"><code class="docutils literal notranslate"><span class="pre">quant_binavg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.tools.quant_updown_bias"><code class="docutils literal notranslate"><span class="pre">quant_updown_bias()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="glidertest.html#glidertest.fetchers.load_sample_dataset"><code class="docutils literal notranslate"><span class="pre">load_sample_dataset()</span></code></a></li>
 </ul>
 </li>
