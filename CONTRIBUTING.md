@@ -21,7 +21,7 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 
 Before you ask a question, it is best to search for existing [Issues](https://github.com/callumrollo/glidertest/issues) that might help you. If you don't find an existing Issue:
 
-- Open an [Issue](https://github.com/user/project-slug/issues/new).
+- Open an [Issue](https://github.com/callumrollo/glidertest/issues/new).
 - Provide as much context as you can about what you're running into.
 - If possible, try to provide a reproducible example, e.g. a jupyter notebook.
 
@@ -52,13 +52,13 @@ This section guides you through submitting an enhancement suggestion for XYZ, **
 #### Before Submitting an Enhancement
 
 - Make sure that you are using the latest version.
-- Read the [documentation](https://github.com/user/project-slug/blob/main/README.md) carefully and find out if the functionality is already covered, maybe by an individual configuration.
+- Read the [documentation](https://callumrollo.github.io/glidertest) carefully and find out if the functionality is already covered, maybe by an individual configuration.
 - Find out whether your idea fits with the scope and aims of the project. It's up to you to make a strong case to convince the project's developers of the merits of this feature. Keep in mind that we want features that will be useful to the majority of our users and not just a small subset.
 
 <!-- omit in toc -->
 #### How Do I Submit a Good Enhancement Suggestion?
 
-Enhancement suggestions are tracked as [GitHub issues](https://github.com/user/project-slug/issues).
+Enhancement suggestions are tracked as [GitHub issues](https://github.com/callumrollo/glidertest/issues).
 
 - Use a **clear and descriptive title** for the issue to identify the suggestion.
 - Provide a **step-by-step description of the suggested enhancement** in as many details as possible.
