@@ -93,3 +93,10 @@ def test_vert_vel():
     ds_climbs = ds_climbs.drop_vars(['LATITUDE'])
     with pytest.raises(KeyError) as e:
         tools.quant_binavg(ds_climbs, var='VERT_CURR_MODEL', dz=10)
+
+def test_hyst_plot(var):
+    ds = fetchers.load_sample_dataset()
+    fig, ax = plot_hysteresis(ds, var=var, v_res=1, perct_err=2, ax=None)
+    assert fig.get_suptitle()== var
+    assert ax[3].get_ylabel() == 'Depth (m)'
+    assert ax[0].get_ylabel() == 'Depth (m)'

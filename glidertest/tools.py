@@ -9,11 +9,11 @@ from glidertest import utilities
 
 def quant_updown_bias(ds, var='PSAL', v_res=1):
     """
-    This function computes up and downcast averages for a specific variable
+    This function computes up and downcast averages for a specific variable and outputs the difference between them
 
     Parameters
     ----------
-    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. 
+    ds: xarray on OG1 format containing at least depth, profile number and the selected variable.
         Data should not be gridded.
     var: Selected variable
     v_res: Vertical resolution for the gridding
@@ -333,3 +333,64 @@ def quant_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
         }
     )
     return ds_out
+
+
+def quant_hysteresis(ds: xr.Dataset, var='DOXY', v_res=1):
+    """
+    This function computes up and downcast averages for a specific variable
+
+    Parameters
+    ----------
+    ds: xarray on OG1 format containing at least depth, profile_number and the selected variable.
+        Data should not be gridded.
+    var: Selected variable
+    v_res: Vertical resolution for the gridding
+
+    Returns
+    -------
+   df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values
+
+    Original author
+    ----------------
+    Chiara Monforte
+    """
+    # utilities._check_necessary_variables(ds, ['PROFILE_NUMBER', 'DEPTH', var])
+    p = 1  # Horizontal resolution
+    z = v_res  # Vertical resolution
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        varG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z)
+        dive = np.nanmedian(varG[0::2, :], axis=0)  # Dive
+        climb = np.nanmedian(varG[1::2, :], axis=0)  # Climb
+        df = pd.DataFrame(data={'dive': dive, 'climb': climb, 'depth': depthG[0, :]})
+    return df
+
+
+def compute_hyst_stat(ds, var='DOXY', v_res=1):
+    """
+    This function computes some basic statistics for the differences between climb and dive data
+
+    Parameters
+    ----------
+    ds: xarray on OG1 format containing at least depth, profile_number and the selected variable. Data should not be gridded.
+    var: Selected variable
+    v_res: Vertical resolution for the gridding
+
+    Returns
+    -------
+    diff: difference between upcast and downcast
+    err: Percentage error of the dive-climb difference. One value per depth step
+    rms: Root Mean Square of the difference in values between dive and climb
+    df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values
+
+    Original author
+    ----------------
+    Chiara  Monforte
+    """
+    df = quant_hysteresis(ds, var=var, v_res=v_res)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        diff = abs(df.dive - df.climb)
+        err = (diff * 100) / np.nanmedian([df.dive, df.climb], axis=0)
+        rms = np.sqrt(np.nanmean(abs(df.dive - df.climb) ** 2))
+    return df, diff, err, rms

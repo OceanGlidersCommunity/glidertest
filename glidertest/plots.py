@@ -899,3 +899,62 @@ def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.
         plt.show()
         ax.tick_params(axis='both', which='major')
         return fig, ax
+
+    def plot_hysteresis(ds, var='DOXY', v_res=1, perct_err=2, ax=None):
+        """
+        This function creates 4 plots which can help the user visualize any possible hysteresis
+        present in their dataset for a specific variable
+
+        Parameters
+        ----------
+        ds: xarray on OG1 format containing at least depth, profile_number and the selected variable.
+            Data should not be gridded.
+        var: Selected variable
+        v_res: Vertical resolution for the gridding
+        perct_err: Percentage error threshold used to plot a vertical line in one of the subplots
+        ax: Specific axis in can the user wants to add this plot to an existing figure
+
+        Returns
+        -------
+       df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values
+
+        Original author
+        ----------------
+        Chiara Monforte
+        """
+        varG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], 1, v_res)
+        df, diff, err, rms = tools.compute_hyst_stat(ds, var=var, v_res=v_res)
+
+        if ax is None:
+            fig = plt.figure(figsize=(14, 10))
+            force_plot = True
+        else:
+            fig = plt.gcf()
+            force_plot = False
+        gs = fig.add_gridspec(2, 3)
+        # open axes/subplots
+        ax = []
+        ax.append(fig.add_subplot(gs[0, 0]))
+        ax.append(fig.add_subplot(gs[0, 1]))
+        ax.append(fig.add_subplot(gs[0, 2]))
+        ax.append(fig.add_subplot(gs[1, :]))
+        ax[0].plot(df.climb, df.depth, label='Dive')
+        ax[0].plot(df.dive, df.depth, label='Climb')
+        ax[0].legend()
+        ax[1].plot(diff, df.depth)
+        ax[2].plot(err, df.depth)
+        ax[2].axvline(perct_err, c='red')
+        [a.grid() for a in ax]
+        [a.invert_yaxis() for a in ax]
+        ax[0].set_ylabel('Depth (m)')
+        ax[0].set_xlabel(f'{var} concentration ({ds[var].units})')
+        ax[1].set_xlabel(f'Absolute difference between mean dive and climb ({ds[var].units})')
+        ax[2].set_xlabel('Percentage error between up and downcast (%)')
+        c = ax[3].pcolor(profG[:-1, :], depthG[:-1, :], np.diff(varG, axis=0),
+                         vmin=np.nanpercentile(np.diff(varG, axis=0), 0.5),
+                         vmax=np.nanpercentile(np.diff(varG, axis=0), 99.5), cmap='seismic')
+        plt.colorbar(c, ax=ax[3], label=f'Difference between up and downcast ({ds[var].units})', fraction=0.05)
+        ax[3].set(ylabel='Depth (m)', xlabel='Profile number')
+        fig.suptitle(var, y=0.94)
+        if force_plot:
+            plt.show()

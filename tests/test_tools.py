@@ -46,3 +46,10 @@ def test_vert_vel():
     ds_climbs = ds_climbs.drop_vars(['LATITUDE'])
     with pytest.raises(KeyError) as e:
         tools.quant_binavg(ds_climbs, var='VERT_CURR_MODEL', dz=10)
+
+def test_hyst():
+    ds = fetchers.load_sample_dataset()
+    df_h = tools.quant_hysteresis(ds, var = 'DOXY', v_res = 1)
+    df, diff, err, rms = tools.compute_hyst_stat(ds, var='DOXY', v_res=1)
+    assert np.array_equal(df_h.dropna(), df.dropna())
+    assert len(diff) == len(err)
