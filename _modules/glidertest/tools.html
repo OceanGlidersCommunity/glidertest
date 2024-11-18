@@ -425,6 +425,73 @@
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">ds_out</span></div>
 
+
+
+<div class="viewcode-block" id="quant_hysteresis">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_hysteresis">[docs]</a>
+<span class="k">def</span> <span class="nf">quant_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function computes up and downcast averages for a specific variable</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds: xarray on OG1 format containing at least depth, profile_number and the selected variable.</span>
+<span class="sd">        Data should not be gridded.</span>
+<span class="sd">    var: Selected variable</span>
+<span class="sd">    v_res: Vertical resolution for the gridding</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">   df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</span>
+
+<span class="sd">    Original author</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Chiara Monforte</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># utilities._check_necessary_variables(ds, [&#39;PROFILE_NUMBER&#39;, &#39;DEPTH&#39;, var])</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Horizontal resolution</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">v_res</span>  <span class="c1"># Vertical resolution</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">dive</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">varG</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Dive</span>
+        <span class="n">climb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">varG</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Climb</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;dive&#39;</span><span class="p">:</span> <span class="n">dive</span><span class="p">,</span> <span class="s1">&#39;climb&#39;</span><span class="p">:</span> <span class="n">climb</span><span class="p">,</span> <span class="s1">&#39;depth&#39;</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+<div class="viewcode-block" id="compute_hyst_stat">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_hyst_stat">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_hyst_stat</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds: xarray on OG1 format containing at least depth, profile_number and the selected variable. Data should not be gridded.</span>
+<span class="sd">    var: Selected variable</span>
+<span class="sd">    v_res: Vertical resolution for the gridding</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    diff: difference between upcast and downcast</span>
+<span class="sd">    err: Percentage error of the dive-climb difference. One value per depth step</span>
+<span class="sd">    rms: Root Mean Square of the difference in values between dive and climb</span>
+<span class="sd">    df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</span>
+
+<span class="sd">    Original author</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Chiara  Monforte</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">quant_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="n">v_res</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span> <span class="o">-</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">)</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span> <span class="o">-</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">rms</span></div>
+
 </pre></div>
 
            </div>
