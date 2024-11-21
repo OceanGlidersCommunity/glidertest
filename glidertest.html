@@ -52,6 +52,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.check_monotony"><code class="docutils literal notranslate"><span class="pre">check_monotony()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_daynight_avg"><code class="docutils literal notranslate"><span class="pre">compute_daynight_avg()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_hyst_stat"><code class="docutils literal notranslate"><span class="pre">compute_hyst_stat()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_prof_duration"><code class="docutils literal notranslate"><span class="pre">compute_prof_duration()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.find_outlier_duration"><code class="docutils literal notranslate"><span class="pre">find_outlier_duration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.quant_binavg"><code class="docutils literal notranslate"><span class="pre">quant_binavg()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.quant_hysteresis"><code class="docutils literal notranslate"><span class="pre">quant_hysteresis()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.quant_updown_bias"><code class="docutils literal notranslate"><span class="pre">quant_updown_bias()</span></code></a></li>
@@ -62,6 +64,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_glider_track"><code class="docutils literal notranslate"><span class="pre">plot_glider_track()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_grid_spacing"><code class="docutils literal notranslate"><span class="pre">plot_grid_spacing()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_hysteresis"><code class="docutils literal notranslate"><span class="pre">plot_hysteresis()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_outlier_duration"><code class="docutils literal notranslate"><span class="pre">plot_outlier_duration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_prof_monotony"><code class="docutils literal notranslate"><span class="pre">plot_prof_monotony()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_quench_assess"><code class="docutils literal notranslate"><span class="pre">plot_quench_assess()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_ts"><code class="docutils literal notranslate"><span class="pre">plot_ts()</span></code></a></li>
@@ -226,7 +229,7 @@ day: Actual date for the batch</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.compute_hyst_stat">
-<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_hyst_stat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_hyst_stat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_hyst_stat" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_hyst_stat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_hyst_stat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_hyst_stat" title="Link to this definition"></a></dt>
 <dd><p>This function computes some basic statistics for the differences between climb and dive data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -242,6 +245,52 @@ day: Actual date for the batch</p>
 <li><p><strong>err</strong> (<em>Percentage error of the dive-climb difference. One value per depth step</em>)</p></li>
 <li><p><strong>rms</strong> (<em>Root Mean Square of the difference in values between dive and climb</em>)</p></li>
 <li><p><strong>df</strong> (<em>pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</em>)</p></li>
+<li><p><em>Original author</em></p></li>
+<li><p><em>—————-</em></p></li>
+<li><p><em>Chiara  Monforte</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.tools.compute_prof_duration">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_prof_duration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_prof_duration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_prof_duration" title="Link to this definition"></a></dt>
+<dd><p>This function computes some basic statistics for the differences between climb and dive data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray on OG1 format containing at least time and profile_number. Data should not be gridded.</em>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>df</strong> (<em>pandas dataframe containing the profile number and the duration of that profile in minutes</em>)</p></li>
+<li><p><em>Original author</em></p></li>
+<li><p><em>—————-</em></p></li>
+<li><p><em>Chiara  Monforte</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.tools.find_outlier_duration">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">find_outlier_duration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rolling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#find_outlier_duration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.find_outlier_duration" title="Link to this definition"></a></dt>
+<dd><p>This function computes some basic statistics for the differences between climb and dive data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>pandas dataframe containing the profile number and the duration</em><em> of </em><em>that profile in minutes</em>)</p></li>
+<li><p><strong>rolling</strong> (<em>window size for the rolling mean</em>)</p></li>
+<li><p><strong>std</strong> (<em>number</em><em> of </em><em>standard deviations to use for 'odd' profile duration</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>The function prints a statement in case there are profiles with ‘odd’ duration,</em></p></li>
+<li><p><strong>rolling_mean</strong> (<em>Rolling mean of profile duration computed with the set window</em>)</p></li>
+<li><p><strong>overt_prof</strong> (<em>Profiles where the duration is above the set rolling mean with added standard deviation</em>)</p></li>
 <li><p><em>Original author</em></p></li>
 <li><p><em>—————-</em></p></li>
 <li><p><em>Chiara  Monforte</em></p></li>
@@ -500,6 +549,46 @@ ax: Specific axis in can the user wants to add this plot to an existing figure</
 <blockquote>
 <div><p>Chiara Monforte</p>
 </div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots.plot_outlier_duration">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_outlier_duration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rolling_mean</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overtime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_outlier_duration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_outlier_duration" title="Link to this definition"></a></dt>
+<dd><p>Generates two plots to visualize profile durations and highlight outliers.
+This helps identify profiles with abnormal durations by comparing the actual profile durations
+to a rolling mean, and by visualizing the shape and depth of the selected outlier profiles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>An xarray object containing at least the variables 'TIME'</em><em>, </em><em>'DEPTH'</em><em>, </em><em>and 'PROFILE_NUMBER'.</em>)</p></li>
+<li><p><strong>profiles.</strong> (<em>These are used to compute the profile durations and plot depth</em>)</p></li>
+<li><p><strong>rolling_mean</strong> (<em>A series representing the rolling mean</em><em> of </em><em>the profile durations</em><em>,</em>)</p></li>
+<li><p><strong>deviation.</strong> (<em>which is used to highlight outliers based on standard</em>)</p></li>
+<li><p><strong>overtime</strong> (<em>A list</em><em> of </em><em>profile numbers identified as having unusual durations.</em>)</p></li>
+<li><p><strong>outliers.</strong> (<em>These profiles are marked on the plot to highlight the</em>)</p></li>
+<li><p><strong>std</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default 2</em>) – The number of standard deviations above and below the rolling mean that will be used to define the range
+of “normal” durations. Profiles outside this range are considered outliers.</p></li>
+<li><p><strong>ax</strong> (<em>The axes object on which to plot the results. If not provided</em><em>, </em><em>a new figure with two subplots is created.</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>fig</strong> (<em>The figure containing the generated plots.</em>) –</p>
+<ol class="arabic simple">
+<li><p>A plot showing the profile durations with the rolling mean and the range defined by the rolling mean ± <cite>std</cite>
+(standard deviation). The range is highlighted in orange.</p></li>
+<li><p>A scatter plot of the profile depths, with outlier profiles marked in red. These outliers are determined based
+on the duration exceeding the threshold defined by the rolling mean ± <cite>std</cite>.</p></li>
+</ol>
+</li>
+<li><p><strong>ax</strong> (<em>A 1x2 array of axes used for the two subplots.</em>)</p></li>
+<li><p><em>Original author</em></p></li>
+<li><p><em>——</em></p></li>
+<li><p><em>Chiara Monforte</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">

@@ -73,6 +73,7 @@
              
   <h1>Source code for glidertest.tools</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
@@ -448,7 +449,7 @@
 <span class="sd">    ----------------</span>
 <span class="sd">    Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># utilities._check_necessary_variables(ds, [&#39;PROFILE_NUMBER&#39;, &#39;DEPTH&#39;, var])</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
     <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Horizontal resolution</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">v_res</span>  <span class="c1"># Vertical resolution</span>
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
@@ -463,7 +464,7 @@
 
 <div class="viewcode-block" id="compute_hyst_stat">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_hyst_stat">[docs]</a>
-<span class="k">def</span> <span class="nf">compute_hyst_stat</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">compute_hyst_stat</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
 
@@ -491,6 +492,66 @@
         <span class="n">err</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span> <span class="o">-</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">rms</span></div>
+
+
+
+<div class="viewcode-block" id="compute_prof_duration">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_prof_duration">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_prof_duration</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds: xarray on OG1 format containing at least time and profile_number. Data should not be gridded.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    df: pandas dataframe containing the profile number and the duration of that profile in minutes</span>
+
+<span class="sd">    Original author</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Chiara  Monforte</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;TIME&#39;</span><span class="p">])</span>
+    <span class="n">deltat</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">deltat_min</span> <span class="o">=</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">deltat</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;timedelta64[s]&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int64&#39;</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;profile_num&#39;</span><span class="p">:</span> <span class="n">deltat</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="s1">&#39;profile_duration&#39;</span><span class="p">:</span> <span class="n">deltat_min</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="find_outlier_duration">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.find_outlier_duration">[docs]</a>
+<span class="k">def</span> <span class="nf">find_outlier_duration</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">rolling</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df: pandas dataframe containing the profile number and the duration of that profile in minutes</span>
+<span class="sd">    rolling: window size for the rolling mean</span>
+<span class="sd">    std: number of standard deviations to use for &#39;odd&#39; profile duration</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    The function prints a statement in case there are profiles with &#39;odd&#39; duration,</span>
+<span class="sd">    rolling_mean: Rolling mean of profile duration computed with the set window</span>
+<span class="sd">    overt_prof: Profiles where the duration is above the set rolling mean with added standard deviation</span>
+
+<span class="sd">    Original author</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Chiara  Monforte</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">rolling_mean</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">rolling</span><span class="p">,</span> <span class="n">min_periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">overtime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">rolling_mean</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">))</span> <span class="o">|</span> <span class="p">(</span>
+                <span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">rolling_mean</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">)))</span>
+    <span class="n">overt_prof</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_num&#39;</span><span class="p">][</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;There are </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s1"> profiles where the duration differs by </span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s1"> standard deviations of the nearby </span><span class="si">{</span><span class="n">rolling</span><span class="si">}</span><span class="s1"> profiles have been detected. Further checks are recommended&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rolling_mean</span><span class="p">,</span> <span class="n">overt_prof</span></div>
 
 </pre></div>
 
