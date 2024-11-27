@@ -1,6 +1,6 @@
 # glidertest
 
-Glidertest is a python library for diagnosing potential issues in OG1 format glider data. Glidertest does not modify, fix or grid glider data. Functionality currently includes:
+Glidertest is a python package for diagnosing potential issues in Ocean Gliders format glider data. Glidertest does not modify, fix or grid glider data. Functionality currently includes:
 
 - Checking time and depth spacing
 - Making histograms and TS diagrams
