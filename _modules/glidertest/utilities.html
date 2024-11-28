@@ -190,31 +190,6 @@
     <span class="k">return</span> <span class="n">grid</span><span class="p">,</span> <span class="n">XI</span><span class="p">,</span> <span class="n">YI</span></div>
 
 
-<div class="viewcode-block" id="compute_cline">
-<a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.compute_cline">[docs]</a>
-<span class="k">def</span> <span class="nf">compute_cline</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">depth_array</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Find the depth of the maximum vertical difference for a specified variables</span>
-<span class="sd">    </span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    var: 2D array containing data from a selected variable gridded over time/profile/distance etc. and depth (y-axis))</span>
-<span class="sd">    depth_array: 2D array containing pressure/depth data gridded over time/profile/distance etc. and depth (y-axis))</span>
-<span class="sd">    </span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    1D array containing the depth of the cline at each timestamp/profile/distance etc.</span>
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
-        <span class="n">clin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))))</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">depth_array</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">clin</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="mi">1</span><span class="p">)</span></div>
-
-
-
 <div class="viewcode-block" id="compute_sunset_sunrise">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.compute_sunset_sunrise">[docs]</a>
 <span class="k">def</span> <span class="nf">compute_sunset_sunrise</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">):</span>
