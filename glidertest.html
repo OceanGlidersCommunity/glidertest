@@ -51,6 +51,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.calc_w_sw"><code class="docutils literal notranslate"><span class="pre">calc_w_sw()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.check_monotony"><code class="docutils literal notranslate"><span class="pre">check_monotony()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_daynight_avg"><code class="docutils literal notranslate"><span class="pre">compute_daynight_avg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_global_range"><code class="docutils literal notranslate"><span class="pre">compute_global_range()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_hyst_stat"><code class="docutils literal notranslate"><span class="pre">compute_hyst_stat()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_prof_duration"><code class="docutils literal notranslate"><span class="pre">compute_prof_duration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.find_outlier_duration"><code class="docutils literal notranslate"><span class="pre">find_outlier_duration()</span></code></a></li>
@@ -62,8 +63,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_combined_velocity_profiles"><code class="docutils literal notranslate"><span class="pre">plot_combined_velocity_profiles()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_daynight_avg"><code class="docutils literal notranslate"><span class="pre">plot_daynight_avg()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_glider_track"><code class="docutils literal notranslate"><span class="pre">plot_glider_track()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_global_range"><code class="docutils literal notranslate"><span class="pre">plot_global_range()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_grid_spacing"><code class="docutils literal notranslate"><span class="pre">plot_grid_spacing()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_hysteresis"><code class="docutils literal notranslate"><span class="pre">plot_hysteresis()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_ioosqc"><code class="docutils literal notranslate"><span class="pre">plot_ioosqc()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_outlier_duration"><code class="docutils literal notranslate"><span class="pre">plot_outlier_duration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_prof_monotony"><code class="docutils literal notranslate"><span class="pre">plot_prof_monotony()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_quench_assess"><code class="docutils literal notranslate"><span class="pre">plot_quench_assess()</span></code></a></li>
@@ -217,6 +220,35 @@ day: Actual date for the batch</p>
 </dd>
 </dl>
 </li>
+<li><p><em>Original author</em></p></li>
+<li><p><em>—————-</em></p></li>
+<li><p><em>Chiara Monforte</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.tools.compute_global_range">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_global_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_global_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_global_range" title="Link to this definition"></a></dt>
+<dd><p>Applies a gross filter to the dataset by removing observations outside the specified global range.</p>
+<p>This function checks if any values of the specified variable (<cite>var</cite>) fall outside the provided
+range <cite>[min_val, max_val]</cite>. If a value is out of the specified range, it is excluded from the
+output. The function returns the filtered dataset with the out-of-range values removed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>The xarray Dataset containing the variable to be filtered.</em>)</p></li>
+<li><p><strong>var</strong> (<em>The name</em><em> of </em><em>the variable to apply the range filter on. Default is 'DOXY'.</em>)</p></li>
+<li><p><strong>min_val</strong> (<em>The minimum allowable value for the variable. Default is -5.</em>)</p></li>
+<li><p><strong>max_val</strong> (<em>The maximum allowable value for the variable. Default is 600.</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>xarray.DataArray</em> – A filtered DataArray containing only the values of the specified variable
+within the range <cite>[min_val, max_val]</cite>. Values outside this range are dropped.</p></li>
 <li><p><em>Original author</em></p></li>
 <li><p><em>—————-</em></p></li>
 <li><p><em>Chiara Monforte</em></p></li>
@@ -503,6 +535,33 @@ now in OG1 format as sg014_20040924T182454_delayed.nc.  Note that flight model p
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots.plot_global_range">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_global_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_global_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_global_range" title="Link to this definition"></a></dt>
+<dd><dl>
+<dt>This function generates a histogram of the specified variable (<cite>var</cite>) from the dataset (<cite>ds</cite>) and</dt><dd><p>overlays vertical lines at the specified minimum (<cite>min_val</cite>) and maximum (<cite>max_val</cite>) values to
+visually represent the global range. The function is useful for visually inspecting whether
+values of the specified variable fall within the expected global range.</p>
+<p>ds : The xarray dataset containing the variable (<cite>var</cite>) to be plotted.</p>
+<p>var : The name of the variable to plot. Default is ‘DOXY’.</p>
+<p>min_val : The minimum value of the global range to highlight on the plot. Default is -5.</p>
+<p>max_val : The maximum value of the global range to highlight on the plot. Default is 600.</p>
+<dl class="simple">
+<dt>ax<span class="classifier">matplotlib.axes.Axes, optional</span></dt><dd><p>The axes on which to plot the histogram. If <cite>None</cite>, a new figure and axes are created.
+Default is <cite>None</cite>.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>fig<span class="classifier">matplotlib.figure.Figure</span></dt><dd><p>The figure object containing the plot.</p>
+</dd>
+<dt>ax<span class="classifier">matplotlib.axes.Axes</span></dt><dd><p>The axes object containing the histogram plot.</p>
+</dd>
+</dl>
+<p>Chiara Monforte</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_grid_spacing">
 <span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_grid_spacing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_grid_spacing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_grid_spacing" title="Link to this definition"></a></dt>
 <dd><p>This function plots histograms of the grid spacing (diff(ds.DEPTH) and diff(ds.TIME)) where only the inner 99% of values are plotted.</p>
@@ -547,6 +606,50 @@ ax: Specific axis in can the user wants to add this plot to an existing figure</
 <blockquote>
 <div><p>Chiara Monforte</p>
 </div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots.plot_ioosqc">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_ioosqc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suspect_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[25]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fail_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[50]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_ioosqc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_ioosqc" title="Link to this definition"></a></dt>
+<dd><p>Plots a scatter plot of the the results of IOOS qQC tests with quality control labels (GOOD, UNKNOWN, SUSPECT, FAIL, MISSING) on the y-axis,
+and overlays threshold-based markers for suspect and fail values. This function is useful for visualizing the status of
+data points according to the quality control thresholds.</p>
+<section id="parameters">
+<h2>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>data<span class="classifier">The result from the IOOS_QC test.</span></dt><dd><p>A sequence of numerical values representing the data points to be plotted.</p>
+</dd>
+<dt>suspect_threshold<span class="classifier">A list containing one or two numerical values indicating the thresholds for suspect values. If one value is provided,</span></dt><dd><p>it applies to both lower and upper bounds for suspect data points. If two values are provided, they define the
+lower and upper bounds for suspect values.</p>
+</dd>
+<dt>fail_threshold A list containing one or two numerical values indicating the thresholds for fail values. Similar to <cite>suspect_threshold</cite>,</dt><dd><p>it can have one or two values to define the bounds for fail data points.</p>
+</dd>
+<dt>title<span class="classifier">str, optional, default = ‘’</span></dt><dd><p>The title to display at the top of the plot.</p>
+</dd>
+<dt>ax<span class="classifier">matplotlib Axes object, optional, default = None</span></dt><dd><p>If provided, the plot will be drawn on this existing Axes object. If None, a new figure and axis will be created.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>fig<span class="classifier">matplotlib figure</span></dt><dd><p>The figure object containing the plot.</p>
+</dd>
+<dt>ax<span class="classifier">matplotlib Axes object</span></dt><dd><p>The axes object used for plotting.</p>
+</dd>
+</dl>
+</section>
+<section id="notes">
+<h2>Notes:<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>The plot uses two y-axes: one for labeling data points as ‘GOOD’, ‘UNKNOWN’, ‘SUSPECT’, ‘FAIL’, or ‘MISSING’ based
+on thresholds, and another for marking specific suspect and fail ranges.</p></li>
+</ul>
+</section>
+<section id="original-author">
+<h2>Original author<a class="headerlink" href="#original-author" title="Link to this heading"></a></h2>
+<p>Chiara Monforte</p>
+</section>
 </dd></dl>
 
 <dl class="py function">

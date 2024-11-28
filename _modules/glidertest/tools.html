@@ -73,7 +73,7 @@
              
   <h1>Source code for glidertest.tools</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
@@ -542,8 +542,6 @@
 <span class="sd">    ----------------</span>
 <span class="sd">    Chiara  Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-
     <span class="n">rolling_mean</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">rolling</span><span class="p">,</span> <span class="n">min_periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
     <span class="n">overtime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">rolling_mean</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">))</span> <span class="o">|</span> <span class="p">(</span>
                 <span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">rolling_mean</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">)))</span>
@@ -552,6 +550,42 @@
         <span class="nb">print</span><span class="p">(</span>
             <span class="sa">f</span><span class="s1">&#39;There are </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s1"> profiles where the duration differs by </span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s1"> standard deviations of the nearby </span><span class="si">{</span><span class="n">rolling</span><span class="si">}</span><span class="s1"> profiles have been detected. Further checks are recommended&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rolling_mean</span><span class="p">,</span> <span class="n">overt_prof</span></div>
+
+
+<div class="viewcode-block" id="compute_global_range">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_global_range">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_global_range</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies a gross filter to the dataset by removing observations outside the specified global range.</span>
+
+<span class="sd">    This function checks if any values of the specified variable (`var`) fall outside the provided</span>
+<span class="sd">    range `[min_val, max_val]`. If a value is out of the specified range, it is excluded from the</span>
+<span class="sd">    output. The function returns the filtered dataset with the out-of-range values removed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : The xarray Dataset containing the variable to be filtered.</span>
+
+<span class="sd">    var : The name of the variable to apply the range filter on. Default is &#39;DOXY&#39;.</span>
+
+<span class="sd">    min_val : The minimum allowable value for the variable. Default is -5.</span>
+
+<span class="sd">    max_val : The maximum allowable value for the variable. Default is 600.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xarray.DataArray</span>
+<span class="sd">        A filtered DataArray containing only the values of the specified variable</span>
+<span class="sd">        within the range `[min_val, max_val]`. Values outside this range are dropped.</span>
+
+<span class="sd">    Original author</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Chiara Monforte</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="p">])</span>
+    <span class="n">out_range</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">&lt;</span><span class="n">min_val</span> <span class="p">)</span><span class="o">|</span> <span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">&gt;</span><span class="n">max_val</span> <span class="p">))</span>
+    <span class="k">return</span> <span class="n">out_range</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">)</span></div>
+
 
 </pre></div>
 
