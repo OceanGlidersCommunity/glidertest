@@ -118,4 +118,4 @@ def test_sop():
 def test_plot_sampling_period_all():
     ds = fetchers.load_sample_dataset()
     plots.plot_sampling_period_all(ds)
-    plots.plot_sampling_period(ds,vars='CHLA')
+    plots.plot_sampling_period(ds,variable='CHLA')
