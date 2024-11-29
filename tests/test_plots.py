@@ -114,3 +114,8 @@ def test_sop():
     plots.plot_ioosqc(spike, suspect_threshold=[25], fail_threshold=[50], title='Spike test DOXY')
     flat = qartod.flat_line_test(ds.DOXY, ds.TIME, 1, 2, 0.001)
     plots.plot_ioosqc(flat, suspect_threshold=[0.01], fail_threshold=[0.1], title='Flat test DOXY')
+
+def test_plot_sampling_period_all():
+    ds = fetchers.load_sample_dataset()
+    plots.plot_sampling_period_all(ds)
+    plots.plot_sampling_period(ds,vars='CHLA')

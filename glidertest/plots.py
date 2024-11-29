@@ -616,6 +616,98 @@ def plot_grid_spacing(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
 
     return fig, ax
 
+def plot_sampling_period_all(ds: xr.Dataset):
+    """
+    This function plots several histograms of the sampling period for several variables (TEMP/PSAL by default and DOXY/CHLA if present) after removing their nans.
+
+    Parameters
+    ----------
+    ds: xarray in OG1 format.
+
+    Returns
+    -------
+    One histogram for each variable showing the distribution of the sampling period.
+
+    Original author
+    ----------------
+    Louis Clement
+    """
+
+    count_vars=2
+    vars=['TEMP', 'PSAL']
+    if 'DOXY' in set(ds.variables): 
+        count_vars+=1
+        vars.append('DOXY')
+    if 'CHLA' in set(ds.variables): 
+        count_vars+=1
+        vars.append('CHLA')
+
+    fig, ax = plt.subplots(1, count_vars, figsize=(5*count_vars, 6))
+    for i in range(len(vars)):
+        ax[i] = plot_sampling_period(ds, ax[i], vars[i])
+    plt.show()
+
+def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, vars='TEMP'):
+    """
+    Similar to plot_grid_spacing, this function plots histograms but of the sampling period for one variable after removing its nans.
+    
+
+    Parameters
+    ----------
+    ds: xarray in OG1 format.
+    ax: Optional, axis to plot the data.
+    vars: the variable 
+
+    Returns
+    -------
+    One histogram showing the distribution of the sampling period.
+    ax: matplotlib.axes._subplots.AxesSubplot
+
+    Original author
+    ----------------
+    Louis Clement
+    """
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(5, 6))
+
+    nonan = ~np.isnan(ds[vars].values)
+    time_diff = np.diff(ds.TIME.values[nonan]) / np.timedelta64(1, 's')  # Convert to seconds
+
+    median_time_diff = np.median(time_diff)
+    mean_time_diff = np.mean(time_diff)
+    max_time_diff = np.max(time_diff)
+    min_time_diff = np.min(time_diff)
+    max_time_diff_hrs = max_time_diff/3600
+
+    # Remove the top and bottom 0.5% of values to get a better histogram
+    # This is hiding some data from the user
+    time_diff = time_diff[(time_diff >= np.nanpercentile(time_diff, 0.5)) & (time_diff <= np.nanpercentile(time_diff, 99.5))]
+    if vars=='TEMP': 
+        print('Depth and time differences have been filtered to the middle 99% of values.')
+        print('Numeric median/mean/max/min values are based on the original data.')
+
+    ax.hist(time_diff, bins=50)
+    ax.set_xlabel('Time Spacing (s)')
+    if vars=='TEMP': ax.set_ylabel('Frequency')
+    ax.set_title('Histogram of Sampling Period' + '\n' + 
+                 'for ' + vars + ', \n' + 
+                 'valid values: {:.1f}'.format(100*(np.sum(nonan)/ds.TIME.values.shape[0]))+'%')
+
+    annotation_text = (
+        f'Median: {median_time_diff:.2f} s\n'
+        f'Mean: {mean_time_diff:.2f} s\n'
+        f'Max: {max_time_diff:.2f} s ({max_time_diff_hrs:.2f} hr)\n'
+        f'Min: {min_time_diff:.2f} s'
+    )
+    ax.annotate(annotation_text, xy=(0.96, 0.96), xycoords='axes fraction'
+                    , ha='right', va='top',
+                    bbox=dict(boxstyle='round,pad=0.3', edgecolor='black', facecolor='white', alpha=.5))
+
+    ax.tick_params(axis='both', which='major')
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='grey')
+
+    return ax
 
 def plot_ts(ds: xr.Dataset, axs: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
     """
