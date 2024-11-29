@@ -651,7 +651,6 @@ def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, vars='TEMP'):
     """
     Similar to plot_grid_spacing, this function plots histograms but of the sampling period for one variable after removing its nans.
     
-
     Parameters
     ----------
     ds: xarray in OG1 format.
