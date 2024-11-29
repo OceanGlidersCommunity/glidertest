@@ -616,7 +616,7 @@ def plot_grid_spacing(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
 
     return fig, ax
 
-def plot_sampling_period_all(ds: xr.Dataset):
+def plot_sampling_period_all(ds: xr.Dataset) -> tuple({plt.Figure, plt.Axes}):
     """
     This function plots several histograms of the sampling period for several variables (TEMP/PSAL by default and DOXY/CHLA if present) after removing their nans.
 
@@ -627,6 +627,8 @@ def plot_sampling_period_all(ds: xr.Dataset):
     Returns
     -------
     One histogram for each variable showing the distribution of the sampling period.
+    fig: matplotlib.figure.Figure
+    ax: matplotlib.axes._subplots.AxesSubplot
 
     Original author
     ----------------
@@ -634,20 +636,22 @@ def plot_sampling_period_all(ds: xr.Dataset):
     """
 
     count_vars=2
-    vars=['TEMP', 'PSAL']
+    variables=['TEMP', 'PSAL']
     if 'DOXY' in set(ds.variables): 
         count_vars+=1
-        vars.append('DOXY')
+        variables.append('DOXY')
     if 'CHLA' in set(ds.variables): 
         count_vars+=1
-        vars.append('CHLA')
+        variables.append('CHLA')
 
     fig, ax = plt.subplots(1, count_vars, figsize=(5*count_vars, 6))
-    for i in range(len(vars)):
-        ax[i] = plot_sampling_period(ds, ax[i], vars[i])
+    for i in range(len(variables)):
+        ax[i] = plot_sampling_period(ds, ax[i], variables[i])
     plt.show()
 
-def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, vars='TEMP'):
+    return fig, ax
+
+def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, variable='TEMP'):
     """
     Similar to plot_grid_spacing, this function plots histograms but of the sampling period for one variable after removing its nans.
     
@@ -655,7 +659,7 @@ def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, vars='TEMP'):
     ----------
     ds: xarray in OG1 format.
     ax: Optional, axis to plot the data.
-    vars: the variable 
+    variable: display the sampling period for this variable 
 
     Returns
     -------
@@ -670,7 +674,7 @@ def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, vars='TEMP'):
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 6))
 
-    nonan = ~np.isnan(ds[vars].values)
+    nonan = ~np.isnan(ds[variable].values)
     time_diff = np.diff(ds.TIME.values[nonan]) / np.timedelta64(1, 's')  # Convert to seconds
 
     median_time_diff = np.median(time_diff)
@@ -682,15 +686,15 @@ def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, vars='TEMP'):
     # Remove the top and bottom 0.5% of values to get a better histogram
     # This is hiding some data from the user
     time_diff = time_diff[(time_diff >= np.nanpercentile(time_diff, 0.5)) & (time_diff <= np.nanpercentile(time_diff, 99.5))]
-    if vars=='TEMP': 
+    if variable=='TEMP': 
         print('Depth and time differences have been filtered to the middle 99% of values.')
         print('Numeric median/mean/max/min values are based on the original data.')
 
     ax.hist(time_diff, bins=50)
     ax.set_xlabel('Time Spacing (s)')
-    if vars=='TEMP': ax.set_ylabel('Frequency')
+    if variable=='TEMP': ax.set_ylabel('Frequency')
     ax.set_title('Histogram of Sampling Period' + '\n' + 
-                 'for ' + vars + ', \n' + 
+                 'for ' + variable + ', \n' + 
                  'valid values: {:.1f}'.format(100*(np.sum(nonan)/ds.TIME.values.shape[0]))+'%')
 
     annotation_text = (
