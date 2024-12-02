@@ -19,7 +19,7 @@ We use work from the following papers:
  
 We provide an example notebook to demonstrate the purpose of the various function and test datasets from SeaExplorer data in the Baltic and Seaglider data in the Labrador Sea.
 
-For recommendations or bug reports, please visit https://github.com/callumrollo/glidertest/issues/new
+For recommendations or bug reports, please visit https://github.com/OceanGlidersCommunity/glidertest/issues/new
 
 ======================================
 
