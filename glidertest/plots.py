@@ -1305,3 +1305,38 @@ def plot_ioosqc(data, suspect_threshold=[25], fail_threshold=[50], title='', ax=
         if force_plot:
             plt.show()
     return fig, ax
+
+def plot_max_depth_per_profile(ds: xr.Dataset, bins= 20, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
+    """
+    This function can be used to plot the maximum depth of each profile in a dataset.
+    
+    Parameters
+    ----------
+    ds: xarray on OG1 format containing the profile number and the maximum depth. 
+    bins: int, optional (default=20)
+    
+    Returns
+    -------
+    One figure with two plots illustrating the max depth of each profile and a histogram of the max depths
+
+    Original author
+    ----------------
+    Till Moritz
+    """
+    group_profiles = ds.groupby('profile_num').apply(lambda x: x['DEPTH'].max())
+    max_depths = group_profiles.values
+    profile_nums = group_profiles.profile_num.values
+    with plt.style.context(glidertest_style_file):
+        fig, ax = plt.subplots(1, 2, figsize=(18, 6))
+        ax[0].plot(profile_nums, max_depths,**kw)
+        ax[0].set_xlabel('Profile Number')
+        ax[0].set_ylabel('Max Depth')
+        ax[0].set_title('Max Depth per Profile')
+        ax[0].grid()
+        ax[1].hist(max_depths, bins=bins)
+        ax[1].set_xlabel('Max Depth')
+        ax[1].set_ylabel('Number of Profiles')
+        ax[1].set_title('Histogram of Max Depth per Profile')
+        ax[1].grid()
+        plt.show()
+    return fig, ax
