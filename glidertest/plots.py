@@ -1333,7 +1333,7 @@ def plot_max_depth_per_profile(ds: xr.Dataset, bins= 20, ax = None, **kw: dict) 
             fig = plt.gcf()
             force_plot = False
             
-        ax[0].plot(max_depths.profile_num, max_depths,**kw)
+        ax[0].plot(max_depths.PROFILE_NUMBER, max_depths,**kw)
         ax[0].set_xlabel('Profile number')
         ax[0].set_ylabel(f'Max depth ({max_depths.units})')
         ax[0].set_title('Max depth per profile')
