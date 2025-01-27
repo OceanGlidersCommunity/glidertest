@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>glidertest.plots &mdash; glidertest v0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -72,21 +72,21 @@
            <div itemprop="articleBody">
              
   <h1>Source code for glidertest.plots</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">matplotlib.dates</span> <span class="k">as</span> <span class="nn">mdates</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
-<span class="kn">from</span> <span class="nn">matplotlib.dates</span> <span class="kn">import</span> <span class="n">DateFormatter</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
-<span class="kn">import</span> <span class="nn">gsw</span>
-<span class="kn">import</span> <span class="nn">cartopy.crs</span> <span class="k">as</span> <span class="nn">ccrs</span>
-<span class="kn">import</span> <span class="nn">cartopy.feature</span> <span class="k">as</span> <span class="nn">cfeature</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">glidertest</span> <span class="kn">import</span> <span class="n">utilities</span><span class="p">,</span> <span class="n">tools</span>
-<span class="kn">import</span> <span class="nn">os</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mdates</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateFormatter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gsw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cartopy.crs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ccrs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cartopy.feature</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cfeature</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">utilities</span><span class="p">,</span> <span class="n">tools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
 <span class="nb">dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
 <span class="n">glidertest_style_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">dir</span><span class="si">}</span><span class="s2">/glidertest.mplstyle&quot;</span>
@@ -95,7 +95,7 @@
 
 <div class="viewcode-block" id="plot_updown_bias">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_updown_bias">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_updown_bias</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;TEMP&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_updown_bias</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;TEMP&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function can be used to plot the up and downcast differences computed with the updown_bias function</span>
 <span class="sd">    </span>
@@ -148,7 +148,7 @@
 
 <div class="viewcode-block" id="plot_basic_vars">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_basic_vars">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_basic_vars</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_basic_vars</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function plots the basic oceanographic variables temperature, salinity and density. A second plot is created and filled with oxygen and </span>
 <span class="sd">    chlorophyll data if available.</span>
@@ -255,7 +255,7 @@
 
 <div class="viewcode-block" id="process_optics_assess">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.process_optics_assess">[docs]</a>
-<span class="k">def</span> <span class="nf">process_optics_assess</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;CHLA&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_optics_assess</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;CHLA&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function to assess visually any drift in deep optics data and the presence of any possible negative data. This function returns  both plots and text</span>
 <span class="sd">    </span>
@@ -325,7 +325,7 @@
 
 <div class="viewcode-block" id="plot_daynight_avg">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_daynight_avg">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_daynight_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span><span class="n">var</span><span class="o">=</span><span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_day</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_daynight_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span><span class="n">var</span><span class="o">=</span><span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_day</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function can be used to plot the day and night averages computed with the day_night_avg function</span>
 <span class="sd">    </span>
@@ -375,7 +375,7 @@
 
 <div class="viewcode-block" id="plot_quench_assess">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_quench_assess">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_quench_assess</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_quench_assess</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                            <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function can be used to plot sections for any variable with the sunrise and sunset plotted over</span>
@@ -455,7 +455,7 @@
 
 <div class="viewcode-block" id="check_temporal_drift">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.check_temporal_drift">[docs]</a>
-<span class="k">def</span> <span class="nf">check_temporal_drift</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_temporal_drift</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function can be used to plot sections for any variable with the sunrise and sunset plotted over</span>
 <span class="sd">    </span>
@@ -504,7 +504,7 @@
 
 <div class="viewcode-block" id="plot_prof_monotony">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_prof_monotony">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_prof_monotony</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_prof_monotony</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function can be used to plot the profile number and check for any possible issues with the profile index assigned.</span>
@@ -555,7 +555,7 @@
 
 <div class="viewcode-block" id="plot_glider_track">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_glider_track">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_glider_track</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_glider_track</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function plots the glider track on a map, with latitude and longitude colored by time.</span>
 
@@ -620,7 +620,7 @@
 
 <div class="viewcode-block" id="plot_grid_spacing">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_grid_spacing">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_grid_spacing</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_grid_spacing</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function plots histograms of the grid spacing (diff(ds.DEPTH) and diff(ds.TIME)) where only the inner 99% of values are plotted.</span>
 
@@ -733,7 +733,7 @@
 
 <div class="viewcode-block" id="plot_sampling_period_all">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_sampling_period_all">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_sampling_period_all</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_sampling_period_all</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function plots several histograms of the sampling period for several variables (TEMP/PSAL by default and DOXY/CHLA if present) after removing their nans.</span>
 
@@ -771,7 +771,7 @@
 
 <div class="viewcode-block" id="plot_sampling_period">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_sampling_period">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_sampling_period</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="s1">&#39;TEMP&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_sampling_period</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="s1">&#39;TEMP&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Similar to plot_grid_spacing, this function plots histograms but of the sampling period for one variable after removing its nans.</span>
 <span class="sd">    </span>
@@ -835,7 +835,7 @@
 
 <div class="viewcode-block" id="plot_ts">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_ts">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_ts</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">axs</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_ts</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">axs</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function plots histograms of temperature and salinity values (middle 95%), and a 2D histogram of salinity and temperature with density contours.</span>
 
@@ -945,7 +945,7 @@
 
 <div class="viewcode-block" id="plot_vertical_speeds_with_histograms">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_vertical_speeds_with_histograms">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_vertical_speeds_with_histograms</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_vertical_speeds_with_histograms</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot vertical speeds with histograms for diagnostic purposes.</span>
 <span class="sd">    This function generates a diagnostic plot for the calculation of vertical seawater velocity.</span>
@@ -1099,7 +1099,7 @@
 
 <div class="viewcode-block" id="plot_combined_velocity_profiles">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_combined_velocity_profiles">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_combined_velocity_profiles</span><span class="p">(</span><span class="n">ds_out_dives</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ds_out_climbs</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_combined_velocity_profiles</span><span class="p">(</span><span class="n">ds_out_dives</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ds_out_climbs</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plots combined vertical velocity profiles for dives and climbs.</span>
 
@@ -1168,7 +1168,7 @@
 
 <div class="viewcode-block" id="plot_hysteresis">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_hysteresis">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">perct_err</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">perct_err</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function creates 4 plots which can help the user visualize any possible hysteresis</span>
 <span class="sd">    present in their dataset for a specific variable</span>
@@ -1234,7 +1234,7 @@
 
 <div class="viewcode-block" id="plot_outlier_duration">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_outlier_duration">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_outlier_duration</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">rolling_mean</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">overtime</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_outlier_duration</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">rolling_mean</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">overtime</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">       Generates two plots to visualize profile durations and highlight outliers.</span>
 <span class="sd">       This helps identify profiles with abnormal durations by comparing the actual profile durations</span>
@@ -1309,7 +1309,7 @@
 
 <div class="viewcode-block" id="plot_global_range">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_global_range">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_global_range</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_global_range</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">   This function generates a histogram of the specified variable (`var`) from the dataset (`ds`) and</span>
 <span class="sd">    overlays vertical lines at the specified minimum (`min_val`) and maximum (`max_val`) values to</span>
@@ -1359,7 +1359,7 @@
 
 <div class="viewcode-block" id="plot_ioosqc">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_ioosqc">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_ioosqc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">suspect_threshold</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">],</span> <span class="n">fail_threshold</span><span class="o">=</span><span class="p">[</span><span class="mi">50</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_ioosqc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">suspect_threshold</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">],</span> <span class="n">fail_threshold</span><span class="o">=</span><span class="p">[</span><span class="mi">50</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plots a scatter plot of the the results of IOOS qQC tests with quality control labels (GOOD, UNKNOWN, SUSPECT, FAIL, MISSING) on the y-axis,</span>
 <span class="sd">    and overlays threshold-based markers for suspect and fail values. This function is useful for visualizing the status of</span>
@@ -1437,7 +1437,7 @@
 
 <div class="viewcode-block" id="plot_max_depth_per_profile">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_max_depth_per_profile">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_max_depth_per_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_max_depth_per_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function can be used to plot the maximum depth of each profile in a dataset.</span>
 <span class="sd">    </span>
@@ -1463,7 +1463,7 @@
             <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
             <span class="n">force_plot</span> <span class="o">=</span> <span class="kc">False</span>
             
-        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">max_depths</span><span class="o">.</span><span class="n">profile_num</span><span class="p">,</span> <span class="n">max_depths</span><span class="p">,</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">max_depths</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">max_depths</span><span class="p">,</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
         <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Profile number&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Max depth (</span><span class="si">{</span><span class="n">max_depths</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Max depth per profile&#39;</span><span class="p">)</span>
@@ -1485,7 +1485,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
+    <p>&#169; Copyright 2025, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>glidertest.tools &mdash; glidertest v0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -72,19 +72,18 @@
            <div itemprop="articleBody">
              
   <h1>Source code for glidertest.tools</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">import</span> <span class="nn">gsw</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">glidertest</span> <span class="kn">import</span> <span class="n">utilities</span>
-
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gsw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">utilities</span>
 
 <div class="viewcode-block" id="quant_updown_bias">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_updown_bias">[docs]</a>
-<span class="k">def</span> <span class="nf">quant_updown_bias</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quant_updown_bias</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function computes up and downcast averages for a specific variable</span>
 
@@ -125,7 +124,7 @@
 
 <div class="viewcode-block" id="compute_daynight_avg">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_daynight_avg">[docs]</a>
-<span class="k">def</span> <span class="nf">compute_daynight_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sel_var</span><span class="o">=</span><span class="s1">&#39;CHLA&#39;</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_daynight_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sel_var</span><span class="o">=</span><span class="s1">&#39;CHLA&#39;</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function computes night and day averages for a selected variable over a specific period of time or a specific series of dives</span>
 <span class="sd">    Data in divided into day and night using the sunset and sunrise time as described in the above function sunset_sunrise from GliderTools</span>
@@ -207,7 +206,7 @@
 
 <div class="viewcode-block" id="check_monotony">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.check_monotony">[docs]</a>
-<span class="k">def</span> <span class="nf">check_monotony</span><span class="p">(</span><span class="n">da</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_monotony</span><span class="p">(</span><span class="n">da</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function check weather the selected variable over the mission is monotonically increasing or not. This is developed in particular for profile number.</span>
 <span class="sd">    If the profile number is not monotonically increasing, this may mean that whatever function was used to assign the profile number may have misassigned at some points.</span>
@@ -235,7 +234,7 @@
 
 <div class="viewcode-block" id="calc_w_meas">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calc_w_meas">[docs]</a>
-<span class="k">def</span> <span class="nf">calc_w_meas</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_w_meas</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate the vertical velocity of a glider using changes in pressure with time.</span>
 
@@ -289,7 +288,7 @@
 
 <div class="viewcode-block" id="calc_w_sw">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calc_w_sw">[docs]</a>
-<span class="k">def</span> <span class="nf">calc_w_sw</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_w_sw</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate the vertical seawater velocity and add it to the dataset.</span>
 
@@ -322,7 +321,7 @@
 
 <div class="viewcode-block" id="quant_binavg">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_binavg">[docs]</a>
-<span class="k">def</span> <span class="nf">quant_binavg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;VERT_CURR&#39;</span><span class="p">,</span> <span class="n">zgrid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quant_binavg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;VERT_CURR&#39;</span><span class="p">,</span> <span class="n">zgrid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate the bin average of vertical velocities within specified depth ranges.</span>
 <span class="sd">    This function computes the bin average of all vertical velocities within depth ranges,</span>
@@ -367,7 +366,7 @@
             <span class="n">dz</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># Default interval if neither zgrid nor dz is provided</span>
         <span class="n">zgrid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">findbetw</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">findbetw</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">arr</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">arr</span> <span class="o">&lt;=</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># Calculate bin edges from zgrid centers</span>
@@ -430,7 +429,7 @@
 
 <div class="viewcode-block" id="quant_hysteresis">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_hysteresis">[docs]</a>
-<span class="k">def</span> <span class="nf">quant_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quant_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function computes up and downcast averages for a specific variable</span>
 
@@ -464,7 +463,7 @@
 
 <div class="viewcode-block" id="compute_hyst_stat">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_hyst_stat">[docs]</a>
-<span class="k">def</span> <span class="nf">compute_hyst_stat</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_hyst_stat</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
 
@@ -497,7 +496,7 @@
 
 <div class="viewcode-block" id="compute_prof_duration">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_prof_duration">[docs]</a>
-<span class="k">def</span> <span class="nf">compute_prof_duration</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_prof_duration</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
 
@@ -522,7 +521,7 @@
 
 <div class="viewcode-block" id="find_outlier_duration">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.find_outlier_duration">[docs]</a>
-<span class="k">def</span> <span class="nf">find_outlier_duration</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">rolling</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_outlier_duration</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">rolling</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
 
@@ -554,7 +553,7 @@
 
 <div class="viewcode-block" id="compute_global_range">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_global_range">[docs]</a>
-<span class="k">def</span> <span class="nf">compute_global_range</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_global_range</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Applies a gross filter to the dataset by removing observations outside the specified global range.</span>
 
@@ -589,7 +588,7 @@
 
 <div class="viewcode-block" id="max_depth_per_profile">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.max_depth_per_profile">[docs]</a>
-<span class="k">def</span> <span class="nf">max_depth_per_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">max_depth_per_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function computes the maximum depth for each profile in the dataset</span>
 
@@ -606,7 +605,7 @@
 <span class="sd">    ----------------</span>
 <span class="sd">    Till Moritz</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">max_depths</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;profile_num&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+    <span class="n">max_depths</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
     <span class="c1">### add the unit to the dataarray</span>
     <span class="n">max_depths</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">max_depths</span></div>
@@ -621,7 +620,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
+    <p>&#169; Copyright 2025, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
