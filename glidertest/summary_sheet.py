@@ -6,6 +6,8 @@ from glidertest import tools, plots
 from ioos_qc import qartod
 import cartopy.crs as ccrs
 from matplotlib.font_manager import FontProperties
+from datetime import datetime
+import os
 
 configs = {
     "TEMP": {"gross_range_test": {
@@ -42,8 +44,7 @@ def qc_checks(ds, var='TEMP'):
     spike = qartod.spike_test(ds[var], suspect_threshold=configs[var]['spike_test']['suspect_threshold'],
                               fail_threshold=configs[var]['spike_test']['fail_threshold'], method="average")
     flat = qartod.flat_line_test(ds[var], ds.TIME, 1, 3, 0.001)
-
-    df, diff, err, rms = tools.compute_hyst_stat(ds, var=var, v_res=1)
+    __, __, err, __ = tools.compute_hyst_stat(ds, var=var, v_res=1)
 
     return gr, spike, flat, err
 
@@ -89,7 +90,7 @@ def phrase_numberprof_check(ds):
     return prof_check
 
 # Page 1 with general info and location of the mission
-def summary_plot(ds, save_dir='C:/Users/u241346/Desktop/figure3.jpg'):
+def summary_plot(ds, save_dir='blabla'):
     fig, ax = plt.subplots(figsize=(8.3, 11.7))
     ax.patch.set_edgecolor('black')
     ax.patch.set_linewidth(10)
@@ -182,7 +183,6 @@ def summary_plot(ds, save_dir='C:/Users/u241346/Desktop/figure3.jpg'):
     tab2_ax.axis('tight')
     table2 = tab2_ax.table(cellText=df2.values, colLabels=df2.columns, cellColours=colrs, cellLoc='center')
     table2.scale(3, 2)
-    # table2.set_fontsize(104)
 
     for (row, col), cell in table2.get_celld().items():
         if (row == 0) or (col == -1):
@@ -191,7 +191,9 @@ def summary_plot(ds, save_dir='C:/Users/u241346/Desktop/figure3.jpg'):
             cell.set_text_props(fontproperties=FontProperties(weight='bold'))
 
     ## Add logo at the bottom
-    im = plt.imread('logos.png')
+    dir = os.path.dirname(os.path.realpath(__file__))
+    logo = f"{dir}/img/logos.png"
+    im = plt.imread(logo)
     newax = fig.add_axes([0.88, -0.03, 0.1, 0.1], anchor='NE')
     newax.imshow(im)
     newax.axis('off')
@@ -205,5 +207,8 @@ def summary_plot(ds, save_dir='C:/Users/u241346/Desktop/figure3.jpg'):
     bv1_ax = fig.add_axes([0.5, 0.31, 0.21, 0.21], anchor='SE', zorder=-1)
     bv2_ax = fig.add_axes([0.78, 0.31, 0.21, 0.21], anchor='SE', zorder=-1)
     plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1, ax=[bv1_ax, bv2_ax])
-    fig.savefig(save_dir)
+    todays_date = datetime.today().strftime('%Y%m%d')
+    glider_sn = ds.attrs['glider_serial']
+    mission = ds.attrs['deployment_id']
+    fig.savefig(f'{save_dir}/SEA{glider_sn}_{mission}_report{todays_date}.pdf')
     return fig, ax
