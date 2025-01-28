@@ -223,7 +223,8 @@ def summary_plot(ds, save_dir='blabla'):
     # Add basic variables profiles plot
     bv1_ax = fig.add_axes([0.5, 0.31, 0.21, 0.21], anchor='SE', zorder=-1)
     bv2_ax = fig.add_axes([0.78, 0.31, 0.21, 0.21], anchor='SE', zorder=-1)
-    plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1, ax=[bv1_ax, bv2_ax])
+
+    plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=int(ds.PROFILE_NUMBER.max()), ax=[bv1_ax, bv2_ax])
     todays_date = datetime.today().strftime('%Y%m%d')
     fig.savefig(f'{save_dir}/{gserial}_{mission}_report{todays_date}.pdf')
     return fig, ax
