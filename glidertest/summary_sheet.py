@@ -189,7 +189,8 @@ def summary_plot(ds, save_dir='blabla'):
     tableO = fill_tableqc(tableS,ds, var='DOXY')
     tableC = fill_tableqc(tableO,ds, var='CHLA')
 
-    colrs = np.copy(tableC)
+    tableCcopy = tableC.copy()
+    colrs = np.copy(tableCcopy)
     colrs[np.where(colrs != 'X')] = 'w'
     colrs[np.where(colrs == 'X')] = 'lightcoral'
 
