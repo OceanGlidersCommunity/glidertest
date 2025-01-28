@@ -106,7 +106,7 @@ def summary_plot(ds, save_dir='.'):
 
     ### Create the text boxes
     if 'PLATFORM_SERIAL_NUMBER' in ds.variables:
-        gserial = ds['PLATFORM_SERIAL_NUMBER']
+        gserial = ds['PLATFORM_SERIAL_NUMBER'].values
     else:
         gserial = 'Unknown'
     if 'deployment_id' in ds.attrs:
