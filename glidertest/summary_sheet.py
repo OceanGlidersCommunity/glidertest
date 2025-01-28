@@ -92,7 +92,7 @@ def phrase_numberprof_check(ds):
     return prof_check
 
 # Page 1 with general info and location of the mission
-def summary_plot(ds, save_dir='blabla'):
+def summary_plot(ds, save_dir='.'):
     fig, ax = plt.subplots(figsize=(8.3, 11.7))
     ax.patch.set_edgecolor('black')
     ax.patch.set_linewidth(10)
