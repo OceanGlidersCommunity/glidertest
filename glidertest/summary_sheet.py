@@ -58,16 +58,18 @@ def fill_tableqc(df,ds, var='TEMP'):
         variable = 'Oxygen'
     if var == 'CHLA':
         variable = 'Chlorophyll'
-    gr, spike, flat, err = qc_checks(ds, var=var)
-    if len(gr) > 0:
-        df.loc[0, variable] = 'X'
-    if len(np.where((spike == 3) | (spike == 4))[0]) > 0:
-        df.loc[1, variable] = 'X'
-    if len(np.where((flat == 3) | (flat == 4))[0]) > 0:
-        df.loc[2, variable] = 'X'
-    if len(np.where(err > 5)[0]) > 5:
-        df.loc[3, variable] = 'X'
-
+    if var not in ds.variables:
+        df.loc[:, variable] = 'No data'
+    else:
+        gr, spike, flat, err = qc_checks(ds, var=var)
+        if len(gr) > 0:
+            df.loc[0, variable] = 'X'
+        if len(np.where((spike == 3) | (spike == 4))[0]) > 0:
+            df.loc[1, variable] = 'X'
+        if len(np.where((flat == 3) | (flat == 4))[0]) > 0:
+            df.loc[2, variable] = 'X'
+        if len(np.where(err > 5)[0]) > 5:
+            df.loc[3, variable] = 'X'
     return df
 
 
@@ -103,14 +105,28 @@ def summary_plot(ds, save_dir='blabla'):
     plt.axis('off')
 
     ### Create the text boxes
+    if 'PLATFORM_SERIAL_NUMBER' in ds.variables:
+        gserial = ds['PLATFORM_SERIAL_NUMBER']
+    else:
+        gserial = 'Unknown'
+    if 'deployment_id' in ds.attrs:
+        mission = ds.attrs['deployment_id']
+    else:
+        mission = 'Unknown'
+    if 'contributor_name' in ds.attrs:
+        cname = ds.attrs['contributor_name']
+    else:
+        cname = 'Unknown'
+
+    ### Create the text boxes
     textstr = '\n'.join((
-        f"Glider serial:  SEA0{ds.attrs['glider_serial']}",
-        f"Mission number:  {ds.attrs['deployment_id']}",
-        f"Deployment date:  {ds.attrs['deployment_start'][:10]}",
-        f"Recovery date:  {ds.attrs['deployment_end'][:10]}",
+        f"Glider serial:  {gserial}",
+        f"Mission number:  {mission}",
+        f"Deployment date:  {ds.TIME[0].values.astype('datetime64[D]')}",
+        f"Recovery date:  {ds.TIME[-1].values.astype('datetime64[D]')}",
         f"Mission duration:  {np.round(((ds.TIME.max() - ds.TIME.min()) / np.timedelta64(1, 'D')).astype(float).values, 1)} days",
         f"Diving depth range:  {int(tools.max_depth_per_profile(ds).min())} - {int(tools.max_depth_per_profile(ds).max())} m",
-        f"Dataset creator:  {ds.creator_name} \n({ds.contributing_institutions})",
+        f"Dataset creator:  {cname} \n({ds.contributing_institutions})",
     ))
 
     # Add text titles
@@ -208,7 +224,5 @@ def summary_plot(ds, save_dir='blabla'):
     bv2_ax = fig.add_axes([0.78, 0.31, 0.21, 0.21], anchor='SE', zorder=-1)
     plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1, ax=[bv1_ax, bv2_ax])
     todays_date = datetime.today().strftime('%Y%m%d')
-    glider_sn = ds.attrs['glider_serial']
-    mission = ds.attrs['deployment_id']
-    fig.savefig(f'{save_dir}/SEA{glider_sn}_{mission}_report{todays_date}.pdf')
+    fig.savefig(f'{save_dir}/{gserial}_{mission}_report{todays_date}.pdf')
     return fig, ax
