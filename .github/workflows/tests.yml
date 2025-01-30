@@ -33,10 +33,10 @@ jobs:
         create-args: >-
           python=${{ matrix.python-version }} --file requirements-dev.txt --channel conda-forge
 
-    - name: Debug: List _temp directory after setup
+    - name: List _temp directory after setup
       run: ls -la /home/runner/work/_temp || echo "Directory does not exist"
 
-    - name: Debug: Check Micromamba Environment
+    - name: Check Micromamba Environment
       run: micromamba info
 
     - name: Install glidertest
