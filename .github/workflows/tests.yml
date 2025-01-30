@@ -29,10 +29,10 @@ jobs:
         create-args: >-
           python=${{ matrix.python-version }} --file requirements-dev.txt --channel conda-forge
 
-    - name: Debug: List _temp directory
+    - name: List _temp directory
       run: ls -la /home/runner/work/_temp/setup-micromamba
 
-    - name: Debug: Check Micromamba Environment
+    - name: Check Micromamba Environment
       run: micromamba info
 
     - name: Install glidertest
