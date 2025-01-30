@@ -226,6 +226,6 @@ def summary_plot(ds, save_dir='.', test=True):
 
     plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=int(ds.PROFILE_NUMBER.max()), ax=[bv1_ax, bv2_ax])
     todays_date = datetime.today().strftime('%Y%m%d')
-    if test=True:
+    if test:
         fig.savefig(f'{save_dir}/{gserial}_{mission}_report{todays_date}.pdf')
     return fig, ax

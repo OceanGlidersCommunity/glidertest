@@ -19,4 +19,4 @@ def test_phrase_duration_check():
     summary_sheet.phrase_duration_check(ds)
 def test_summary_plot():
     ds = fetchers.load_sample_dataset()
-    summary_sheet.summary_plot(ds, test=True)
+    summary_sheet.summary_plot(ds, test=False)
