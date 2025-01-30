@@ -22,7 +22,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Debug: List _temp directory before setup
+    - name: List _temp directory before setup
       run: ls -la /home/runner/work/_temp || echo "Directory does not exist"
 
     - name: Setup Micromamba Python ${{ matrix.python-version }}
