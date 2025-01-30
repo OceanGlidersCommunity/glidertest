@@ -1,5 +1,6 @@
 from glidertest import fetchers, summary_sheet
 import pandas as pd
+import matplotlib
 
 matplotlib.use('agg')  # use agg backend to prevent creating plot windows during tests
 
