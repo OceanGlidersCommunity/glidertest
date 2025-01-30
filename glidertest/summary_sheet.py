@@ -92,7 +92,7 @@ def phrase_numberprof_check(ds):
     return prof_check
 
 # Page 1 with general info and location of the mission
-def summary_plot(ds, save_dir='.'):
+def summary_plot(ds, save_dir='.', test=True):
     fig, ax = plt.subplots(figsize=(8.3, 11.7))
     ax.patch.set_edgecolor('black')
     ax.patch.set_linewidth(10)
@@ -226,5 +226,6 @@ def summary_plot(ds, save_dir='.'):
 
     plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=int(ds.PROFILE_NUMBER.max()), ax=[bv1_ax, bv2_ax])
     todays_date = datetime.today().strftime('%Y%m%d')
-    fig.savefig(f'{save_dir}/{gserial}_{mission}_report{todays_date}.pdf')
+    if test=True:
+        fig.savefig(f'{save_dir}/{gserial}_{mission}_report{todays_date}.pdf')
     return fig, ax

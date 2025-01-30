@@ -1,6 +1,8 @@
 from glidertest import fetchers, summary_sheet
 import pandas as pd
 
+matplotlib.use('agg')  # use agg backend to prevent creating plot windows during tests
+
 def test_qc_checks():
     ds = fetchers.load_sample_dataset()
     gr, spike, flat, err = summary_sheet.qc_checks(ds, var='PSAL')
@@ -16,4 +18,4 @@ def test_phrase_duration_check():
     summary_sheet.phrase_duration_check(ds)
 def test_summary_plot():
     ds = fetchers.load_sample_dataset()
-    summary_sheet.summary_plot(ds)
+    summary_sheet.summary_plot(ds, test=True)
