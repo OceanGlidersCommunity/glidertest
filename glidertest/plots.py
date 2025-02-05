@@ -125,8 +125,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
             ax1.plot(np.nanmean(salG, axis=0), depthG[0, :], c='red')
             ax2.plot(np.nanmean(denG, axis=0) - 1000, depthG[0, :], c='black')
 
-            ax[0].set(ylabel='Depth (m)',
-                      xlabel=f'{utilities.plotting_labels("TEMP")} \n({utilities.plotting_units(ds, "TEMP")})')
+            ax[0].set(ylabel='Depth (m)', xlabel=f'{utilities.plotting_labels("TEMP")} \n({utilities.plotting_units(ds, "TEMP")})')
             ax[0].tick_params(axis='x', colors='blue')
             ax[0].xaxis.label.set_color('blue')
             ax1.spines['bottom'].set_color('blue')
@@ -141,7 +140,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
             ax2.tick_params(axis='x', colors='black')
 
             # Add text annotation to the right, outside of the plot
-            ax2.text(1.2, 1.28, f'Averaged profiles {start_prof}-{end_prof}', transform=ax2.transAxes,
+            ax2.text(1.2, 1.25, f'Averaged profiles {start_prof}-{end_prof}', transform=ax2.transAxes,
                      verticalalignment='center', horizontalalignment='left', rotation=0, fontsize=12,
                      bbox=dict(facecolor='white', alpha=0.5))
 
@@ -155,7 +154,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
                 ax2_1.spines['top'].set_color('green')
                 ax2_1.tick_params(axis='x', colors='green')
             else:
-                ax[1].text(0.15, 0.1, 'Chlorophyll data unavailable', va='top', transform=ax[1].transAxes)
+                ax[1].text(0.3, 0.7, 'Chlorophyll data unavailable', va='top', transform=ax[1].transAxes)
 
             if 'DOXY' in ds.variables:
                 oxyG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds.DOXY, p, z)
@@ -167,7 +166,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
                 ax[1].tick_params(axis='x', colors='orange')
                 ax[1].spines['bottom'].set_color('orange')
             else:
-                ax[1].text(0.15, 0.5, 'Oxygen data unavailable', va='top', transform=ax[1].transAxes)
+                ax[1].text(0.3, 0.5, 'Oxygen data unavailable', va='top', transform=ax[1].transAxes)
             [a.set_ylim(depthG.max(), 0) for a in ax]
             [a.grid() for a in ax]
             if force_plot:
