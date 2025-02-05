@@ -285,6 +285,10 @@ label_dict={
         "label": "In situ density",
         "units": "kg m⁻³"
     },
+    "SIGMA": {
+        "label": "In situ sigma-t",
+        "units": "kg m⁻³-1000"
+    },
     "DOXY": {
         "label": "Dissolved oxygen",
         "units": "mmol m⁻³"

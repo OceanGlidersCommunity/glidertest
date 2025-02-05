@@ -69,24 +69,25 @@ def plot_updown_bias(ds: xr.Dataset, var='TEMP', v_res=1, ax: plt.Axes = None, *
             plt.show()
         return fig, ax
 
+
 def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None):
     """
     This function plots the basic oceanographic variables temperature, salinity and density. A second plot is created and filled with oxygen and 
     chlorophyll data if available.
-    
+
     Parameters
     ----------
     ds: xarray in OG1 format containing at least temperature, salinity and density and depth
     v_res: vertical resolution for the gridding. Horizontal resolution (by profile) is assumed to be 1
     start_prof: start profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale
-                or region and subsections want to be plotted-1     
+                or region and subsections want to be plotted-1
     end_prof: end profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale
-              or region and subsections want to be plotted-1          
-    
+              or region and subsections want to be plotted-1
+
     Returns
     -------
     Line plots for the averages of the different variables.
-    
+
     Original author
     ----------------
     Chiara Monforte
@@ -99,7 +100,6 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
     salG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds.PSAL, p, z)
     denG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds.DENSITY, p, z)
 
-
     tempG = tempG[start_prof:end_prof, :]
     salG = salG[start_prof:end_prof, :]
     denG = denG[start_prof:end_prof, :]
@@ -109,7 +109,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             if ax is None:
-                fig, ax = plt.subplots(1,2)
+                fig, ax = plt.subplots(1, 2)
                 force_plot = True
             else:
                 fig = plt.gcf()
@@ -123,49 +123,51 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
             ax2.spines["top"].set_position(("axes", 1.2))
             ax[0].plot(np.nanmean(tempG, axis=0), depthG[0, :], c='blue')
             ax1.plot(np.nanmean(salG, axis=0), depthG[0, :], c='red')
-            ax2.plot(np.nanmean(denG, axis=0), depthG[0, :], c='black')
+            ax2.plot(np.nanmean(denG, axis=0) - 1000, depthG[0, :], c='black')
 
-            ax[0].set(ylabel='Depth (m)', xlabel=f'{utilities.plotting_labels("TEMP")} \n({utilities.plotting_units(ds,"TEMP")})')
+            ax[0].set(ylabel='Depth (m)',
+                      xlabel=f'{utilities.plotting_labels("TEMP")} \n({utilities.plotting_units(ds, "TEMP")})')
             ax[0].tick_params(axis='x', colors='blue')
             ax[0].xaxis.label.set_color('blue')
             ax1.spines['bottom'].set_color('blue')
-            ax1.set(xlabel=f'{utilities.plotting_labels("PSAL")} ({utilities.plotting_units(ds,"PSAL")})')
+            ax1.set(xlabel=f'{utilities.plotting_labels("PSAL")} ({utilities.plotting_units(ds, "PSAL")})')
             ax1.xaxis.label.set_color('red')
             ax1.spines['top'].set_color('red')
             ax1.tick_params(axis='x', colors='red')
             ax2.spines['bottom'].set_color('black')
-            ax2.set(xlabel=f'{utilities.plotting_labels("DENSITY")} ({utilities.plotting_units(ds,"DENSITY")})')
+            ax2.set(xlabel=f'{utilities.plotting_labels("SIGMA")} \n({utilities.plotting_units(ds, "SIGMA")})')
             ax2.xaxis.label.set_color('black')
             ax2.spines['top'].set_color('black')
             ax2.tick_params(axis='x', colors='black')
 
             # Add text annotation to the right, outside of the plot
-            ax2.text(1.2, 1.25, f'Averaged profiles {start_prof}-{end_prof}', transform=ax2.transAxes, 
-                     verticalalignment='center', horizontalalignment='left', rotation=0, fontsize=12, bbox=dict(facecolor='white', alpha=0.5))
+            ax2.text(1.2, 1.28, f'Averaged profiles {start_prof}-{end_prof}', transform=ax2.transAxes,
+                     verticalalignment='center', horizontalalignment='left', rotation=0, fontsize=12,
+                     bbox=dict(facecolor='white', alpha=0.5))
 
             if 'CHLA' in ds.variables:
                 chlaG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds.CHLA, p, z)
                 chlaG = chlaG[start_prof:end_prof, :]
                 ax2_1 = ax[1].twiny()
                 ax2_1.plot(np.nanmean(chlaG, axis=0), depthG[0, :], c='green')
-                ax2_1.set(xlabel=f'{utilities.plotting_labels("CHLA")} ({utilities.plotting_units(ds,"CHLA")})')
+                ax2_1.set(xlabel=f'{utilities.plotting_labels("CHLA")} ({utilities.plotting_units(ds, "CHLA")})')
                 ax2_1.xaxis.label.set_color('green')
                 ax2_1.spines['top'].set_color('green')
                 ax2_1.tick_params(axis='x', colors='green')
             else:
-                ax[1].text(0.3, 0.7, 'Chlorophyll data unavailable', va='top', transform=ax[1].transAxes)
+                ax[1].text(0.15, 0.1, 'Chlorophyll data unavailable', va='top', transform=ax[1].transAxes)
 
             if 'DOXY' in ds.variables:
                 oxyG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds.DOXY, p, z)
                 oxyG = oxyG[start_prof:end_prof, :]
                 ax[1].plot(np.nanmean(oxyG, axis=0), depthG[0, :], c='orange')
-                ax[1].set(xlabel=f'{utilities.plotting_labels("DOXY")} \n({utilities.plotting_units(ds,"DOXY")})')
+                ax[1].set(xlabel=f'{utilities.plotting_labels("DOXY")} \n({utilities.plotting_units(ds, "DOXY")})')
                 ax[1].xaxis.label.set_color('orange')
                 ax[1].spines['top'].set_color('orange')
                 ax[1].tick_params(axis='x', colors='orange')
                 ax[1].spines['bottom'].set_color('orange')
             else:
-                ax[1].text(0.3, 0.5, 'Oxygen data unavailable', va='top', transform=ax[1].transAxes)
+                ax[1].text(0.15, 0.5, 'Oxygen data unavailable', va='top', transform=ax[1].transAxes)
             [a.set_ylim(depthG.max(), 0) for a in ax]
             [a.grid() for a in ax]
             if force_plot:
