@@ -286,8 +286,8 @@ label_dict={
         "units": "kg m⁻³"
     },
     "SIGMA": {
-        "label": "In situ sigma-t",
-        "units": "kg m⁻³-1000"
+        "label": "Sigma-t",
+        "units": "kg m⁻³"
     },
     "DOXY": {
         "label": "Dissolved oxygen",
