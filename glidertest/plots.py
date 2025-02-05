@@ -192,7 +192,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
             [a.grid() for a in ax]
             if force_plot:
                 plt.show()
-        return fig, ax
+    return fig, ax
 
 
 def process_optics_assess(ds, var='CHLA'):
