@@ -117,26 +117,20 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.calc_w_meas">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">calc_w_meas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#calc_w_meas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.calc_w_meas" title="Link to this definition"></a></dt>
-<dd><p>Calculate the vertical velocity of a glider using changes in pressure with time.</p>
+<dd><p>Calculates the vertical velocity of a glider using changes in pressure with time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>(</strong><strong>xarray.Dataset</strong><strong>)</strong> (<em>ds</em>)</p></li>
-<li><p><strong>(</strong><strong>array-like</strong><strong>)</strong> (<em>- TIME</em>)</p></li>
-<li><p><strong>(</strong><strong>array-like</strong><strong>)</strong></p></li>
-</ul>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing <strong>DEPTH</strong> and <strong>TIME</strong>.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><strong>ds (xarray.Dataset)</strong> (<em>Containing the new variable</em>)</p></li>
-<li><p><strong>- GLIDER_VERT_VELO_DZDT (array-like)</strong> (<em>with vertical velocities calculated from dz/dt</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Eleanor Frajka-Williams</em></p></li>
-</ul>
-</p>
+<dd class="field-even"><p><strong>ds</strong> – Containing the new variable <strong>GLIDER_VERT_VELO_DZDT</strong> (array-like), with vertical velocities calculated from dz/dt</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xarray.Dataset</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <dl class="py function">
@@ -145,94 +139,82 @@
 <dd><p>Calculate the vertical seawater velocity and add it to the dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>(</strong><strong>xarray.Dataset</strong><strong>)</strong> (<em>ds</em>)</p>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing <strong>VERT_GLIDER_SPEED</strong> and <strong>VERT_SPEED_DZDT</strong>.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ds (xarray.Dataset)</strong></p>
+<dd class="field-even"><p><strong>ds</strong> – Dataset with the new variable <strong>VERT_SW_SPEED</strong>, which is the inferred vertical seawater velocity.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dataset with the new variable ‘VERT_SW_SPEED’, which is the inferred vertical seawater velocity.</p>
+<dd class="field-odd"><p>xarray.Dataset</p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user.</p>
-<p>Eleanor Frajka-Williams</p>
-</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user.</p></li>
+</ul>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.check_monotony">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">check_monotony</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">da</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#check_monotony"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.check_monotony" title="Link to this definition"></a></dt>
-<dd><p>This function check weather the selected variable over the mission is monotonically increasing or not. This is developed in particular for profile number.
-If the profile number is not monotonically increasing, this may mean that whatever function was used to assign the profile number may have misassigned at some points.</p>
+<dd><p>Checks whether the selected variable is <strong>monotonically increasing</strong> throughout the mission.
+This function is particularly designed to check <strong>profile numbers</strong> to ensure they are assigned correctly.
+If the profile number is not monotonically increasing, it may indicate misassignment due to an error in data processing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>da</strong> (<em>xarray.DataArray on OG1 format. Data should not be gridded.</em>)</p>
+<dd class="field-odd"><p><strong>da</strong> (<em>xarray.DataArray</em>) – DataArray in <strong>OG1 format</strong>. Data should <strong>not</strong> be gridded.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><em>It will print a sentence stating whether data is</em></p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
-</ul>
-</p>
+<dd class="field-even"><p><strong>True</strong> if the variable is monotonically increasing, else <strong>False</strong>.
+Additionally, a message is printed indicating the result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.compute_daynight_avg">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_daynight_avg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CHLA'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_prof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_prof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_daynight_avg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_daynight_avg" title="Link to this definition"></a></dt>
-<dd><p>This function computes night and day averages for a selected variable over a specific period of time or a specific series of dives
-Data in divided into day and night using the sunset and sunrise time as described in the above function sunset_sunrise from GliderTools
-:param ds: Data should not be gridded.
-:type ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable.
-:param sel_var:
-:type sel_var: variable to use to compute the day night averages
-:param start_time: we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
-:type start_time: Start date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,
-:param end_time: we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment
-:type end_time: End date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,
-:param start_prof: or the central week of the deployment.</p>
-<blockquote>
-<div><p>It is important to have a large enough number of dives to have some day and night data otherwise the function will not run</p>
-</div></blockquote>
+<dd><p>Computes day and night averages for a selected variable over a specified time period or range of dives.
+Day and night are determined based on <strong>sunrise and sunset times</strong> from the <cite>compute_sunset_sunrise</cite> function in GliderTools.
+A sufficient number of dives is required to ensure both <strong>day and night data</strong> are present; otherwise, the function will not run.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>end_prof</strong> (<em>End profile</em><em> of </em><em>the data selection. If no profile is specified</em><em>, </em><em>the specified time selection will be used</em>) – or the central week of the deployment.</p></li>
-<li><p><strong>run</strong> (<em>It is important to have a large enough number</em><em> of </em><em>dives to have some day and night data otherwise the function will not</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME, DEPTH, LATITUDE, LONGITUDE,</strong> and the selected variable.
+Data should <strong>not</strong> be gridded.</p></li>
+<li><p><strong>sel_var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='CHLA'</em>) – The variable for which day and night averages will be computed.</p></li>
+<li><p><strong>start_time</strong> (<em>str</em><em> or </em><em>datetime-like</em><em>, </em><em>optional</em>) – The <strong>start date</strong> for data selection.
+- If not specified, defaults to the <strong>central week of the deployment</strong>.
+- Selecting a smaller section (a few days to weeks) is recommended for better visualization of NPQ effects.</p></li>
+<li><p><strong>end_time</strong> (<em>str</em><em> or </em><em>datetime-like</em><em>, </em><em>optional</em>) – The <strong>end date</strong> for data selection.
+- If not specified, defaults to the <strong>central week of the deployment</strong>.</p></li>
+<li><p><strong>start_prof</strong> (<em>int</em><em>, </em><em>optional</em>) – The <strong>starting profile number</strong> for data selection.
+- If not specified, the function uses <cite>start_time</cite> or defaults to the <strong>central week of deployment</strong>.
+- A sufficient number of dives is required for valid day and night separation.</p></li>
+<li><p><strong>end_prof</strong> (<em>int</em><em>, </em><em>optional</em>) – The <strong>ending profile number</strong> for data selection.
+- If not specified, the function uses <cite>end_time</cite> or defaults to the <strong>central week of deployment</strong>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul>
-<li><p><strong>day_av</strong> (<em>pandas.Dataframe</em>) –</p>
-<dl class="simple">
-<dt>A dataframe with the day averages of the selected variable with the following columns:</dt><dd><p>batch: Number representing the grouping for each day. This number can represent the number of the day in chronological order
-depth: Depth values for the average
-dat: Average value for the selected variable
-day: Actual date for the batch</p>
-</dd>
-</dl>
-</li>
-<li><p><strong>night_av</strong> (<em>pandas.Dataframe</em>) –</p>
-<dl class="simple">
-<dt>A dataframe with the night averages of the selected variable with the following columns:</dt><dd><p>batch: Number representing the grouping for each day. This number can represent the number of the day in chronological order
-depth: Depth values for the average
-dat: Average value for the selected variable
-day: Actual date for the batch</p>
-</dd>
-</dl>
-</li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>day_av</strong> (<em>pandas.DataFrame</em>) – DataFrame containing <strong>daytime averages</strong> of the selected variable with the following columns:
+- <cite>batch</cite> : Integer representing the grouped day-night cycles (e.g., chronological day number).
+- <cite>depth</cite> : Depth values for the average calculation.
+- <cite>dat</cite> : Average value of the selected variable.
+- <cite>date</cite> : Actual date corresponding to the batch.</p></li>
+<li><p><strong>night_av</strong> (<em>pandas.DataFrame</em>) – DataFrame containing <strong>nighttime averages</strong> of the selected variable with the same columns as for day_av</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
@@ -245,23 +227,22 @@ output. The function returns the filtered dataset with the out-of-range values r
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>The xarray Dataset containing the variable to be filtered.</em>)</p></li>
-<li><p><strong>var</strong> (<em>The name</em><em> of </em><em>the variable to apply the range filter on. Default is 'DOXY'.</em>)</p></li>
-<li><p><strong>min_val</strong> (<em>The minimum allowable value for the variable. Default is -5.</em>)</p></li>
-<li><p><strong>max_val</strong> (<em>The maximum allowable value for the variable. Default is 600.</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing the variable to be filtered.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='DOXY'</em>) – The name of the variable to apply the range filter on.</p></li>
+<li><p><strong>min_val</strong> (<em>float</em><em>, </em><em>default = -5</em>) – The minimum allowable value for the variable.</p></li>
+<li><p><strong>max_val</strong> (<em>float</em><em>, </em><em>default = 600</em>) – The maximum allowable value for the variable.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><em>xarray.DataArray</em> – A filtered DataArray containing only the values of the specified variable
-within the range <cite>[min_val, max_val]</cite>. Values outside this range are dropped.</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
-</ul>
-</p>
+<dd class="field-even"><p>A filtered DataArray containing only the values of the specified variable
+within the range <cite>[min_val, max_val]</cite>. Values outside this range are dropped.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xarray.DataArray</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
@@ -271,70 +252,72 @@ within the range <cite>[min_val, max_val]</cite>. Values outside this range are 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray on OG1 format containing at least depth</em><em>, </em><em>profile_number and the selected variable. Data should not be gridded.</em>)</p></li>
-<li><p><strong>var</strong> (<em>Selected variable</em>)</p></li>
-<li><p><strong>v_res</strong> (<em>Vertical resolution for the gridding</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>DEPTH, PROFILE_NUMBER,</strong> and the selected variable.
+Data should not be gridded.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='DOXY'</em>) – Selected variable</p></li>
+<li><p><strong>v_res</strong> (<em>float</em>) – Vertical resolution for the gridding</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>diff</strong> (<em>difference between upcast and downcast</em>)</p></li>
-<li><p><strong>err</strong> (<em>Percentage error of the dive-climb difference. One value per depth step</em>)</p></li>
-<li><p><strong>rms</strong> (<em>Root Mean Square of the difference in values between dive and climb</em>)</p></li>
-<li><p><strong>df</strong> (<em>pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara  Monforte</em></p></li>
+<li><p><strong>diff</strong> (<em>array-like</em>) – Difference between upcast and downcast values.</p></li>
+<li><p><strong>err</strong> (<em>array-like</em>) – Percentage error of the dive-climb difference, computed for each depth step.</p></li>
+<li><p><strong>rms</strong> (<em>float</em>) – Root Mean Square (RMS) of the difference in values between dive and climb.</p></li>
+<li><p><strong>df</strong> (<em>pandas.DataFrame</em>) – DataFrame containing:
+- <strong>Dive and climb averages</strong> over depth for the selected variable.
+- <strong>Depth values</strong> in a separate column.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.compute_prof_duration">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_prof_duration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_prof_duration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_prof_duration" title="Link to this definition"></a></dt>
-<dd><p>This function computes some basic statistics for the differences between climb and dive data</p>
+<dd><p>This function computes some basic statistics for the differences between climb and dive data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ds</strong> (<em>xarray on OG1 format containing at least time and profile_number. Data should not be gridded.</em>)</p>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>DEPTH, PROFILE_NUMBER,</strong> and the selected variable.
+Data should not be gridded.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><strong>df</strong> (<em>pandas dataframe containing the profile number and the duration of that profile in minutes</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara  Monforte</em></p></li>
-</ul>
-</p>
+<dd class="field-even"><p><strong>df</strong> – Dataframe containing the profile number and the duration of that profile in minutes</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.find_outlier_duration">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">find_outlier_duration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rolling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#find_outlier_duration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.find_outlier_duration" title="Link to this definition"></a></dt>
-<dd><p>This function computes some basic statistics for the differences between climb and dive data</p>
+<dd><p>Identifies <strong>outlier profile durations</strong> based on a rolling mean and standard deviation threshold.
+This helps detect profiles with significantly longer or shorter durations compared to surrounding profiles.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>df</strong> (<em>pandas dataframe containing the profile number and the duration</em><em> of </em><em>that profile in minutes</em>)</p></li>
-<li><p><strong>rolling</strong> (<em>window size for the rolling mean</em>)</p></li>
-<li><p><strong>std</strong> (<em>number</em><em> of </em><em>standard deviations to use for 'odd' profile duration</em>)</p></li>
+<li><p><strong>df</strong> (<em>pandas.DataFrame</em>) – Dataframr containing the profile number and the duration of that profile in minutes</p></li>
+<li><p><strong>rolling</strong> (<em>int</em><em>, </em><em>default = 20</em>) – Window size for the rolling mean</p></li>
+<li><p><strong>std</strong> (<em>int</em><em>, </em><em>default = 2</em>) – Number of standard deviations to use for ‘odd’ profile duration</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>The function prints a statement in case there are profiles with ‘odd’ duration,</em></p></li>
-<li><p><strong>rolling_mean</strong> (<em>Rolling mean of profile duration computed with the set window</em>)</p></li>
-<li><p><strong>overt_prof</strong> (<em>Profiles where the duration is above the set rolling mean with added standard deviation</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara  Monforte</em></p></li>
+<li><p><strong>rolling_mean</strong> (<em>pandas.Series</em>) – Rolling mean of <strong>profile duration</strong> computed using the specified window size.</p></li>
+<li><p><strong>overt_prof</strong> (<em>numpy.ndarray</em>) – Array of <strong>profile numbers</strong> where the duration exceeds the rolling mean by more than the set <strong>standard deviation threshold</strong>.
+- If outliers are found, a message is printed recommending further investigation.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte</p>
 </dd></dl>
 
 <dl class="py function">
@@ -343,21 +326,18 @@ within the range <cite>[min_val, max_val]</cite>. Values outside this range are 
 <dd><p>This function computes the maximum depth for each profile in the dataset</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray on OG1 format containing at least depth and profile_number. Data</em>)</p></li>
-<li><p><strong>gridded.</strong> (<em>should not be</em>)</p></li>
-</ul>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>DEPTH, PROFILE_NUMBER,</strong> and the selected variable.
+Data should not be gridded.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><strong>max_depths</strong> (<em>pandas dataframe containing the profile number and the maximum depth of that profile</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Till Moritz</em></p></li>
-</ul>
-</p>
+<dd class="field-even"><p><strong>max_depths</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas dataframe containing the profile number and the maximum depth of that profile</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Till Moritz</p>
 </dd></dl>
 
 <dl class="py function">
@@ -371,43 +351,47 @@ within each depth bin.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>VERT_SW_SPEED</strong> (<em>- ds using the variables PRES and</em>)</p></li>
-<li><p><strong>(</strong><strong>array-like</strong> (<em>- zgrid</em>)</p></li>
-<li><p><strong>optional</strong><strong>)</strong> (<em>Interval for creating depth grid if zgrid is not provided.</em>)</p></li>
-<li><p><strong>(</strong><strong>float</strong> (<em>- dz</em>)</p></li>
-<li><p><strong>optional</strong><strong>)</strong></p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing the variables <strong>PRES</strong> and <strong>VERT_SW_SPEED</strong></p></li>
+<li><p><strong>zgrid</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Depth grid for binning. If None, a default grid is created.</p></li>
+<li><p><strong>dz</strong> (<em>float</em><em>, </em><em>optional</em>) – Interval for creating depth grid if zgrid is not provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>- meanw (array-like)</strong></p>
+<dd class="field-even"><p><strong>meanw</strong> – Bin-averaged vertical velocities for each depth bin.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Bin-averaged vertical velocities for each depth bin.</p>
+<dd class="field-odd"><p>array-like</p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>I know this is a non-sensical name.  We should re-name, but is based on advice from Ramsey Harcourt.</p>
-<p>Eleanor Frajka-Williams</p>
-</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>I know this is a non-sensical name.  We should re-name, but is based on advice from Ramsey Harcourt.</p></li>
+</ul>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.quant_hysteresis">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">quant_hysteresis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#quant_hysteresis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.quant_hysteresis" title="Link to this definition"></a></dt>
-<dd><blockquote>
-<div><p>This function computes up and downcast averages for a specific variable</p>
-<dl class="simple">
-<dt>ds: xarray on OG1 format containing at least depth, profile_number and the selected variable.</dt><dd><p>Data should not be gridded.</p>
+<dd><p>This function computes up and downcast averages for a specific variable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>DEPTH, PROFILE_NUMBER,</strong> and the selected variable.
+Data should <strong>not</strong> be gridded.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='DOXY'</em>) – Selected variable</p></li>
+<li><p><strong>v_res</strong> (<em>float</em>) – Vertical resolution for the gridding in meters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>df</strong> – Dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
 </dd>
 </dl>
-<p>var: Selected variable
-v_res: Vertical resolution for the gridding</p>
-</div></blockquote>
-<p>df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</p>
-<blockquote>
-<div><p>Chiara Monforte</p>
-</div></blockquote>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
@@ -417,46 +401,49 @@ v_res: Vertical resolution for the gridding</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray on OG1 format containing at least time</em><em>, </em><em>depth</em><em>, </em><em>latitude</em><em>, </em><em>longitude and the selected variable.</em>) – Data should not be gridded.</p></li>
-<li><p><strong>var</strong> (<em>Selected variable</em>)</p></li>
-<li><p><strong>v_res</strong> (<em>Vertical resolution for the gridding</em>)</p></li>
+<li><p><strong>ds</strong> (<em>Dataset.xarray</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME, DEPTH, LATITUDE, LONGITUDE,</strong> and the selected variable.
+Data should <strong>not</strong> be gridded.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='PSAL'</em>) – Selected variable.</p></li>
+<li><p><strong>v_res</strong> (<em>float</em>) – Vertical resolution for the gridding in meters.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><strong>df</strong> (<em>pandas dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
-</ul>
-</p>
+<dd class="field-even"><p><strong>df</strong> – Dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function" id="module-glidertest.plots">
 <dt class="sig sig-object py" id="glidertest.plots.check_temporal_drift">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">check_temporal_drift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#check_temporal_drift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.check_temporal_drift" title="Link to this definition"></a></dt>
-<dd><p>This function can be used to plot sections for any variable with the sunrise and sunset plotted over</p>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">check_temporal_drift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#check_temporal_drift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.check_temporal_drift" title="Link to this definition"></a></dt>
+<dd><p>Assesses potential <strong>temporal drift</strong> in a selected variable by generating a figure with two subplots:
+1. <strong>Time series scatter plot</strong> of the variable.
+2. <strong>Depth profile scatter plot</strong>, colored by date.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray on OG1 format containing at least time</em><em>, </em><em>depth</em><em>, </em><em>latitude</em><em>, </em><em>longitude and the selected variable.</em>) – Data should not be gridded.</p></li>
-<li><p><strong>var</strong> (<em>selected variable to plot</em>)</p></li>
-<li><p><strong>ax</strong> (<em>axis to plot the data</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME, DEPTH,</strong> and the selected variable.
+Data <strong>should not be gridded</strong>.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em>) – Selected variable to analyze.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Axis to plot the data. If None, a new figure and axis will be created.</p></li>
+<li><p><strong>**kw</strong> (<em>dict</em>) – Additional keyword arguments for customization.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>A figure with two subplots. One is a section containing the data over time and depth. The other one is a scatter of data from the variable</em></p></li>
-<li><p><em>over depth and colored by date</em></p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The generated figure.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes containing the plots.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
@@ -467,22 +454,25 @@ chlorophyll data if available.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray in OG1 format containing at least temperature</em><em>, </em><em>salinity and density and depth</em>)</p></li>
-<li><p><strong>v_res</strong> (<em>vertical resolution for the gridding. Horizontal resolution</em><em> (</em><em>by profile</em><em>) </em><em>is assumed to be 1</em>)</p></li>
-<li><p><strong>start_prof</strong> (<em>start profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale</em>) – or region and subsections want to be plotted-1</p></li>
-<li><p><strong>end_prof</strong> (<em>end profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale</em>) – or region and subsections want to be plotted-1</p></li>
+<li><p><strong>ds</strong> (<em>xarray</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>PROFILE_NUMBER, DEPTH, TEMP, PSAL, LATITUDE, LONGITUDE,</strong> and the selected variable.</p></li>
+<li><p><strong>v_res</strong> (<em>float</em><em>, </em><em>default = 1</em>) – Vertical resolution for the gridding. Horizontal resolution (by profile) is assumed to be 1</p></li>
+<li><p><strong>start_prof</strong> (<em>int</em>) – Start profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale
+or region and subsections want to be plotted-1</p></li>
+<li><p><strong>end_prof</strong> (<em>int</em>) – End profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale
+or region and subsections want to be plotted-1</p></li>
+<li><p><strong>**kw</strong> (<em>dict</em><em>, </em><em>optional</em>) – Additional keyword arguments passed to <cite>matplotlib.pyplot.plot()</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>Line plots for the averages of the different variables.</em></p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – Figure object containing the generated plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes object with the plotted variables <strong>temperature, salinity and density</strong> over depth.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
@@ -491,216 +481,226 @@ chlorophyll data if available.</p>
 <dd><p>Plots combined vertical velocity profiles for dives and climbs.</p>
 <p>Replicates Fig 3 in Frajka-Williams et al. 2011, but using an updated dataset from Jim Bennett (2013),
 now in OG1 format as sg014_20040924T182454_delayed.nc.  Note that flight model parameters may differ from those in the paper.</p>
+<p>The function converts vertical velocities from m/s to cm/s, plots the mean vertical velocities and their ranges for both dives and climbs,
+and customizes the plot with labels, legends, and axis settings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>(</strong><strong>xarray.Dataset</strong><strong>)</strong> (<em>ds_out_climbs</em>)</p></li>
-<li><p><strong>(</strong><strong>xarray.Dataset</strong><strong>)</strong></p></li>
-<li><p><strong>cm/s</strong> (<em>The function converts vertical velocities from m/s to</em>)</p></li>
-<li><p><strong>climbs</strong> (<em>plots the mean vertical velocities and their ranges for both dives and</em>)</p></li>
-<li><p><strong>labels</strong> (<em>and customizes the plot with</em>)</p></li>
-<li><p><strong>legends</strong></p></li>
-<li><p><strong>settings.</strong> (<em>and axis</em>)</p></li>
+<li><p><strong>ds_out_dives</strong> (<em>xarray.Dataset</em>) – Dataset containing dive profiles with variables:
+- ‘zgrid’: Depth grid (meters)
+- ‘meanw’: Mean vertical velocity (m/s)
+- ‘w_lower’: Lower bound of velocity range (m/s)
+- ‘w_upper’: Upper bound of velocity range (m/s)</p></li>
+<li><p><strong>ds_out_climbs</strong> (<em>xarray.Dataset</em>) – Dataset containing climb profiles with the same variables as <cite>ds_out_dives</cite>.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The figure object for the plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes._subplots.AxesSubplot</em>) – The axes object for the plot.</p></li>
+</ul>
+</p>
+</dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Assumes that the vertical velocities are in m/s and the depth grid is in meters.</p>
-<p>Eleanor Frajka-Williams</p>
-</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Assumes that the vertical velocities are in m/s and the depth grid is in meters.</p></li>
+</ul>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_daynight_avg">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_daynight_avg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var='PSAL'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_day=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_daynight_avg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_daynight_avg" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_daynight_avg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var='PSAL'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_day=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_daynight_avg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_daynight_avg" title="Link to this definition"></a></dt>
 <dd><p>This function can be used to plot the day and night averages computed with the day_night_avg function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray dataset in OG1 format containing at least time</em><em>, </em><em>depth and the selected variable</em>)</p></li>
-<li><p><strong>var</strong> (<em>name</em><em> of </em><em>the selected variable</em>)</p></li>
-<li><p><strong>ax</strong> (<em>axis to plot the data</em>)</p></li>
-<li><p><strong>sel_day</strong> (<em>selected day to plot. Defaults to the median day</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME, DEPTH,</strong> and the selected variable.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='PSAL'</em>) – Selected variable</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>default = None</em>) – Axis to plot the data</p></li>
+<li><p><strong>sel_day</strong> (str or None, optional, default = <cite>None</cite>) – The specific day to plot. If <cite>None</cite>, the function selects the <strong>median day</strong> in the dataset.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>A line plot comparing the day and night average over depth for the selected day</em></p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The generated <strong>figure</strong> containing the plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – The <strong>axes</strong> object with the plotted data.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_glider_track">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_glider_track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_glider_track"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_glider_track" title="Link to this definition"></a></dt>
-<dd><p>This function plots the glider track on a map, with latitude and longitude colored by time.</p>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_glider_track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_glider_track"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_glider_track" title="Link to this definition"></a></dt>
+<dd><p>Plots the <strong>glider track</strong> on a map, with latitude and longitude colored by time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray in OG1 format with at least TIME</em><em>, </em><em>LATITUDE</em><em>, </em><em>and LONGITUDE.</em>)</p></li>
-<li><p><strong>ax</strong> (<em>Optional; axis to plot the data.</em>)</p></li>
-<li><p><strong>kw</strong> (<em>Optional; additional keyword arguments for the scatter plot.</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME, LATITUDE,</strong> and <strong>LONGITUDE</strong>.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Axis to plot the data. If None, a new figure and axis will be created.</p></li>
+<li><p><strong>**kw</strong> (<em>dict</em>) – Additional keyword arguments for the scatter plot.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>One plot with the map of the glider track.</em></p></li>
-<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>)</p></li>
-<li><p><strong>ax</strong> (<em>matplotlib.axes._subplots.AxesSubplot</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Eleanor Frajka-Williams</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The generated figure.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes containing the plot.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_global_range">
 <span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_global_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_global_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_global_range" title="Link to this definition"></a></dt>
-<dd><dl>
-<dt>This function generates a histogram of the specified variable (<cite>var</cite>) from the dataset (<cite>ds</cite>) and</dt><dd><p>overlays vertical lines at the specified minimum (<cite>min_val</cite>) and maximum (<cite>max_val</cite>) values to
-visually represent the global range. The function is useful for visually inspecting whether
-values of the specified variable fall within the expected global range.</p>
-<p>ds : The xarray dataset containing the variable (<cite>var</cite>) to be plotted.
-var : The name of the variable to plot.
-min_val : The minimum value of the global range to highlight on the plot.
-max_val : The maximum value of the global range to highlight on the plot.
-ax : matplotlib.axes.Axes, optional</p>
-<blockquote>
-<div><p>The axes on which to plot the histogram. If <cite>None</cite>, a new figure and axes are created.
-Default is <cite>None</cite>.</p>
-</div></blockquote>
-<dl class="simple">
-<dt>fig<span class="classifier">matplotlib.figure.Figure</span></dt><dd><p>The figure object containing the plot.</p>
-</dd>
-<dt>ax<span class="classifier">matplotlib.axes.Axes</span></dt><dd><p>The axes object containing the histogram plot.</p>
-</dd>
-</dl>
-<p>Chiara Monforte</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="glidertest.plots.plot_grid_spacing">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_grid_spacing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_grid_spacing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_grid_spacing" title="Link to this definition"></a></dt>
-<dd><p>This function plots histograms of the grid spacing (diff(ds.DEPTH) and diff(ds.TIME)) where only the inner 99% of values are plotted.</p>
+<dd><p>This function creates a histogram of the selected variable (<cite>var</cite>) from the dataset (<cite>ds</cite>),
+allowing for visual inspection of its distribution. It overlays vertical lines at the specified
+minimum (<cite>min_val</cite>) and maximum (<cite>max_val</cite>) values to indicate the global range, helping
+identify whether values fall within expected limits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray in OG1 format with at least TIME and DEPTH.</em>)</p></li>
-<li><p><strong>ax</strong> (<em>Optional; axis to plot the data.</em>)</p></li>
-<li><p><strong>kw</strong> (<em>Optional; additional keyword arguments for the histograms.</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing the variable to be plotted.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>default = 'DOXY'</em>) – The name of the variable to be plotted in the histogram.</p></li>
+<li><p><strong>min_val</strong> (<em>float</em><em>, </em><em>default = -5</em>) – The minimum value of the global range to highlight on the plot.</p></li>
+<li><p><strong>max_val</strong> (<em>float</em><em>, </em><em>default = 600</em>) – The maximum value of the global range to highlight on the plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – The axes on which to plot the histogram. If <cite>None</cite>, a new figure and axes are created.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>Two histograms showing the distribution of grid spacing for depth and time.</em></p></li>
-<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>)</p></li>
-<li><p><strong>ax</strong> (<em>matplotlib.axes._subplots.AxesSubplot</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Eleanor Frajka-Williams</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The figure object containing the histogram plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – The axes object containing the histogram plot.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots.plot_grid_spacing">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_grid_spacing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_grid_spacing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_grid_spacing" title="Link to this definition"></a></dt>
+<dd><p>Plots <strong>histograms of the grid spacing</strong>, showing depth and time differences while excluding the outer 1% of values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME</strong> and <strong>DEPTH</strong>.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Axis to plot the data. If None, a new figure and axis will be created.</p></li>
+<li><p><strong>**kw</strong> (<em>dict</em>) – Additional keyword arguments for the histograms.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The generated figure.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes containing the histograms.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_hysteresis">
 <span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_hysteresis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perct_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_hysteresis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_hysteresis" title="Link to this definition"></a></dt>
-<dd><blockquote>
-<div><p>This function creates 4 plots which can help the user visualize any possible hysteresis
+<dd><p>This function creates 4 plots which can help the user visualize any possible hysteresis
 present in their dataset for a specific variable</p>
-<dl class="simple">
-<dt>ds: xarray on OG1 format containing at least depth, profile_number and the selected variable.</dt><dd><p>Data should not be gridded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong> containing at least <strong>DEPTH, PROFILE_NUMBER</strong> and the selected variable.
+Data should <strong>not</strong> be gridded.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default = 'DOXY'</em>) – The variable to analyze for hysteresis effects</p></li>
+<li><p><strong>v_res</strong> (<em>int</em><em>, </em><em>default = 1</em>) – Vertical resolution for gridding the data</p></li>
+<li><p><strong>perct_err</strong> (<em>float</em><em>, </em><em>default = 2</em>) – Percentage error threshold for plotting a reference vertical line</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>default = None</em>) – Specific axes for plotting if adding to an existing figure</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The figure object containing the plots.</p></li>
+<li><p><strong>ax</strong> (<em>list of matplotlib.axes.Axes</em>) – The list of axes corresponding to the four generated subplots.</p></li>
+</ul>
+</p>
 </dd>
 </dl>
-<p>var: Selected variable
-v_res: Vertical resolution for the gridding
-perct_err: Percentage error threshold used to plot a vertical line in one of the subplots
-ax: Specific axis in can the user wants to add this plot to an existing figure</p>
-</div></blockquote>
-<p>df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</p>
-<blockquote>
-<div><p>Chiara Monforte</p>
-</div></blockquote>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_ioosqc">
 <span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_ioosqc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suspect_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[25]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fail_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[50]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_ioosqc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_ioosqc" title="Link to this definition"></a></dt>
-<dd><p>Plots a scatter plot of the the results of IOOS qQC tests with quality control labels (GOOD, UNKNOWN, SUSPECT, FAIL, MISSING) on the y-axis,
-and overlays threshold-based markers for suspect and fail values. This function is useful for visualizing the status of
-data points according to the quality control thresholds.</p>
-<section id="parameters">
-<h2>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
-<dl class="simple">
-<dt>data<span class="classifier">The result from the IOOS_QC test.</span></dt><dd><p>A sequence of numerical values representing the data points to be plotted.</p>
-</dd>
-<dt>suspect_threshold<span class="classifier">A list containing one or two numerical values indicating the thresholds for suspect values. If one value is provided,</span></dt><dd><p>it applies to both lower and upper bounds for suspect data points. If two values are provided, they define the
-lower and upper bounds for suspect values.</p>
-</dd>
-<dt>fail_threshold A list containing one or two numerical values indicating the thresholds for fail values. Similar to <cite>suspect_threshold</cite>,</dt><dd><p>it can have one or two values to define the bounds for fail data points.</p>
-</dd>
-<dt>title<span class="classifier">str, optional, default = ‘’</span></dt><dd><p>The title to display at the top of the plot.</p>
-</dd>
-<dt>ax<span class="classifier">matplotlib Axes object, optional, default = None</span></dt><dd><p>If provided, the plot will be drawn on this existing Axes object. If None, a new figure and axis will be created.</p>
-</dd>
-</dl>
-</section>
-<section id="returns">
-<h2>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
-<dl class="simple">
-<dt>fig<span class="classifier">matplotlib figure</span></dt><dd><p>The figure object containing the plot.</p>
-</dd>
-<dt>ax<span class="classifier">matplotlib Axes object</span></dt><dd><p>The axes object used for plotting.</p>
-</dd>
-</dl>
-</section>
-<section id="notes">
-<h2>Notes:<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p>The plot uses two y-axes: one for labeling data points as ‘GOOD’, ‘UNKNOWN’, ‘SUSPECT’, ‘FAIL’, or ‘MISSING’ based
-on thresholds, and another for marking specific suspect and fail ranges.</p></li>
-</ul>
-</section>
-<section id="original-author">
-<h2>Original author<a class="headerlink" href="#original-author" title="Link to this heading"></a></h2>
-<p>Chiara Monforte</p>
-</section>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="glidertest.plots.plot_max_depth_per_profile">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_max_depth_per_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins=20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_max_depth_per_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_max_depth_per_profile" title="Link to this definition"></a></dt>
-<dd><p>This function can be used to plot the maximum depth of each profile in a dataset.</p>
+<dd><p>This function generates a scatter plot of the results from an IOOS QC test, labeling data points
+with quality control categories (‘GOOD’, ‘UNKNOWN’, ‘SUSPECT’, ‘FAIL’, ‘MISSING’). It also overlays
+threshold-based markers to visualize suspect and fail ranges, aiding in the interpretation of
+data quality.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray on OG1 format containing the profile number and the maximum depth.</em>)</p></li>
-<li><p><strong>bins</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=20</em><em>)</em>)</p></li>
+<li><p><strong>data</strong> (<em>array-like</em>) – The results from the IOOS QC test, representing numerical data points to be plotted.</p></li>
+<li><p><strong>suspect_threshold</strong> (<em>list</em><em>, </em><em>optional</em><em>, </em><em>default =</em><em> [</em><em>25</em><em>]</em>) – A list containing one or two numerical values defining the thresholds for suspect values.
+If one value is provided, it applies to both lower and upper bounds. If two values are given,
+they define distinct lower and upper suspect limits.</p></li>
+<li><p><strong>fail_threshold</strong> (<em>list</em><em>, </em><em>optional</em><em>, </em><em>default =</em><em> [</em><em>50</em><em>]</em>) – A list containing one or two numerical values defining the thresholds for fail values.
+The structure follows the same logic as <cite>suspect_threshold</cite>.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default = ''</em>) – The title to display at the top of the plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – The axes object on which to plot the results. If <cite>None</cite>, a new figure and axis are created.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>One figure with two plots illustrating the max depth of each profile and a histogram of the max depths</em></p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Till Moritz</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The figure object containing the QC results plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – The axes object used for plotting.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The plot uses two y-axes: one for labeling data points as ‘GOOD’, ‘UNKNOWN’, ‘SUSPECT’, ‘FAIL’, or ‘MISSING’ based
+on thresholds, and another for marking specific suspect and fail ranges.</p></li>
+</ul>
+<p>Original Author: Chiara Monforte</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots.plot_max_depth_per_profile">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_max_depth_per_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins=20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_max_depth_per_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_max_depth_per_profile" title="Link to this definition"></a></dt>
+<dd><p>Plots the maximum depth of each profile in a dataset.</p>
+<p>This function generates two plots: one showing the maximum depth of each profile and another
+histogram illustrating the distribution of maximum depths. It provides a visual representation
+of profile depth variations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – An xarray dataset in OG1 format containing profile numbers and corresponding maximum depths.</p></li>
+<li><p><strong>bins</strong> (<em>int</em><em>, </em><em>optional</em><em>, </em><em>default = 20</em>) – The number of bins to use for the histogram of maximum depths.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – The axes object on which to plot the results. If <cite>None</cite>, a new figure with two subplots is created.</p></li>
+<li><p><strong>**kw</strong> (<em>dict</em><em>, </em><em>optional</em>) – Additional keyword arguments passed to the plotting function for customization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The figure object containing the plots.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – A 1x2 array of axes used for the two subplots.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Till Moritz</p>
 </dd></dl>
 
 <dl class="py function">
@@ -712,219 +712,225 @@ to a rolling mean, and by visualizing the shape and depth of the selected outlie
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>An xarray object containing at least the variables 'TIME'</em><em>, </em><em>'DEPTH'</em><em>, </em><em>and 'PROFILE_NUMBER'.</em>) – These are used to compute the profile durations and plot depth profiles.</p></li>
-<li><p><strong>rolling_mean</strong> (<em>A series representing the rolling mean</em><em> of </em><em>the profile durations</em><em>,</em>) – which is used to highlight outliers based on standard deviation.</p></li>
-<li><p><strong>overtime</strong> (<em>A list</em><em> of </em><em>profile numbers identified as having unusual durations.</em>) – These profiles are marked on the plot to highlight the outliers.</p></li>
-<li><p><strong>std</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default 2</em>) – The number of standard deviations above and below the rolling mean that will be used to define the range
-of “normal” durations. Profiles outside this range are considered outliers.</p></li>
-<li><p><strong>ax</strong> (<em>The axes object on which to plot the results. If not provided</em><em>, </em><em>a new figure with two subplots is created.</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing at least <strong>TIME, DEPTH, and PROFILE_NUMBER</strong></p></li>
+<li><p><strong>rolling_mean</strong> (<em>pandas.Series</em>) – A series representing the rolling mean of profile durations, used to
+define the range of normal durations.</p></li>
+<li><p><strong>overtime</strong> (<em>list</em>) – A list of profile numbers identified as outliers based on abnormal durations.</p></li>
+<li><p><strong>std</strong> (<em>float</em><em>, </em><em>default = 2</em>) – The number of standard deviations around the rolling mean used to classify
+outliers.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>default = None</em>) – Axes object for plotting. If None, a new figure with two subplots is created.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>fig</strong> (<em>The figure containing the generated plots.</em>) –</p>
-<ol class="arabic simple">
-<li><p>A plot showing the profile durations with the rolling mean and the range defined by the rolling mean ± <cite>std</cite>
-(standard deviation). The range is highlighted in orange.</p></li>
-<li><p>A scatter plot of the profile depths, with outlier profiles marked in red. These outliers are determined based
-on the duration exceeding the threshold defined by the rolling mean ± <cite>std</cite>.</p></li>
-</ol>
-</li>
-<li><p><strong>ax</strong> (<em>A 1x2 array of axes used for the two subplots.</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>——</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The figure containing the generated plots</p></li>
+<li><p><strong>ax</strong> (<em>list of matplotlib.axes.Axes</em>) – A list of axes corresponding to the two generated subplots.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_prof_monotony">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_prof_monotony</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_prof_monotony"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_prof_monotony" title="Link to this definition"></a></dt>
-<dd><p>This function can be used to plot the profile number and check for any possible issues with the profile index assigned.</p>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_prof_monotony</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_prof_monotony"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_prof_monotony" title="Link to this definition"></a></dt>
+<dd><p>Checks for potential issues with the assigned <strong>profile index</strong> by plotting its progression over time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray dataset in OG1 format with at least PROFILE_NUMBER</em><em>, </em><em>TIME</em><em>, </em><em>DEPTH. Data should not be gridded</em>)</p></li>
-<li><p><strong>ax</strong> (<em>axis to plot the data</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME, DEPTH,</strong> and <strong>PROFILE_NUMBER</strong>.
+Data <strong>should not be gridded</strong>.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Axis to plot the data. If None, a new figure and axis will be created.</p></li>
+<li><p><strong>**kw</strong> (<em>dict</em>) – Additional keyword arguments for customization.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>Two plots, one line plot with the profile number over time (expected to be always increasing). A</em></p></li>
-<li><p><em>second plot which is a scatter plot showing at which depth over time there was a profile index where the</em></p></li>
-<li><p><em>difference was neither 0 nor 1 (meaning there are possibly issues with how the profile index was assigned).</em></p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The generated figure.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes containing the two plots.
+- 1. One line plot with the profile number over time (expected to be always increasing).
+- 2. Scatter plot showing at which depth over time there was a profile index where the
+difference was neither 0 nor 1 (meaning there are possibly issues with how the profile index was assigned).</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_quench_assess">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_quench_assess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_var:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_prof=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_prof=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylim=35</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_quench_assess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_quench_assess" title="Link to this definition"></a></dt>
-<dd><p>This function can be used to plot sections for any variable with the sunrise and sunset plotted over</p>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_quench_assess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_var:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_prof=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_prof=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylim=35</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_quench_assess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_quench_assess" title="Link to this definition"></a></dt>
+<dd><p>Generates a <strong>section plot</strong> of the selected variable over time and depth,
+with <strong>sunrise and sunset</strong> times marked to assess potential Non-Photochemical Quenching (NPQ) effects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray on OG1 format containing at least time</em><em>, </em><em>depth</em><em>, </em><em>latitude</em><em>, </em><em>longitude and the selected variable.</em>) – Data should not be gridded.</p></li>
-<li><p><strong>sel_var</strong> (<em>selected variable to plot</em>)</p></li>
-<li><p><strong>ax</strong> (<em>axis to plot the data</em>)</p></li>
-<li><p><strong>start_time</strong> (<em>Start date</em><em> of </em><em>the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect.</em>) – Defaults to mid 4 days</p></li>
-<li><p><strong>end_time</strong> (<em>End date</em><em> of </em><em>the data selection format 'YYYY-MM-DD'. As missions can be long and came make it hard to visualise NPQ effect.</em>) – Defaults to mid 4 days</p></li>
-<li><p><strong>start_prof</strong> (<em>Start profile</em><em> of </em><em>the data selection. If no profile is specified</em><em>, </em><em>the specified time selection will be used</em><em> or </em><em>the mid 4 days</em><em> of </em><em>the deployment</em>)</p></li>
-<li><p><strong>end_prof</strong> (<em>End profile</em><em> of </em><em>the data selection. If no profile is specified</em><em>, </em><em>the specified time selection will be used</em><em> or </em><em>the mid 4 days</em><em> of </em><em>the deployment</em>)</p></li>
-<li><p><strong>ylim</strong> (<em>specified limit for the maximum y-axis value. The minimum is computed as ylim/30</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME, DEPTH, LATITUDE, LONGITUDE</strong>, and the selected variable.
+Data <strong>should not</strong> be gridded.</p></li>
+<li><p><strong>sel_var</strong> (<em>str</em>) – The selected variable to plot.</p></li>
+<li><p><strong>ax</strong> (matplotlib.axes.Axes, optional, default = <cite>None</cite>) – Axis on which to plot the data. If <cite>None</cite>, a new figure and axis will be created.</p></li>
+<li><p><strong>start_time</strong> (str or None, optional, default = <cite>None</cite>) – Start date for the data selection (<cite>‘YYYY-MM-DD’</cite>).
+- If <cite>None</cite>, defaults to <strong>2 days before</strong> the dataset’s median date.</p></li>
+<li><p><strong>end_time</strong> (str or None, optional, default = <cite>None</cite>) – End date** for the data selection (<cite>‘YYYY-MM-DD’</cite>).
+- If <cite>None</cite>, defaults to <strong>2 days after</strong> the dataset’s median date.</p></li>
+<li><p><strong>start_prof</strong> (int or None, optional, default = <cite>None</cite>) – Start profile number for data selection</p></li>
+<li><p><strong>end_prof</strong> (int or None, optional, default = <cite>None</cite>) – End profile number for data selection</p></li>
+<li><p><strong>ylim</strong> (float, optional, default = <cite>35</cite>) – Maximum depth limit for the y-axis. The <strong>minimum limit</strong> is automatically set as <cite>ylim / 30</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>A section showing the variability of the selected data over time and depth</em></p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The generated <strong>figure</strong> containing the plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – The <strong>axes</strong> object with the plotted data.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_sampling_period">
 <span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_sampling_period</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TEMP'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_sampling_period"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_sampling_period" title="Link to this definition"></a></dt>
-<dd><p>Similar to plot_grid_spacing, this function plots histograms but of the sampling period for one variable after removing its nans.</p>
+<dd><p>Plots a <strong>histogram of the sampling period</strong> for a selected variable after removing NaN values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray in OG1 format.</em>)</p></li>
-<li><p><strong>ax</strong> (<em>Optional</em><em>, </em><em>axis to plot the data.</em>)</p></li>
-<li><p><strong>variable</strong> (<em>display the sampling period for this variable</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Axis to plot the data. If not provided, a new figure and axis are created.</p></li>
+<li><p><strong>variable</strong> (<em>str</em><em>, </em><em>default='TEMP'</em>) – Variable for which the sampling period is displayed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><em>One histogram showing the distribution of the sampling period.</em></p></li>
-<li><p><strong>ax</strong> (<em>matplotlib.axes._subplots.AxesSubplot</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Louis Clement</em></p></li>
-</ul>
-</p>
+<dd class="field-even"><p><strong>ax</strong> – Axis containing the histogram.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.axes.Axes</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Louis Clement</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_sampling_period_all">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_sampling_period_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_sampling_period_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_sampling_period_all" title="Link to this definition"></a></dt>
-<dd><p>This function plots several histograms of the sampling period for several variables (TEMP/PSAL by default and DOXY/CHLA if present) after removing their nans.</p>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_sampling_period_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_sampling_period_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_sampling_period_all" title="Link to this definition"></a></dt>
+<dd><p>Plots <strong>histograms of the sampling period</strong> for multiple variables.
+By default, it includes <strong>TEMP</strong> and <strong>PSAL</strong>, with <strong>DOXY</strong> and <strong>CHLA</strong> added if present in the dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ds</strong> (<em>xarray in OG1 format.</em>)</p>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>One histogram for each variable showing the distribution of the sampling period.</em></p></li>
-<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>)</p></li>
-<li><p><strong>ax</strong> (<em>matplotlib.axes._subplots.AxesSubplot</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Louis Clement</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The generated figure.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes containing the histograms.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Louis Clement</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_ts">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axs:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_ts" title="Link to this definition"></a></dt>
-<dd><p>This function plots histograms of temperature and salinity values (middle 95%), and a 2D histogram of salinity and temperature with density contours.</p>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axs:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_ts" title="Link to this definition"></a></dt>
+<dd><p>Plots <strong>temperature and salinity distributions</strong> using histograms and a 2D density plot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray in OG1 format with at least TEMP and PSAL.</em>)</p></li>
-<li><p><strong>ax</strong> (<em>Optional; axis to plot the data.</em>)</p></li>
-<li><p><strong>kw</strong> (<em>Optional; additional keyword arguments for the histograms.</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>DEPTH, LONGITUDE, LATITUDE, TEMP and PSAL</strong>.</p></li>
+<li><p><strong>axs</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Axes to plot the data. If not provided, a new figure and axes are created.</p></li>
+<li><p><strong>kw</strong> (<em>dict</em><em>, </em><em>optional</em>) – Additional keyword arguments for the histograms.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><strong>Three plots</strong> (<em>histogram of temperature, histogram of salinity, and 2D histogram of salinity and temperature with density contours.</em>)</p></li>
-<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>)</p></li>
-<li><p><strong>ax</strong> (<em>matplotlib.axes._subplots.AxesSubplot</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Eleanor Frajka-Williams</em></p></li>
+<dd class="field-even"><p><ul>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – Figure containing the plots.</p></li>
+<li><p><strong>axs</strong> (<em>matplotlib.axes.Axes</em>) – Axes containing the histograms.
+- <strong>Three plots are created:</strong></p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><strong>Histogram of Conservative Temperature</strong> (middle 99%)</p></li>
+<li><p><strong>Histogram of Absolute Salinity</strong> (middle 99%)</p></li>
+<li><p><strong>2D Histogram of Salinity vs. Temperature</strong> with density contours</p></li>
+</ol>
+</div></blockquote>
+</li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_updown_bias">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_updown_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var='TEMP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_updown_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_updown_bias" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_updown_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var='TEMP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_updown_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_updown_bias" title="Link to this definition"></a></dt>
 <dd><p>This function can be used to plot the up and downcast differences computed with the updown_bias function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray on OG1 format containing at least time</em><em>, </em><em>depth</em><em>, </em><em>latitude</em><em>, </em><em>longitude and the selected variable.</em>) – Data should not be gridded.</p></li>
-<li><p><strong>var</strong> (<em>Selected variable</em>)</p></li>
-<li><p><strong>v_res</strong> (<em>Vertical resolution for the gridding</em>)</p></li>
-<li><p><strong>ax</strong> (<em>axis to plot the data</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME, DEPTH, LATITUDE, LONGITUDE,</strong> and the selected variable.
+Data should not be gridded.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='TEMP'</em>) – Selected variable</p></li>
+<li><p><strong>v_res</strong> (<em>float</em><em>, </em><em>default = 1</em>) – Vertical resolution for the gridding</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>default = None</em>) – Axis to plot the data</p></li>
+<li><p><strong>**kw</strong> (<em>dict</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>matplotlib.pyplot.plot</strong><strong>(</strong><strong>)</strong><strong>.</strong> (<em>Additional keyword arguments passed to</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>A line plot comparing the climb and dive average over depth</em></p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – Figure object containing the generated plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes object with the plotted <strong>climb vs. dive differences</strong> over depth.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_vertical_speeds_with_histograms">
 <span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_vertical_speeds_with_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_prof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_prof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_vertical_speeds_with_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_vertical_speeds_with_histograms" title="Link to this definition"></a></dt>
-<dd><p>Plot vertical speeds with histograms for diagnostic purposes.
-This function generates a diagnostic plot for the calculation of vertical seawater velocity.
-It plots the modelled and computed (from dz/dt) vertical velocities as line plots, where these
-should be similar. The difference between these velocities is the implied seawater velocity,
-which should be closer to zero than the vehicle velocities. The histogram provides a visual
-representation to identify any biases. The final calculation of the median should be close to
-zero if a large enough sample of dives is input and if the glider flight model is well-tuned.</p>
+<dd><p>Plots vertical glider speeds with histograms for diagnostic purposes.</p>
+<p>This function generates a <strong>diagnostic plot</strong> for vertical velocity calculations, comparing:
+1. <strong>Modeled glider vertical speed</strong> (flight model)
+2. <strong>Computed glider speed</strong> (from dz/dt, pressure sensor)
+3. <strong>Implied seawater velocity</strong> (difference between the two)</p>
+<p>The histograms allow for identifying biases, and the <strong>median of the seawater velocity</strong> should be close to zero if:
+- A large enough sample of dives is used.
+- The glider flight model is well-tuned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>(</strong><strong>xarray.Dataset</strong><strong>)</strong> (<em>ds</em>)</p></li>
-<li><p><strong>speed</strong> (<em>- VERT_GLIDER_SPEED is the modelled glider</em>)</p></li>
-<li><p><strong>sensor</strong> (<em>- VERT_SPEED_DZDT is the computed glider speed from the pressure</em>)</p></li>
-<li><p><strong>velocity.</strong> (<em>- VERT_SW_SPEED is the implied seawater</em>)</p></li>
-<li><p><strong>(</strong><strong>int</strong> (<em>end_prof</em>)</p></li>
-<li><p><strong>optional</strong><strong>)</strong> (<em>The ending profile number for subsetting the dataset. Defaults to last profile number.</em>)</p></li>
-<li><p><strong>(</strong><strong>int</strong></p></li>
-<li><p><strong>optional</strong><strong>)</strong></p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing vertical speed data with required variables:
+- <strong>VERT_GLIDER_SPEED</strong>: Modeled glider speed
+- <strong>VERT_SPEED_DZDT</strong>: Computed glider speed from pressure sensor
+- <strong>VERT_SW_SPEED</strong>: Implied seawater velocity</p></li>
+<li><p><strong>start_prof</strong> (<em>int</em><em>, </em><em>optional</em>) – Starting profile number for subsetting. Defaults to the <strong>first profile number</strong>.</p></li>
+<li><p><strong>end_prof</strong> (<em>int</em><em>, </em><em>optional</em>) – Ending profile number for subsetting. Defaults to the <strong>last profile number</strong>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>fig, axs (tuple)</strong> (<em>The figure and axes objects for the plot.</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Eleanor Frajka-Williams</em></p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The figure containing the plots.</p></li>
+<li><p><strong>axs</strong> (<em>tuple(matplotlib.axes.Axes)</em>) – The axes objects for the plots.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <dl class="py function">
@@ -934,21 +940,27 @@ zero if a large enough sample of dives is input and if the glider flight model i
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray dataset in OG1 format containing at least time</em><em>, </em><em>depth and the selected optical variable</em>)</p></li>
-<li><p><strong>var</strong> (<em>name</em><em> of </em><em>the selected variable</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>TIME, DEPTH,</strong> and the selected variable.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='CHLA'</em>) – Selected variable</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>Text giving info on where and when negative data was observed</em></p></li>
-<li><p><em>Plot showing bottom data with a linear regression line to highlight any drift</em></p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Chiara Monforte</em></p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – A plot of deep optical data with a <strong>linear regression line</strong> to highlight potential drift.</p></li>
+<li><p><strong>text_output</strong> (<em>str</em>) – Text displaying where and when negative values are present in the dataset.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes object with</p></li>
+<li><p><strong>text_output</strong> (<em>str</em>) – Text giving info on where and when negative data was observed</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function" id="module-glidertest.utilities">
@@ -957,18 +969,17 @@ zero if a large enough sample of dives is input and if the glider flight model i
 <dd><p>Calculate the depth (Z position) of the glider using the gsw library to convert pressure to depth.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>(</strong><strong>xarray.Dataset</strong><strong>)</strong> (<em>ds</em>)</p>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The input dataset containing ‘PRES’, ‘LATITUDE’, and ‘LONGITUDE’ variables.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><strong>xarray.Dataset</strong> (<em>The dataset with an additional ‘DEPTH_Z’ variable.</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><em>Eleanor Frajka-Williams</em></p></li>
-</ul>
-</p>
+<dd class="field-even"><p>The dataset with an additional ‘DEPTH_Z’ variable.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xarray.Dataset</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <dl class="py function">
@@ -991,41 +1002,41 @@ correction.</p>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>sunrise</strong> (<em>numpy.ndarray</em>) – An array of the sunrise times.</p></li>
 <li><p><strong>sunset</strong> (<em>numpy.ndarray</em>) – An array of the sunset times.</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><strong>Function from GliderTools (https</strong> (<em>//github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/optics.py)</em>)</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Function from GliderTools
+[Source Code](<a class="reference external" href="https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/optics.py">https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/optics.py</a>)</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.utilities.construct_2dgrid">
 <span class="sig-prename descclassname"><span class="pre">glidertest.utilities.</span></span><span class="sig-name descname"><span class="pre">construct_2dgrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/utilities.html#construct_2dgrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.utilities.construct_2dgrid" title="Link to this definition"></a></dt>
-<dd><p>Function to grid data</p>
+<dd><p>Constructs a 2D gridded representation of input data based on specified resolutions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>data with data for the x dimension</em>)</p></li>
-<li><p><strong>y</strong> (<em>data with data for the y dimension</em>)</p></li>
-<li><p><strong>v</strong> (<em>data with data for the z dimension</em>)</p></li>
-<li><p><strong>xi</strong> (<em>Horizontal resolution for the gridding</em>)</p></li>
-<li><p><strong>yi</strong> (<em>Vertical resolution for the gridding</em>)</p></li>
+<li><p><strong>x</strong> (<em>array-like</em>) – Input data representing the x-dimension.</p></li>
+<li><p><strong>y</strong> (<em>array-like</em>) – Input data representing the y-dimension.</p></li>
+<li><p><strong>v</strong> (<em>array-like</em>) – Input data representing the z-dimension (values to be gridded).</p></li>
+<li><p><strong>xi</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em><em>, </em><em>default=1</em>) – Resolution for the x-dimension grid spacing.</p></li>
+<li><p><strong>yi</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em><em>, </em><em>default=1</em>) – Resolution for the y-dimension grid spacing.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><strong>grid</strong> (<em>z data gridded in x and y space with xi and yi resolution</em>)</p></li>
-<li><p><strong>XI</strong> (<em>x data gridded in x and y space with xi and yi resolution</em>)</p></li>
-<li><p><strong>YI</strong> (<em>y data gridded in x and y space with xi and yi resolution</em>)</p></li>
-<li><p><em>Original author</em></p></li>
-<li><p><em>—————-</em></p></li>
-<li><p><strong>Bastien Queste (https</strong> (<em>//github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140)</em>)</p></li>
+<li><p><strong>grid</strong> (<em>numpy.ndarray</em>) – Gridded representation of the z-values over the x and y space.</p></li>
+<li><p><strong>XI</strong> (<em>numpy.ndarray</em>) – Gridded x-coordinates corresponding to the specified resolution.</p></li>
+<li><p><strong>YI</strong> (<em>numpy.ndarray</em>) – Gridded y-coordinates corresponding to the specified resolution.</p></li>
 </ul>
 </p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Bastien Queste
+[Source Code](<a class="reference external" href="https://github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140">https://github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140</a>)</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1036,17 +1047,18 @@ correction.</p>
 If found, it returns the associated label from <cite>label_dict</cite>. If not, it returns the variable name itself as the label.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>(</strong><strong>str</strong><strong>)</strong> (<em>var</em>)</p></li>
-<li><p><strong>Returns</strong></p></li>
-<li><p><strong>----------</strong></p></li>
-<li><p><strong>str</strong> (The label corresponding to the variable <cite>var</cite>. If the variable is not found in <cite>label_dict</cite>,) – the function returns the variable name as the label.</p></li>
-<li><p><strong>author</strong> (<em>Original</em>)</p></li>
-<li><p><strong>----------</strong></p></li>
-<li><p><strong>Monforte</strong> (<em>Chiara</em>)</p></li>
-</ul>
+<dd class="field-odd"><p><strong>var</strong> (<em>str</em>) – The variable (key) whose label is to be retrieved.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The label corresponding to the variable <cite>var</cite>. If the variable is not found in <cite>label_dict</cite>,
+the function returns the variable name as the label.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1059,17 +1071,20 @@ from the dataset <cite>ds</cite> using the <cite>var</cite> key.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>similar</strong><strong>)</strong> (<em>ds</em><em> (</em><em>xarray.Dataset or</em>)</p></li>
-<li><p><strong>(</strong><strong>str</strong><strong>)</strong> (<em>var</em>)</p></li>
-<li><p><strong>Returns</strong></p></li>
-<li><p><strong>----------</strong></p></li>
-<li><p><strong>str</strong> (The units corresponding to the variable <cite>var</cite>. If the variable is found in <cite>label_dict</cite>,) – the associated units will be returned. If not, the function returns the units from <cite>ds[var]</cite>.</p></li>
-<li><p><strong>author</strong> (<em>Original</em>)</p></li>
-<li><p><strong>----------</strong></p></li>
-<li><p><strong>Monforte</strong> (<em>Chiara</em>)</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing the variable <cite>var</cite>.</p></li>
+<li><p><strong>var</strong> (<em>str</em>) – The variable (key) whose units are to be retrieved.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The units corresponding to the variable <cite>var</cite>. If the variable is found in <cite>label_dict</cite>,
+the associated units will be returned. If not, the function returns the units from <cite>ds[var]</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
 <dl class="py function" id="module-glidertest.fetchers">
@@ -1078,10 +1093,10 @@ from the dataset <cite>ds</cite> using the <cite>var</cite> key.</p>
 <dd><p>Download sample datasets for use with glidertest</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dataset_name</strong> (<em>str</em><em>, </em><em>optional</em>) – _description_. Defaults to “sea045_20230530T0832_delayed.nc”.</p>
+<dd class="field-odd"><p><strong>dataset_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Default is “sea045_20230530T0832_delayed.nc”.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If the requests dataset is not known, raises a value error</p>
+<dd class="field-even"><p><strong>ValueError:</strong> – If the requests dataset is not known, raises a value error</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Requested sample dataset</p>

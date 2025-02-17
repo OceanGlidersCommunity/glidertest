@@ -95,14 +95,20 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">load_sample_dataset</span><span class="p">(</span><span class="n">dataset_name</span><span class="o">=</span><span class="s2">&quot;sea045_20230604T1253_delayed.nc&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Download sample datasets for use with glidertest</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        dataset_name (str, optional): _description_. Defaults to &quot;sea045_20230530T0832_delayed.nc&quot;.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataset_name: str, optional</span>
+<span class="sd">        Default is &quot;sea045_20230530T0832_delayed.nc&quot;.</span>
 
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If the requests dataset is not known, raises a value error</span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError: </span>
+<span class="sd">        If the requests dataset is not known, raises a value error</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        xarray.Dataset: Requested sample dataset</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xarray.Dataset: </span>
+<span class="sd">        Requested sample dataset</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">dataset_name</span> <span class="ow">in</span> <span class="n">data_source_og</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">file_path</span> <span class="o">=</span> <span class="n">data_source_og</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">)</span>

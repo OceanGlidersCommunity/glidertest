@@ -86,20 +86,23 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Checks that all of a list of variables are present in a dataset</span>
+<span class="sd">    Checks that all of a list of variables are present in a dataset.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds (xarray.Dataset): _description_</span>
-<span class="sd">    vars (list): _description_</span>
+<span class="sd">    ds: xarray.Dataset</span>
+<span class="sd">        Dataset that should be checked</span>
+<span class="sd">    vars: list</span>
+<span class="sd">        List of variables</span>
 
 <span class="sd">    Raises</span>
-<span class="sd">    ----------</span>
-<span class="sd">    KeyError: Raises an error if all vars not present in ds</span>
+<span class="sd">    ------</span>
+<span class="sd">    KeyError:</span>
+<span class="sd">        Raises an error if all vars not present in ds</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Callum Rollo</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Callum Rollo</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">missing_vars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">missing_vars</span><span class="p">:</span>
@@ -155,27 +158,36 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.construct_2dgrid">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">construct_2dgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">xi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">yi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function to grid data</span>
-<span class="sd">    </span>
+<span class="sd">    Constructs a 2D gridded representation of input data based on specified resolutions.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: data with data for the x dimension</span>
-<span class="sd">    y: data with data for the y dimension</span>
-<span class="sd">    v: data with data for the z dimension</span>
-<span class="sd">    xi: Horizontal resolution for the gridding</span>
-<span class="sd">    yi: Vertical resolution for the gridding</span>
-<span class="sd">                </span>
+<span class="sd">    x : array-like  </span>
+<span class="sd">        Input data representing the x-dimension.  </span>
+<span class="sd">    y : array-like  </span>
+<span class="sd">        Input data representing the y-dimension.  </span>
+<span class="sd">    v : array-like  </span>
+<span class="sd">        Input data representing the z-dimension (values to be gridded).  </span>
+<span class="sd">    xi : int or float, optional, default=1  </span>
+<span class="sd">        Resolution for the x-dimension grid spacing.  </span>
+<span class="sd">    yi : int or float, optional, default=1  </span>
+<span class="sd">        Resolution for the y-dimension grid spacing.  </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    grid: z data gridded in x and y space with xi and yi resolution</span>
-<span class="sd">    XI: x data gridded in x and y space with xi and yi resolution</span>
-<span class="sd">    YI: y data gridded in x and y space with xi and yi resolution</span>
+<span class="sd">    grid : numpy.ndarray  </span>
+<span class="sd">        Gridded representation of the z-values over the x and y space.  </span>
+<span class="sd">    XI : numpy.ndarray  </span>
+<span class="sd">        Gridded x-coordinates corresponding to the specified resolution.  </span>
+<span class="sd">    YI : numpy.ndarray  </span>
+<span class="sd">        Gridded y-coordinates corresponding to the specified resolution. </span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Bastien Queste (https://github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140)</span>
-<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Bastien Queste  </span>
+<span class="sd">    [Source Code](https://github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140)  </span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">xi</span><span class="p">,</span> <span class="n">xi</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">yi</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -201,7 +213,6 @@
 <span class="sd">    rather than day or night indices, as it is more flexible for the quenching</span>
 <span class="sd">    correction.</span>
 
-
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    time: numpy.ndarray or pandas.Series</span>
@@ -218,10 +229,10 @@
 <span class="sd">    sunset: numpy.ndarray</span>
 <span class="sd">        An array of the sunset times.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Function from GliderTools (https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/optics.py)</span>
-
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Function from GliderTools </span>
+<span class="sd">    [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/optics.py)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">ts</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">timescale</span><span class="p">()</span>
@@ -327,15 +338,17 @@
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds (xarray.Dataset): The input dataset containing &#39;PRES&#39;, &#39;LATITUDE&#39;, and &#39;LONGITUDE&#39; variables.</span>
+<span class="sd">    ds: xarray.Dataset</span>
+<span class="sd">        The input dataset containing &#39;PRES&#39;, &#39;LATITUDE&#39;, and &#39;LONGITUDE&#39; variables.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    xarray.Dataset: The dataset with an additional &#39;DEPTH_Z&#39; variable.</span>
+<span class="sd">    xarray.Dataset: </span>
+<span class="sd">        The dataset with an additional &#39;DEPTH_Z&#39; variable.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Eleanor Frajka-Williams</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PRES&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">])</span>
 
@@ -409,16 +422,18 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    var (str): The variable (key) whose label is to be retrieved.</span>
+<span class="sd">    var: str</span>
+<span class="sd">        The variable (key) whose label is to be retrieved.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">    ----------</span>
-<span class="sd">    str: The label corresponding to the variable `var`. If the variable is not found in `label_dict`,</span>
-<span class="sd">             the function returns the variable name as the label.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str: </span>
+<span class="sd">        The label corresponding to the variable `var`. If the variable is not found in `label_dict`,</span>
+<span class="sd">        the function returns the variable name as the label.</span>
 
-<span class="sd">    Original author:</span>
-<span class="sd">    ----------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">label_dict</span><span class="p">:</span>
         <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">label_dict</span><span class="p">[</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
@@ -438,17 +453,20 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds (xarray.Dataset or similar): The dataset containing the variable `var`.</span>
-<span class="sd">    var (str): The variable (key) whose units are to be retrieved.</span>
+<span class="sd">    ds: xarray.Dataset</span>
+<span class="sd">        The dataset containing the variable `var`.</span>
+<span class="sd">    var: str </span>
+<span class="sd">        The variable (key) whose units are to be retrieved.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">    ----------</span>
-<span class="sd">    str: The units corresponding to the variable `var`. If the variable is found in `label_dict`,</span>
-<span class="sd">         the associated units will be returned. If not, the function returns the units from `ds[var]`.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str: </span>
+<span class="sd">        The units corresponding to the variable `var`. If the variable is found in `label_dict`,</span>
+<span class="sd">        the associated units will be returned. If not, the function returns the units from `ds[var]`.</span>
 
-<span class="sd">    Original author:</span>
-<span class="sd">    ----------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">label_dict</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">label_dict</span><span class="p">[</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>

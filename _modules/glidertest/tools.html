@@ -89,18 +89,22 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. </span>
-<span class="sd">        Data should not be gridded.</span>
-<span class="sd">    var: Selected variable</span>
-<span class="sd">    v_res: Vertical resolution for the gridding</span>
+<span class="sd">    ds: Dataset.xarray </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH, LATITUDE, LONGITUDE,** and the selected variable.  </span>
+<span class="sd">        Data should **not** be gridded.</span>
+<span class="sd">    var: str, optional, default=&#39;PSAL&#39;</span>
+<span class="sd">        Selected variable.</span>
+<span class="sd">    v_res: float</span>
+<span class="sd">        Vertical resolution for the gridding in meters.</span>
 <span class="sd">                </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    df: pandas dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth</span>
+<span class="sd">    df: pandas.DataFrame </span>
+<span class="sd">        Dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
     <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Horizontal resolution</span>
@@ -126,43 +130,46 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_daynight_avg">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_daynight_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sel_var</span><span class="o">=</span><span class="s1">&#39;CHLA&#39;</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function computes night and day averages for a selected variable over a specific period of time or a specific series of dives</span>
-<span class="sd">    Data in divided into day and night using the sunset and sunrise time as described in the above function sunset_sunrise from GliderTools</span>
+<span class="sd">    Computes day and night averages for a selected variable over a specified time period or range of dives.  </span>
+<span class="sd">    Day and night are determined based on **sunrise and sunset times** from the `compute_sunset_sunrise` function in GliderTools.  </span>
+<span class="sd">    A sufficient number of dives is required to ensure both **day and night data** are present; otherwise, the function will not run.  </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. </span>
-<span class="sd">        Data should not be gridded.</span>
-<span class="sd">    sel_var: variable to use to compute the day night averages</span>
-<span class="sd">    start_time: Start date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,</span>
-<span class="sd">                we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment</span>
-<span class="sd">    end_time: End date of the data selection. As missions can be long and can make it hard to visualise NPQ effect,</span>
-<span class="sd">                we recommend selecting small section of few days to a few weeks. Defaults to the central week of the deployment</span>
-<span class="sd">    start_prof: Start profile of the data selection. If no profile is specified, the specified time selection will be used</span>
-<span class="sd">                or the central week of the deployment.</span>
-<span class="sd">                It is important to have a large enough number of dives to have some day and night data otherwise the function will not run</span>
-<span class="sd">    end_prof:  End profile of the data selection. If no profile is specified, the specified time selection will be used</span>
-<span class="sd">            or the central week of the deployment.</span>
-<span class="sd">    It is important to have a large enough number of dives to have some day and night data otherwise the function will not run</span>
-<span class="sd">                </span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH, LATITUDE, LONGITUDE,** and the selected variable.  </span>
+<span class="sd">        Data should **not** be gridded.  </span>
+<span class="sd">    sel_var : str, optional, default=&#39;CHLA&#39;  </span>
+<span class="sd">        The variable for which day and night averages will be computed.  </span>
+<span class="sd">    start_time : str or datetime-like, optional  </span>
+<span class="sd">        The **start date** for data selection.  </span>
+<span class="sd">        - If not specified, defaults to the **central week of the deployment**.  </span>
+<span class="sd">        - Selecting a smaller section (a few days to weeks) is recommended for better visualization of NPQ effects.  </span>
+<span class="sd">    end_time : str or datetime-like, optional  </span>
+<span class="sd">        The **end date** for data selection.  </span>
+<span class="sd">        - If not specified, defaults to the **central week of the deployment**.  </span>
+<span class="sd">    start_prof : int, optional  </span>
+<span class="sd">        The **starting profile number** for data selection.  </span>
+<span class="sd">        - If not specified, the function uses `start_time` or defaults to the **central week of deployment**.  </span>
+<span class="sd">        - A sufficient number of dives is required for valid day and night separation.  </span>
+<span class="sd">    end_prof : int, optional  </span>
+<span class="sd">        The **ending profile number** for data selection.  </span>
+<span class="sd">        - If not specified, the function uses `end_time` or defaults to the **central week of deployment**.  </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    day_av: pandas.Dataframe</span>
-<span class="sd">        A dataframe with the day averages of the selected variable with the following columns:</span>
-<span class="sd">            batch: Number representing the grouping for each day. This number can represent the number of the day in chronological order</span>
-<span class="sd">            depth: Depth values for the average</span>
-<span class="sd">            dat: Average value for the selected variable</span>
-<span class="sd">            day: Actual date for the batch </span>
-<span class="sd">    night_av: pandas.Dataframe</span>
-<span class="sd">        A dataframe with the night averages of the selected variable with the following columns:</span>
-<span class="sd">            batch: Number representing the grouping for each day. This number can represent the number of the day in chronological order</span>
-<span class="sd">            depth: Depth values for the average</span>
-<span class="sd">            dat: Average value for the selected variable</span>
-<span class="sd">            day: Actual date for the batch </span>
-<span class="sd">    </span>
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    day_av : pandas.DataFrame  </span>
+<span class="sd">        DataFrame containing **daytime averages** of the selected variable with the following columns:  </span>
+<span class="sd">        - `batch` : Integer representing the grouped day-night cycles (e.g., chronological day number).  </span>
+<span class="sd">        - `depth` : Depth values for the average calculation.  </span>
+<span class="sd">        - `dat` : Average value of the selected variable.  </span>
+<span class="sd">        - `date` : Actual date corresponding to the batch.  </span>
+<span class="sd">    night_av : pandas.DataFrame  </span>
+<span class="sd">        DataFrame containing **nighttime averages** of the selected variable with the same columns as for day_av</span>
 
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Chiara Monforte  </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="k">if</span> <span class="s2">&quot;TIME&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -208,21 +215,24 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.check_monotony">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_monotony</span><span class="p">(</span><span class="n">da</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function check weather the selected variable over the mission is monotonically increasing or not. This is developed in particular for profile number.</span>
-<span class="sd">    If the profile number is not monotonically increasing, this may mean that whatever function was used to assign the profile number may have misassigned at some points.</span>
-<span class="sd">    </span>
+<span class="sd">    Checks whether the selected variable is **monotonically increasing** throughout the mission.  </span>
+<span class="sd">    This function is particularly designed to check **profile numbers** to ensure they are assigned correctly.  </span>
+<span class="sd">    If the profile number is not monotonically increasing, it may indicate misassignment due to an error in data processing.  </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    da: xarray.DataArray on OG1 format. Data should not be gridded.</span>
+<span class="sd">    da: xarray.DataArray   </span>
+<span class="sd">        DataArray in **OG1 format**. Data should **not** be gridded. </span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    It will print a sentence stating whether data is</span>
+<span class="sd">    bool:</span>
+<span class="sd">        **True** if the variable is monotonically increasing, else **False**. </span>
+<span class="sd">        Additionally, a message is printed indicating the result.  </span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
-
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">da</span><span class="p">)</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is not always monotonically increasing&#39;</span><span class="p">)</span>
@@ -236,22 +246,21 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calc_w_meas">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calc_w_meas</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculate the vertical velocity of a glider using changes in pressure with time.</span>
+<span class="sd">    Calculates the vertical velocity of a glider using changes in pressure with time.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds (xarray.Dataset): Dataset containing &#39;DEPTH&#39; and &#39;TIME&#39;.</span>
-<span class="sd">    - DEPTH (array-like): Array of depth measurements</span>
-<span class="sd">    - TIME (array-like): Array of time stamps</span>
+<span class="sd">    ds: xarray.Dataset</span>
+<span class="sd">        Dataset containing **DEPTH** and **TIME**.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    ds (xarray.Dataset): Containing the new variable</span>
-<span class="sd">    - GLIDER_VERT_VELO_DZDT (array-like): with vertical velocities calculated from dz/dt</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Containing the new variable **GLIDER_VERT_VELO_DZDT** (array-like), with vertical velocities calculated from dz/dt</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Eleanor Frajka-Williams</span>
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">])</span>
     <span class="c1"># Ensure inputs are numpy arrays</span>
@@ -294,19 +303,18 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds (xarray.Dataset): Dataset containing &#39;VERT_GLIDER_SPEED&#39; and &#39;VERT_SPEED_DZDT&#39;.</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Dataset containing **VERT_GLIDER_SPEED** and **VERT_SPEED_DZDT**.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    ds (xarray.Dataset): Dataset with the new variable &#39;VERT_SW_SPEED&#39;, which is the inferred vertical seawater velocity.</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Dataset with the new variable **VERT_SW_SPEED**, which is the inferred vertical seawater velocity.</span>
 
-<span class="sd">    Note</span>
+<span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. </span>
-
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Eleanor Frajka-Williams</span>
+<span class="sd">    - This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user.</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Eleanor&#39;s note: This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. </span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;GLIDER_VERT_VELO_MODEL&#39;</span><span class="p">,</span> <span class="s1">&#39;GLIDER_VERT_VELO_DZDT&#39;</span><span class="p">])</span>
@@ -331,21 +339,22 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    - ds using the variables PRES and VERT_SW_SPEED</span>
-<span class="sd">    - zgrid (array-like, optional): Depth grid for binning. If None, a default grid is created.</span>
-<span class="sd">    - dz (float, optional): Interval for creating depth grid if zgrid is not provided.</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Dataset containing the variables **PRES** and **VERT_SW_SPEED**</span>
+<span class="sd">    zgrid:  array-like, optional </span>
+<span class="sd">        Depth grid for binning. If None, a default grid is created.</span>
+<span class="sd">    dz: float, optional </span>
+<span class="sd">        Interval for creating depth grid if zgrid is not provided.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    - meanw (array-like): Bin-averaged vertical velocities for each depth bin.</span>
+<span class="sd">    meanw: array-like </span>
+<span class="sd">        Bin-averaged vertical velocities for each depth bin.</span>
 
-<span class="sd">    Note</span>
+<span class="sd">    Notes</span>
 <span class="sd">    ----</span>
-<span class="sd">    I know this is a non-sensical name.  We should re-name, but is based on advice from Ramsey Harcourt.</span>
-
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Eleanor Frajka-Williams</span>
+<span class="sd">    - I know this is a non-sensical name.  We should re-name, but is based on advice from Ramsey Harcourt.</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;PRES&#39;</span><span class="p">])</span>
     <span class="n">press</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">PRES</span><span class="o">.</span><span class="n">values</span>
@@ -435,18 +444,22 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least depth, profile_number and the selected variable.</span>
-<span class="sd">        Data should not be gridded.</span>
-<span class="sd">    var: Selected variable</span>
-<span class="sd">    v_res: Vertical resolution for the gridding</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **DEPTH, PROFILE_NUMBER,** and the selected variable.  </span>
+<span class="sd">        Data should **not** be gridded.</span>
+<span class="sd">    var: str, optional, default=&#39;DOXY&#39; </span>
+<span class="sd">        Selected variable</span>
+<span class="sd">    v_res: float</span>
+<span class="sd">        Vertical resolution for the gridding in meters.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">   df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</span>
+<span class="sd">    df: pandas.DataFrame </span>
+<span class="sd">        Dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
     <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Horizontal resolution</span>
@@ -469,20 +482,30 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least depth, profile_number and the selected variable. Data should not be gridded.</span>
-<span class="sd">    var: Selected variable</span>
-<span class="sd">    v_res: Vertical resolution for the gridding</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **DEPTH, PROFILE_NUMBER,** and the selected variable.</span>
+<span class="sd">        Data should not be gridded.</span>
+<span class="sd">    var: str, optional, default=&#39;DOXY&#39; </span>
+<span class="sd">        Selected variable</span>
+<span class="sd">    v_res: float</span>
+<span class="sd">        Vertical resolution for the gridding</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    diff: difference between upcast and downcast</span>
-<span class="sd">    err: Percentage error of the dive-climb difference. One value per depth step</span>
-<span class="sd">    rms: Root Mean Square of the difference in values between dive and climb</span>
-<span class="sd">    df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</span>
+<span class="sd">    diff : array-like  </span>
+<span class="sd">        Difference between upcast and downcast values.  </span>
+<span class="sd">    err : array-like  </span>
+<span class="sd">        Percentage error of the dive-climb difference, computed for each depth step.  </span>
+<span class="sd">    rms : float  </span>
+<span class="sd">        Root Mean Square (RMS) of the difference in values between dive and climb.  </span>
+<span class="sd">    df : pandas.DataFrame  </span>
+<span class="sd">        DataFrame containing:  </span>
+<span class="sd">        - **Dive and climb averages** over depth for the selected variable.  </span>
+<span class="sd">        - **Depth values** in a separate column.  </span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara  Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Chiara  Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">quant_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="n">v_res</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
@@ -498,19 +521,22 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_prof_duration">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_prof_duration</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
+<span class="sd">    This function computes some basic statistics for the differences between climb and dive data.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least time and profile_number. Data should not be gridded.</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **DEPTH, PROFILE_NUMBER,** and the selected variable.</span>
+<span class="sd">        Data should not be gridded.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    df: pandas dataframe containing the profile number and the duration of that profile in minutes</span>
+<span class="sd">    df: pandas.DataFrame </span>
+<span class="sd">        Dataframe containing the profile number and the duration of that profile in minutes</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara  Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Chiara  Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;TIME&#39;</span><span class="p">])</span>
     <span class="n">deltat</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
@@ -523,23 +549,29 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.find_outlier_duration">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_outlier_duration</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">rolling</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
+<span class="sd">    Identifies **outlier profile durations** based on a rolling mean and standard deviation threshold.  </span>
+<span class="sd">    This helps detect profiles with significantly longer or shorter durations compared to surrounding profiles. </span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    df: pandas dataframe containing the profile number and the duration of that profile in minutes</span>
-<span class="sd">    rolling: window size for the rolling mean</span>
-<span class="sd">    std: number of standard deviations to use for &#39;odd&#39; profile duration</span>
+<span class="sd">    df: pandas.DataFrame </span>
+<span class="sd">        Dataframr containing the profile number and the duration of that profile in minutes</span>
+<span class="sd">    rolling: int, default = 20</span>
+<span class="sd">        Window size for the rolling mean</span>
+<span class="sd">    std: int, default = 2</span>
+<span class="sd">        Number of standard deviations to use for &#39;odd&#39; profile duration</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    The function prints a statement in case there are profiles with &#39;odd&#39; duration,</span>
-<span class="sd">    rolling_mean: Rolling mean of profile duration computed with the set window</span>
-<span class="sd">    overt_prof: Profiles where the duration is above the set rolling mean with added standard deviation</span>
+<span class="sd">    rolling_mean : pandas.Series  </span>
+<span class="sd">        Rolling mean of **profile duration** computed using the specified window size.  </span>
+<span class="sd">    overt_prof : numpy.ndarray  </span>
+<span class="sd">        Array of **profile numbers** where the duration exceeds the rolling mean by more than the set **standard deviation threshold**.  </span>
+<span class="sd">        - If outliers are found, a message is printed recommending further investigation. </span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara  Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Chiara  Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">rolling_mean</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">rolling</span><span class="p">,</span> <span class="n">min_periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
     <span class="n">overtime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">rolling_mean</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">))</span> <span class="o">|</span> <span class="p">(</span>
@@ -563,23 +595,24 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds : The xarray Dataset containing the variable to be filtered.</span>
-
-<span class="sd">    var : The name of the variable to apply the range filter on. Default is &#39;DOXY&#39;.</span>
-
-<span class="sd">    min_val : The minimum allowable value for the variable. Default is -5.</span>
-
-<span class="sd">    max_val : The maximum allowable value for the variable. Default is 600.</span>
+<span class="sd">    ds : xarray.Dataset </span>
+<span class="sd">        Dataset containing the variable to be filtered.</span>
+<span class="sd">    var : str, optional, default=&#39;DOXY&#39; </span>
+<span class="sd">        The name of the variable to apply the range filter on.</span>
+<span class="sd">    min_val : float, default = -5</span>
+<span class="sd">        The minimum allowable value for the variable.</span>
+<span class="sd">    max_val : float, default = 600</span>
+<span class="sd">        The maximum allowable value for the variable.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    xarray.DataArray</span>
+<span class="sd">    xarray.DataArray : </span>
 <span class="sd">        A filtered DataArray containing only the values of the specified variable</span>
 <span class="sd">        within the range `[min_val, max_val]`. Values outside this range are dropped.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="p">])</span>
     <span class="n">out_range</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">&lt;</span><span class="n">min_val</span> <span class="p">)</span><span class="o">|</span> <span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">&gt;</span><span class="n">max_val</span> <span class="p">))</span>
@@ -594,16 +627,17 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least depth and profile_number. Data</span>
-<span class="sd">    should not be gridded.</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **DEPTH, PROFILE_NUMBER,** and the selected variable.</span>
+<span class="sd">        Data should not be gridded.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    max_depths: pandas dataframe containing the profile number and the maximum depth of that profile</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Till Moritz</span>
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Till Moritz</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">max_depths</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
     <span class="c1">### add the unit to the dataarray</span>

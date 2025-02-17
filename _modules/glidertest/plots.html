@@ -102,19 +102,28 @@
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable.</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH, LATITUDE, LONGITUDE,** and the selected variable.</span>
 <span class="sd">        Data should not be gridded.</span>
-<span class="sd">    var: Selected variable</span>
-<span class="sd">    v_res: Vertical resolution for the gridding</span>
-<span class="sd">    ax: axis to plot the data</span>
-<span class="sd">    </span>
+<span class="sd">    var: str, optional, default=&#39;TEMP&#39;</span>
+<span class="sd">        Selected variable</span>
+<span class="sd">    v_res: float, default = 1</span>
+<span class="sd">        Vertical resolution for the gridding</span>
+<span class="sd">    ax: matplotlib.axes.Axes, default = None</span>
+<span class="sd">        Axis to plot the data</span>
+<span class="sd">    **kw : dict, optional  </span>
+<span class="sd">    Additional keyword arguments passed to `matplotlib.pyplot.plot()`.  </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    A line plot comparing the climb and dive average over depth</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        Figure object containing the generated plot.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        Axes object with the plotted **climb vs. dive differences** over depth. </span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -157,20 +166,30 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray in OG1 format containing at least temperature, salinity and density and depth</span>
-<span class="sd">    v_res: vertical resolution for the gridding. Horizontal resolution (by profile) is assumed to be 1</span>
-<span class="sd">    start_prof: start profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale</span>
-<span class="sd">                or region and subsections want to be plotted-1</span>
-<span class="sd">    end_prof: end profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale</span>
-<span class="sd">              or region and subsections want to be plotted-1</span>
+
+<span class="sd">    ds: xarray </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **PROFILE_NUMBER, DEPTH, TEMP, PSAL, LATITUDE, LONGITUDE,** and the selected variable.</span>
+<span class="sd">    v_res: float, default = 1</span>
+<span class="sd">        Vertical resolution for the gridding. Horizontal resolution (by profile) is assumed to be 1</span>
+<span class="sd">    start_prof: int</span>
+<span class="sd">        Start profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale</span>
+<span class="sd">        or region and subsections want to be plotted-1     </span>
+<span class="sd">    end_prof: int</span>
+<span class="sd">        End profile used to compute the means that will be plotted. This can vary in case the dataset spread over a large timescale</span>
+<span class="sd">        or region and subsections want to be plotted-1          </span>
+<span class="sd">    **kw : dict, optional  </span>
+<span class="sd">        Additional keyword arguments passed to `matplotlib.pyplot.plot()`.  </span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Line plots for the averages of the different variables.</span>
-
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        Figure object containing the generated plot.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        Axes object with the plotted variables **temperature, salinity and density** over depth. </span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;TEMP&#39;</span><span class="p">,</span> <span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">])</span>
     <span class="n">ds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_calc_teos10_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
@@ -283,17 +302,28 @@
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray dataset in OG1 format containing at least time, depth and the selected optical variable</span>
-<span class="sd">    var: name of the selected variable         </span>
+<span class="sd">    ds: xarray.Dataset</span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH,** and the selected variable.</span>
+<span class="sd">    var: str, optional, default=&#39;CHLA&#39;</span>
+<span class="sd">        Selected variable        </span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Text giving info on where and when negative data was observed</span>
-<span class="sd">    Plot showing bottom data with a linear regression line to highlight any drift </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        A plot of deep optical data with a **linear regression line** to highlight potential drift.  </span>
+<span class="sd">    text_output : str  </span>
+<span class="sd">        Text displaying where and when negative values are present in the dataset.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        Axes object with </span>
+<span class="sd">    text_output: str</span>
+<span class="sd">        Text giving info on where and when negative data was observed</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="c1"># Check how much negative data there is</span>
@@ -353,18 +383,25 @@
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray dataset in OG1 format containing at least time, depth and the selected variable</span>
-<span class="sd">    var: name of the selected variable</span>
-<span class="sd">    ax: axis to plot the data</span>
-<span class="sd">    sel_day: selected day to plot. Defaults to the median day</span>
+<span class="sd">    ds: xarray.Dataset</span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH,** and the selected variable.</span>
+<span class="sd">    var: str, optional, default=&#39;PSAL&#39;</span>
+<span class="sd">        Selected variable  </span>
+<span class="sd">    ax: matplotlib.axes.Axes, default = None</span>
+<span class="sd">        Axis to plot the data</span>
+<span class="sd">    sel_day : str or None, optional, default = `None`  </span>
+<span class="sd">        The specific day to plot. If `None`, the function selects the **median day** in the dataset.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    A line plot comparing the day and night average over depth for the selected day</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        The generated **figure** containing the plot.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        The **axes** object with the plotted data.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">day</span><span class="p">,</span> <span class="n">night</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">compute_daynight_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sel_var</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
@@ -400,29 +437,41 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_quench_assess</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                            <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function can be used to plot sections for any variable with the sunrise and sunset plotted over</span>
-<span class="sd">    </span>
+<span class="sd">    Generates a **section plot** of the selected variable over time and depth,  </span>
+<span class="sd">    with **sunrise and sunset** times marked to assess potential Non-Photochemical Quenching (NPQ) effects.  </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. </span>
-<span class="sd">        Data should not be gridded.</span>
-<span class="sd">    sel_var: selected variable to plot</span>
-<span class="sd">    ax: axis to plot the data</span>
-<span class="sd">    start_time: Start date of the data selection format &#39;YYYY-MM-DD&#39;. As missions can be long and came make it hard to visualise NPQ effect. </span>
-<span class="sd">                Defaults to mid 4 days</span>
-<span class="sd">    end_time: End date of the data selection format &#39;YYYY-MM-DD&#39;. As missions can be long and came make it hard to visualise NPQ effect. </span>
-<span class="sd">                Defaults to mid 4 days</span>
-<span class="sd">    start_prof: Start profile of the data selection. If no profile is specified, the specified time selection will be used or the mid 4 days of the deployment</span>
-<span class="sd">    end_prof:  End profile of the data selection. If no profile is specified, the specified time selection will be used or the mid 4 days of the deployment</span>
-<span class="sd">    ylim: specified limit for the maximum y-axis value. The minimum is computed as ylim/30</span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH, LATITUDE, LONGITUDE**, and the selected variable.</span>
+<span class="sd">        Data **should not** be gridded.  </span>
+<span class="sd">    sel_var : str  </span>
+<span class="sd">        The selected variable to plot.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional, default = `None`  </span>
+<span class="sd">        Axis on which to plot the data. If `None`, a new figure and axis will be created.  </span>
+<span class="sd">    start_time : str or None, optional, default = `None`  </span>
+<span class="sd">        Start date for the data selection (`&#39;YYYY-MM-DD&#39;`).  </span>
+<span class="sd">        - If `None`, defaults to **2 days before** the dataset’s median date.  </span>
+<span class="sd">    end_time : str or None, optional, default = `None`  </span>
+<span class="sd">        End date** for the data selection (`&#39;YYYY-MM-DD&#39;`).  </span>
+<span class="sd">        - If `None`, defaults to **2 days after** the dataset’s median date.  </span>
+<span class="sd">    start_prof : int or None, optional, default = `None`  </span>
+<span class="sd">        Start profile number for data selection</span>
+<span class="sd">    end_prof : int or None, optional, default = `None`  </span>
+<span class="sd">        End profile number for data selection </span>
+<span class="sd">    ylim : float, optional, default = `35`  </span>
+<span class="sd">        Maximum depth limit for the y-axis. The **minimum limit** is automatically set as `ylim / 30`.  </span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    A section showing the variability of the selected data over time and depth</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        The generated **figure** containing the plot.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        The **axes** object with the plotted data.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
@@ -479,23 +528,32 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.check_temporal_drift">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_temporal_drift</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function can be used to plot sections for any variable with the sunrise and sunset plotted over</span>
+<span class="sd">    Assesses potential **temporal drift** in a selected variable by generating a figure with two subplots:  </span>
+<span class="sd">    1. **Time series scatter plot** of the variable.  </span>
+<span class="sd">    2. **Depth profile scatter plot**, colored by date.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least time, depth, latitude, longitude and the selected variable. </span>
-<span class="sd">        Data should not be gridded.</span>
-<span class="sd">    var: selected variable to plot</span>
-<span class="sd">    ax: axis to plot the data</span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH,** and the selected variable.  </span>
+<span class="sd">        Data **should not be gridded**.  </span>
+<span class="sd">    var : str, optional  </span>
+<span class="sd">        Selected variable to analyze.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional  </span>
+<span class="sd">        Axis to plot the data. If None, a new figure and axis will be created.  </span>
+<span class="sd">    **kw : dict  </span>
+<span class="sd">        Additional keyword arguments for customization.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    A figure with two subplots. One is a section containing the data over time and depth. The other one is a scatter of data from the variable</span>
-<span class="sd">    over depth and colored by date</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        The generated figure.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        Axes containing the plots. </span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
@@ -529,23 +587,31 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_prof_monotony</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function can be used to plot the profile number and check for any possible issues with the profile index assigned.</span>
+<span class="sd">    Checks for potential issues with the assigned **profile index** by plotting its progression over time.  </span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray dataset in OG1 format with at least PROFILE_NUMBER, TIME, DEPTH. Data should not be gridded</span>
-<span class="sd">    ax: axis to plot the data</span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH,** and **PROFILE_NUMBER**.  </span>
+<span class="sd">        Data **should not be gridded**.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional  </span>
+<span class="sd">        Axis to plot the data. If None, a new figure and axis will be created.  </span>
+<span class="sd">    **kw : dict  </span>
+<span class="sd">        Additional keyword arguments for customization. </span>
 
 <span class="sd">    Returns </span>
 <span class="sd">    -------</span>
-<span class="sd">    Two plots, one line plot with the profile number over time (expected to be always increasing). A</span>
-<span class="sd">    second plot which is a scatter plot showing at which depth over time there was a profile index where the</span>
-<span class="sd">    difference was neither 0 nor 1 (meaning there are possibly issues with how the profile index was assigned).</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        The generated figure.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        Axes containing the two plots.</span>
+<span class="sd">        - 1. One line plot with the profile number over time (expected to be always increasing).</span>
+<span class="sd">        - 2. Scatter plot showing at which depth over time there was a profile index where the</span>
+<span class="sd">        difference was neither 0 nor 1 (meaning there are possibly issues with how the profile index was assigned).</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
-
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
@@ -579,23 +645,27 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_glider_track">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_glider_track</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function plots the glider track on a map, with latitude and longitude colored by time.</span>
+<span class="sd">    Plots the **glider track** on a map, with latitude and longitude colored by time.  </span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray in OG1 format with at least TIME, LATITUDE, and LONGITUDE.</span>
-<span class="sd">    ax: Optional; axis to plot the data.</span>
-<span class="sd">    kw: Optional; additional keyword arguments for the scatter plot.</span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME, LATITUDE,** and **LONGITUDE**.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional  </span>
+<span class="sd">        Axis to plot the data. If None, a new figure and axis will be created.  </span>
+<span class="sd">    **kw : dict  </span>
+<span class="sd">        Additional keyword arguments for the scatter plot.  </span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    One plot with the map of the glider track.</span>
-<span class="sd">    fig: matplotlib.figure.Figure</span>
-<span class="sd">    ax: matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        The generated figure.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        Axes containing the plot.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Eleanor Frajka-Williams</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">])</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
@@ -650,23 +720,27 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_grid_spacing">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_grid_spacing</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function plots histograms of the grid spacing (diff(ds.DEPTH) and diff(ds.TIME)) where only the inner 99% of values are plotted.</span>
+<span class="sd">    Plots **histograms of the grid spacing**, showing depth and time differences while excluding the outer 1% of values.  </span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray in OG1 format with at least TIME and DEPTH.</span>
-<span class="sd">    ax: Optional; axis to plot the data.</span>
-<span class="sd">    kw: Optional; additional keyword arguments for the histograms.</span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **TIME** and **DEPTH**.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional  </span>
+<span class="sd">        Axis to plot the data. If None, a new figure and axis will be created.  </span>
+<span class="sd">    **kw : dict  </span>
+<span class="sd">        Additional keyword arguments for the histograms.  </span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Two histograms showing the distribution of grid spacing for depth and time.</span>
-<span class="sd">    fig: matplotlib.figure.Figure</span>
-<span class="sd">    ax: matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        The generated figure.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        Axes containing the histograms. </span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Eleanor Frajka-Williams</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
@@ -763,21 +837,24 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_sampling_period_all">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_sampling_period_all</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function plots several histograms of the sampling period for several variables (TEMP/PSAL by default and DOXY/CHLA if present) after removing their nans.</span>
+<span class="sd">    Plots **histograms of the sampling period** for multiple variables.  </span>
+<span class="sd">    By default, it includes **TEMP** and **PSAL**, with **DOXY** and **CHLA** added if present in the dataset.  </span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray in OG1 format.</span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset in **OG1 format**.  </span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    One histogram for each variable showing the distribution of the sampling period.</span>
-<span class="sd">    fig: matplotlib.figure.Figure</span>
-<span class="sd">    ax: matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        The generated figure.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        Axes containing the histograms.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Louis Clement</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Louis Clement</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">count_vars</span><span class="o">=</span><span class="mi">2</span>
@@ -801,22 +878,25 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_sampling_period">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_sampling_period</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="s1">&#39;TEMP&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Similar to plot_grid_spacing, this function plots histograms but of the sampling period for one variable after removing its nans.</span>
-<span class="sd">    </span>
+<span class="sd">    Plots a **histogram of the sampling period** for a selected variable after removing NaN values.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray in OG1 format.</span>
-<span class="sd">    ax: Optional, axis to plot the data.</span>
-<span class="sd">    variable: display the sampling period for this variable </span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset in **OG1 format**.  </span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional  </span>
+<span class="sd">        Axis to plot the data. If not provided, a new figure and axis are created.  </span>
+<span class="sd">    variable : str, default=&#39;TEMP&#39;  </span>
+<span class="sd">        Variable for which the sampling period is displayed.  </span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    One histogram showing the distribution of the sampling period.</span>
-<span class="sd">    ax: matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">        Axis containing the histogram. </span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Louis Clement</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Louis Clement</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -865,23 +945,31 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_ts">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_ts</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">axs</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function plots histograms of temperature and salinity values (middle 95%), and a 2D histogram of salinity and temperature with density contours.</span>
+<span class="sd">    Plots **temperature and salinity distributions** using histograms and a 2D density plot.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray in OG1 format with at least TEMP and PSAL.</span>
-<span class="sd">    ax: Optional; axis to plot the data.</span>
-<span class="sd">    kw: Optional; additional keyword arguments for the histograms.</span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **DEPTH, LONGITUDE, LATITUDE, TEMP and PSAL**.  </span>
+<span class="sd">    axs : matplotlib.axes.Axes, optional  </span>
+<span class="sd">        Axes to plot the data. If not provided, a new figure and axes are created.  </span>
+<span class="sd">    kw : dict, optional  </span>
+<span class="sd">        Additional keyword arguments for the histograms.  </span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Three plots: histogram of temperature, histogram of salinity, and 2D histogram of salinity and temperature with density contours.</span>
-<span class="sd">    fig: matplotlib.figure.Figure</span>
-<span class="sd">    ax: matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        Figure containing the plots.  </span>
+<span class="sd">    axs : matplotlib.axes.Axes  </span>
+<span class="sd">        Axes containing the histograms.  </span>
+<span class="sd">        - **Three plots are created:**  </span>
+<span class="sd">            1. **Histogram of Conservative Temperature** (middle 99%)  </span>
+<span class="sd">            2. **Histogram of Absolute Salinity** (middle 99%)  </span>
+<span class="sd">            3. **2D Histogram of Salinity vs. Temperature** with density contours </span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Eleanor Frajka-Williams</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="s1">&#39;TEMP&#39;</span><span class="p">])</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
@@ -971,34 +1059,44 @@
         <span class="n">all_ax</span> <span class="o">=</span> <span class="n">axs</span>
         <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">all_ax</span></div>
 
+    
 <div class="viewcode-block" id="plot_vertical_speeds_with_histograms">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_vertical_speeds_with_histograms">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_vertical_speeds_with_histograms</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Plot vertical speeds with histograms for diagnostic purposes.</span>
-<span class="sd">    This function generates a diagnostic plot for the calculation of vertical seawater velocity.</span>
-<span class="sd">    It plots the modelled and computed (from dz/dt) vertical velocities as line plots, where these</span>
-<span class="sd">    should be similar. The difference between these velocities is the implied seawater velocity,</span>
-<span class="sd">    which should be closer to zero than the vehicle velocities. The histogram provides a visual</span>
-<span class="sd">    representation to identify any biases. The final calculation of the median should be close to</span>
-<span class="sd">    zero if a large enough sample of dives is input and if the glider flight model is well-tuned.</span>
+<span class="sd">    Plots vertical glider speeds with histograms for diagnostic purposes.</span>
+
+<span class="sd">    This function generates a **diagnostic plot** for vertical velocity calculations, comparing:</span>
+<span class="sd">    1. **Modeled glider vertical speed** (flight model)</span>
+<span class="sd">    2. **Computed glider speed** (from dz/dt, pressure sensor)</span>
+<span class="sd">    3. **Implied seawater velocity** (difference between the two)</span>
+
+<span class="sd">    The histograms allow for identifying biases, and the **median of the seawater velocity** should be close to zero if:</span>
+<span class="sd">    - A large enough sample of dives is used.</span>
+<span class="sd">    - The glider flight model is well-tuned.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds (xarray.Dataset): The dataset containing the vertical speed data where</span>
-<span class="sd">    - VERT_GLIDER_SPEED is the modelled glider speed</span>
-<span class="sd">    - VERT_SPEED_DZDT is the computed glider speed from the pressure sensor</span>
-<span class="sd">    - VERT_SW_SPEED is the implied seawater velocity.</span>
-<span class="sd">    start_prof (int, optional): The starting profile number for subsetting the dataset. Defaults to first profile number.</span>
-<span class="sd">    end_prof (int, optional): The ending profile number for subsetting the dataset. Defaults to last profile number.</span>
+<span class="sd">    ds : xarray.Dataset  </span>
+<span class="sd">        Dataset containing vertical speed data with required variables:  </span>
+<span class="sd">        - **VERT_GLIDER_SPEED**: Modeled glider speed  </span>
+<span class="sd">        - **VERT_SPEED_DZDT**: Computed glider speed from pressure sensor  </span>
+<span class="sd">        - **VERT_SW_SPEED**: Implied seawater velocity  </span>
+<span class="sd">    start_prof : int, optional  </span>
+<span class="sd">        Starting profile number for subsetting. Defaults to the **first profile number**.  </span>
+<span class="sd">    end_prof : int, optional  </span>
+<span class="sd">        Ending profile number for subsetting. Defaults to the **last profile number**.  </span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    fig, axs (tuple): The figure and axes objects for the plot.</span>
+<span class="sd">    fig : matplotlib.figure.Figure  </span>
+<span class="sd">        The figure containing the plots.  </span>
+<span class="sd">    axs : tuple(matplotlib.axes.Axes)  </span>
+<span class="sd">        The axes objects for the plots.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Eleanor Frajka-Williams</span>
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;GLIDER_VERT_VELO_MODEL&#39;</span><span class="p">,</span> <span class="s1">&#39;GLIDER_VERT_VELO_DZDT&#39;</span><span class="p">,</span> <span class="s1">&#39;VERT_CURR_MODEL&#39;</span><span class="p">,</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">])</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
@@ -1134,20 +1232,33 @@
 <span class="sd">    Replicates Fig 3 in Frajka-Williams et al. 2011, but using an updated dataset from Jim Bennett (2013), </span>
 <span class="sd">    now in OG1 format as sg014_20040924T182454_delayed.nc.  Note that flight model parameters may differ from those in the paper.</span>
 
+<span class="sd">    The function converts vertical velocities from m/s to cm/s, plots the mean vertical velocities and their ranges for both dives and climbs,</span>
+<span class="sd">    and customizes the plot with labels, legends, and axis settings.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds_out_dives (xarray.Dataset): Dataset containing dive profiles with variables &#39;zgrid&#39;, &#39;meanw&#39;, &#39;w_lower&#39;, and &#39;w_upper&#39;.</span>
-<span class="sd">    ds_out_climbs (xarray.Dataset): Dataset containing climb profiles with variables &#39;zgrid&#39;, &#39;meanw&#39;, &#39;w_lower&#39;, and &#39;w_upper&#39;.</span>
+<span class="sd">    ds_out_dives : xarray.Dataset</span>
+<span class="sd">        Dataset containing dive profiles with variables:</span>
+<span class="sd">        - &#39;zgrid&#39;: Depth grid (meters)</span>
+<span class="sd">        - &#39;meanw&#39;: Mean vertical velocity (m/s)</span>
+<span class="sd">        - &#39;w_lower&#39;: Lower bound of velocity range (m/s)</span>
+<span class="sd">        - &#39;w_upper&#39;: Upper bound of velocity range (m/s)</span>
+<span class="sd">    </span>
+<span class="sd">    ds_out_climbs : xarray.Dataset</span>
+<span class="sd">        Dataset containing climb profiles with the same variables as `ds_out_dives`.</span>
 
-<span class="sd">    The function converts vertical velocities from m/s to cm/s, plots the mean vertical velocities and their ranges for both dives and climbs, and customizes the plot with labels, legends, and axis settings.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        The figure object for the plot.</span>
+<span class="sd">    </span>
+<span class="sd">    ax : matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">        The axes object for the plot.</span>
 
-<span class="sd">    Note</span>
-<span class="sd">    ----</span>
-<span class="sd">    Assumes that the vertical velocities are in m/s and the depth grid is in meters.</span>
-
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Eleanor Frajka-Williams</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Assumes that the vertical velocities are in m/s and the depth grid is in meters.</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">conv_factor</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># Convert m/s to cm/s</span>
     <span class="n">depth_negative</span> <span class="o">=</span> <span class="n">ds_out_dives</span><span class="o">.</span><span class="n">zgrid</span><span class="o">.</span><span class="n">values</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
@@ -1203,20 +1314,28 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing at least depth, profile_number and the selected variable.</span>
-<span class="sd">        Data should not be gridded.</span>
-<span class="sd">    var: Selected variable</span>
-<span class="sd">    v_res: Vertical resolution for the gridding</span>
-<span class="sd">    perct_err: Percentage error threshold used to plot a vertical line in one of the subplots</span>
-<span class="sd">    ax: Specific axis in can the user wants to add this plot to an existing figure</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        Dataset in **OG1 format** containing at least **DEPTH, PROFILE_NUMBER** and the selected variable. </span>
+<span class="sd">        Data should **not** be gridded.</span>
+<span class="sd">    var : str, optional, default = &#39;DOXY&#39;</span>
+<span class="sd">        The variable to analyze for hysteresis effects</span>
+<span class="sd">    v_res : int, default = 1</span>
+<span class="sd">        Vertical resolution for gridding the data</span>
+<span class="sd">    perct_err : float, default = 2</span>
+<span class="sd">        Percentage error threshold for plotting a reference vertical line</span>
+<span class="sd">    ax : matplotlib.axes.Axes, default = None</span>
+<span class="sd">        Specific axes for plotting if adding to an existing figure</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">   df: pandas dataframe containing dive and climb average over depth for the selected variable. A third column contains the depth values</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        The figure object containing the plots.</span>
+<span class="sd">    ax : list of matplotlib.axes.Axes</span>
+<span class="sd">        The list of axes corresponding to the four generated subplots.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">v_res</span><span class="p">)</span>
     <span class="n">df</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">rms</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">compute_hyst_stat</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="n">v_res</span><span class="p">)</span>
@@ -1264,38 +1383,36 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_outlier_duration">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_outlier_duration</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">rolling_mean</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">overtime</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">       Generates two plots to visualize profile durations and highlight outliers.</span>
-<span class="sd">       This helps identify profiles with abnormal durations by comparing the actual profile durations</span>
-<span class="sd">       to a rolling mean, and by visualizing the shape and depth of the selected outlier profiles.</span>
+<span class="sd">    Generates two plots to visualize profile durations and highlight outliers.</span>
+<span class="sd">    This helps identify profiles with abnormal durations by comparing the actual profile durations</span>
+<span class="sd">    to a rolling mean, and by visualizing the shape and depth of the selected outlier profiles.</span>
 
-<span class="sd">       Parameters</span>
-<span class="sd">       ----------</span>
-<span class="sd">       ds : An xarray object containing at least the variables &#39;TIME&#39;, &#39;DEPTH&#39;, and &#39;PROFILE_NUMBER&#39;.</span>
-<span class="sd">           These are used to compute the profile durations and plot depth profiles.</span>
-<span class="sd">       rolling_mean : A series representing the rolling mean of the profile durations,</span>
-<span class="sd">                   which is used to highlight outliers based on standard deviation.</span>
-<span class="sd">       overtime : A list of profile numbers identified as having unusual durations.</span>
-<span class="sd">               These profiles are marked on the plot to highlight the outliers.</span>
-<span class="sd">       std : float, optional, default 2</span>
-<span class="sd">           The number of standard deviations above and below the rolling mean that will be used to define the range</span>
-<span class="sd">           of &quot;normal&quot; durations. Profiles outside this range are considered outliers.</span>
-<span class="sd">       ax :The axes object on which to plot the results. If not provided, a new figure with two subplots is created.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        Dataset containing at least **TIME, DEPTH, and PROFILE_NUMBER**</span>
+<span class="sd">    rolling_mean : pandas.Series</span>
+<span class="sd">        A series representing the rolling mean of profile durations, used to </span>
+<span class="sd">        define the range of normal durations.</span>
+<span class="sd">    overtime : list</span>
+<span class="sd">        A list of profile numbers identified as outliers based on abnormal durations.</span>
+<span class="sd">    std : float, default = 2</span>
+<span class="sd">        The number of standard deviations around the rolling mean used to classify </span>
+<span class="sd">        outliers.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, default = None</span>
+<span class="sd">        Axes object for plotting. If None, a new figure with two subplots is created.</span>
 
-<span class="sd">       Returns</span>
-<span class="sd">       -------</span>
-<span class="sd">       fig : The figure containing the generated plots.</span>
-<span class="sd">           1. A plot showing the profile durations with the rolling mean and the range defined by the rolling mean ± `std`</span>
-<span class="sd">              (standard deviation). The range is highlighted in orange.</span>
-<span class="sd">           2. A scatter plot of the profile depths, with outlier profiles marked in red. These outliers are determined based</span>
-<span class="sd">              on the duration exceeding the threshold defined by the rolling mean ± `std`.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        The figure containing the generated plots</span>
+<span class="sd">    ax : list of matplotlib.axes.Axes</span>
+<span class="sd">        A list of axes corresponding to the two generated subplots.</span>
 
-<span class="sd">       ax :  A 1x2 array of axes used for the two subplots.</span>
-
-<span class="sd">       Original author</span>
-<span class="sd">       ------</span>
-<span class="sd">       Chiara Monforte</span>
-<span class="sd">       &quot;&quot;&quot;</span>
-
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
@@ -1339,31 +1456,34 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_global_range">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_global_range</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">   This function generates a histogram of the specified variable (`var`) from the dataset (`ds`) and</span>
-<span class="sd">    overlays vertical lines at the specified minimum (`min_val`) and maximum (`max_val`) values to</span>
-<span class="sd">    visually represent the global range. The function is useful for visually inspecting whether</span>
-<span class="sd">    values of the specified variable fall within the expected global range.</span>
+<span class="sd">    This function creates a histogram of the selected variable (`var`) from the dataset (`ds`), </span>
+<span class="sd">    allowing for visual inspection of its distribution. It overlays vertical lines at the specified </span>
+<span class="sd">    minimum (`min_val`) and maximum (`max_val`) values to indicate the global range, helping </span>
+<span class="sd">    identify whether values fall within expected limits.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds : The xarray dataset containing the variable (`var`) to be plotted.</span>
-<span class="sd">    var : The name of the variable to plot.</span>
-<span class="sd">    min_val : The minimum value of the global range to highlight on the plot.</span>
-<span class="sd">    max_val : The maximum value of the global range to highlight on the plot.</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        The dataset containing the variable to be plotted.</span>
+<span class="sd">    var : str, default = &#39;DOXY&#39;</span>
+<span class="sd">        The name of the variable to be plotted in the histogram.</span>
+<span class="sd">    min_val : float, default = -5</span>
+<span class="sd">        The minimum value of the global range to highlight on the plot.</span>
+<span class="sd">    max_val : float, default = 600</span>
+<span class="sd">        The maximum value of the global range to highlight on the plot.</span>
 <span class="sd">    ax : matplotlib.axes.Axes, optional</span>
 <span class="sd">        The axes on which to plot the histogram. If `None`, a new figure and axes are created.</span>
-<span class="sd">        Default is `None`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    fig : matplotlib.figure.Figure</span>
-<span class="sd">        The figure object containing the plot.</span>
+<span class="sd">        The figure object containing the histogram plot.</span>
 <span class="sd">    ax : matplotlib.axes.Axes</span>
 <span class="sd">        The axes object containing the histogram plot.</span>
-
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1389,39 +1509,39 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_ioosqc">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_ioosqc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">suspect_threshold</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">],</span> <span class="n">fail_threshold</span><span class="o">=</span><span class="p">[</span><span class="mi">50</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Plots a scatter plot of the the results of IOOS qQC tests with quality control labels (GOOD, UNKNOWN, SUSPECT, FAIL, MISSING) on the y-axis,</span>
-<span class="sd">    and overlays threshold-based markers for suspect and fail values. This function is useful for visualizing the status of</span>
-<span class="sd">    data points according to the quality control thresholds.</span>
+<span class="sd">    This function generates a scatter plot of the results from an IOOS QC test, labeling data points </span>
+<span class="sd">    with quality control categories (&#39;GOOD&#39;, &#39;UNKNOWN&#39;, &#39;SUSPECT&#39;, &#39;FAIL&#39;, &#39;MISSING&#39;). It also overlays </span>
+<span class="sd">    threshold-based markers to visualize suspect and fail ranges, aiding in the interpretation of </span>
+<span class="sd">    data quality.</span>
 
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
-<span class="sd">    data : The result from the IOOS_QC test.</span>
-<span class="sd">            A sequence of numerical values representing the data points to be plotted.</span>
-<span class="sd">    suspect_threshold : A list containing one or two numerical values indicating the thresholds for suspect values. If one value is provided,</span>
-<span class="sd">        it applies to both lower and upper bounds for suspect data points. If two values are provided, they define the</span>
-<span class="sd">        lower and upper bounds for suspect values.</span>
-<span class="sd">    fail_threshold A list containing one or two numerical values indicating the thresholds for fail values. Similar to `suspect_threshold`,</span>
-<span class="sd">        it can have one or two values to define the bounds for fail data points.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : array-like</span>
+<span class="sd">        The results from the IOOS QC test, representing numerical data points to be plotted.</span>
+<span class="sd">    suspect_threshold : list, optional, default = [25]</span>
+<span class="sd">        A list containing one or two numerical values defining the thresholds for suspect values.</span>
+<span class="sd">        If one value is provided, it applies to both lower and upper bounds. If two values are given,</span>
+<span class="sd">        they define distinct lower and upper suspect limits.</span>
+<span class="sd">    fail_threshold : list, optional, default = [50]</span>
+<span class="sd">        A list containing one or two numerical values defining the thresholds for fail values.</span>
+<span class="sd">        The structure follows the same logic as `suspect_threshold`.</span>
 <span class="sd">    title : str, optional, default = &#39;&#39;</span>
 <span class="sd">        The title to display at the top of the plot.</span>
-<span class="sd">    ax : matplotlib Axes object, optional, default = None</span>
-<span class="sd">        If provided, the plot will be drawn on this existing Axes object. If None, a new figure and axis will be created.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        The axes object on which to plot the results. If `None`, a new figure and axis are created.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
-<span class="sd">    fig : matplotlib figure</span>
-<span class="sd">        The figure object containing the plot.</span>
-
-<span class="sd">    ax : matplotlib Axes object</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        The figure object containing the QC results plot.</span>
+<span class="sd">    ax : matplotlib.axes.Axes</span>
 <span class="sd">        The axes object used for plotting.</span>
 
-<span class="sd">    Notes:</span>
-<span class="sd">    ------</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
 <span class="sd">    - The plot uses two y-axes: one for labeling data points as &#39;GOOD&#39;, &#39;UNKNOWN&#39;, &#39;SUSPECT&#39;, &#39;FAIL&#39;, or &#39;MISSING&#39; based</span>
 <span class="sd">      on thresholds, and another for marking specific suspect and fail ranges.</span>
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Chiara Monforte</span>
+<span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1467,20 +1587,33 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_max_depth_per_profile">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_max_depth_per_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">({</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function can be used to plot the maximum depth of each profile in a dataset.</span>
-<span class="sd">    </span>
+<span class="sd">    Plots the maximum depth of each profile in a dataset.</span>
+
+<span class="sd">    This function generates two plots: one showing the maximum depth of each profile and another </span>
+<span class="sd">    histogram illustrating the distribution of maximum depths. It provides a visual representation </span>
+<span class="sd">    of profile depth variations.</span>
+<span class="sd">        </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: xarray on OG1 format containing the profile number and the maximum depth. </span>
-<span class="sd">    bins: int, optional (default=20)</span>
-<span class="sd">    </span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        An xarray dataset in OG1 format containing profile numbers and corresponding maximum depths.</span>
+<span class="sd">    bins : int, optional, default = 20</span>
+<span class="sd">        The number of bins to use for the histogram of maximum depths.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        The axes object on which to plot the results. If `None`, a new figure with two subplots is created.</span>
+<span class="sd">    **kw : dict, optional</span>
+<span class="sd">        Additional keyword arguments passed to the plotting function for customization.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    One figure with two plots illustrating the max depth of each profile and a histogram of the max depths</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        The figure object containing the plots.</span>
+<span class="sd">    ax : matplotlib.axes.Axes</span>
+<span class="sd">        A 1x2 array of axes used for the two subplots.</span>
 
-<span class="sd">    Original author</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    Till Moritz</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Till Moritz</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">max_depths</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">max_depth_per_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
