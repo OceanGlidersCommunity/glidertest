@@ -48,6 +48,8 @@ def plot_updown_bias(ds: xr.Dataset, var='TEMP', v_res=1, ax: plt.Axes = None, *
     Notes
     -----
     Original Author: Chiara Monforte
+
+    force new docs build
     """
     with plt.style.context(glidertest_style_file):
         if ax is None:
