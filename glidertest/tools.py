@@ -535,3 +535,48 @@ def max_depth_per_profile(ds: xr.Dataset):
     max_depths.attrs['units'] = ds['DEPTH'].attrs['units']
     return max_depths
 
+def bin_data(ds_profile: xr.Dataset, vars: list, resolution: float, agg: str = 'mean'):
+    """
+    Bin the data in a profile dataset by depth.
+    
+    Parameters
+    ----------
+        ds_profile: xr.Dataset 
+            The dataset containing at least **DEPTH and the variables to bin**.
+        resolution: float 
+            The depth resolution for the binning.
+        var: list
+            The variables to bin.
+        agg: str 
+            The aggregation method to use for binning. Default is 'mean'. Other option is 'median'.
+
+    Returns
+    -------
+        tuple: (binned_depths, binned_temperatures, binned_salinity, binned_density), where each is a numpy array with NaNs for unused indices.
+
+    Notes
+    -----
+    Original author: Till Moritz
+    """
+    ### if empty string in vars, delete it
+    if '' in vars:
+        vars.remove('')
+
+    utilities._check_necessary_variables(ds_profile, vars + ['DEPTH'])
+    
+    depth = ds_profile.DEPTH
+    ### group depth values into discrete intervals for analysis with the given resolution
+    bins = np.arange(np.floor(np.min(depth) / resolution) * resolution,
+                     np.ceil(np.max(depth) / resolution) * resolution + resolution,resolution)
+
+    variables = {name: ds_profile[name] for name in vars}
+    variables['DEPTH'] = depth
+    if agg == 'mean':
+        binned_data = {name: var.groupby_bins('DEPTH', bins).mean().values for name, var in variables.items()}
+    elif agg == 'median':
+        binned_data = {name: var.groupby_bins('DEPTH', bins).median().values for name, var in variables.items()}
+    else:
+        raise ValueError(f"Invalid aggregation method: {agg}")
+    
+    return binned_data
+
