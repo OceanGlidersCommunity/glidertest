@@ -6,7 +6,7 @@ matplotlib.use('agg')  # use agg backend to prevent creating plot windows during
 
 def test_qc_checks():
     ds = fetchers.load_sample_dataset()
-    gr, spike, flat, err = summary_sheet.qc_checks(ds, var='PSAL')
+    gr, spike, flat, err_range = summary_sheet.qc_checks(ds, var='PSAL')
 def test_tableqc():
     ds = fetchers.load_sample_dataset()
     df_test = pd.DataFrame({'': ['Global range', 'Spike test', 'Flat test', 'Hysteresis', 'Drift'],

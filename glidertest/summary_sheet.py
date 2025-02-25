@@ -45,9 +45,9 @@ def qc_checks(ds, var='TEMP'):
     spike = qartod.spike_test(ds[var], suspect_threshold=configs[var]['spike_test']['suspect_threshold'],
                               fail_threshold=configs[var]['spike_test']['fail_threshold'], method="average")
     flat = qartod.flat_line_test(ds[var], ds.TIME, 1, 3, 0.001)
-    __, __, err, __ = tools.compute_hyst_stat(ds, var=var, v_res=1)
+    __, __,__,err_range, __ = tools.compute_hyst_stat(ds, var=var, v_res=1)
 
-    return gr, spike, flat, err
+    return gr, spike, flat, err_range
 
 
 def fill_tableqc(df,ds, var='TEMP'):
@@ -217,6 +217,8 @@ def summary_plot(ds, save_dir='.', test=True):
     newax.axis('off')
     ax.text(0.78, -0.11, f'Created with glidertest v{glidertest.__version__}', transform=ax.transAxes, fontsize=font_size - 3,
             verticalalignment='top')
+
+
 
     # Add glider track plot
     gt_ax = fig.add_axes([0.47, 0.64, 0.38, 0.25], projection=ccrs.PlateCarree(), anchor='SE', zorder=-1, )
