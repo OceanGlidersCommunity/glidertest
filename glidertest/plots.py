@@ -1251,8 +1251,8 @@ def plot_hysteresis(ds, var='DOXY', v_res=1, threshold=2, ax=None):
         ax[0].set_ylabel('Depth (m)')
         ax[0].set_xlabel(f'{utilities.plotting_labels(var)} $=mean$ \n({utilities.plotting_units(ds, var)})')
         ax[1].set_xlabel(f'Absolute difference = |$\Delta$| \n({ds[var].units})')
-        ax[2].set_xlabel('Percent error = |$\Delta$|/$mean$ \n(%)')
-        ax[3].set_xlabel('Percent error = |$\Delta$|/$range$ \n(%)')
+        ax[2].set_xlabel('Error [|Δ| / mean] (%)')
+        ax[3].set_xlabel('Scaled error [|Δ| / range] (%)')
         for ax1 in ax[:-1]:
             ax1.xaxis.set_label_position('top')
         c = ax[4].pcolor(profG[:-1, :], depthG[:-1, :], np.diff(varG, axis=0),
