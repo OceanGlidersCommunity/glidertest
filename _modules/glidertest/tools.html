@@ -72,7 +72,9 @@
            <div itemprop="articleBody">
              
   <h1>Source code for glidertest.tools</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
@@ -494,8 +496,10 @@
 <span class="sd">    -------</span>
 <span class="sd">    diff : array-like  </span>
 <span class="sd">        Difference between upcast and downcast values.  </span>
-<span class="sd">    err : array-like  </span>
-<span class="sd">        Percentage error of the dive-climb difference, computed for each depth step.  </span>
+<span class="sd">    err_range : array-like</span>
+<span class="sd">        Percentage error of the dive-climb difference based on the range of values, computed for each depth step.</span>
+<span class="sd">    err_mean : array-like</span>
+<span class="sd">        Percentage error of the dive-climb difference based on the mean values, computed for each depth step.</span>
 <span class="sd">    rms : float  </span>
 <span class="sd">        Root Mean Square (RMS) of the difference in values between dive and climb.  </span>
 <span class="sd">    df : pandas.DataFrame  </span>
@@ -511,9 +515,11 @@
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
         <span class="n">diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span> <span class="o">-</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">)</span>
-        <span class="n">err</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">err_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+        <span class="n">err_mean</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span> <span class="o">-</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">rms</span></div>
+    <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">err_mean</span><span class="p">,</span> <span class="n">err_range</span><span class="p">,</span> <span class="n">rms</span></div>
 
 
 

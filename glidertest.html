@@ -261,7 +261,8 @@ Data should not be gridded.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>diff</strong> (<em>array-like</em>) – Difference between upcast and downcast values.</p></li>
-<li><p><strong>err</strong> (<em>array-like</em>) – Percentage error of the dive-climb difference, computed for each depth step.</p></li>
+<li><p><strong>err_range</strong> (<em>array-like</em>) – Percentage error of the dive-climb difference based on the range of values, computed for each depth step.</p></li>
+<li><p><strong>err_mean</strong> (<em>array-like</em>) – Percentage error of the dive-climb difference based on the mean values, computed for each depth step.</p></li>
 <li><p><strong>rms</strong> (<em>float</em>) – Root Mean Square (RMS) of the difference in values between dive and climb.</p></li>
 <li><p><strong>df</strong> (<em>pandas.DataFrame</em>) – DataFrame containing:
 - <strong>Dive and climb averages</strong> over depth for the selected variable.
@@ -613,7 +614,7 @@ identify whether values fall within expected limits.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_hysteresis">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_hysteresis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perct_err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_hysteresis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_hysteresis" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_hysteresis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_hysteresis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_hysteresis" title="Link to this definition"></a></dt>
 <dd><p>This function creates 4 plots which can help the user visualize any possible hysteresis
 present in their dataset for a specific variable</p>
 <dl class="field-list simple">
@@ -623,7 +624,7 @@ present in their dataset for a specific variable</p>
 Data should <strong>not</strong> be gridded.</p></li>
 <li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default = 'DOXY'</em>) – The variable to analyze for hysteresis effects</p></li>
 <li><p><strong>v_res</strong> (<em>int</em><em>, </em><em>default = 1</em>) – Vertical resolution for gridding the data</p></li>
-<li><p><strong>perct_err</strong> (<em>float</em><em>, </em><em>default = 2</em>) – Percentage error threshold for plotting a reference vertical line</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>default = 2</em>) – Percentage error threshold for plotting a reference vertical line</p></li>
 <li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>default = None</em>) – Specific axes for plotting if adding to an existing figure</p></li>
 </ul>
 </dd>
