@@ -53,7 +53,7 @@ def test_hyst():
     df_h = tools.quant_hysteresis(ds, var = 'DOXY', v_res = 1)
     df, diff, err_mean, err_range, rms = tools.compute_hyst_stat(ds, var='DOXY', v_res=1)
     assert np.array_equal(df_h.dropna(), df.dropna())
-    assert len(diff) == len(err)
+    assert len(diff) == len(err_mean)
 
 def test_sop():
     ds = fetchers.load_sample_dataset()

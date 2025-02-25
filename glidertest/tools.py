@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
@@ -397,8 +399,10 @@ def compute_hyst_stat(ds: xr.Dataset, var='DOXY', v_res=1):
     -------
     diff : array-like  
         Difference between upcast and downcast values.  
-    err : array-like  
-        Percentage error of the dive-climb difference, computed for each depth step.  
+    err_range : array-like
+        Percentage error of the dive-climb difference based on the range of values, computed for each depth step.
+    err_mean : array-like
+        Percentage error of the dive-climb difference based on the mean values, computed for each depth step.
     rms : float  
         Root Mean Square (RMS) of the difference in values between dive and climb.  
     df : pandas.DataFrame  
