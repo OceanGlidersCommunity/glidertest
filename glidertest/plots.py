@@ -14,9 +14,11 @@ import warnings
 from glidertest import utilities, tools
 import os
 import matplotlib.ticker
+from matplotlib.ticker import FormatStrFormatter
 
 dir = os.path.dirname(os.path.realpath(__file__))
 glidertest_style_file = f"{dir}/glidertest.mplstyle"
+
 
 
 
@@ -1189,7 +1191,7 @@ def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.
         return fig, ax
 
 
-def plot_hysteresis(ds, var='DOXY', v_res=1, perct_err=2, ax=None):
+def plot_hysteresis(ds, var='DOXY', v_res=1, threshold=2, ax=None):
     """
     This function creates 4 plots which can help the user visualize any possible hysteresis
     present in their dataset for a specific variable
@@ -1203,7 +1205,7 @@ def plot_hysteresis(ds, var='DOXY', v_res=1, perct_err=2, ax=None):
         The variable to analyze for hysteresis effects
     v_res : int, default = 1
         Vertical resolution for gridding the data
-    perct_err : float, default = 2
+    threshold : float, default = 2
         Percentage error threshold for plotting a reference vertical line
     ax : matplotlib.axes.Axes, default = None
         Specific axes for plotting if adding to an existing figure
@@ -1220,16 +1222,16 @@ def plot_hysteresis(ds, var='DOXY', v_res=1, perct_err=2, ax=None):
     Original Author: Chiara Monforte
     """
     varG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], 1, v_res)
-    df, diff, err, rms = tools.compute_hyst_stat(ds, var=var, v_res=v_res)
+    df, diff, err_mean, err_range, rms = tools.compute_hyst_stat(ds, var=var, v_res=v_res)
     with plt.style.context(glidertest_style_file):
         if ax is None:
             fig = plt.figure()
-            ax = [plt.subplot(3, 3, 1), plt.subplot(3, 3, 2), plt.subplot(3, 3, 3), plt.subplot(3, 1, 2)]
+            ax = [plt.subplot(4, 4, 1), plt.subplot(4, 4, 2), plt.subplot(4, 4, 3), plt.subplot(4, 4, 4), plt.subplot(4, 1, 2)]
             force_plot = True
         else:
             if len(ax) == 1:
                 fig = plt.gcf()
-                ax = [plt.subplot(3, 3, 1), plt.subplot(3, 3, 2), plt.subplot(3, 3, 3), plt.subplot(3, 1, 2)]
+                ax = [plt.subplot(4, 4, 1), plt.subplot(4, 4, 2), plt.subplot(4, 4, 3), plt.subplot(4, 4, 4), plt.subplot(4, 1, 2)]
                 force_plot = False
             else:
                 fig = plt.gcf()
@@ -1237,23 +1239,27 @@ def plot_hysteresis(ds, var='DOXY', v_res=1, perct_err=2, ax=None):
 
         ax[0].plot(df.climb, df.depth, label='Dive')
         ax[0].plot(df.dive, df.depth, label='Climb')
+        ax[0].xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         ax[0].legend()
         ax[1].plot(diff, df.depth)
-        ax[2].plot(err, df.depth)
-        ax[2].axvline(perct_err, c='red')
+        ax[2].plot(err_mean, df.depth)
+        ax[2].axvline(threshold, c='red')
+        ax[3].plot(err_range, df.depth)
+        ax[3].axvline(threshold, c='red')
         [a.grid() for a in ax]
         [a.invert_yaxis() for a in ax]
         ax[0].set_ylabel('Depth (m)')
         ax[0].set_xlabel(f'{utilities.plotting_labels(var)} $=mean$ \n({utilities.plotting_units(ds, var)})')
         ax[1].set_xlabel(f'Absolute difference = |$\Delta$| \n({ds[var].units})')
         ax[2].set_xlabel('Percent error = |$\Delta$|/$mean$ \n(%)')
+        ax[3].set_xlabel('Percent error = |$\Delta$|/$range$ \n(%)')
         for ax1 in ax[:-1]:
             ax1.xaxis.set_label_position('top')
-        c = ax[3].pcolor(profG[:-1, :], depthG[:-1, :], np.diff(varG, axis=0),
+        c = ax[4].pcolor(profG[:-1, :], depthG[:-1, :], np.diff(varG, axis=0),
                          vmin=np.nanpercentile(np.diff(varG, axis=0), 0.5),
                          vmax=np.nanpercentile(np.diff(varG, axis=0), 99.5), cmap='seismic')
-        plt.colorbar(c, ax=ax[3], label=f'Difference dive-climb \n({ds[var].units})', fraction=0.05)
-        ax[3].set(ylabel='Depth (m)', xlabel='Profile number')
+        plt.colorbar(c, ax=ax[4], label=f'Difference dive-climb \n({ds[var].units})', fraction=0.05)
+        ax[4].set(ylabel='Depth (m)', xlabel='Profile number')
         fig.suptitle(utilities.plotting_labels(var), y=.98)
         if force_plot:
             plt.show()

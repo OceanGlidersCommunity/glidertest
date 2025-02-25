@@ -414,9 +414,11 @@ def compute_hyst_stat(ds: xr.Dataset, var='DOXY', v_res=1):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
         diff = abs(df.dive - df.climb)
-        err = (diff * 100) / np.nanmedian([df.dive, df.climb], axis=0)
+        err_range = (diff * 100) / (np.nanmax(np.nanmedian([df.dive, df.climb], axis=0)) - np.nanmin(
+            np.nanmedian([df.dive, df.climb], axis=0)))
+        err_mean = (diff * 100) / np.nanmedian([df.dive, df.climb], axis=0)
         rms = np.sqrt(np.nanmean(abs(df.dive - df.climb) ** 2))
-    return df, diff, err, rms
+    return df, diff, err_mean, err_range, rms
 
 
 def compute_prof_duration(ds:xr.Dataset):
