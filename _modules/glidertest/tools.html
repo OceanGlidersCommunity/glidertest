@@ -650,6 +650,120 @@
     <span class="n">max_depths</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">max_depths</span></div>
 
+<div class="viewcode-block" id="compute_mld_glidertools">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_mld_glidertools">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_mld_glidertools</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">ref_depth</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Mixed Layer Depth (MLD) for an ungridded glider dataset.</span>
+
+<span class="sd">    This function computes the MLD by applying a threshold difference to a specified variable</span>
+<span class="sd">    (e.g., temperature or density). The default threshold is set for density (0.01).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        A dataset containing glider data, including depth, profile number and the variable of interest.</span>
+<span class="sd">    variable : str</span>
+<span class="sd">        The name of the variable (e.g., &#39;temperature&#39; or &#39;density&#39;) used for the threshold calculation.</span>
+<span class="sd">    thresh : float, optional, default=0.01</span>
+<span class="sd">        The threshold for the difference in the variable. Typically used to detect the mixed layer.</span>
+<span class="sd">    ref_depth : float, optional, default=10</span>
+<span class="sd">        The reference depth (in meters) used to calculate the difference for the threshold.</span>
+<span class="sd">    verbose : bool, optional, default=True</span>
+<span class="sd">        If True, additional information and warnings are printed to the console.</span>
+
+<span class="sd">    Return</span>
+<span class="sd">    ------</span>
+<span class="sd">    mld : array</span>
+<span class="sd">        An array of depths corresponding to the MLD for each unique glider dive in the dataset.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function is based on the original GliderTools implementation and was modified by</span>
+<span class="sd">    Chiara Monforte to ensure compliance with the OG1 standards.</span>
+<span class="sd">    [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span><span class="s2">&quot;DEPTH&quot;</span><span class="p">,</span> <span class="s2">&quot;PROFILE_NUMBER&quot;</span><span class="p">])</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">&quot;DEPTH&quot;</span><span class="p">])</span>
+    <span class="n">mld</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mld_profile</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mld</span></div>
+
+<div class="viewcode-block" id="mld_profile">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.mld_profile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mld_profile</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Mixed Layer Depth (MLD) for a single glider profile.</span>
+
+<span class="sd">    This function computes the MLD by applying a threshold difference to the specified variable</span>
+<span class="sd">    (e.g., temperature or density) for a given glider profile. The default threshold is set for density (0.01).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pandas.DataFrame</span>
+<span class="sd">        A dataframe containing the glider profile data (including the variable of interest and depth).</span>
+<span class="sd">    variable : str</span>
+<span class="sd">        The name of the variable (e.g., &#39;temperature&#39; or &#39;density&#39;) used for the threshold calculation.</span>
+<span class="sd">    thresh : float, optional, default=0.01</span>
+<span class="sd">        The threshold for the difference in the variable. Typically used to detect the mixed layer.</span>
+<span class="sd">    ref_depth : float, optional, default=10</span>
+<span class="sd">        The reference depth (in meters) used to calculate the difference for the threshold.</span>
+<span class="sd">    verbose : bool, optional, default=True</span>
+<span class="sd">        If True, additional information and warnings are printed to the console.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mld : float or np.nan</span>
+<span class="sd">        The depth of the mixed layer, or np.nan if no MLD can be determined based on the threshold.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function is based on the original GliderTools implementation and was modified by</span>
+<span class="sd">    Chiara Monforte to ensure compliance with the OG1 standards.</span>
+<span class="sd">    [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exception</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">divenum</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">&quot;DEPTH&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">mld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">exception</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;no observations found for specified variable in dive </span><span class="si">{}</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">divenum</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">ref_depth</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">exception</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;no observations within 5 m of ref_depth for dive </span><span class="si">{}</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">divenum</span>
+        <span class="p">)</span>
+        <span class="n">mld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">))</span><span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="c1"># create arrays in order of increasing depth</span>
+        <span class="n">var_arr</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[::</span> <span class="nb">int</span><span class="p">(</span><span class="n">direction</span><span class="p">)]</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">values</span><span class="p">[::</span> <span class="nb">int</span><span class="p">(</span><span class="n">direction</span><span class="p">)]</span>
+        <span class="c1"># get index closest to ref_depth</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">depth</span> <span class="o">-</span> <span class="n">ref_depth</span><span class="p">))</span>
+        <span class="c1"># create difference array for threshold variable</span>
+        <span class="n">dd</span> <span class="o">=</span> <span class="n">var_arr</span> <span class="o">-</span> <span class="n">var_arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c1"># mask out all values that are shallower then ref_depth</span>
+        <span class="n">dd</span><span class="p">[</span><span class="n">depth</span> <span class="o">&lt;</span> <span class="n">ref_depth</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="c1"># get all values in difference array within threshold range</span>
+        <span class="n">mixed</span> <span class="o">=</span> <span class="n">dd</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mixed</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">idx_mld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">)</span>
+            <span class="n">mld</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">idx_mld</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">exception</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">mld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;threshold criterion never true (all mixed or </span><span class="se">\</span>
+<span class="s2">                shallow profile) for profile </span><span class="si">{}</span><span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">divenum</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mld</span></div>
 
 </pre></div>
 

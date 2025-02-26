@@ -474,6 +474,42 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
 
+<div class="viewcode-block" id="group_by_profiles">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.group_by_profiles">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Group glider dataset by the dive profile number.</span>
+
+<span class="sd">    This function groups the dataset by the `PROFILE_NUMBER` column, where each group corresponds to a single profile.</span>
+<span class="sd">    The resulting groups can be evaluated statistically, for example using methods like `pandas.DataFrame.mean` or</span>
+<span class="sd">    other aggregation functions. To filter a specific profile, use `xarray.Dataset.where` instead.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        A 1-dimensional glider dataset containing profile information.</span>
+<span class="sd">    variables : list of str, optional</span>
+<span class="sd">        A list of variable names to group by, if only a subset of the dataset should be included in the grouping.</span>
+<span class="sd">        Grouping by a subset is more memory-efficient and faster.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    profiles : pandas.core.groupby.DataFrameGroupBy</span>
+<span class="sd">        A pandas `GroupBy` object, grouped by the `PROFILE_NUMBER` of the glider dataset.</span>
+<span class="sd">        This can be further aggregated using methods like `mean` or `sum`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function is based on the original GliderTools implementation and was modified by</span>
+<span class="sd">    Chiara Monforte to ensure compliance with the OG1 standards.</span>
+<span class="sd">    [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/utils.py)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">reset_coords</span><span class="p">()</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;PROFILE_NUMBER&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">variables</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="p">[</span><span class="n">variables</span><span class="p">]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;PROFILE_NUMBER&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;PROFILE_NUMBER&quot;</span><span class="p">)</span></div>
+
 </pre></div>
 
            </div>
