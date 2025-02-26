@@ -19,3 +19,4 @@ cartopy
 gsw
 tqdm
 ioos_qc
+glidertools
