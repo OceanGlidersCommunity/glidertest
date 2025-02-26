@@ -387,28 +387,30 @@ def plotting_units(ds: xr.Dataset,var: str):
         return ""
 def group_by_profiles(ds, variables=None):
     """
-    Group profiles by dives column. Each group member is one dive. The
-    returned profiles can be evaluated statistically, e.g. by
-    pandas.DataFrame.mean or other aggregating methods. To filter out one
-    specific profile, use xarray.Dataset.where instead.
+    Group glider dataset by the dive profile number.
+
+    This function groups the dataset by the `PROFILE_NUMBER` column, where each group corresponds to a single profile.
+    The resulting groups can be evaluated statistically, for example using methods like `pandas.DataFrame.mean` or
+    other aggregation functions. To filter a specific profile, use `xarray.Dataset.where` instead.
 
     Parameters
     ----------
     ds : xarray.Dataset
-        1-dimensional Glider dataset
-    variables : list of strings, optional
-        specify variables if only a subset of the dataset should be grouped
-        into profiles. Grouping only a subset is considerably faster and more
-        memory-effective.
-    Return
-    ------
-    profiles:
-    dataset grouped by profiles (dives variable), as created by the
-    pandas.groupby methods.
+        A 1-dimensional glider dataset containing profile information.
+    variables : list of str, optional
+        A list of variable names to group by, if only a subset of the dataset should be included in the grouping.
+        Grouping by a subset is more memory-efficient and faster.
+
+    Returns
+    -------
+    profiles : pandas.core.groupby.DataFrameGroupBy
+        A pandas `GroupBy` object, grouped by the `PROFILE_NUMBER` of the glider dataset.
+        This can be further aggregated using methods like `mean` or `sum`.
 
     Notes
     -----
-    Original Author: Function from GliderTools modified by Chiara Monforte to make it OG1 compliant
+    This function is based on the original GliderTools implementation and was modified by
+    Chiara Monforte to ensure compliance with the OG1 standards.
     [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/utils.py)
     """
     ds = ds.reset_coords().to_pandas().reset_index().set_index("PROFILE_NUMBER")

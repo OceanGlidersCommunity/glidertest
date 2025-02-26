@@ -8,7 +8,6 @@ from scipy import stats
 import gsw
 import warnings
 from glidertest import utilities
-from glidertools.helpers import GliderToolsWarning
 
 def quant_updown_bias(ds, var='PSAL', v_res=1):
     """
@@ -543,63 +542,70 @@ def max_depth_per_profile(ds: xr.Dataset):
     return max_depths
 def compute_mld_glidertools(ds, variable, thresh=0.01, ref_depth=10, verbose=True):
     """
-    Calculates the MLD for ungridded glider array.
+    Calculate the Mixed Layer Depth (MLD) for an ungridded glider dataset.
 
-    You can provide density or temperature.
-    The default threshold is set for density (0.01).
+    This function computes the MLD by applying a threshold difference to a specified variable
+    (e.g., temperature or density). The default threshold is set for density (0.01).
 
     Parameters
     ----------
-    ds : xarray.Dataset Glider dataset
+    ds : xarray.Dataset
+        A dataset containing glider data, including depth, profile number and the variable of interest.
     variable : str
-         variable that will be used for the threshold criteria
-    thresh : float=0.01 threshold for difference of variable
-    ref_depth : float=10 reference depth for difference
-    return_as_mask : bool, optional
-    verbose : bool, optional
+        The name of the variable (e.g., 'temperature' or 'density') used for the threshold calculation.
+    thresh : float, optional, default=0.01
+        The threshold for the difference in the variable. Typically used to detect the mixed layer.
+    ref_depth : float, optional, default=10
+        The reference depth (in meters) used to calculate the difference for the threshold.
+    verbose : bool, optional, default=True
+        If True, additional information and warnings are printed to the console.
 
     Return
     ------
     mld : array
-        will be an array of depths the length of the
-        number of unique dives.
+        An array of depths corresponding to the MLD for each unique glider dive in the dataset.
 
     Notes
     -----
-    Original Author: Function from GliderTools modified by Chiara Monforte to make it OG1 compliant
+    This function is based on the original GliderTools implementation and was modified by
+    Chiara Monforte to ensure compliance with the OG1 standards.
     [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py)
     """
+    utilities._check_necessary_variables(ds, [variable,"DEPTH", "PROFILE_NUMBER"])
     groups = utilities.group_by_profiles(ds, [variable, "DEPTH"])
     mld = groups.apply(mld_profile, variable, thresh, ref_depth, verbose)
     return mld
 def mld_profile(df, variable, thresh, ref_depth, verbose=True):
     """
-    Calculates the MLD for a single glider profile.
+    Calculate the Mixed Layer Depth (MLD) for a single glider profile.
 
-    You can provide any variable.
-    The default threshold is set for density (0.01).
+    This function computes the MLD by applying a threshold difference to the specified variable
+    (e.g., temperature or density) for a given glider profile. The default threshold is set for density (0.01).
 
     Parameters
     ----------
-    ds : xarray.Dataset Glider dataset
+    df : pandas.DataFrame
+        A dataframe containing the glider profile data (including the variable of interest and depth).
     variable : str
-         variable that will be used for the threshold criteria
-    thresh : float=0.01 threshold for difference of variable
-    ref_depth : float=10 reference depth for difference
-    return_as_mask : bool, optional
-    verbose : bool, optional
+        The name of the variable (e.g., 'temperature' or 'density') used for the threshold calculation.
+    thresh : float, optional, default=0.01
+        The threshold for the difference in the variable. Typically used to detect the mixed layer.
+    ref_depth : float, optional, default=10
+        The reference depth (in meters) used to calculate the difference for the threshold.
+    verbose : bool, optional, default=True
+        If True, additional information and warnings are printed to the console.
 
-    Return
-    ------
-    mld : array
-        will be an array of depths the length of the
-        number of unique dives.
+    Returns
+    -------
+    mld : float or np.nan
+        The depth of the mixed layer, or np.nan if no MLD can be determined based on the threshold.
 
     Notes
     -----
-    Original Author: Function from GliderTools modified by Chiara Monforte to make it OG1 compliant
+    This function is based on the original GliderTools implementation and was modified by
+    Chiara Monforte to ensure compliance with the OG1 standards.
     [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py)
-        """
+    """
     exception = False
     divenum = df.index[0]
     df = df.dropna(subset=[variable, "DEPTH"])
@@ -628,7 +634,7 @@ def mld_profile(df, variable, thresh, ref_depth, verbose=True):
         dd = var_arr - var_arr[i]
         # mask out all values that are shallower then ref_depth
         dd[depth < ref_depth] = np.nan
-        # get all values in difference array within treshold range
+        # get all values in difference array within threshold range
         mixed = dd[abs(dd) > thresh]
         if len(mixed) > 0:
             idx_mld = np.argmax(abs(dd) > thresh)
@@ -641,5 +647,5 @@ def mld_profile(df, variable, thresh, ref_depth, verbose=True):
                 divenum
             )
     if verbose and exception:
-        warnings.warn(message, category=GliderToolsWarning)
+        warnings.warn(message)
     return mld

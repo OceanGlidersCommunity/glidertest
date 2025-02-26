@@ -12,4 +12,3 @@ sgp4>=2.14
 cartopy
 tqdm
 ioos_qc
-glidertools
