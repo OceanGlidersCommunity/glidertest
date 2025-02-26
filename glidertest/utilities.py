@@ -385,3 +385,34 @@ def plotting_units(ds: xr.Dataset,var: str):
         return f'{ds[var].units}'
     else:
         return ""
+def group_by_profiles(ds, variables=None):
+    """
+    Group profiles by dives column. Each group member is one dive. The
+    returned profiles can be evaluated statistically, e.g. by
+    pandas.DataFrame.mean or other aggregating methods. To filter out one
+    specific profile, use xarray.Dataset.where instead.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        1-dimensional Glider dataset
+    variables : list of strings, optional
+        specify variables if only a subset of the dataset should be grouped
+        into profiles. Grouping only a subset is considerably faster and more
+        memory-effective.
+    Return
+    ------
+    profiles:
+    dataset grouped by profiles (dives variable), as created by the
+    pandas.groupby methods.
+
+    Notes
+    -----
+    Original Author: Function from GliderTools modified by Chiara Monforte to make it OG1 compliant
+    [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/utils.py)
+    """
+    ds = ds.reset_coords().to_pandas().reset_index().set_index("PROFILE_NUMBER")
+    if variables:
+        return ds[variables].groupby("PROFILE_NUMBER")
+    else:
+        return ds.groupby("PROFILE_NUMBER")

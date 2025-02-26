@@ -8,6 +8,7 @@ from scipy import stats
 import gsw
 import warnings
 from glidertest import utilities
+from glidertools.helpers import GliderToolsWarning
 
 def quant_updown_bias(ds, var='PSAL', v_res=1):
     """
@@ -540,4 +541,105 @@ def max_depth_per_profile(ds: xr.Dataset):
     ### add the unit to the dataarray
     max_depths.attrs['units'] = ds['DEPTH'].attrs['units']
     return max_depths
+def compute_mld_glidertools(ds, variable, thresh=0.01, ref_depth=10, verbose=True):
+    """
+    Calculates the MLD for ungridded glider array.
 
+    You can provide density or temperature.
+    The default threshold is set for density (0.01).
+
+    Parameters
+    ----------
+    ds : xarray.Dataset Glider dataset
+    variable : str
+         variable that will be used for the threshold criteria
+    thresh : float=0.01 threshold for difference of variable
+    ref_depth : float=10 reference depth for difference
+    return_as_mask : bool, optional
+    verbose : bool, optional
+
+    Return
+    ------
+    mld : array
+        will be an array of depths the length of the
+        number of unique dives.
+
+    Notes
+    -----
+    Original Author: Function from GliderTools modified by Chiara Monforte to make it OG1 compliant
+    [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py)
+    """
+    groups = utilities.group_by_profiles(ds, [variable, "DEPTH"])
+    mld = groups.apply(mld_profile, variable, thresh, ref_depth, verbose)
+    return mld
+def mld_profile(df, variable, thresh, ref_depth, verbose=True):
+    """
+    Calculates the MLD for a single glider profile.
+
+    You can provide any variable.
+    The default threshold is set for density (0.01).
+
+    Parameters
+    ----------
+    ds : xarray.Dataset Glider dataset
+    variable : str
+         variable that will be used for the threshold criteria
+    thresh : float=0.01 threshold for difference of variable
+    ref_depth : float=10 reference depth for difference
+    return_as_mask : bool, optional
+    verbose : bool, optional
+
+    Return
+    ------
+    mld : array
+        will be an array of depths the length of the
+        number of unique dives.
+
+    Notes
+    -----
+    Original Author: Function from GliderTools modified by Chiara Monforte to make it OG1 compliant
+    [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py)
+        """
+    exception = False
+    divenum = df.index[0]
+    df = df.dropna(subset=[variable, "DEPTH"])
+    if len(df) == 0:
+        mld = np.nan
+        exception = True
+        message = """no observations found for specified variable in dive {}
+                """.format(
+            divenum
+        )
+    elif np.nanmin(np.abs(df.DEPTH.values - ref_depth)) > 5:
+        exception = True
+        message = """no observations within 5 m of ref_depth for dive {}
+                """.format(
+            divenum
+        )
+        mld = np.nan
+    else:
+        direction = 1 if np.nanmean(np.diff(df.DEPTH))> 0 else -1
+        # create arrays in order of increasing depth
+        var_arr = df[variable].values[:: int(direction)]
+        depth = df.DEPTH.values[:: int(direction)]
+        # get index closest to ref_depth
+        i = np.nanargmin(np.abs(depth - ref_depth))
+        # create difference array for threshold variable
+        dd = var_arr - var_arr[i]
+        # mask out all values that are shallower then ref_depth
+        dd[depth < ref_depth] = np.nan
+        # get all values in difference array within treshold range
+        mixed = dd[abs(dd) > thresh]
+        if len(mixed) > 0:
+            idx_mld = np.argmax(abs(dd) > thresh)
+            mld = depth[idx_mld]
+        else:
+            exception = True
+            mld = np.nan
+            message = """threshold criterion never true (all mixed or \
+                shallow profile) for profile {}""".format(
+                divenum
+            )
+    if verbose and exception:
+        warnings.warn(message, category=GliderToolsWarning)
+    return mld

@@ -62,3 +62,8 @@ def test_sop():
 def test_maxdepth():
     ds = fetchers.load_sample_dataset()
     tools.max_depth_per_profile(ds)
+
+def test_mld():
+    ds = fetchers.load_sample_dataset()
+    mld = tools.compute_mld_glidertools(ds, 'TEMP')
+    assert len(np.unique(ds.PROFILE_NUMBER)) == len(mld)
