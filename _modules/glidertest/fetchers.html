@@ -75,17 +75,24 @@
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pooch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
-<span class="n">server</span> <span class="o">=</span> <span class="s2">&quot;https://callumrollo.com/files&quot;</span>
+<span class="n">server</span> <span class="o">=</span> <span class="s2">&quot;https://erddap.observations.voiceoftheocean.org/examples/glidertest&quot;</span>
 <span class="n">data_source_og</span> <span class="o">=</span> <span class="n">pooch</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
     <span class="n">path</span><span class="o">=</span><span class="n">pooch</span><span class="o">.</span><span class="n">os_cache</span><span class="p">(</span><span class="s2">&quot;glidertest&quot;</span><span class="p">),</span>
     <span class="n">base_url</span><span class="o">=</span><span class="n">server</span><span class="p">,</span>
     <span class="n">registry</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;sea055_20220104T1536_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:7f72f8a0398c3d339687d7b7dcf0311036997f6855ed80cae5bbf877e09975a6&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;sea045_20230530T0832_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:9a97b5b212e9ad751909e175bc01fdc75fd7b7fd784cc59d8e9f29e8bdfb829f&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;sea045_20230530T0832_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:6d3075280d2e4a075d011b59486d7fa6bf616459dc92a7ece14a9d9a749f5ce4&quot;</span><span class="p">,</span>
         <span class="s2">&quot;sea045_20230604T1253_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:9d71b5fb580842e8296b447041cd5b544c8b4336df40a8f3c2e09279f436f502&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;sg015_20050213T230253_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:ca64e33e9f317e1fc3442e74485a9bf5bb1b4a81b5728e9978847b436e0586ab&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;sg014_20040924T182454_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:c9fca08ce676573224c04512f4d5bfe251d0419478ee433dfefa03aa70e2eb9a&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;sg014_20040924T182454_delayed_subset.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:0e97a4107364d27364d076ed8007f08c891b2015b439cf524a44612de0a1a2ea&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;sea055_20220104T1536_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:7f72f8a0398c3d339687d7b7dcf0311036997f6855ed80cae5bbf877e09975a6&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;sea055_20240628T0856_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:7756a0034dba7241dd626b7e21cfb1d0bce634865a5f3dceea391faaa3195546&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;sea055_20241009T1345_delayed.nc&quot;</span><span class="p">:</span> <span class="s2">&quot;sha256:cd411c326b2734efd73a02b97e43c019dccbe1825447542b1d7cbfa4130639e4&quot;</span><span class="p">,</span>
+        <span class="s1">&#39;sea063_20230811T1657_delayed.nc&#39;</span><span class="p">:</span> <span class="s1">&#39;sha256:8d4bf2555f226a35078290961c49749389fb0f9075917b263b3231823f87fc35&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sea067_20221113T0853_delayed.nc&#39;</span><span class="p">:</span> <span class="s1">&#39;sha256:641856ab415b06743d43609fd4f77c07e382087741cf068afd0bbf3c1f425402&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sea069_20230726T0628_delayed.nc&#39;</span><span class="p">:</span> <span class="s1">&#39;sha256:a502372d0f16e5cdba13c76167dc3adceeb45342f5f53edbbdf131cbd728824e&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sea077_20220906T0748_delayed.nc&#39;</span><span class="p">:</span> <span class="s1">&#39;sha256:3c2e9def777a2e230cc1b2114ca069dcbdb3c58ada2794a8305a781f3f76da01&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sea077_20230316T1019_delayed.nc&#39;</span><span class="p">:</span> <span class="s1">&#39;sha256:a146247dd33d38ab7b1d379481f66c749fdf16db31aacad1fe70287c55b359a6&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sg014_20040924T182454_delayed.nc&#39;</span><span class="p">:</span> <span class="s1">&#39;sha256:c9fca08ce676573224c04512f4d5bfe251d0419478ee433dfefa03aa70e2eb9a&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sg014_20040924T182454_delayed_subset.nc&#39;</span><span class="p">:</span> <span class="s1">&#39;sha256:0e97a4107364d27364d076ed8007f08c891b2015b439cf524a44612de0a1a2ea&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sg015_20050213T230253_delayed.nc&#39;</span><span class="p">:</span> <span class="s1">&#39;sha256:ca64e33e9f317e1fc3442e74485a9bf5bb1b4a81b5728e9978847b436e0586ab&#39;</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">)</span>
 
