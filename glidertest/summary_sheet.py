@@ -232,3 +232,55 @@ def summary_plot(ds, save_dir='.', test=True):
     if test:
         fig.savefig(f'{save_dir}/{gserial}_{mission}_report{todays_date}.pdf')
     return fig, ax
+
+
+def summary_plot_template(ds, var='CHLA', save_dir=''):
+    fig, ax = plt.subplots(figsize=(8.3, 11.7))
+    ax.patch.set_edgecolor('black')
+    ax.patch.set_linewidth(10)
+
+    fig.subplots_adjust(hspace=0.35, wspace=0.15)
+    font_size = 10
+
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    plt.axis('off')
+
+    ### Basic info
+    textstr = '\n'.join((
+        f"Sensor name:  ",
+        f"Sensor serial: ",
+        f"Calibration date:  ",
+        f"Calibration parameters:  ",
+        f"Data availabiliy time period:{str(ds[var].dropna(dim='N_MEASUREMENTS').TIME[0].values.astype('datetime64[D]'))} - {str(ds[var].dropna(dim='N_MEASUREMENTS').TIME[-1].values.astype('datetime64[D]'))}",
+        f"Data availabiliy depth range: {int(ds[var].dropna(dim='N_MEASUREMENTS').DEPTH.min())} - {int(ds[var].dropna(dim='N_MEASUREMENTS').DEPTH.max())} m",
+    ))
+
+    # Add text titles
+    ax.text(-0.05, 1.05, f'Glidertest summary mission sheet - {var}', transform=ax.transAxes, fontsize=font_size + 10,
+            weight='bold')
+    ax.text(-0.05, 1.01, 'Main mission info', transform=ax.transAxes, fontsize=font_size, weight='bold')
+    ax.text(-0.05, 0.64, 'Sampling resolution', transform=ax.transAxes, fontsize=font_size, weight='bold')
+    ax.text(0.45, 0.64, 'Basic checks', transform=ax.transAxes, fontsize=font_size, weight='bold')
+    ax.text(-0.05, 0.99, textstr, transform=ax.transAxes, fontsize=font_size,
+            verticalalignment='top')
+    # Section plots
+    s_ax = fig.add_axes([0.58, 0.65, 0.45, 0.25], anchor='SE', zorder=-1, )
+    c = s_ax.scatter(ds.TIME, ds.DEPTH, c=ds[var], s=10, vmin=np.nanpercentile(ds[var], 0.5),
+                     vmax=np.nanpercentile(ds[var], 99.5))
+    plt.colorbar(c, ax=s_ax, label=f'{utilities.plotting_labels(var)} \n({utilities.plotting_units(ds, var)})')
+    s_ax.invert_yaxis()
+    s_ax.set_ylabel('Depth (m)')
+    utilities._time_axis_formatter(s_ax, ds, format_x_axis=True)
+    # Sampling period plot
+    sp_ax = fig.add_axes([0.08, 0.32, 0.35, 0.22], anchor='SE', zorder=-1, )
+    plots.plot_sampling_period(ds, sp_ax, variable=var)
+
+    # Basic check tests or other plots
+    bc_ax1 = fig.add_axes([0.58, 0.48, 0.20, 0.10], anchor='SE', zorder=-1, )
+    bc_ax2 = fig.add_axes([0.58, 0.34, 0.20, 0.10], anchor='SE', zorder=-1, )
+    bc_ax3 = fig.add_axes([0.58, 0.23, 0.20, 0.10], anchor='SE', zorder=-1, )
+    bc_ax4 = fig.add_axes([0.80, 0.48, 0.20, 0.10], anchor='SE', zorder=-1, )
+    bc_ax5 = fig.add_axes([0.80, 0.34, 0.20, 0.10], anchor='SE', zorder=-1, )
+    bc_ax6 = fig.add_axes([0.80, 0.23, 0.20, 0.10], anchor='SE', zorder=-1, )
+    return fig, ax
