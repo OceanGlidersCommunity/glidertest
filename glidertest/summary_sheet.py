@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-from glidertest import tools, plots
+from glidertest import tools, plots, utilities
 import glidertest
 from ioos_qc import qartod
 import cartopy.crs as ccrs
