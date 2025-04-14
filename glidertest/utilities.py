@@ -128,35 +128,6 @@ def _select_time_formatter_and_locator(ds):
 
     return formatter, locator, xlabel
 
-def set_colorbar_time_ticks(colorbar, locator, color_array):
-    """
-    Set ticks on a time-based colorbar using the provided locator.
-
-    Parameters
-    ----------
-    colorbar : matplotlib.colorbar.Colorbar
-        Colorbar object to update.
-    locator : matplotlib.dates.Locator
-        Locator for determining tick positions.
-    color_array : numpy.ndarray
-        Data array used for color values (numeric date format).
-    """
-    color_min = color_array.min()
-    color_max = color_array.max()
-
-    # Skip manual ticks if range is too small
-    if (color_max - color_min) < 1e-3:
-        return
-
-    vmin_dt = mdates.num2date(color_min)
-    vmax_dt = mdates.num2date(color_max)
-    ticks = locator.tick_values(vmin_dt, vmax_dt)
-
-    # Filter ticks within data range
-    ticks = [tick for tick in ticks if color_min <= tick <= color_max]
-    # Apply ticks if we have any
-    if ticks:
-        colorbar.set_ticks(mdates.date2num(ticks))
 
 def construct_2dgrid(x, y, v, xi=1, yi=1):
     """
