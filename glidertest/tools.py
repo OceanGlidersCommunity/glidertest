@@ -264,7 +264,6 @@ def quant_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
 
     Notes
     ----
-    - I know this is a non-sensical name.  We should re-name, but is based on advice from Ramsey Harcourt.
     Original Author: Eleanor Frajka-Williams
     """
     utilities._check_necessary_variables(ds, [var, 'PRES'])

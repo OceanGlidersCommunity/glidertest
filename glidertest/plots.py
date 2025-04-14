@@ -484,9 +484,31 @@ def check_temporal_drift(ds: xr.Dataset, var: str, ax: plt.Axes = None, **kw: di
         c = ax[1].scatter(ds[var], ds.DEPTH, c=mdates.date2num(ds.TIME), s=10)
         ax[1].set(xlim=(np.nanpercentile(ds[var], 0.01), np.nanpercentile(ds[var], 99.99)), ylabel='Depth (m)', xlabel=f'{utilities.plotting_labels(var)} ({utilities.plotting_units(ds,var)})')
         ax[1].invert_yaxis()
-
         [a.grid() for a in ax]
-        plt.colorbar(c, format=DateFormatter('%b %d'))
+
+        color_array = c.get_array()
+        formatter, locator, _ = utilities._select_time_formatter_and_locator(ds)
+
+        if locator is not None:
+            # Set vmin/vmax from ticks
+            vmin_dt = mdates.num2date(color_array.min())
+            vmax_dt = mdates.num2date(color_array.max())
+            ticks = locator.tick_values(vmin_dt, vmax_dt)
+
+            # Filter to ticks in data range
+            color_min = color_array.min()
+            color_max = color_array.max()
+            ticks = [tick for tick in ticks if color_min <= tick <= color_max]
+
+            # ✅ Pass vmin/vmax to scatter!
+            c.set_clim(vmin=min(ticks), vmax=max(ticks))
+
+        # Now plot colorbar
+        colorbar = plt.colorbar(c, format=formatter)
+
+        # And set ticks
+        if locator is not None and ticks:
+            colorbar.set_ticks(ticks)
         if force_plot:
             plt.show()
     return fig, ax
@@ -596,12 +618,43 @@ def plot_glider_track(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
             longitudes = longitudes[indices]
             times = times[indices]
 
-        # Plot latitude and longitude colored by time
-        sc = ax.scatter(longitudes, latitudes, c=times, cmap='viridis', **kw)
+        # Convert time to matplotlib numeric format
+        numeric_times = mdates.date2num(times)
 
-        # Add colorbar with formatted time labels
-        cbar = plt.colorbar(sc, ax=ax) #, label='Time')
-        cbar.ax.set_yticklabels([pd.to_datetime(t).strftime('%Y-%b-%d') for t in cbar.get_ticks()])
+        # Get formatter and locator
+        formatter, locator, _ = utilities._select_time_formatter_and_locator(ds)
+
+       # Precompute ticks BEFORE scatter plot
+        if locator is not None:
+            vmin_dt = mdates.num2date(numeric_times.min())
+            vmax_dt = mdates.num2date(numeric_times.max())
+            ticks = locator.tick_values(vmin_dt, vmax_dt)
+
+            # Filter ticks within data range
+            ticks = [tick for tick in ticks if numeric_times.min() <= tick <= numeric_times.max()]
+        else:
+            ticks = []
+
+        # Create scatter plot with vmin/vmax from ticks
+        vmin = min(ticks) if ticks else numeric_times.min()
+        vmax = max(ticks) if ticks else numeric_times.max()
+
+        sc = ax.scatter(
+            longitudes,
+            latitudes,
+            c=numeric_times,
+            cmap='viridis',
+            vmin=vmin,
+            vmax=vmax,
+            **kw
+        )
+
+        # Create colorbar with formatter
+        cbar = plt.colorbar(sc, ax=ax, format=formatter)
+
+        # Apply ticks to colorbar
+        if locator is not None and ticks:
+            cbar.set_ticks(ticks)
 
         ax.set_extent([np.min(longitudes)-1, np.max(longitudes)+1, np.min(latitudes)-1, np.max(latitudes)+1], crs=ccrs.PlateCarree())
 
