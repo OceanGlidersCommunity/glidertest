@@ -123,24 +123,24 @@
     <span class="k">return</span> <span class="n">ds</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_time_axis_formatter</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="n">format_x_axis</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="n">start_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">end_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">):</span>
-        <span class="n">formatter</span> <span class="o">=</span> <span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;%H:%M&#39;</span><span class="p">)</span>
-        <span class="n">locator</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">HourLocator</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Time [UTC] (</span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s1">)&#39;</span> <span class="k">if</span> <span class="n">start_date</span> <span class="o">==</span> <span class="n">end_date</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;Time [UTC] (</span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">end_date</span><span class="si">}</span><span class="s1">)&#39;</span>
-    <span class="k">elif</span> <span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">):</span>
-        <span class="n">formatter</span> <span class="o">=</span> <span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">-%b&#39;</span><span class="p">)</span>
-        <span class="n">locator</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">DayLocator</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Time [UTC] (</span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s1">)&#39;</span> <span class="k">if</span> <span class="n">start_date</span> <span class="o">==</span> <span class="n">end_date</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;Time [UTC] (</span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">end_date</span><span class="si">}</span><span class="s1">)&#39;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">formatter</span> <span class="o">=</span> <span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">-%b&#39;</span><span class="p">)</span>
-        <span class="n">locator</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">xlabel</span> <span class="o">=</span> <span class="s1">&#39;Time [UTC]&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply time formatter and locator to an axis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ax : matplotlib axis</span>
+<span class="sd">        Axis to format.</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        Dataset containing TIME coordinate.</span>
+<span class="sd">    format_x_axis : bool, default=True</span>
+<span class="sd">        Whether to format the x-axis (True) or y-axis (False).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">formatter</span><span class="p">,</span> <span class="n">locator</span><span class="p">,</span> <span class="n">xlabel</span> <span class="o">=</span> <span class="n">_select_time_formatter_and_locator</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span> <span class="k">if</span> <span class="n">format_x_axis</span> <span class="k">else</span> <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">locator</span><span class="p">:</span>
+        <span class="n">axis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">locator</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">format_x_axis</span><span class="p">:</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
@@ -153,6 +153,56 @@
             <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">locator</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
         
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_select_time_formatter_and_locator</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Select appropriate time formatter and locator based on time range.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        Dataset containing TIME coordinate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    formatter : matplotlib.dates.DateFormatter</span>
+<span class="sd">        Formatter for time axis or colorbar.</span>
+<span class="sd">    locator : matplotlib.dates.Locator or None</span>
+<span class="sd">        Locator for axis ticks (None if not needed).</span>
+<span class="sd">    xlabel : str</span>
+<span class="sd">        Label for the axis (optional for colorbars).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">time_range_hours</span> <span class="o">=</span> <span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">time_range_hours</span> <span class="o">&lt;</span> <span class="mi">24</span><span class="p">:</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;%H:%M&#39;</span><span class="p">)</span>
+        <span class="c1"># Dynamic interval based on time range</span>
+        <span class="k">if</span> <span class="n">time_range_hours</span> <span class="o">&lt;=</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="n">interval</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">time_range_hours</span> <span class="o">&lt;=</span> <span class="mi">12</span><span class="p">:</span>
+            <span class="n">interval</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">interval</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">locator</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">HourLocator</span><span class="p">(</span><span class="n">byhour</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Time [UTC] (</span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s1">)&#39;</span> <span class="k">if</span> <span class="n">start_date</span> <span class="o">==</span> <span class="n">end_date</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;Time [UTC] (</span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">end_date</span><span class="si">}</span><span class="s1">)&#39;</span>
+    <span class="k">elif</span> <span class="n">time_range_hours</span> <span class="o">&lt;</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">-%b&#39;</span><span class="p">)</span>
+        <span class="n">locator</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">DayLocator</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%b-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Time [UTC] (</span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s1">)&#39;</span> <span class="k">if</span> <span class="n">start_date</span> <span class="o">==</span> <span class="n">end_date</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;Time [UTC] (</span><span class="si">{</span><span class="n">start_date</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">end_date</span><span class="si">}</span><span class="s1">)&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">-%b&#39;</span><span class="p">)</span>
+        <span class="n">locator</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">xlabel</span> <span class="o">=</span> <span class="s1">&#39;Time [UTC]&#39;</span>
+
+    <span class="k">return</span> <span class="n">formatter</span><span class="p">,</span> <span class="n">locator</span><span class="p">,</span> <span class="n">xlabel</span>
+
+
 <div class="viewcode-block" id="construct_2dgrid">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.construct_2dgrid">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">construct_2dgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">xi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">yi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
