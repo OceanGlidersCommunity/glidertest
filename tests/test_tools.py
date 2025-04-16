@@ -63,8 +63,19 @@ def test_maxdepth():
     ds = fetchers.load_sample_dataset()
     tools.max_depth_per_profile(ds)
 
+def test_bin_data():
+    ds = fetchers.load_sample_dataset()
+    prof_num = ds.PROFILE_NUMBER[0].values
+    ds_profile = ds.where(ds.PROFILE_NUMBER == prof_num, drop=True)
+    tools.bin_data(ds_profile)
+
 def test_mld():
     ds = fetchers.load_sample_dataset()
+    ds = tools.add_sigma_1(ds)
+    ### Test all three MLD methods
+    tools.compute_mld(ds,var_density='DENSITY',method='threshold')
+    tools.compute_mld(ds,var_density='SIGMA_1',method='CR',threshold=-1)
+
     mld = tools.compute_mld_glidertools(ds, 'TEMP')
     assert len(np.unique(ds.PROFILE_NUMBER)) == len(mld)
     # Test if len(df) == 0
@@ -74,3 +85,7 @@ def test_mld():
     # Test elif np.nanmin(np.abs(df.DEPTH.values - ref_depth)) > 5
     mld = tools.compute_mld_glidertools(ds, 'TEMP', thresh=0.01, ref_depth=500, verbose=True)
     assert np.isnan(np.unique(mld))
+
+def test_add_sigma1():
+    ds = fetchers.load_sample_dataset()
+    tools.add_sigma_1(ds)

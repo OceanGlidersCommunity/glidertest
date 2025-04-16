@@ -1565,3 +1565,89 @@ def plot_max_depth_per_profile(ds: xr.Dataset, bins= 20, ax = None, **kw: dict) 
         if force_plot:
             plt.show()
     return fig, ax
+
+
+def plot_profile(ds: xr.Dataset, profile_num: int, vars: list = ['TEMP','PSAL','DENSITY'], use_bins: bool = False, binning: float = 2) -> tuple:
+    """
+    Plots binned temperature, salinity, and density against depth on a single plot with three x-axes.
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        Xarray dataset in OG1 format with at least PROFILE_NUMBER, DEPTH, TEMPERATURE, SALINITY, and DENSITY.
+    profile_num: int
+        The profile number to plot.
+    vars: list
+        The variables to plot. Default is ['TEMP','PSAL','DENSITY'].
+    binning: int
+        The depth resolution for binning.
+    use_bins: bool
+        If True, use binned data instead of raw data.
+
+    Returns
+    -------
+    fig: matplotlib.figure.Figure
+        The figure object containing the plot.
+    ax1: matplotlib.axes.Axes
+        The axis object containing the primary plot.
+
+    Notes
+    -----
+    Original Author: Till Moritz
+    """
+    # Remove empty strings from vars
+    vars = [v for v in vars if v] 
+    # If vars is empty, show an empty plot
+    if not vars:
+        fig, ax1 = plt.subplots(figsize=(12, 9))
+        ax1.set_title(f'Profile {profile_num} (No Variables Selected)')
+        ax1.set_ylabel('Depth (m)')
+        ax1.invert_yaxis()
+        ax1.grid(True)
+        return fig, ax1
+    
+    if len(vars) > 3:
+        raise ValueError("Only three variables can be plotted at once, chose less variables")
+    
+    with plt.style.context(glidertest_style_file):  # Assuming `plotting_style` is defined elsewhere
+        fig, ax1 = plt.subplots(figsize=(12, 9))  # Adjusted for profile visualization
+
+        # Select the specific profile
+        profile = ds.where(ds.PROFILE_NUMBER == profile_num, drop=True)
+        if use_bins:
+            var_data = tools.bin_data(profile, vars, binning)
+        else:
+            var_data = {name: profile[name].values for name in vars}
+            var_data['DEPTH'] = profile.DEPTH.values
+
+        # Plot binned data
+        mission = ds.id.split('_')[1][0:8]
+        glider = ds.id.split('_')[0]
+
+        s=10+binning
+
+        axs = [ax1, ax1.twiny(), ax1.twiny()]
+        colors = ['red', 'blue', 'grey']
+        for i, var in enumerate(vars):
+            ax = axs[i]
+            ### add the long_name to the label, if it exists
+            long_name = getattr(profile[var], 'long_name', '')
+            ax.plot(var_data[var], var_data['DEPTH'], color=colors[i], label=f'{var} - {long_name}', ls='-')
+            ax.scatter(var_data[var], var_data['DEPTH'], color=colors[i], marker='o',s=s)
+            unit = getattr(profile[var], 'units', '')
+            ax.set_xlabel(f'{var} [{unit}]', color=colors[i])
+            ax.tick_params(axis='x', colors=colors[i], bottom=True, top=False, labelbottom=True, labeltop=False)
+            if i > 0:
+                ax.xaxis.set_ticks_position('bottom')
+                ax.spines['top'].set_visible(False)
+                ax.spines['bottom'].set_position(('axes', -0.09*i))
+            ax.xaxis.set_label_coords(0.5, -0.05-0.105*i)
+
+        fig.legend(loc='upper right',fontsize=10)
+        # Set pressure as y-axis (Increasing Downward)
+        ax1.grid(True)
+        ax1.set_ylabel('Depth (m)')
+        ax1.invert_yaxis()  # Pressure increases downward
+        ax1.set_title(f'Profile {profile_num} ({glider} on mission: {mission})')
+
+    return fig, ax1
