@@ -574,10 +574,63 @@ def compute_mld_glidertools(ds, variable, thresh=0.01, ref_depth=10, verbose=Tru
     groups = utilities.group_by_profiles(ds, [variable, "DEPTH"])
     mld = groups.apply(mld_profile, variable, thresh, ref_depth, verbose)
     return mld
+
+
+def bin_data(ds_profile: xr.Dataset, vars: list, resolution: float, agg: str = 'mean'):
+    """
+    Bin the data in a profile dataset by depth using fixed depth steps.
+    
+    Parameters
+    ----------
+        ds_profile: xr.Dataset 
+            The dataset containing at least **DEPTH and the variables to bin**.
+        resolution: float 
+            The depth resolution for the binning.
+        var: list
+            The variables to bin.
+        agg: str 
+            The aggregation method to use for binning. Default is 'mean'. Other option is 'median'.
+
+    Returns
+    -------
+        dict: A dictionary containing binned data arrays for each variable, including DEPTH.
+
+    Notes
+    -----
+    Original author: Till Moritz
+    """
+    # Remove empty strings from vars list
+    vars = [var for var in vars if var]
+
+    # Ensure necessary variables exist
+    utilities._check_necessary_variables(ds_profile, vars + ['DEPTH'])
+
+    # Define bin edges and bin centers
+    min_depth = np.floor(ds_profile.DEPTH.min() / resolution) * resolution
+    max_depth = np.ceil(ds_profile.DEPTH.max() / resolution) * resolution
+    bins = np.arange(min_depth, max_depth + resolution, resolution)
+    bin_centers = bins[:-1] + resolution / 2  # Set depth values to bin centers
+
+    # Group variables by depth bins and apply aggregation
+    binned_data = {}
+    for name in vars:
+        grouped = ds_profile[name].groupby_bins('DEPTH', bins)
+        if agg == 'mean':
+            binned_data[name] = grouped.mean().values
+        elif agg == 'median':
+            binned_data[name] = grouped.median().values
+        else:
+            raise ValueError(f"Invalid aggregation method: {agg}")
+
+    # Assign bin centers as the new depth values
+    binned_data['DEPTH'] = bin_centers
+
+    return binned_data
+
+  
 def mld_profile(df, variable, thresh, ref_depth, verbose=True):
     """
     Calculate the Mixed Layer Depth (MLD) for a single glider profile.
-
     This function computes the MLD by applying a threshold difference to the specified variable
     (e.g., temperature or density) for a given glider profile. The default threshold is set for density (0.01).
 

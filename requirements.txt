@@ -12,3 +12,6 @@ sgp4>=2.14
 cartopy
 tqdm
 ioos_qc
+folium
+Ipython
+ipywidgets

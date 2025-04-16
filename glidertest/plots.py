@@ -321,7 +321,7 @@ def plot_daynight_avg(ds,var='PSAL', ax: plt.Axes = None, sel_day=None, **kw: di
     Original Author: Chiara Monforte
 
     """
-    day, night = tools.compute_daynight_avg(ds, sel_var=var)
+    day, night = tools.compute_daynight_avg(ds, sel_var=var,start_time=sel_day,end_time=sel_day)
     if not sel_day:
         dates = list(day.date.dropna().values) + list(night.date.dropna().values)
         dates.sort()
@@ -889,14 +889,16 @@ def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, variable='TEMP'):
 
     return ax
 
-def plot_ts(ds: xr.Dataset, axs: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
+def plot_ts(ds: xr.Dataset, percentile: list = [0.5,99.5], axs: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
     """
     Plots **temperature and salinity distributions** using histograms and a 2D density plot.
 
     Parameters
     ----------
     ds : xarray.Dataset  
-        Dataset in **OG1 format**, containing at least **DEPTH, LONGITUDE, LATITUDE, TEMP and PSAL**.  
+        Dataset in **OG1 format**, containing at least **DEPTH, LONGITUDE, LATITUDE, TEMP and PSAL**. 
+    percentile : list, optional
+        The percentiles to use for filtering the data. Default is [0.5, 99.5].
     axs : matplotlib.axes.Axes, optional  
         Axes to plot the data. If not provided, a new figure and axes are created.  
     kw : dict, optional  
@@ -932,41 +934,32 @@ def plot_ts(ds: xr.Dataset, axs: plt.Axes = None, **kw: dict) -> tuple({plt.Figu
         axs[5].set_visible(False)
         num_bins = 30
 
-        temp_orig = ds.TEMP.values
-        sal_orig = ds.PSAL.values
+        # Create a mask once for valid data points
+        mask = np.isfinite(ds.TEMP.values) & np.isfinite(ds.PSAL.values)
+        temp, sal, depth, long, lat = (ds[var].values[mask] for var in ['TEMP', 'PSAL', 'DEPTH', 'LONGITUDE', 'LATITUDE'])
 
-        # Reduce both to where both are finite
-        temp = temp_orig[np.isfinite(temp_orig) & np.isfinite(sal_orig)]
-        sal = sal_orig[np.isfinite(sal_orig) & np.isfinite(temp_orig)]
-        depth = ds.DEPTH[np.isfinite(sal_orig) & np.isfinite(temp_orig)]
-        long = ds.LONGITUDE[np.isfinite(sal_orig) & np.isfinite(temp_orig)]
-        lat = ds.LATITUDE[np.isfinite(sal_orig) & np.isfinite(temp_orig)]
-
+        # Convert to Absolute Salinity (SA) and Conservative Temperature (CT)
         SA = gsw.SA_from_SP(sal, depth, long, lat)
         CT = gsw.CT_from_t(SA, temp, depth)
 
-        # Reduce to middle 99% of values
-        # This helps a lot for plotting, but is also hiding some of the data (not great for a test)
-        CT_filtered = CT[(CT >= np.nanpercentile(CT, .5)) & (CT <= np.nanpercentile(CT, 99.5))]
-        SA_filtered = SA[(SA >= np.nanpercentile(SA, .5)) & (SA <= np.nanpercentile(SA, 99.5))]
-        print('Temperature and Salinity values have been filtered to the middle 99% of values.')
+        # Filter within percentile range
+        p_low, p_high = np.nanpercentile(CT, percentile), np.nanpercentile(SA, percentile)
+        CT_filtered, SA_filtered = CT[(p_low[0] <= CT) & (CT <= p_low[1])], SA[(p_high[0] <= SA) & (SA <= p_high[1])]
+        print(f"Filtered values between {percentile[0]}% and {percentile[1]}% percentiles.")
 
-        # Calculate density to add contours
-        xi = np.linspace(SA_filtered.values.min() - .2, SA_filtered.values.max() + .2, 100)
-        yi = np.linspace(CT_filtered.values.min() - .2, CT_filtered.values.max() + .2, 100)
-        xi, yi = np.meshgrid(xi, yi)
-        zi = gsw.sigma0(xi, yi)
+        # Generate density contours efficiently
+        xi, yi = np.meshgrid(np.linspace(SA_filtered.min() - 0.2, SA_filtered.max() + 0.2, 100),
+                             np.linspace(CT_filtered.min() - 0.2, CT_filtered.max() + 0.2, 100))
+        zi = gsw.sigma0(xi.ravel(), yi.ravel()).reshape(xi.shape)
 
-        # Temperature histogram
+        # Temperature Histogram
         axs[0].hist(CT_filtered, bins=num_bins, orientation="horizontal", **kw)
-        axs[0].set_ylabel('Conservative Temperature (°C)')
-        axs[0].set_xlabel('Frequency', rotation="horizontal")
+        axs[0].set(ylabel='Conservative Temperature (°C)', xlabel='Frequency')
         axs[0].invert_xaxis()
 
-        # Salinity histogram
+        # Salinity Histogram
         axs[4].hist(SA_filtered, bins=num_bins, **kw)
-        axs[4].set_xlabel('Absolute Salinity ( )')
-        axs[4].set_ylabel('Frequency', rotation="vertical")
+        axs[4].set(xlabel='Absolute Salinity', ylabel='Frequency')
         axs[4].yaxis.set_label_position("right")
         axs[4].yaxis.tick_right()
         axs[4].invert_yaxis()
@@ -1565,3 +1558,88 @@ def plot_max_depth_per_profile(ds: xr.Dataset, bins= 20, ax = None, **kw: dict) 
         if force_plot:
             plt.show()
     return fig, ax
+
+def plot_profile_binned(ds: xr.Dataset, profile_num: int, vars: list = ['TEMP','PSAL','DENSITY'], use_bins: bool = False, binning: float = 2) -> tuple:
+    """
+    Plots binned temperature, salinity, and density against depth on a single plot with three x-axes.
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        Xarray dataset in OG1 format with at least PROFILE_NUMBER, DEPTH, TEMPERATURE, SALINITY, and DENSITY.
+    profile_num: int
+        The profile number to plot.
+    vars: list
+        The variables to plot. Default is ['TEMP','PSAL','DENSITY'].
+    binning: int
+        The depth resolution for binning.
+    use_bins: bool
+        If True, use binned data instead of raw data.
+
+    Returns
+    -------
+    fig: matplotlib.figure.Figure
+        The figure object containing the plot.
+    ax1: matplotlib.axes.Axes
+        The axis object containing the primary plot.
+
+    Notes
+    -----
+    Original Author: Till Moritz
+    """
+    # Remove empty strings from vars
+    vars = [v for v in vars if v] 
+    # If vars is empty, show an empty plot
+    if not vars:
+        fig, ax1 = plt.subplots(figsize=(12, 9))
+        ax1.set_title(f'Profile {profile_num} (No Variables Selected)')
+        ax1.set_ylabel('Depth (m)')
+        ax1.invert_yaxis()
+        ax1.grid(True)
+        return fig, ax1
+    
+    if len(vars) > 3:
+        raise ValueError("Only three variables can be plotted at once, chose less variables")
+    
+    with plt.style.context(glidertest_style_file):  # Assuming `plotting_style` is defined elsewhere
+        fig, ax1 = plt.subplots(figsize=(12, 9))  # Adjusted for profile visualization
+
+        # Select the specific profile
+        profile = ds.where(ds.PROFILE_NUMBER == profile_num, drop=True)
+        if use_bins:
+            var_data = tools.bin_data(profile, vars, binning)
+        else:
+            var_data = {name: profile[name].values for name in vars}
+            var_data['DEPTH'] = profile.DEPTH.values
+
+        # Plot binned data
+        mission = ds.id.split('_')[1][0:8]
+        glider = ds.id.split('_')[0]
+
+        s=10+binning
+
+        axs = [ax1, ax1.twiny(), ax1.twiny()]
+        colors = ['red', 'blue', 'grey']
+        for i, var in enumerate(vars):
+            ax = axs[i]
+            ### add the long_name to the label, if it exists
+            long_name = getattr(profile[var], 'long_name', '')
+            ax.plot(var_data[var], var_data['DEPTH'], color=colors[i], label=f'{var} - {long_name}', ls='-')
+            ax.scatter(var_data[var], var_data['DEPTH'], color=colors[i], marker='o',s=s)
+            unit = getattr(profile[var], 'units', '')
+            ax.set_xlabel(f'{var} [{unit}]', color=colors[i])
+            ax.tick_params(axis='x', colors=colors[i], bottom=True, top=False, labelbottom=True, labeltop=False)
+            if i > 0:
+                ax.xaxis.set_ticks_position('bottom')
+                ax.spines['top'].set_visible(False)
+                ax.spines['bottom'].set_position(('axes', -0.09*i))
+            ax.xaxis.set_label_coords(0.5, -0.05-0.105*i)
+
+        fig.legend(loc='upper right',fontsize=10)
+        # Set pressure as y-axis (Increasing Downward)
+        ax1.grid(True)
+        ax1.set_ylabel('Depth (m)')
+        ax1.invert_yaxis()  # Pressure increases downward
+        ax1.set_title(f'Profile {profile_num} ({glider} on mission: {mission})')
+
+    return fig, ax1

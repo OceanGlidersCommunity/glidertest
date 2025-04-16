@@ -127,3 +127,8 @@ def test_plot_sampling_period_all():
 def test_plot_max_depth():
     ds = fetchers.load_sample_dataset()
     plots.plot_max_depth_per_profile(ds)
+
+def test_plot_profile_binned():
+    ds = fetchers.load_sample_dataset()
+    profile_num = ds.PROFILE_NUMBER.values[0]
+    plots.plot_profile_binned(ds, profile_num = profile_num, vars = ['DOXY'])

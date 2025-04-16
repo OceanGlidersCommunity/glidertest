@@ -16,3 +16,7 @@
 .. automodule:: glidertest.fetchers
    :members:
    :undoc-members:
+
+.. automodule:: glidertest.interactive
+   :members:
+   :undoc-members:
