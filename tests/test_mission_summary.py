@@ -6,12 +6,12 @@ matplotlib.use('agg')  # use agg backend to prevent creating plot windows during
 
 def test_qc_checks():
     ds = fetchers.load_sample_dataset()
-    gr, spike, flat, err_range = summary_sheet.qc_checks(ds, var='PSAL')
+    gr, spike, flat, err_mean,err_range = summary_sheet.qc_checks(ds, var='PSAL')
 def test_tableqc():
     ds = fetchers.load_sample_dataset()
-    df_test = pd.DataFrame({'': ['Global range', 'Spike test', 'Flat test', 'Hysteresis', 'Drift'],
-                        'Temperature': ['✓', '✓', '✓', '✓', '✓'],
-                        'Salinity': ['✓', '✓', '✓', '✓', '✓']})
+    df_test = pd.DataFrame({'': ['Global range', 'Spike test', 'Flat test', 'Hysteresis (mean)', 'Hysteresis (range)', 'Drift'],
+                        'Temperature': ['✓', '✓', '✓', '✓', '✓', '✓'],
+                        'Salinity': ['✓', '✓', '✓', '✓', '✓', '✓']})
     tableT = summary_sheet.fill_tableqc(df_test,ds, var='TEMP')
 def test_phrase_duration_check():
     ds = fetchers.load_sample_dataset()

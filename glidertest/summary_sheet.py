@@ -45,9 +45,9 @@ def qc_checks(ds, var='TEMP'):
     spike = qartod.spike_test(ds[var], suspect_threshold=configs[var]['spike_test']['suspect_threshold'],
                               fail_threshold=configs[var]['spike_test']['fail_threshold'], method="average")
     flat = qartod.flat_line_test(ds[var], ds.TIME, 1, 3, 0.001)
-    __, __,__,err_range, __ = tools.compute_hyst_stat(ds, var=var, v_res=1)
+    __, __,err_mean,err_range, __ = tools.compute_hyst_stat(ds, var=var, v_res=1)
 
-    return gr, spike, flat, err_range
+    return gr, spike, flat, err_mean,err_range
 
 
 def fill_tableqc(df,ds, var='TEMP'):
@@ -62,15 +62,17 @@ def fill_tableqc(df,ds, var='TEMP'):
     if var not in ds.variables:
         df.loc[:, variable] = 'No data'
     else:
-        gr, spike, flat, err = qc_checks(ds, var=var)
+        gr, spike, flat, err_mean,err_range = qc_checks(ds, var=var)
         if len(gr) > 0:
             df.loc[0, variable] = 'X'
         if len(np.where((spike == 3) | (spike == 4))[0]) > 0:
             df.loc[1, variable] = 'X'
         if len(np.where((flat == 3) | (flat == 4))[0]) > 0:
             df.loc[2, variable] = 'X'
-        if len(np.where(err > 5)[0]) > 5:
+        if len(np.where(err_mean > 5)[0]) > 5:
             df.loc[3, variable] = 'X'
+        if len(np.where(err_range > 5)[0]) > 5:
+            df.loc[4, variable] = 'X'
     return df
 
 
