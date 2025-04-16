@@ -209,13 +209,7 @@ def summary_plot(ds, save_dir='.', test=True):
         if col == 0:
             cell.set_text_props(fontproperties=FontProperties(weight='bold'))
 
-    ## Add logo at the bottom
-    im = plt.imread('img/logos.png')
-    newax = fig.add_axes([0.88, -0.03, 0.1, 0.1], anchor='NE')
-    newax.imshow(im)
-    newax.axis('off')
-    ax.text(0.78, -0.11, 'Created with Glidertest', transform=ax.transAxes, fontsize=font_size - 3,
-            verticalalignment='top')
+    
 
     # Add glider track plot
     gt_ax = fig.add_axes([0.47, 0.64, 0.38, 0.25], projection=ccrs.PlateCarree(), anchor='SE', zorder=-1, )
@@ -226,6 +220,13 @@ def summary_plot(ds, save_dir='.', test=True):
     plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1, ax=[bv1_ax, bv2_ax])
     todays_date = datetime.today().strftime('%Y%m%d')
     if test:
+        ## Add logo at the bottom
+        im = plt.imread('img/logos.png')
+        newax = fig.add_axes([0.88, -0.03, 0.1, 0.1], anchor='NE')
+        newax.imshow(im)
+        newax.axis('off')
+        ax.text(0.78, -0.11, 'Created with Glidertest', transform=ax.transAxes, fontsize=font_size - 3,
+            verticalalignment='top')
         fig.savefig(f'{save_dir}/{gserial}_{mission}_report{todays_date}.pdf')
     return fig, ax
 
