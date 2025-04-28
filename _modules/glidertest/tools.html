@@ -687,12 +687,68 @@
     <span class="n">mld</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mld_profile</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mld</span></div>
 
+
+
+<div class="viewcode-block" id="bin_data">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.bin_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bin_data</span><span class="p">(</span><span class="n">ds_profile</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">agg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;mean&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bin the data in a profile dataset by depth using fixed depth steps.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">        ds_profile: xr.Dataset </span>
+<span class="sd">            The dataset containing at least **DEPTH and the variables to bin**.</span>
+<span class="sd">        resolution: float </span>
+<span class="sd">            The depth resolution for the binning.</span>
+<span class="sd">        var: list</span>
+<span class="sd">            The variables to bin.</span>
+<span class="sd">        agg: str </span>
+<span class="sd">            The aggregation method to use for binning. Default is &#39;mean&#39;. Other option is &#39;median&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        dict: A dictionary containing binned data arrays for each variable, including DEPTH.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original author: Till Moritz</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Remove empty strings from vars list</span>
+    <span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">vars</span> <span class="k">if</span> <span class="n">var</span><span class="p">]</span>
+
+    <span class="c1"># Ensure necessary variables exist</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds_profile</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Define bin edges and bin centers</span>
+    <span class="n">min_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">ds_profile</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span>
+    <span class="n">max_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">ds_profile</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">min_depth</span><span class="p">,</span> <span class="n">max_depth</span> <span class="o">+</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span>
+    <span class="n">bin_centers</span> <span class="o">=</span> <span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">resolution</span> <span class="o">/</span> <span class="mi">2</span>  <span class="c1"># Set depth values to bin centers</span>
+
+    <span class="c1"># Group variables by depth bins and apply aggregation</span>
+    <span class="n">binned_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+        <span class="n">grouped</span> <span class="o">=</span> <span class="n">ds_profile</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">groupby_bins</span><span class="p">(</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">agg</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
+            <span class="n">binned_data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">elif</span> <span class="n">agg</span> <span class="o">==</span> <span class="s1">&#39;median&#39;</span><span class="p">:</span>
+            <span class="n">binned_data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">median</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid aggregation method: </span><span class="si">{</span><span class="n">agg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Assign bin centers as the new depth values</span>
+    <span class="n">binned_data</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bin_centers</span>
+
+    <span class="k">return</span> <span class="n">binned_data</span></div>
+
+
+  
 <div class="viewcode-block" id="mld_profile">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.mld_profile">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">mld_profile</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate the Mixed Layer Depth (MLD) for a single glider profile.</span>
-
 <span class="sd">    This function computes the MLD by applying a threshold difference to the specified variable</span>
 <span class="sd">    (e.g., temperature or density) for a given glider profile. The default threshold is set for density (0.01).</span>
 
