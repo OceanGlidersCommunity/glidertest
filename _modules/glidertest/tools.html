@@ -82,6 +82,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">gsw</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.integrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">cumulative_trapezoid</span>
 
 <div class="viewcode-block" id="quant_updown_bias">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_updown_bias">[docs]</a>
@@ -113,7 +114,7 @@
     <span class="n">z</span> <span class="o">=</span> <span class="n">v_res</span>  <span class="c1"># Vertical resolution</span>
 
     <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
-        <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">x_bin_center</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="c1">## included x_bin_center = False to take left edge of the bin (profile number i.e. 1,2 ....)</span>
 
         <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">varG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Horizontal gradients</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
@@ -467,7 +468,8 @@
     <span class="n">z</span> <span class="o">=</span> <span class="n">v_res</span>  <span class="c1"># Vertical resolution</span>
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
-        <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">x_bin_center</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="c1">## included x_bin_center = False to take left edge of the bin (profile number i.e. 1,2 ....)</span>
+
         <span class="n">dive</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">varG</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Dive</span>
         <span class="n">climb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">varG</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Climb</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;dive&#39;</span><span class="p">:</span> <span class="n">dive</span><span class="p">,</span> <span class="s1">&#39;climb&#39;</span><span class="p">:</span> <span class="n">climb</span><span class="p">,</span> <span class="s1">&#39;depth&#39;</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
@@ -649,176 +651,412 @@
     <span class="n">max_depths</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">max_depths</span></div>
 
-<div class="viewcode-block" id="compute_mld_glidertools">
-<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_mld_glidertools">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">compute_mld_glidertools</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">ref_depth</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculate the Mixed Layer Depth (MLD) for an ungridded glider dataset.</span>
 
-<span class="sd">    This function computes the MLD by applying a threshold difference to a specified variable</span>
-<span class="sd">    (e.g., temperature or density). The default threshold is set for density (0.01).</span>
+<div class="viewcode-block" id="add_sigma_1">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.add_sigma_1">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_sigma_1</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var_sigma_1</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SIGMA_1&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the potential density anomaly (sigma_1) referenced to 1000 dbar </span>
+<span class="sd">    and adds it to the dataset if not already present.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds : xarray.Dataset</span>
-<span class="sd">        A dataset containing glider data, including depth, profile number and the variable of interest.</span>
-<span class="sd">    variable : str</span>
-<span class="sd">        The name of the variable (e.g., &#39;temperature&#39; or &#39;density&#39;) used for the threshold calculation.</span>
-<span class="sd">    thresh : float, optional, default=0.01</span>
-<span class="sd">        The threshold for the difference in the variable. Typically used to detect the mixed layer.</span>
-<span class="sd">    ref_depth : float, optional, default=10</span>
-<span class="sd">        The reference depth (in meters) used to calculate the difference for the threshold.</span>
-<span class="sd">    verbose : bool, optional, default=True</span>
-<span class="sd">        If True, additional information and warnings are printed to the console.</span>
-
-<span class="sd">    Return</span>
-<span class="sd">    ------</span>
-<span class="sd">    mld : array</span>
-<span class="sd">        An array of depths corresponding to the MLD for each unique glider dive in the dataset.</span>
-
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
-<span class="sd">    This function is based on the original GliderTools implementation and was modified by</span>
-<span class="sd">    Chiara Monforte to ensure compliance with the OG1 standards.</span>
-<span class="sd">    [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span><span class="s2">&quot;DEPTH&quot;</span><span class="p">,</span> <span class="s2">&quot;PROFILE_NUMBER&quot;</span><span class="p">])</span>
-    <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">&quot;DEPTH&quot;</span><span class="p">])</span>
-    <span class="n">mld</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mld_profile</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">mld</span></div>
-
-
-
-<div class="viewcode-block" id="bin_data">
-<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.bin_data">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">bin_data</span><span class="p">(</span><span class="n">ds_profile</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">agg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;mean&#39;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Bin the data in a profile dataset by depth using fixed depth steps.</span>
-<span class="sd">    </span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">        ds_profile: xr.Dataset </span>
-<span class="sd">            The dataset containing at least **DEPTH and the variables to bin**.</span>
-<span class="sd">        resolution: float </span>
-<span class="sd">            The depth resolution for the binning.</span>
-<span class="sd">        var: list</span>
-<span class="sd">            The variables to bin.</span>
-<span class="sd">        agg: str </span>
-<span class="sd">            The aggregation method to use for binning. Default is &#39;mean&#39;. Other option is &#39;median&#39;.</span>
+<span class="sd">    ds : xr.Dataset</span>
+<span class="sd">        OG1-format dataset with required variables: DEPTH, TEMP, PSAL, LATITUDE, LONGITUDE.</span>
+<span class="sd">    var_sigma_1 : str, optional</span>
+<span class="sd">        Name of the variable to be added to the dataset. Default is &quot;SIGMA_1&quot;.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        dict: A dictionary containing binned data arrays for each variable, including DEPTH.</span>
+<span class="sd">    xr.Dataset</span>
+<span class="sd">        Dataset with the additional variable `var_sigma_1`.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    Original author: Till Moritz</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Remove empty strings from vars list</span>
-    <span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">vars</span> <span class="k">if</span> <span class="n">var</span><span class="p">]</span>
+    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;TEMP&#39;</span><span class="p">,</span> <span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">]</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">required_vars</span><span class="p">)</span>
 
-    <span class="c1"># Ensure necessary variables exist</span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds_profile</span><span class="p">,</span> <span class="nb">vars</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">var_sigma_1</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variable &#39;</span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">&#39; already exists in the dataset. Skipping calculation.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ds</span>
 
-    <span class="c1"># Define bin edges and bin centers</span>
-    <span class="n">min_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">ds_profile</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span>
-    <span class="n">max_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">ds_profile</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span>
-    <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">min_depth</span><span class="p">,</span> <span class="n">max_depth</span> <span class="o">+</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span>
-    <span class="n">bin_centers</span> <span class="o">=</span> <span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">resolution</span> <span class="o">/</span> <span class="mi">2</span>  <span class="c1"># Set depth values to bin centers</span>
+    <span class="c1"># Extract required variables</span>
+    <span class="n">TEMP</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;TEMP&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">PSAL</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;PSAL&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">PRES</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">LAT</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">LON</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
-    <span class="c1"># Group variables by depth bins and apply aggregation</span>
-    <span class="n">binned_data</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
-        <span class="n">grouped</span> <span class="o">=</span> <span class="n">ds_profile</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">groupby_bins</span><span class="p">(</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">agg</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
-            <span class="n">binned_data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
-        <span class="k">elif</span> <span class="n">agg</span> <span class="o">==</span> <span class="s1">&#39;median&#39;</span><span class="p">:</span>
-            <span class="n">binned_data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">median</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid aggregation method: </span><span class="si">{</span><span class="n">agg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Filter valid entries</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">TEMP</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">PSAL</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">PRES</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">LAT</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">LON</span><span class="p">)</span>
 
-    <span class="c1"># Assign bin centers as the new depth values</span>
-    <span class="n">binned_data</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bin_centers</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">valid</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All values are invalid for </span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">; output will contain only NaNs.&quot;</span><span class="p">)</span>
+        <span class="n">ds</span><span class="p">[</span><span class="n">var_sigma_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">PRES</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span> 
+            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">,),</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;kg/m^3&#39;</span><span class="p">,</span> <span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;potential density anomaly with respect to 1000 dbar&#39;</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">ds</span>
 
-    <span class="k">return</span> <span class="n">binned_data</span></div>
+    <span class="c1"># Compute absolute salinity and conservative temperature</span>
+    <span class="n">SA</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">SA_from_SP</span><span class="p">(</span><span class="n">PSAL</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">PRES</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">LON</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">LAT</span><span class="p">[</span><span class="n">valid</span><span class="p">])</span>
+    <span class="n">CT</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">CT_from_t</span><span class="p">(</span><span class="n">PSAL</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">TEMP</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">PRES</span><span class="p">[</span><span class="n">valid</span><span class="p">])</span>
+    <span class="n">SIGMA_1</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">sigma1</span><span class="p">(</span><span class="n">SA</span><span class="p">,</span> <span class="n">CT</span><span class="p">)</span>
+
+    <span class="c1"># Create result array with NaNs where invalid</span>
+    <span class="n">full_sigma_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">PRES</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">full_sigma_1</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span> <span class="o">=</span> <span class="n">SIGMA_1</span>
+
+    <span class="n">ds</span><span class="p">[</span><span class="n">var_sigma_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">full_sigma_1</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">,),</span>
+        <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;kg/m^3&#39;</span><span class="p">,</span> <span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;potential density anomaly with respect to 1000 dbar&#39;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ds</span></div>
 
 
-  
-<div class="viewcode-block" id="mld_profile">
-<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.mld_profile">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">mld_profile</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="compute_mld">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_mld">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_mld</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">ref_depth</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+                 <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculate the Mixed Layer Depth (MLD) for a single glider profile.</span>
-<span class="sd">    This function computes the MLD by applying a threshold difference to the specified variable</span>
-<span class="sd">    (e.g., temperature or density) for a given glider profile. The default threshold is set for density (0.01).</span>
-
+<span class="sd">    Computes the mixed layer depth (MLD) for each profile in the dataset. Two methods are available:</span>
+<span class="sd">    1. **Threshold Method**: Computes MLD based on a density threshold (default is 0.03 kg/m³).</span>
+<span class="sd">    2. **Convective Resistance (CR) Method**: Computes MLD based on the CR method. Values close to</span>
+<span class="sd">    0 indicate a well-mixed layer, while values below 0 indicate a stratified layer. For the threshold,</span>
+<span class="sd">    a value of -2 is recommended.</span>
+<span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    df : pandas.DataFrame</span>
-<span class="sd">        A dataframe containing the glider profile data (including the variable of interest and depth).</span>
+<span class="sd">    ds : xr.Dataset</span>
+<span class="sd">        The dataset containing the profiles.</span>
 <span class="sd">    variable : str</span>
-<span class="sd">        The name of the variable (e.g., &#39;temperature&#39; or &#39;density&#39;) used for the threshold calculation.</span>
-<span class="sd">    thresh : float, optional, default=0.01</span>
-<span class="sd">        The threshold for the difference in the variable. Typically used to detect the mixed layer.</span>
-<span class="sd">    ref_depth : float, optional, default=10</span>
-<span class="sd">        The reference depth (in meters) used to calculate the difference for the threshold.</span>
-<span class="sd">    verbose : bool, optional, default=True</span>
-<span class="sd">        If True, additional information and warnings are printed to the console.</span>
+<span class="sd">        Variable used for the MLD calculation. For the CR method use density anomaly with reference to 1000 dbar (&#39;SIGMA_1&#39;).</span>
+<span class="sd">    method : str, optional</span>
+<span class="sd">        The method to use for MLD calculation. Options are &#39;threshold&#39; or &#39;CR&#39;. Default is &#39;threshold&#39;.</span>
+<span class="sd">    threshold : float, optional</span>
+<span class="sd">        If using &#39;threshold&#39;, this is the density threshold for MLD calculation. Default is 0.03 kg/m³.</span>
+<span class="sd">        If using &#39;CR&#39;, this is the CR threshold for the convective resistance. A value of -2 is recommended.</span>
+<span class="sd">    use_bins : bool, optional</span>
+<span class="sd">        Whether to use binned data for MLD calculation. Default is True.</span>
+<span class="sd">    binning : float, optional</span>
+<span class="sd">        The binning resolution in meters. Default is 10m.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    mld : float or np.nan</span>
-<span class="sd">        The depth of the mixed layer, or np.nan if no MLD can be determined based on the threshold.</span>
+<span class="sd">    mld_values : pd.DataFrame</span>
+<span class="sd">        A DataFrame containing the MLD values for each profile, along with the mean time for each profile.</span>
+<span class="sd">        The DataFrame has columns: &#39;PROFILE_NUMBER&#39;, &#39;MLD&#39; and &#39;TIME&#39;.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    This function is based on the original GliderTools implementation and was modified by</span>
-<span class="sd">    Chiara Monforte to ensure compliance with the OG1 standards.</span>
-<span class="sd">    [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py)</span>
+<span class="sd">    Original Author: Till Moritz</span>
+<span class="sd">    Based on the convective resistance caluclation, following the method described in FW2014 (https://doi.org/10.1175/JPO-D-13-069.1))</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">exception</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">divenum</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">&quot;DEPTH&quot;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">mld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-        <span class="n">exception</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;no observations found for specified variable in dive </span><span class="si">{}</span>
-<span class="s2">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">divenum</span>
-        <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">ref_depth</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
-        <span class="n">exception</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;no observations within 5 m of ref_depth for dive </span><span class="si">{}</span>
-<span class="s2">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">divenum</span>
-        <span class="p">)</span>
-        <span class="n">mld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span><span class="s2">&quot;DEPTH&quot;</span><span class="p">,</span> <span class="s2">&quot;PROFILE_NUMBER&quot;</span><span class="p">,</span><span class="s2">&quot;TIME&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;threshold&#39;</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">&quot;DEPTH&quot;</span><span class="p">,</span><span class="s2">&quot;TIME&quot;</span><span class="p">])</span>
+        <span class="n">mld</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mld_profile_treshhold</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+                            <span class="n">ref_depth</span><span class="o">=</span><span class="n">ref_depth</span><span class="p">,</span> <span class="n">use_bins</span><span class="o">=</span><span class="n">use_bins</span><span class="p">,</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;CR&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">variable</span> <span class="o">!=</span> <span class="s1">&#39;SIGMA_1&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: </span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2"> can not be used for convective resistance calulation. Instead use SIGMA_1 for CR calculation.&quot;</span><span class="p">)</span>
+            <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;SIGMA_1&#39;</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">&quot;DEPTH&quot;</span><span class="p">,</span><span class="s2">&quot;TIME&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: CR threshold should be negative. Using -2 as default.&quot;</span><span class="p">)</span>
+            <span class="n">threshold</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
+        <span class="n">mld</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mld_profile_CR</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">use_bins</span><span class="o">=</span><span class="n">use_bins</span><span class="p">,</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">direction</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">))</span><span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
-        <span class="c1"># create arrays in order of increasing depth</span>
-        <span class="n">var_arr</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[::</span> <span class="nb">int</span><span class="p">(</span><span class="n">direction</span><span class="p">)]</span>
-        <span class="n">depth</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">values</span><span class="p">[::</span> <span class="nb">int</span><span class="p">(</span><span class="n">direction</span><span class="p">)]</span>
-        <span class="c1"># get index closest to ref_depth</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">depth</span> <span class="o">-</span> <span class="n">ref_depth</span><span class="p">))</span>
-        <span class="c1"># create difference array for threshold variable</span>
-        <span class="n">dd</span> <span class="o">=</span> <span class="n">var_arr</span> <span class="o">-</span> <span class="n">var_arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="c1"># mask out all values that are shallower then ref_depth</span>
-        <span class="n">dd</span><span class="p">[</span><span class="n">depth</span> <span class="o">&lt;</span> <span class="n">ref_depth</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-        <span class="c1"># get all values in difference array within threshold range</span>
-        <span class="n">mixed</span> <span class="o">=</span> <span class="n">dd</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mixed</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">idx_mld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">thresh</span><span class="p">)</span>
-            <span class="n">mld</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">idx_mld</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">exception</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">mld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;threshold criterion never true (all mixed or </span><span class="se">\</span>
-<span class="s2">                shallow profile) for profile </span><span class="si">{}</span><span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">divenum</span>
-            <span class="p">)</span>
-    <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">exception</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid MLD calculation method. Use &#39;threshold&#39; or &#39;CR&#39;.&quot;</span><span class="p">)</span>
+    <span class="c1"># Convert the result to a DataFrame and name the MLD column</span>
+    <span class="n">mld</span> <span class="o">=</span> <span class="n">mld</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MLD&#39;</span><span class="p">)</span>
+    <span class="c1"># Add mean time for each profile to the DataFrame</span>
+    <span class="n">mld</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">mld</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mld</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="s1">&#39;1min&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mld</span></div>
+
+
+<div class="viewcode-block" id="linear_interpolation">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.linear_interpolation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">linear_interpolation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_new</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Linearly interpolates y over x to estimate y at x_new.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">x_new</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mld_profile_treshhold">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.mld_profile_treshhold">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mld_profile_treshhold</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;SIGMA_T&#39;</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+                          <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the mixed layer depth (MLD) from a profile dataset based on the density profile, </span>
+<span class="sd">    using a threshold of 0.03 kg/m³</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    profile : pd.DataFrame or xr.Dataset</span>
+<span class="sd">        Dataset or DataFrame containing depth and density columns.</span>
+<span class="sd">    variable : str</span>
+<span class="sd">        The name of the variable to use for the threshold calculation (default is &#39;SIGMA_T&#39;).</span>
+<span class="sd">    threshold : float</span>
+<span class="sd">        Density threshold for MLD estimation (default is 0.03 kg/m³).</span>
+<span class="sd">    ref_depth : float</span>
+<span class="sd">        Reference depth for MLD estimation (default is 10m).</span>
+<span class="sd">    use_bins : bool</span>
+<span class="sd">        Whether to bin the profile data before computing MLD.</span>
+<span class="sd">    binning : float</span>
+<span class="sd">        Bin resolution in meters if use_bins is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Estimated mixed layer depth, or NaN if it cannot be determined.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Till Moritz</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">use_bins</span><span class="p">:</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">bin_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">],</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">density</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">density</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">density</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input must be a pandas.DataFrame or xarray.Dataset&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Convert to float arrays to avoid isfinite errors</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">density</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="c1"># Remove NaNs and check if valid data remains</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">valid</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No valid depth or density data for MLD calculation.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="n">depth</span><span class="p">,</span> <span class="n">density</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">density</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">depth</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">depth</span>
+
+    <span class="c1"># Sort by depth</span>
+    <span class="n">sort_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span>
+    <span class="n">depth</span><span class="p">,</span> <span class="n">density</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">sort_idx</span><span class="p">],</span> <span class="n">density</span><span class="p">[</span><span class="n">sort_idx</span><span class="p">]</span>
+
+    <span class="c1"># Estimate density at reference depth</span>
+    <span class="k">if</span> <span class="n">ref_depth</span> <span class="ow">in</span> <span class="n">depth</span><span class="p">:</span>
+        <span class="n">idx_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">depth</span> <span class="o">-</span> <span class="n">ref_depth</span><span class="p">))</span>
+        <span class="n">density_ref</span> <span class="o">=</span> <span class="n">density</span><span class="p">[</span><span class="n">idx_ref</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">density_ref</span> <span class="o">=</span> <span class="n">linear_interpolation</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="n">density</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">)</span>
+
+    <span class="c1"># Focus on depths below reference depth</span>
+    <span class="n">mask_below</span> <span class="o">=</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="n">ref_depth</span>
+    <span class="n">depth_below</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">mask_below</span><span class="p">]</span>
+    <span class="n">density_below</span> <span class="o">=</span> <span class="n">density</span><span class="p">[</span><span class="n">mask_below</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">depth_below</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No data below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">density_below</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">density_ref</span> <span class="o">+</span> <span class="n">threshold</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No density values below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m exceed the threshold.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># Find first crossing of the threshold</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">density_below</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">density_below</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">density_ref</span> <span class="o">+</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="n">mld</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth_below</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">depth_below</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">mld</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span></div>
+
+
+
+<div class="viewcode-block" id="mld_profile_CR">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.mld_profile_CR">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mld_profile_CR</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the mixed layer depth (MLD) using the Convective Resistance (CR) method.</span>
+<span class="sd">    Returns NaN if no valid depth data below 10m is available or no CR values meet the threshold.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    profile : xarray.Dataset or pandas.DataFrame</span>
+<span class="sd">        Profile data containing &#39;DEPTH&#39; and &#39;SIGMA_1&#39;.</span>
+<span class="sd">    threshold : float, optional</span>
+<span class="sd">        CR threshold for determining MLD. Default is -2.</span>
+<span class="sd">    use_bins : bool, optional</span>
+<span class="sd">        Whether to apply depth binning. Default is False.</span>
+<span class="sd">    binning : float, optional</span>
+<span class="sd">        Bin size for depth binning, in meters. Default is 10.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Computed MLD in meters, or NaN if criteria are not met.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original author: Till Moritz</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">use_bins</span><span class="p">:</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">bin_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;SIGMA_1&#39;</span><span class="p">],</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
+
+    <span class="n">CR_df</span> <span class="o">=</span> <span class="n">calculate_CR_for_all_depth</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">CR_df</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">CR_values</span> <span class="o">=</span> <span class="n">CR_df</span><span class="p">[</span><span class="s1">&#39;CR&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+    <span class="c1"># Filter out NaNs</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">CR_values</span><span class="p">)</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+    <span class="n">CR_values</span> <span class="o">=</span> <span class="n">CR_values</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># Identify where CR is below threshold</span>
+    <span class="n">below_threshold</span> <span class="o">=</span> <span class="n">CR_values</span> <span class="o">&lt;</span> <span class="n">threshold</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">below_threshold</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    
+    <span class="n">mld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">depth</span><span class="p">[</span><span class="n">below_threshold</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">mld</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_CR_for_all_depth">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calculate_CR_for_all_depth">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_CR_for_all_depth</span><span class="p">(</span><span class="n">profile</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate CR for all depths in the profile.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    profile : xarray.Dataset or pandas.DataFrame</span>
+<span class="sd">        Profile data containing depth and SIGMA_1.</span>
+<span class="sd">    use_bins : bool, optional</span>
+<span class="sd">        If True, bins the data before computation. Default is False.</span>
+<span class="sd">    binning : float, optional</span>
+<span class="sd">        Bin size for binning. Default is 10.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        DataFrame with columns: DEPTH, CR.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Till Moritz</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;SIGMA_1&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="n">df_profile</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">required_vars</span><span class="p">]</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">df_profile</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">required_vars</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input must be an xarray.Dataset or pandas.DataFrame.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Drop NaNs in SIGMA_1 to avoid problems</span>
+    <span class="n">df_profile</span> <span class="o">=</span> <span class="n">df_profile</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;SIGMA_1&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Prepare CR values</span>
+    <span class="n">CR_values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">depths</span> <span class="o">=</span> <span class="n">df_profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">depths</span><span class="p">:</span>
+        <span class="n">CR_h</span> <span class="o">=</span> <span class="n">compute_CR</span><span class="p">(</span><span class="n">df_profile</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+        <span class="n">CR_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CR_h</span><span class="p">)</span>
+    
+    <span class="c1">#return CR_values, depths</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">:</span> <span class="n">depths</span><span class="p">,</span> <span class="s1">&#39;CR&#39;</span><span class="p">:</span> <span class="n">CR_values</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="compute_CR">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_CR">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_CR</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the CR (density anomaly integral) up to the reference depth h.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    profile : xarray.Dataset or pandas.DataFrame</span>
+<span class="sd">        Profile data containing &#39;DEPTH&#39; and &#39;SIGMA_1&#39;.</span>
+<span class="sd">    h : float</span>
+<span class="sd">        Reference depth up to which CR is computed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Computed CR up to the depth h, or NaN if insufficient data.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Till Moritz</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Extract depth and sigma_1 depending on input type</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">sigma1</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;SIGMA_1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">sigma1</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;SIGMA_1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input must be an xarray.Dataset or pandas.DataFrame.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Filter out NaNs</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">sigma1</span><span class="p">)</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+    <span class="n">sigma1</span> <span class="o">=</span> <span class="n">sigma1</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">h</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">depth</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># Sort by depth</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">sigma1</span> <span class="o">=</span> <span class="n">sigma1</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="c1"># Select depths up to h</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth</span> <span class="o">&lt;=</span> <span class="n">h</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">depth</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not enough data points for depth </span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="n">depth_masked</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+    <span class="n">sigma1_masked</span> <span class="o">=</span> <span class="n">sigma1</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+    <span class="c1"># Fill in missing top layer if needed</span>
+    <span class="n">min_depth</span> <span class="o">=</span> <span class="n">depth_masked</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">min_depth</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">min_depth</span> <span class="o">&lt;=</span> <span class="mi">15</span><span class="p">:</span>
+        <span class="n">new_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">min_depth</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+        <span class="n">top_mask</span> <span class="o">=</span> <span class="n">depth_masked</span> <span class="o">&lt;=</span> <span class="mi">15</span>
+        <span class="n">sigma1_top_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">sigma1_masked</span><span class="p">[</span><span class="n">top_mask</span><span class="p">])</span>
+        <span class="n">new_sigma1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">new_depth</span><span class="p">,</span> <span class="n">sigma1_top_mean</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">depth_filled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">new_depth</span><span class="p">,</span> <span class="n">depth_masked</span><span class="p">])</span>
+        <span class="n">sigma1_filled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">new_sigma1</span><span class="p">,</span> <span class="n">sigma1_masked</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">depth_filled</span> <span class="o">=</span> <span class="n">depth_masked</span>
+        <span class="n">sigma1_filled</span> <span class="o">=</span> <span class="n">sigma1_masked</span>
+    <span class="c1"># Integration and CR computation</span>
+    <span class="n">integral</span> <span class="o">=</span> <span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">sigma1_filled</span><span class="p">,</span> <span class="n">depth_filled</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">sigma1_h</span> <span class="o">=</span> <span class="n">sigma1_filled</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">CR_h</span> <span class="o">=</span> <span class="n">integral</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">depth_filled</span><span class="p">)</span> <span class="o">*</span> <span class="n">sigma1_h</span>
+
+    <span class="k">return</span> <span class="n">CR_h</span></div>
 
 </pre></div>
 

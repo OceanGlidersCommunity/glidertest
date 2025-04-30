@@ -47,22 +47,27 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="demo-output.html">Glidertest demo</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">API</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.bin_data"><code class="docutils literal notranslate"><span class="pre">bin_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.add_sigma_1"><code class="docutils literal notranslate"><span class="pre">add_sigma_1()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.calc_w_meas"><code class="docutils literal notranslate"><span class="pre">calc_w_meas()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.calc_w_sw"><code class="docutils literal notranslate"><span class="pre">calc_w_sw()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.calculate_CR_for_all_depth"><code class="docutils literal notranslate"><span class="pre">calculate_CR_for_all_depth()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.check_monotony"><code class="docutils literal notranslate"><span class="pre">check_monotony()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_CR"><code class="docutils literal notranslate"><span class="pre">compute_CR()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_daynight_avg"><code class="docutils literal notranslate"><span class="pre">compute_daynight_avg()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_global_range"><code class="docutils literal notranslate"><span class="pre">compute_global_range()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_hyst_stat"><code class="docutils literal notranslate"><span class="pre">compute_hyst_stat()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_mld_glidertools"><code class="docutils literal notranslate"><span class="pre">compute_mld_glidertools()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_mld"><code class="docutils literal notranslate"><span class="pre">compute_mld()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.compute_prof_duration"><code class="docutils literal notranslate"><span class="pre">compute_prof_duration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.find_outlier_duration"><code class="docutils literal notranslate"><span class="pre">find_outlier_duration()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.linear_interpolation"><code class="docutils literal notranslate"><span class="pre">linear_interpolation()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.max_depth_per_profile"><code class="docutils literal notranslate"><span class="pre">max_depth_per_profile()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.mld_profile"><code class="docutils literal notranslate"><span class="pre">mld_profile()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.mld_profile_CR"><code class="docutils literal notranslate"><span class="pre">mld_profile_CR()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.mld_profile_treshhold"><code class="docutils literal notranslate"><span class="pre">mld_profile_treshhold()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.quant_binavg"><code class="docutils literal notranslate"><span class="pre">quant_binavg()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.quant_hysteresis"><code class="docutils literal notranslate"><span class="pre">quant_hysteresis()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.quant_updown_bias"><code class="docutils literal notranslate"><span class="pre">quant_updown_bias()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.check_temporal_drift"><code class="docutils literal notranslate"><span class="pre">check_temporal_drift()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_CR"><code class="docutils literal notranslate"><span class="pre">plot_CR()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_basic_vars"><code class="docutils literal notranslate"><span class="pre">plot_basic_vars()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_combined_velocity_profiles"><code class="docutils literal notranslate"><span class="pre">plot_combined_velocity_profiles()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_daynight_avg"><code class="docutils literal notranslate"><span class="pre">plot_daynight_avg()</span></code></a></li>
@@ -74,7 +79,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_max_depth_per_profile"><code class="docutils literal notranslate"><span class="pre">plot_max_depth_per_profile()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_outlier_duration"><code class="docutils literal notranslate"><span class="pre">plot_outlier_duration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_prof_monotony"><code class="docutils literal notranslate"><span class="pre">plot_prof_monotony()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_profile_binned"><code class="docutils literal notranslate"><span class="pre">plot_profile_binned()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_profile"><code class="docutils literal notranslate"><span class="pre">plot_profile()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_quench_assess"><code class="docutils literal notranslate"><span class="pre">plot_quench_assess()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_sampling_period"><code class="docutils literal notranslate"><span class="pre">plot_sampling_period()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_sampling_period_all"><code class="docutils literal notranslate"><span class="pre">plot_sampling_period_all()</span></code></a></li>
@@ -82,6 +87,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_updown_bias"><code class="docutils literal notranslate"><span class="pre">plot_updown_bias()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_vertical_speeds_with_histograms"><code class="docutils literal notranslate"><span class="pre">plot_vertical_speeds_with_histograms()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.process_optics_assess"><code class="docutils literal notranslate"><span class="pre">process_optics_assess()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.bin_profile"><code class="docutils literal notranslate"><span class="pre">bin_profile()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.calc_DEPTH_Z"><code class="docutils literal notranslate"><span class="pre">calc_DEPTH_Z()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.compute_sunset_sunrise"><code class="docutils literal notranslate"><span class="pre">compute_sunset_sunrise()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.construct_2dgrid"><code class="docutils literal notranslate"><span class="pre">construct_2dgrid()</span></code></a></li>
@@ -125,23 +131,22 @@
   <section id="module-glidertest.tools">
 <span id="glidertest-api"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">API</span></code><a class="headerlink" href="#module-glidertest.tools" title="Link to this heading"></a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="glidertest.tools.bin_data">
-<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">bin_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#bin_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.bin_data" title="Link to this definition"></a></dt>
-<dd><p>Bin the data in a profile dataset by depth using fixed depth steps.</p>
+<dt class="sig sig-object py" id="glidertest.tools.add_sigma_1">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">add_sigma_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_sigma_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'SIGMA_1'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="reference internal" href="_modules/glidertest/tools.html#add_sigma_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.add_sigma_1" title="Link to this definition"></a></dt>
+<dd><p>Computes the potential density anomaly (sigma_1) referenced to 1000 dbar
+and adds it to the dataset if not already present.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds_profile</strong> (<em>xr.Dataset</em>) – The dataset containing at least <strong>DEPTH and the variables to bin</strong>.</p></li>
-<li><p><strong>resolution</strong> (<em>float</em>) – The depth resolution for the binning.</p></li>
-<li><p><strong>var</strong> (<em>list</em>) – The variables to bin.</p></li>
-<li><p><strong>agg</strong> (<em>str</em>) – The aggregation method to use for binning. Default is ‘mean’. Other option is ‘median’.</p></li>
+<li><p><strong>ds</strong> (<em>xr.Dataset</em>) – OG1-format dataset with required variables: DEPTH, TEMP, PSAL, LATITUDE, LONGITUDE.</p></li>
+<li><p><strong>var_sigma_1</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the variable to be added to the dataset. Default is “SIGMA_1”.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>dict</strong></p>
+<dd class="field-even"><p>Dataset with the additional variable <cite>var_sigma_1</cite>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A dictionary containing binned data arrays for each variable, including DEPTH.</p>
+<dd class="field-odd"><p>xr.Dataset</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -190,6 +195,29 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="glidertest.tools.calculate_CR_for_all_depth">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">calculate_CR_for_all_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#calculate_CR_for_all_depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.calculate_CR_for_all_depth" title="Link to this definition"></a></dt>
+<dd><p>Calculate CR for all depths in the profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>profile</strong> (<em>xarray.Dataset</em><em> or </em><em>pandas.DataFrame</em>) – Profile data containing depth and SIGMA_1.</p></li>
+<li><p><strong>use_bins</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, bins the data before computation. Default is False.</p></li>
+<li><p><strong>binning</strong> (<em>float</em><em>, </em><em>optional</em>) – Bin size for binning. Default is 10.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame with columns: DEPTH, CR.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Till Moritz</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.check_monotony">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">check_monotony</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">da</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#check_monotony"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.check_monotony" title="Link to this definition"></a></dt>
 <dd><p>Checks whether the selected variable is <strong>monotonically increasing</strong> throughout the mission.
@@ -209,6 +237,28 @@ Additionally, a message is printed indicating the result.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>Original Author: Chiara Monforte</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.tools.compute_CR">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_CR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/glidertest/tools.html#compute_CR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_CR" title="Link to this definition"></a></dt>
+<dd><p>Compute the CR (density anomaly integral) up to the reference depth h.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>profile</strong> (<em>xarray.Dataset</em><em> or </em><em>pandas.DataFrame</em>) – Profile data containing ‘DEPTH’ and ‘SIGMA_1’.</p></li>
+<li><p><strong>h</strong> (<em>float</em>) – Reference depth up to which CR is computed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Computed CR up to the depth h, or NaN if insufficient data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Till Moritz</p>
 </dd></dl>
 
 <dl class="py function">
@@ -310,32 +360,36 @@ Data should not be gridded.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="glidertest.tools.compute_mld_glidertools">
-<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_mld_glidertools</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_mld_glidertools"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_mld_glidertools" title="Link to this definition"></a></dt>
-<dd><p>Calculate the Mixed Layer Depth (MLD) for an ungridded glider dataset.</p>
-<p>This function computes the MLD by applying a threshold difference to a specified variable
-(e.g., temperature or density). The default threshold is set for density (0.01).</p>
+<dt class="sig sig-object py" id="glidertest.tools.compute_mld">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_mld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'threshold'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.03</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_mld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_mld" title="Link to this definition"></a></dt>
+<dd><p>Computes the mixed layer depth (MLD) for each profile in the dataset. Two methods are available:
+1. <strong>Threshold Method</strong>: Computes MLD based on a density threshold (default is 0.03 kg/m³).
+2. <strong>Convective Resistance (CR) Method</strong>: Computes MLD based on the CR method. Values close to
+0 indicate a well-mixed layer, while values below 0 indicate a stratified layer. For the threshold,
+a value of -2 is recommended.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – A dataset containing glider data, including depth, profile number and the variable of interest.</p></li>
-<li><p><strong>variable</strong> (<em>str</em>) – The name of the variable (e.g., ‘temperature’ or ‘density’) used for the threshold calculation.</p></li>
-<li><p><strong>thresh</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.01</em>) – The threshold for the difference in the variable. Typically used to detect the mixed layer.</p></li>
-<li><p><strong>ref_depth</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=10</em>) – The reference depth (in meters) used to calculate the difference for the threshold.</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em><em>, </em><em>default=True</em>) – If True, additional information and warnings are printed to the console.</p></li>
+<li><p><strong>ds</strong> (<em>xr.Dataset</em>) – The dataset containing the profiles.</p></li>
+<li><p><strong>variable</strong> (<em>str</em>) – Variable used for the MLD calculation. For the CR method use density anomaly with reference to 1000 dbar (‘SIGMA_1’).</p></li>
+<li><p><strong>method</strong> (<em>str</em><em>, </em><em>optional</em>) – The method to use for MLD calculation. Options are ‘threshold’ or ‘CR’. Default is ‘threshold’.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – If using ‘threshold’, this is the density threshold for MLD calculation. Default is 0.03 kg/m³.
+If using ‘CR’, this is the CR threshold for the convective resistance. A value of -2 is recommended.</p></li>
+<li><p><strong>use_bins</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to use binned data for MLD calculation. Default is True.</p></li>
+<li><p><strong>binning</strong> (<em>float</em><em>, </em><em>optional</em>) – The binning resolution in meters. Default is 10m.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>mld</strong> – An array of depths corresponding to the MLD for each unique glider dive in the dataset.</p>
+<dd class="field-even"><p><strong>mld_values</strong> – A DataFrame containing the MLD values for each profile, along with the mean time for each profile.
+The DataFrame has columns: ‘PROFILE_NUMBER’, ‘MLD’ and ‘TIME’.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>array</p>
+<dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>This function is based on the original GliderTools implementation and was modified by
-Chiara Monforte to ensure compliance with the OG1 standards.
-[Source Code](<a class="reference external" href="https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py">https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py</a>)</p>
+<p>Original Author: Till Moritz
+Based on the convective resistance caluclation, following the method described in FW2014 (<a class="reference external" href="https://doi.org/10.1175/JPO-D-13-069.1">https://doi.org/10.1175/JPO-D-13-069.1</a>))</p>
 </dd></dl>
 
 <dl class="py function">
@@ -385,6 +439,12 @@ This helps detect profiles with significantly longer or shorter durations compar
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="glidertest.tools.linear_interpolation">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">linear_interpolation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_new</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#linear_interpolation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.linear_interpolation" title="Link to this definition"></a></dt>
+<dd><p>Linearly interpolates y over x to estimate y at x_new.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.max_depth_per_profile">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">max_depth_per_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#max_depth_per_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.max_depth_per_profile" title="Link to this definition"></a></dt>
 <dd><p>This function computes the maximum depth for each profile in the dataset</p>
@@ -405,32 +465,55 @@ Data should not be gridded.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="glidertest.tools.mld_profile">
-<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">mld_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#mld_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.mld_profile" title="Link to this definition"></a></dt>
-<dd><p>Calculate the Mixed Layer Depth (MLD) for a single glider profile.
-This function computes the MLD by applying a threshold difference to the specified variable
-(e.g., temperature or density) for a given glider profile. The default threshold is set for density (0.01).</p>
+<dt class="sig sig-object py" id="glidertest.tools.mld_profile_CR">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">mld_profile_CR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/glidertest/tools.html#mld_profile_CR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.mld_profile_CR" title="Link to this definition"></a></dt>
+<dd><p>Calculate the mixed layer depth (MLD) using the Convective Resistance (CR) method.
+Returns NaN if no valid depth data below 10m is available or no CR values meet the threshold.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>df</strong> (<em>pandas.DataFrame</em>) – A dataframe containing the glider profile data (including the variable of interest and depth).</p></li>
-<li><p><strong>variable</strong> (<em>str</em>) – The name of the variable (e.g., ‘temperature’ or ‘density’) used for the threshold calculation.</p></li>
-<li><p><strong>thresh</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=0.01</em>) – The threshold for the difference in the variable. Typically used to detect the mixed layer.</p></li>
-<li><p><strong>ref_depth</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=10</em>) – The reference depth (in meters) used to calculate the difference for the threshold.</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em><em>, </em><em>default=True</em>) – If True, additional information and warnings are printed to the console.</p></li>
+<li><p><strong>profile</strong> (<em>xarray.Dataset</em><em> or </em><em>pandas.DataFrame</em>) – Profile data containing ‘DEPTH’ and ‘SIGMA_1’.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – CR threshold for determining MLD. Default is -2.</p></li>
+<li><p><strong>use_bins</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to apply depth binning. Default is False.</p></li>
+<li><p><strong>binning</strong> (<em>float</em><em>, </em><em>optional</em>) – Bin size for depth binning, in meters. Default is 10.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>mld</strong> – The depth of the mixed layer, or np.nan if no MLD can be determined based on the threshold.</p>
+<dd class="field-even"><p>Computed MLD in meters, or NaN if criteria are not met.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or np.nan</p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>This function is based on the original GliderTools implementation and was modified by
-Chiara Monforte to ensure compliance with the OG1 standards.
-[Source Code](<a class="reference external" href="https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py">https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/physics.py</a>)</p>
+<p>Original author: Till Moritz</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.tools.mld_profile_treshhold">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">mld_profile_treshhold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'SIGMA_T'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.03</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/glidertest/tools.html#mld_profile_treshhold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.mld_profile_treshhold" title="Link to this definition"></a></dt>
+<dd><p>Computes the mixed layer depth (MLD) from a profile dataset based on the density profile,
+using a threshold of 0.03 kg/m³</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>profile</strong> (<em>pd.DataFrame</em><em> or </em><em>xr.Dataset</em>) – Dataset or DataFrame containing depth and density columns.</p></li>
+<li><p><strong>variable</strong> (<em>str</em>) – The name of the variable to use for the threshold calculation (default is ‘SIGMA_T’).</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Density threshold for MLD estimation (default is 0.03 kg/m³).</p></li>
+<li><p><strong>ref_depth</strong> (<em>float</em>) – Reference depth for MLD estimation (default is 10m).</p></li>
+<li><p><strong>use_bins</strong> (<em>bool</em>) – Whether to bin the profile data before computing MLD.</p></li>
+<li><p><strong>binning</strong> (<em>float</em>) – Bin resolution in meters if use_bins is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Estimated mixed layer depth, or NaN if it cannot be determined.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Till Moritz</p>
 </dd></dl>
 
 <dl class="py function">
@@ -534,6 +617,32 @@ Data <strong>should not be gridded</strong>.</p></li>
 </dl>
 <p class="rubric">Notes</p>
 <p>Original Author: Chiara Monforte</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots.plot_CR">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_CR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_CR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_CR" title="Link to this definition"></a></dt>
+<dd><p>Plots the convective resistance (CR) of a profile against depth based on calculate_CR_for_all_depth function.
+For the calculation, the density anomaly with reference to 1000 kg/m3 is used (‘SIGMA_1’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Xarray dataset in OG1 format with at least PROFILE_NUMBER, DEPTH, SIGMA_1.</p></li>
+<li><p><strong>profile_num</strong> (<em>int</em>) – The profile number to plot.</p></li>
+<li><p><strong>use_bins</strong> (<em>bool</em>) – If True, use binned data instead of raw data.</p></li>
+<li><p><strong>binning</strong> (<em>int</em>) – The depth resolution for binning.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The figure object containing the plot.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – The axis object containing the primary plot.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Till Moritz</p>
 </dd></dl>
 
 <dl class="py function">
@@ -852,8 +961,8 @@ difference was neither 0 nor 1 (meaning there are possibly issues with how the p
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="glidertest.plots.plot_profile_binned">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_profile_binned</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['TEMP',</span> <span class="pre">'PSAL',</span> <span class="pre">'DENSITY']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="_modules/glidertest/plots.html#plot_profile_binned"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_profile_binned" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="glidertest.plots.plot_profile">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['TEMP',</span> <span class="pre">'PSAL',</span> <span class="pre">'DENSITY']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="_modules/glidertest/plots.html#plot_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_profile" title="Link to this definition"></a></dt>
 <dd><p>Plots binned temperature, salinity, and density against depth on a single plot with three x-axes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1081,6 +1190,30 @@ Data should not be gridded.</p></li>
 </dd></dl>
 
 <dl class="py function" id="module-glidertest.utilities">
+<dt class="sig sig-object py" id="glidertest.utilities.bin_profile">
+<span class="sig-prename descclassname"><span class="pre">glidertest.utilities.</span></span><span class="sig-name descname"><span class="pre">bin_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/utilities.html#bin_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.utilities.bin_profile" title="Link to this definition"></a></dt>
+<dd><p>Bins the data for a single profile using the construct_2dgrid function. The binning determines the depth resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds_profile</strong> (<em>xr.Dataset</em><em> or </em><em>pd.DataFrame</em>) – The dataset or dataframe containing the data of one profile containing at least ‘DEPTH’, ‘PROFILE_NUMBER’ and the variables to bin.</p></li>
+<li><p><strong>vars</strong> (<em>list</em>) – The variables to bin.</p></li>
+<li><p><strong>binning</strong> (<em>float</em>) – The depth resolution for binning.</p></li>
+<li><p><strong>agg</strong> (<em>str</em><em>, </em><em>optional</em>) – The aggregation method (‘mean’ or ‘median’). Default is ‘mean’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>binned_profile</strong> – A dataframe containing the binned data for the selected profile.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original author: Till Moritz</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="glidertest.utilities.calc_DEPTH_Z">
 <span class="sig-prename descclassname"><span class="pre">glidertest.utilities.</span></span><span class="sig-name descname"><span class="pre">calc_DEPTH_Z</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/utilities.html#calc_DEPTH_Z"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.utilities.calc_DEPTH_Z" title="Link to this definition"></a></dt>
 <dd><p>Calculate the depth (Z position) of the glider using the gsw library to convert pressure to depth.</p>
@@ -1130,8 +1263,11 @@ correction.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.utilities.construct_2dgrid">
-<span class="sig-prename descclassname"><span class="pre">glidertest.utilities.</span></span><span class="sig-name descname"><span class="pre">construct_2dgrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/utilities.html#construct_2dgrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.utilities.construct_2dgrid" title="Link to this definition"></a></dt>
-<dd><p>Constructs a 2D gridded representation of input data based on specified resolutions.</p>
+<span class="sig-prename descclassname"><span class="pre">glidertest.utilities.</span></span><span class="sig-name descname"><span class="pre">construct_2dgrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_bin_center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_bin_center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'median'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/utilities.html#construct_2dgrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.utilities.construct_2dgrid" title="Link to this definition"></a></dt>
+<dd><p>Constructs a 2D gridded representation of input data based on specified resolutions. The function takes in x, y, and v data,
+and generates a grid where each cell contains the aggregated value (e.g., mean, median) of v corresponding to the x and y coordinates.
+If the input data is already binned and you want the grid coordinates to align with the original bin edges, set <cite>x_bin_center</cite> and <cite>y_bin_center</cite> to False and the
+resolution (i.e. xi and yi) to the bin size.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1140,6 +1276,13 @@ correction.</p>
 <li><p><strong>v</strong> (<em>array-like</em>) – Input data representing the z-dimension (values to be gridded).</p></li>
 <li><p><strong>xi</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em><em>, </em><em>default=1</em>) – Resolution for the x-dimension grid spacing.</p></li>
 <li><p><strong>yi</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em><em>, </em><em>default=1</em>) – Resolution for the y-dimension grid spacing.</p></li>
+<li><p><strong>x_bin_center</strong> (<em>bool</em><em>, </em><em>optional</em><em>, </em><em>default=True</em>) – If True, the x-coordinate grid (<cite>XI</cite>) corresponds to the <strong>center</strong> of each x-bin.
+If False, it corresponds to the <strong>left edge</strong> of each bin.
+This is especially useful if the input <cite>x</cite> data is already binned with the same resolution as <cite>xi</cite>,
+and you want the grid coordinates to align with the original bin edges. (e.g. profile numbers).</p></li>
+<li><p><strong>y_bin_center</strong> (<em>bool</em><em>, </em><em>optional</em><em>, </em><em>default=True</em>) – Same as <cite>x_bin_center</cite>, but for the y-coordinate grid (<cite>YI</cite>).
+Set to False if your <cite>y</cite> data is already pre-binned with the same resolution as <cite>yi</cite>.</p></li>
+<li><p><strong>agg</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='median'</em>) – Aggregation method to be used for gridding. Options include ‘mean’, ‘median’, etc.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1154,6 +1297,7 @@ correction.</p>
 <p class="rubric">Notes</p>
 <p>Original Author: Bastien Queste
 [Source Code](<a class="reference external" href="https://github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140">https://github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140</a>)</p>
+<p>Modified by Till Moritz: added the aggregation parameter and the option to chose either bin center or bin edge as the grid coordinates.</p>
 </dd></dl>
 
 <dl class="py function">

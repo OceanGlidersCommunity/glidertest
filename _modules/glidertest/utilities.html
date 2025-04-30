@@ -199,15 +199,18 @@
         <span class="n">formatter</span> <span class="o">=</span> <span class="n">DateFormatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">-%b&#39;</span><span class="p">)</span>
         <span class="n">locator</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">xlabel</span> <span class="o">=</span> <span class="s1">&#39;Time [UTC]&#39;</span>
-
+        
     <span class="k">return</span> <span class="n">formatter</span><span class="p">,</span> <span class="n">locator</span><span class="p">,</span> <span class="n">xlabel</span>
-
-
+        
 <div class="viewcode-block" id="construct_2dgrid">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.construct_2dgrid">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">construct_2dgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">xi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">yi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">construct_2dgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">xi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">yi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x_bin_center</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">y_bin_center</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">agg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;median&#39;</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Constructs a 2D gridded representation of input data based on specified resolutions.</span>
+<span class="sd">    Constructs a 2D gridded representation of input data based on specified resolutions. The function takes in x, y, and v data,</span>
+<span class="sd">    and generates a grid where each cell contains the aggregated value (e.g., mean, median) of v corresponding to the x and y coordinates.</span>
+<span class="sd">    If the input data is already binned and you want the grid coordinates to align with the original bin edges, set `x_bin_center` and `y_bin_center` to False and the </span>
+<span class="sd">    resolution (i.e. xi and yi) to the bin size.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -220,7 +223,17 @@
 <span class="sd">    xi : int or float, optional, default=1  </span>
 <span class="sd">        Resolution for the x-dimension grid spacing.  </span>
 <span class="sd">    yi : int or float, optional, default=1  </span>
-<span class="sd">        Resolution for the y-dimension grid spacing.  </span>
+<span class="sd">        Resolution for the y-dimension grid spacing.</span>
+<span class="sd">    x_bin_center : bool, optional, default=True</span>
+<span class="sd">        If True, the x-coordinate grid (`XI`) corresponds to the **center** of each x-bin.</span>
+<span class="sd">        If False, it corresponds to the **left edge** of each bin.</span>
+<span class="sd">        This is especially useful if the input `x` data is already binned with the same resolution as `xi`,</span>
+<span class="sd">        and you want the grid coordinates to align with the original bin edges. (e.g. profile numbers).</span>
+<span class="sd">    y_bin_center : bool, optional, default=True</span>
+<span class="sd">        Same as `x_bin_center`, but for the y-coordinate grid (`YI`).</span>
+<span class="sd">        Set to False if your `y` data is already pre-binned with the same resolution as `yi`.</span>
+<span class="sd">    agg : str, optional, default=&#39;median&#39;</span>
+<span class="sd">        Aggregation method to be used for gridding. Options include &#39;mean&#39;, &#39;median&#39;, etc.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -233,22 +246,90 @@
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    Original Author: Bastien Queste  </span>
-<span class="sd">    [Source Code](https://github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140)  </span>
+<span class="sd">    Original Author: Bastien Queste</span>
+<span class="sd">    [Source Code](https://github.com/bastienqueste/gliderad2cp/blob/de0652f70f4768c228f83480fa7d1d71c00f9449/gliderad2cp/process_adcp.py#L140)</span>
+<span class="sd">    </span>
+<span class="sd">    Modified by Till Moritz: added the aggregation parameter and the option to chose either bin center or bin edge as the grid coordinates.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">xi</span><span class="p">,</span> <span class="n">xi</span><span class="p">)</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">xi</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">xi</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">yi</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">yi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">yi</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
+        <span class="n">yi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">yi</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
+
     <span class="n">raw</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">:</span> <span class="n">v</span><span class="p">})</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
-    <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">yi</span><span class="p">)],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">raw</span><span class="p">[</span><span class="s1">&#39;xbins&#39;</span><span class="p">],</span> <span class="n">xbin_iter</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="n">retbins</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">raw</span><span class="p">[</span><span class="s1">&#39;ybins&#39;</span><span class="p">],</span> <span class="n">ybin_iter</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">retbins</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">_tmp</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;xbins&#39;</span><span class="p">,</span> <span class="s1">&#39;ybins&#39;</span><span class="p">])[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s1">&#39;median&#39;</span><span class="p">)</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">yi</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="n">raw</span><span class="p">[</span><span class="s1">&#39;xbins&#39;</span><span class="p">],</span> <span class="n">xbin_iter</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="n">retbins</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">raw</span><span class="p">[</span><span class="s1">&#39;ybins&#39;</span><span class="p">],</span> <span class="n">ybin_iter</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">retbins</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;xbins&#39;</span><span class="p">,</span> <span class="s1">&#39;ybins&#39;</span><span class="p">])</span>  <span class="c1"># Remove out-of-bound rows</span>
+    <span class="n">_tmp</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;xbins&#39;</span><span class="p">,</span> <span class="s1">&#39;ybins&#39;</span><span class="p">])[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">agg</span><span class="p">)</span>
     <span class="n">grid</span><span class="p">[</span><span class="n">_tmp</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">_tmp</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)]</span> <span class="o">=</span> <span class="n">_tmp</span><span class="o">.</span><span class="n">values</span>
+    <span class="c1"># Match XI and YI shape to grid using bin centers</span>
+    <span class="k">if</span> <span class="n">x_bin_center</span><span class="p">:</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">xi</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">xi</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">y_bin_center</span><span class="p">:</span>
+        <span class="n">yi</span> <span class="o">=</span> <span class="n">yi</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">yi</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">yi</span> <span class="o">=</span> <span class="n">yi</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">YI</span><span class="p">,</span> <span class="n">XI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">yi</span><span class="p">,</span> <span class="n">xi</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">grid</span><span class="p">,</span> <span class="n">XI</span><span class="p">,</span> <span class="n">YI</span></div>
+
+
+
+<div class="viewcode-block" id="bin_profile">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.bin_profile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bin_profile</span><span class="p">(</span><span class="n">ds_profile</span><span class="p">,</span> <span class="nb">vars</span><span class="p">,</span> <span class="n">binning</span><span class="p">,</span> <span class="n">agg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;mean&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bins the data for a single profile using the construct_2dgrid function. The binning determines the depth resolution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds_profile : xr.Dataset or pd.DataFrame</span>
+<span class="sd">        The dataset or dataframe containing the data of one profile containing at least &#39;DEPTH&#39;, &#39;PROFILE_NUMBER&#39; and the variables to bin.</span>
+<span class="sd">    vars : list</span>
+<span class="sd">        The variables to bin.</span>
+<span class="sd">    binning : float</span>
+<span class="sd">        The depth resolution for binning.</span>
+<span class="sd">    agg : str, optional</span>
+<span class="sd">        The aggregation method (&#39;mean&#39; or &#39;median&#39;). Default is &#39;mean&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    binned_profile: pd.DataFrame</span>
+<span class="sd">        A dataframe containing the binned data for the selected profile.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original author: Till Moritz</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">## check if only one profile is selected</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ds_profile</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="n">profile_number</span> <span class="o">=</span> <span class="n">ds_profile</span><span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ds_profile</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">profile_number</span> <span class="o">=</span> <span class="n">ds_profile</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">profile_number</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only one profile can be selected for binning.&quot;</span><span class="p">)</span>
+    
+    <span class="n">binned_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">msk</span> <span class="o">=</span> <span class="n">ds_profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">ds_profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">msk</span><span class="p">]</span>
+    <span class="n">profile_number</span> <span class="o">=</span> <span class="n">profile_number</span><span class="p">[</span><span class="n">msk</span><span class="p">]</span>
+
+    <span class="c1"># Check for short or empty input data and return empty DataFrame</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ds_profile</span><span class="p">[</span><span class="n">var</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="nb">vars</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+        <span class="n">var_grid</span><span class="p">,</span> <span class="n">prof_num_grid</span><span class="p">,</span> <span class="n">depth_grid</span> <span class="o">=</span> <span class="n">construct_2dgrid</span><span class="p">(</span><span class="n">profile_number</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">ds_profile</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">msk</span><span class="p">],</span>
+                                                                <span class="n">xi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">yi</span><span class="o">=</span><span class="n">binning</span><span class="p">,</span> <span class="n">x_bin_center</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">y_bin_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">agg</span><span class="o">=</span><span class="n">agg</span><span class="p">)</span>
+        <span class="n">binned_data</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_grid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">binned_data</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">depth_grid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">binned_data</span><span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prof_num_grid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">binned_data</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="compute_sunset_sunrise">
@@ -415,7 +496,6 @@
         <span class="s2">&quot;standard_name&quot;</span><span class="p">:</span> <span class="s2">&quot;depth&quot;</span><span class="p">,</span>
         <span class="s2">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;Depth calculated from pressure using gsw library, positive up.&quot;</span><span class="p">,</span>
     <span class="p">}</span>
-    
     <span class="k">return</span> <span class="n">ds</span></div>
 
 
