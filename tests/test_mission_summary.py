@@ -19,8 +19,9 @@ def test_phrase_duration_check():
     ds = fetchers.load_sample_dataset()
     summary_sheet.phrase_numberprof_check(ds)
     summary_sheet.phrase_duration_check(ds)
+def test_summary_plot():
     library_dir = Path(__file__).parent.parent.absolute()
-    example_dir = f'{library_dir}/tests/example-summarysheet/'
+    example_dir = library_dir / 'tests/example-summarysheet/'
     if not Path(example_dir).is_dir():
         Path(example_dir).mkdir()
     summary_sheet.create_docfile(ds,example_dir)
