@@ -6,7 +6,7 @@ matplotlib.use('agg')  # use agg backend to prevent creating plot windows during
 
 
 library_dir = Path(__file__).parent.parent.absolute()
-example_dir = library_dir / 'tests/example-summarysheet/'
+example_dir = f'{library_dir}/tests/example-summarysheet/'
 def test_qc_checks():
     ds = fetchers.load_sample_dataset()
     gr, spike, flat, err_mean,err_range = summary_sheet.qc_checks(ds, var='PSAL')
