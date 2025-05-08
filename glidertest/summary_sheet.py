@@ -1,6 +1,6 @@
 import numpy as np
 from rstcloth import RstCloth
-from glidertest import tools, plots, utilities
+from glidertest import tools, plots
 from ioos_qc import qartod
 from datetime import datetime
 import pypandoc
