@@ -1,13 +1,10 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
-
-from glidertest import tools, plots, utilities
-import glidertest
+from rstcloth import RstCloth
+from glidertest import tools, plots
 from ioos_qc import qartod
-import cartopy.crs as ccrs
-from matplotlib.font_manager import FontProperties
 from datetime import datetime
+import pypandoc
+import matplotlib
 import os
 
 configs = {
@@ -38,8 +35,37 @@ configs = {
     },
 }
 
-
 def qc_checks(ds, var='TEMP'):
+    """
+    Run a series of basic quality control (global range, spike test, drift and hysteresis) checks on a selected variable in the dataset.
+    We use functions from glidertest.tools as well as ioos qartod.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, containing the selected variable and time information.
+    var : str, optional, default='TEMP'
+        Variable to perform QC checks on.
+
+    Returns
+    -------
+    gr : xarray.DataArray
+        Result of the **gross range test**, identifying values outside the expected physical range.
+    spike : xarray.DataArray
+        Result of the **spike test**, detecting sudden changes in data based on threshold configuration.
+    flat : xarray.DataArray
+        Result of the **flat line test**, identifying segments with little or no variation.
+    err_mean : array-like
+        Percentage error of the dive-climb difference based on the mean values, from hysteresis analysis.
+    err_range : array-like
+        Percentage error of the dive-climb difference based on the value range, from hysteresis analysis.
+
+    Notes
+    ------
+    - Thresholds for QC tests are taken from the global `configs` dictionary.
+    Original Author: Chiara  Monforte
+    """
+    utilities._check_necessary_variables(ds, [var, 'TIME'])
     gr = tools.compute_global_range(ds, var=var, min_val=configs[var]['gross_range_test']['suspect_span'][0],
                                     max_val=configs[var]['gross_range_test']['suspect_span'][1])
     spike = qartod.spike_test(ds[var], suspect_threshold=configs[var]['spike_test']['suspect_threshold'],
@@ -49,34 +75,26 @@ def qc_checks(ds, var='TEMP'):
 
     return gr, spike, flat, err_mean,err_range
 
-
-def fill_tableqc(df,ds, var='TEMP'):
-    if var == 'TEMP':
-        variable = 'Temperature'
-    if var == 'PSAL':
-        variable = 'Salinity'
-    if var == 'DOXY':
-        variable = 'Oxygen'
-    if var == 'CHLA':
-        variable = 'Chlorophyll'
-    if var not in ds.variables:
-        df.loc[:, variable] = 'No data'
-    else:
-        gr, spike, flat, err_mean,err_range = qc_checks(ds, var=var)
-        if len(gr) > 0:
-            df.loc[0, variable] = 'X'
-        if len(np.where((spike == 3) | (spike == 4))[0]) > 0:
-            df.loc[1, variable] = 'X'
-        if len(np.where((flat == 3) | (flat == 4))[0]) > 0:
-            df.loc[2, variable] = 'X'
-        if len(np.where(err_mean > 5)[0]) > 5:
-            df.loc[3, variable] = 'X'
-        if len(np.where(err_range > 5)[0]) > 5:
-            df.loc[4, variable] = 'X'
-    return df
-
-
 def phrase_duration_check(ds):
+    """
+    Check for anomalies in profile duration and return a human-readable message summarizing the result.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, containing time information required for computing profile durations.
+
+    Returns
+    -------
+    duration_check : str
+        A message indicating whether abnormal profile durations have been detected:
+        - If outliers are found: `"X profiles have abnormal duration"`
+        - Otherwise: `"No issues with profile duration have been detected"`
+
+    Notes
+    ------
+    Original Author: Chiara  Monforte.
+    """
     duration = tools.compute_prof_duration(ds)
     rolling_mean, overtime = tools.find_outlier_duration(duration, rolling=20, std=2)
     if len(overtime) > 0:
@@ -85,8 +103,26 @@ def phrase_duration_check(ds):
         duration_check = 'No issues with profile duration have been detected'
     return duration_check
 
-
 def phrase_numberprof_check(ds):
+    """
+   Check the monotonicity of profile numbers and return a human-readable summary of the result.
+
+   Parameters
+   ----------
+   ds : xarray.Dataset
+       Dataset in **OG1 format**, containing the **PROFILE_NUMBER** variable.
+
+   Returns
+   -------
+   prof_check : str
+       A message indicating whether profile numbers increase monotonically:
+       - If monotonic: `"No issues detected"`
+       - If not monotonic: `"Issues with profile number have been detected"`
+
+   Notes
+   ------
+   Original Author: Chiara  Monforte.
+   """
     check = tools.check_monotony(ds.PROFILE_NUMBER)
     if check:
         prof_check = 'No issues detected'
@@ -94,190 +130,334 @@ def phrase_numberprof_check(ds):
         prof_check = 'Issues with profile number have been detected'
     return prof_check
 
-# Page 1 with general info and location of the mission
-def summary_plot(ds, save_dir='.', test=True):
-    fig, ax = plt.subplots(figsize=(8.3, 11.7))
-    ax.patch.set_edgecolor('black')
-    ax.patch.set_linewidth(10)
+def fill_str(strgr, strst, strft, strhy, strdr,ds, var='TEMP'):
+    """
+    Populate QC summary strings for a selected variable based on a series of QC checks.
 
-    fig.subplots_adjust(hspace=0.35, wspace=0.15)
-    font_size = 10
+    Parameters
+   ----------
+    strgr : list of str
+        Row for **Global range test** results with X or ✓, structured as `[label/test name, TEMP, PSAL, DOXY, CHLA]`.
+    strst : list of str
+        Row for **Spike test** results with X or ✓, structured as `[label/test name, TEMP, PSAL, DOXY, CHLA]`.
+    strft : list of str
+        Row for **Flat line test** results with X or ✓, structured as `[label/test name, TEMP, PSAL, DOXY, CHLA]`.
+    strhy : list of str
+        Row for **Hysteresis error (mean)** results with X or ✓, structured as `[label/test name, TEMP, PSAL, DOXY, CHLA]`.
+    strdr : list of str
+        Row for **Hysteresis error (range)** results with X or ✓, structured as `[label/test name, TEMP, PSAL, DOXY, CHLA]`.
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, containing the selected variable.
+    var : str, optional, default='TEMP'
+        Selected variable to evaluate. Must be one of: `'TEMP'`, `'PSAL'`, `'DOXY'`, `'CHLA'`.
 
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-    plt.axis('off')
+    Returns
+    -------
+    strgr : list of str
+        Updated Global range test row.
+    strst : list of str
+        Updated Spike test row.
+    strft : list of str
+        Updated Flat line test row.
+    strhy : list of str
+        Updated Hysteresis error (mean) row.
+    strdr : list of str
+        Updated Hysteresis error (range) row.
 
-    ### Create the text boxes
-    if 'PLATFORM_SERIAL_NUMBER' in ds.variables:
-        gserial = ds['PLATFORM_SERIAL_NUMBER'].values
+    Notes
+    ------
+    - Input string is filled with ✓. Each list entry is updated with an `'X'` if a QC issue is detected for the corresponding variable.
+    - If the variable is missing in the dataset, all tests for that variable are marked as `"No data"`.
+    - Column indices are mapped as: `TEMP=1`, `PSAL=2`, `DOXY=3`, `CHLA=4`.
+    Original Author: Chiara  Monforte.
+    """
+    if var == 'TEMP':
+        i = 1
+    if var == 'PSAL':
+        i = 2
+    if var == 'DOXY':
+        i = 3
+    if var == 'CHLA':
+        i = 4
+    if var not in ds.variables:
+        strgr[i] = 'No data'
+        strft[i] = 'No data'
+        strst[i] = 'No data'
+        strhy[i] = 'No data'
+        strdr[i] = 'No data'
     else:
-        gserial = 'Unknown'
-    if 'deployment_id' in ds.attrs:
-        mission = ds.attrs['deployment_id']
-    else:
-        mission = 'Unknown'
-    if 'contributor_name' in ds.attrs:
-        cname = ds.attrs['contributor_name']
-    else:
-        cname = 'Unknown'
+        gr, spike, flat, err_mean,err_range = qc_checks(ds, var=var)
+        if len(gr) > 0:
+            strgr[i] = 'X'
+        if len(np.where((spike == 3) | (spike == 4))[0]) > 0:
+            strst[i] = 'X'
+        if len(np.where((flat == 3) | (flat == 4))[0]) > 0:
+            strft[i] = 'X'
+        if len(np.where(err_mean > 5)[0]) > 5:
+            strhy[i] = 'X'
+        if len(np.where(err_range > 5)[0]) > 5:
+            strdr[i] = 'X'
+    return strgr, strst, strft, strhy, strdr
 
-    ### Create the text boxes
-    textstr = '\n'.join((
-        f"Glider serial:  {gserial}",
-        f"Mission number:  {mission}",
-        f"Deployment date:  {ds.TIME[0].values.astype('datetime64[D]')}",
-        f"Recovery date:  {ds.TIME[-1].values.astype('datetime64[D]')}",
-        f"Mission duration:  {np.round(((ds.TIME.max() - ds.TIME.min()) / np.timedelta64(1, 'D')).astype(float).values, 1)} days",
-        f"Diving depth range:  {int(tools.max_depth_per_profile(ds).min())} - {int(tools.max_depth_per_profile(ds).max())} m",
-        f"Dataset creator:  {cname} \n({ds.contributing_institutions})",
-    ))
+def create_docfile(ds, path=''):
+    """
+    Generate a reStructuredText (.rst) mission summary report for a specific glider deployment.
 
-    # Add text titles
-    ax.text(-0.05, 1.05, 'Glidertest summary mission sheet', transform=ax.transAxes, fontsize=font_size + 10,
-            weight='bold')
-    ax.text(-0.05, 1.01, 'Main mission info', transform=ax.transAxes, fontsize=font_size, weight='bold')
-    ax.text(-0.05, 0.64, 'Basic payload configuration', transform=ax.transAxes, fontsize=font_size, weight='bold')
-    ax.text(0.45, 0.64, 'Basic water column structure', transform=ax.transAxes, fontsize=font_size, weight='bold')
-    ax.text(-0.05, 0.99, textstr, transform=ax.transAxes, fontsize=font_size,
-            verticalalignment='top')
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, containing metadata and profile data for the mission.
+        Should include variables like **TIME**, **PLATFORM_SERIAL_NUMBER**, and measurement variables
+        (e.g., TEMP, PSAL, DOXY, CHLA, etc.).
+    path : str, optional, default=''
+        Output file path for the generated `.rst` document.
 
-    # Payload config table
-    df = pd.DataFrame({'': ['Temperature', 'Salinity', 'Oxygen', 'Chlorophyll', 'Backscatter', 'Altimeter', 'ADCP'],
-                       'Data exist': ['X', 'X', 'X', 'X', 'X', 'X', 'X']})
+    Returns
+    -------
+    doc : RstCloth
+        RstCloth document object with the mission summary content written to disk.
 
-    if 'TEMP' in ds.variables:
-        df.loc[0, 'Data exist'] = "✓"
-    if 'PSAL' in ds.variables:
-        df.loc[1, 'Data exist'] = "✓"
-    if 'ALTITUDE' in ds.variables:
-        df.loc[5, 'Data exist'] = "✓"
-    if 'CHLA' in ds.variables:
-        df.loc[3, 'Data exist'] = "✓"
-    if 'BBP700' in ds.variables:
-        df.loc[4, 'Data exist'] = "✓"
-    if 'PRES_ADCP' in ds.variables:
-        df.loc[6, 'Data exist'] = "✓"
-    if 'DOXY' in ds.variables:
-        df.loc[2, 'Data exist'] = "✓"
-    tab_ax = fig.add_axes([0.16, 0.58, 0.15, 0.25], anchor='NE')
-    fig.patch.set_visible(False)
-    tab_ax.axis('off')
-    tab_ax.axis('tight')
-    table = tab_ax.table(cellText=df.values, colLabels=df.columns, cellLoc='center')
-    table.scale(2, 2)
+    Notes
+    ------
+    - The document includes:
+        - Main mission info (serial, deployment ID, duration, depth range)
+        - Instrument payload summary (✓ if data is available)
+        - Water column structure image (`bv.png`)
+        - Basic quality checks:
+            - Profile number monotonicity
+            - Duration anomalies
+            - Summary of global range, spike, flat line, hysteresis, and drift checks
+        - Glider track image (`gt.png`)
+    - The function assumes supporting images (`gt.png`, `bv.png`) are available in the same directory.
+    Original Author: Chiara  Monforte.
+    """
+    with open(path, 'w', encoding='utf-8') as output_file:
+        doc = RstCloth(output_file)
+        doc.title('Glidertest summary mission sheet')
+        doc.newline()
+        doc.h1('Main mission info')
+        ### Create the text boxes
+        if 'PLATFORM_SERIAL_NUMBER' in ds.variables:
+            gserial = ds['PLATFORM_SERIAL_NUMBER'].values
+        else:
+            gserial = 'Unknown'
+        if 'deployment_id' in ds.attrs:
+            mission = ds.attrs['deployment_id']
+        else:
+            mission = 'Unknown'
+        if 'contributor_name' in ds.attrs:
+            cname = ds.attrs['contributor_name']
+        else:
+            cname = 'Unknown'
+        doc.content(f'Glider serial:  {gserial}')
+        doc.newline()
+        doc.content(f"Mission number:  {mission}")
+        doc.newline()
+        doc.content(f"Deployment date:  {ds.TIME[0].values.astype('datetime64[D]')}")
+        doc.newline()
+        doc.content(f"Recovery date:  {ds.TIME[-1].values.astype('datetime64[D]')}")
+        doc.newline()
+        doc.content(
+            f"Mission duration:  {np.round(((ds.TIME.max() - ds.TIME.min()) / np.timedelta64(1, 'D')).astype(float).values, 1)} days")
+        doc.newline()
+        doc.content(
+            f"Diving depth range:  {int(tools.max_depth_per_profile(ds).min())} - {int(tools.max_depth_per_profile(ds).max())} m")
+        doc.newline()
+        doc.content(f"Dataset creator:  {cname} \n({ds.contributing_institutions})")
 
-    for (row, col), cell in table.get_celld().items():
-        if (row == 0) or (col == -1):
-            cell.set_text_props(fontproperties=FontProperties(weight='bold'))
-    for (row, col), cell in table.get_celld().items():
-        if (col == 0):
-            cell.set_text_props(fontproperties=FontProperties(weight='bold'))
+        # Add glider track image
 
-    # Basic checks
-    ax.text(-0.05, 0.22, 'Basic checks', transform=ax.transAxes, fontsize=font_size, weight='bold')
-    basictext = '\n'.join((
-        f"Issues with profile number: {phrase_numberprof_check(ds)} ",
-        f"Issues with profile duration: {phrase_duration_check(ds)}",))
-    ax.text(-0.05, 0.21, basictext, transform=ax.transAxes, fontsize=font_size,
-            verticalalignment='top')
-    ## Basic checks table
-    df2 = pd.DataFrame({'':['Global range', 'Spike test', 'Flat test', 'Hysteresis (mean)', 'Hysteresis (range)', 'Drift'],
-                    'Temperature':['✓', '✓', '✓', '✓', '✓', '✓'], 
-                    'Salinity':['✓', '✓', '✓', '✓', '✓', '✓'], 
-                    'Oxygen':['✓', '✓', '✓', '✓', '✓', '✓'], 
-                    'Chlorophyll':['✓', '✓', '✓', '✓', '✓', '✓']})
-    tableT = fill_tableqc(df2,ds, var='TEMP')
-    tableS = fill_tableqc(tableT,ds, var='PSAL')
-    tableO = fill_tableqc(tableS,ds, var='DOXY')
-    tableC = fill_tableqc(tableO,ds, var='CHLA')
+        doc.newline()
+        doc.directive('image', 'gt.png', fields=[
+            ('alt', ''),
+            ('width', '600px')
+        ])
 
-    colrs = np.copy(tableC)
-    colrs[np.where(colrs != 'X')] = 'w'
-    colrs[np.where(colrs == 'X')] = 'lightcoral'
+        doc.newline()
+        doc.h1('Basic payload configuration')
+        temp_str = ['Temperature', 'X']
+        sal_str = ['Salinity', 'X']
+        oxy_str = ['Oxygen', 'X']
+        chla_str = ['Chlorophyll', 'X']
+        back_str = ['Backscatter', 'X']
+        alt_str = ['Altimeter', 'X']
+        adcp_str = ['ADCP', 'X']
 
-    tab2_ax = fig.add_axes([0.34, 0.24, 0.27, 0.55], anchor='NE')
-    fig.patch.set_visible(False)
-    tab2_ax.axis('off')
-    tab2_ax.axis('tight')
-    table2 = tab2_ax.table(cellText=df2.values, colLabels=df2.columns, cellColours=colrs, cellLoc='center')
-    table2.scale(3, 2)
+        if 'TEMP' in ds.variables:
+            temp_str[-1] = "✓"
+        if 'PSAL' in ds.variables:
+            sal_str[-1] = "✓"
+        if 'ALTITUDE' in ds.variables:
+            alt_str[-1] = "✓"
+        if 'CHLA' in ds.variables:
+            chla_str[-1] = "✓"
+        if 'BBP700' in ds.variables:
+            back_str[-1] = "✓"
+        if 'PRES_ADCP' in ds.variables:
+            adcp_str[-1] = "✓"
+        if 'DOXY' in ds.variables:
+            oxy_str[-1] = "✓"
+        doc.table(
+            ['', 'Data exists'],
+            data=[
+                temp_str,
+                sal_str,
+                oxy_str,
+                chla_str,
+                back_str,
+                alt_str,
+                adcp_str
+            ])
 
+        # Add basic water column structure
+        doc.h1(text='Basic water column structure', char='-')
+        doc.newline()
+        doc.directive('image', 'bv.png', fields=[
+            ('alt', ''),
+            ('width', '600px')
+        ])
+        doc.newline()
+        doc.h1('Basic checks')
+        profnum = phrase_numberprof_check(ds)
+        doc.newline()
+        dur = phrase_duration_check(ds)
+        doc.content(f"Issues with profile number: {profnum} ")
+        doc.content(f"Issues with profile duration: {dur}", )
+        gr_strb = ['Global range', '✓', '✓', '✓', '✓']
+        st_strb = ['Spike test', '✓', '✓', '✓', '✓']
+        ft_strb = ['Flat test', '✓', '✓', '✓', '✓']
+        hy_strb = ['Hysteresis', '✓', '✓', '✓', '✓']
+        dr_strb = ['Drift', '✓', '✓', '✓', '✓']
+        gr_strb, st_strb, ft_strb, hy_strb, dr_strb = fill_str(gr_strb, st_strb, ft_strb, hy_strb, dr_strb, ds,
+                                                               var='TEMP')
+        gr_strb, st_strb, ft_strb, hy_strb, dr_strb = fill_str(gr_strb, st_strb, ft_strb, hy_strb, dr_strb, ds,
+                                                               var='PSAL')
+        gr_strb, st_strb, ft_strb, hy_strb, dr_strb = fill_str(gr_strb, st_strb, ft_strb, hy_strb, dr_strb, ds,
+                                                               var='DOXY')
+        gr_strb, st_strb, ft_strb, hy_strb, dr_strb = fill_str(gr_strb, st_strb, ft_strb, hy_strb, dr_strb, ds,
+                                                               var='CHLA')
+        doc.table(
+            ['', 'Temperature', 'Salinity', 'Oxygen', 'Chlorophyll'],
+            data=[
+                gr_strb,
+                st_strb,
+                ft_strb,
+                hy_strb,
+                dr_strb,
+            ])
+        todays_date = datetime.today().strftime('%Y-%m-%d')
+        doc.content(f'Created with glidertest on {todays_date}')
 
-    for (row, col), cell in table2.get_celld().items():
-        if (row == 0) or (col == -1):
-            cell.set_text_props(fontproperties=FontProperties(weight='bold', size=55))
-        if col == 0:
-            cell.set_text_props(fontproperties=FontProperties(weight='bold'))
+    return doc
+def rst_to_md(input_rst_path = '', output_md_path = ''):
+    """
+    Convert a reStructuredText (.rst) file to Markdown format using Pandoc.
 
-    
+    Parameters
+    ----------
+    input_rst_path : str, optional, default=''
+        Path to the input `.rst` file.
+    output_md_path : str, optional, default=''
+        Path where the converted `.md` file will be saved.
 
-    # Add glider track plot
-    gt_ax = fig.add_axes([0.47, 0.64, 0.38, 0.25], projection=ccrs.PlateCarree(), anchor='SE', zorder=-1, )
-    plots.plot_glider_track(ds, ax=gt_ax)
-    # Add basic variables profiles plot
-    bv1_ax = fig.add_axes([0.5, 0.31, 0.21, 0.21], anchor='SE', zorder=-1)
-    bv2_ax = fig.add_axes([0.78, 0.31, 0.21, 0.21], anchor='SE', zorder=-1)
-    plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1, ax=[bv1_ax, bv2_ax])
-    todays_date = datetime.today().strftime('%Y%m%d')
-    if test:
-        ## Add logo at the bottom
-        im = plt.imread('img/logos.png')
-        newax = fig.add_axes([0.88, -0.03, 0.1, 0.1], anchor='NE')
-        newax.imshow(im)
-        newax.axis('off')
-        ax.text(0.78, -0.11, 'Created with Glidertest', transform=ax.transAxes, fontsize=font_size - 3,
-            verticalalignment='top')
-        fig.savefig(f'{save_dir}/{gserial}_{mission}_report{todays_date}.pdf')
-    return fig, ax
+    Returns
+    -------
+    None
+        Prints a confirmation message after successful conversion.
 
+    Notes
+    ------
+    - Requires `pypandoc` and a working Pandoc installation.
+    Original Author: Chiara  Monforte.
+    """
+    pypandoc.convert_file(input_rst_path, 'md', format='rst', outputfile=output_md_path)
+    return print(f"Converted RST to Markdown and saved to: {output_md_path}")
 
-def summary_plot_template(ds, var='CHLA', save_dir=''):
-    fig, ax = plt.subplots(figsize=(8.3, 11.7))
-    ax.patch.set_edgecolor('black')
-    ax.patch.set_linewidth(10)
+def mission_report(ds, report_name):
+    """
+    Generate a full mission report for a glider deployment, including figures and summary documents in .rst and .md format.
+    All is saved in a new folder (The report directory is created automatically if it doesn't exist).
 
-    fig.subplots_adjust(hspace=0.35, wspace=0.15)
-    font_size = 10
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, containing metadata and measured variables for the deployment.
+    report_name : str
+        Base name for the report folder. The current date will be appended (format: YYYYMMDD).
 
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-    plt.axis('off')
+    Returns
+    -------
+    None
+        Saves the following in a new report folder:
+        - Glider track plot (`gt.png`)
+        - Basic variable structure plot (`bv.png`)
+        - Mission summary in `.rst` and `.md` formats
 
-    ### Basic info
-    textstr = '\n'.join((
-        f"Sensor name:  ",
-        f"Sensor serial: ",
-        f"Calibration date:  ",
-        f"Calibration parameters:  ",
-        f"Data availabiliy time period:{str(ds[var].dropna(dim='N_MEASUREMENTS').TIME[0].values.astype('datetime64[D]'))} - {str(ds[var].dropna(dim='N_MEASUREMENTS').TIME[-1].values.astype('datetime64[D]'))}",
-        f"Data availabiliy depth range: {int(ds[var].dropna(dim='N_MEASUREMENTS').DEPTH.min())} - {int(ds[var].dropna(dim='N_MEASUREMENTS').DEPTH.max())} m",
-    ))
+    Notes
+    ------
+    Original Author: Chiara  Monforte.
+    """
+    report_dir = report_name + datetime.today().strftime('%Y%m%d')
+    if not os.path.exists(report_dir):
+        os.makedirs(report_dir)
 
-    # Add text titles
-    ax.text(-0.05, 1.05, f'Glidertest summary mission sheet - {var}', transform=ax.transAxes, fontsize=font_size + 10,
-            weight='bold')
-    ax.text(-0.05, 1.01, 'Main mission info', transform=ax.transAxes, fontsize=font_size, weight='bold')
-    ax.text(-0.05, 0.64, 'Sampling resolution', transform=ax.transAxes, fontsize=font_size, weight='bold')
-    ax.text(0.45, 0.64, 'Basic checks', transform=ax.transAxes, fontsize=font_size, weight='bold')
-    ax.text(-0.05, 0.99, textstr, transform=ax.transAxes, fontsize=font_size,
-            verticalalignment='top')
-    # Section plots
-    s_ax = fig.add_axes([0.58, 0.65, 0.45, 0.25], anchor='SE', zorder=-1, )
-    c = s_ax.scatter(ds.TIME, ds.DEPTH, c=ds[var], s=10, vmin=np.nanpercentile(ds[var], 0.5),
-                     vmax=np.nanpercentile(ds[var], 99.5))
-    plt.colorbar(c, ax=s_ax, label=f'{utilities.plotting_labels(var)} \n({utilities.plotting_units(ds, var)})')
-    s_ax.invert_yaxis()
-    s_ax.set_ylabel('Depth (m)')
-    utilities._time_axis_formatter(s_ax, ds, format_x_axis=True)
-    # Sampling period plot
-    sp_ax = fig.add_axes([0.08, 0.32, 0.35, 0.22], anchor='SE', zorder=-1, )
-    plots.plot_sampling_period(ds, sp_ax, variable=var)
+    matplotlib.use('Agg')
+    fig_gt, ax_gt = plots.plot_glider_track(ds)
+    fig_bv, ax_bv = plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1)
+    fig_gt.savefig(f'{report_dir}/gt.png')
+    fig_bv.savefig(f'{report_dir}/bv.png')
 
-    # Basic check tests or other plots
-    bc_ax1 = fig.add_axes([0.58, 0.48, 0.20, 0.10], anchor='SE', zorder=-1, )
-    bc_ax2 = fig.add_axes([0.58, 0.34, 0.20, 0.10], anchor='SE', zorder=-1, )
-    bc_ax3 = fig.add_axes([0.58, 0.23, 0.20, 0.10], anchor='SE', zorder=-1, )
-    bc_ax4 = fig.add_axes([0.80, 0.48, 0.20, 0.10], anchor='SE', zorder=-1, )
-    bc_ax5 = fig.add_axes([0.80, 0.34, 0.20, 0.10], anchor='SE', zorder=-1, )
-    bc_ax6 = fig.add_axes([0.80, 0.23, 0.20, 0.10], anchor='SE', zorder=-1, )
-    return fig, ax
+    create_docfile(ds, f'{report_dir}/summary.rst')
+    rst_to_md(input_rst_path=f'{report_dir}/summary.rst',
+                    output_md_path=f'{report_dir}/summary.md')
+    print(f"Your report is saved in {report_dir} in rst and markdown")
+
+def template_docfile(ds, path=''):
+    """
+    Create a template reStructuredText (.rst) document with example text, image, and table.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, used as a placeholder or reference for generating content.
+    path : str, optional, default=''
+        Path to the output `.rst` file.
+
+    Returns
+    -------
+    doc : RstCloth
+        RstCloth document object written to disk with placeholder content.
+
+    Notes
+    ------
+    Original Author: Chiara  Monforte.
+    """
+    with open(path, 'w', encoding='utf-8') as output_file:
+        doc = RstCloth(output_file)
+        doc.title('Title of the document')
+        doc.newline()
+        doc.h1('First subtitle')
+        ### Create the text boxes
+        doc.content('Add text with specific info')
+        doc.newline()
+        doc.content('Add some more text')
+
+        # Add a plot
+        doc.newline()
+        doc.directive('image', 'example.png', fields=[
+            ('alt', ''),
+            ('width', '600px')
+        ])
+
+        doc.newline()
+        doc.h1('Second subtitle')
+        #Add a table
+        doc.table(['Row heading', 'Example Table'],
+          data=[
+              ['Info 1','Detail 1'],
+              ['Info 2','Detail 2'],
+              ['Info 3','Detail 3'],
+          ])
+        todays_date = datetime.today().strftime('%Y-%m-%d')
+        doc.content(f'Created with glidertest on {todays_date}')
+    return doc
