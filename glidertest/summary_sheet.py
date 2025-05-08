@@ -232,11 +232,13 @@ def create_docfile(ds, path):
     - The function assumes supporting images (`gt.png`, `bv.png`) are available in the same directory.
     Original Author: Chiara  Monforte.
     """
+
+    '''
     if not (path / 'gt.png').exists():
         raise ValueError(f"Did not find required file gt.png in supplied path {path}. Aborting")
     if not (path / 'bv.png').exists():
         raise ValueError(f"Did not find required file bv.png in supplied path {path}. Aborting")
-
+    '''
     with open(path/'summary.rst', 'w', encoding='utf-8') as output_file:
         doc = RstCloth(output_file)
         doc.title('Glidertest summary mission sheet')
