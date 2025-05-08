@@ -21,7 +21,11 @@ def test_phrase_duration_check():
     summary_sheet.phrase_duration_check(ds)
     library_dir = Path(__file__).parent.parent.absolute()
     example_dir = f'{library_dir}/tests/example-summarysheet/'
-    summary_sheet.create_docfile(ds, path=f'{example_dir}/ex_rst.rst')
-    summary_sheet.rst_to_md(input_rst_path = f'{example_dir}/ex_rst.rst', output_md_path = f'{example_dir}/ex_md.md')
+    if not Path(example_dir).is_dir():
+        Path(example_dir).mkdir()
+    summary_sheet.create_docfile(ds,example_dir)
+    summary_sheet.rst_to_md(example_dir / 'ex_rst.rst',
+                            example_dir / 'ex_md.md')
     summary_sheet.mission_report(ds, example_dir)
-    summary_sheet.template_docfile(ds, path=f'{example_dir}/template.rst')
+    summary_sheet.template_docfile(ds, example_dir)
+

@@ -6,6 +6,7 @@ from datetime import datetime
 import pypandoc
 import matplotlib
 import os
+from pathlib import Path
 
 configs = {
     "TEMP": {"gross_range_test": {
@@ -199,7 +200,7 @@ def fill_str(strgr, strst, strft, strhy, strdr,ds, var='TEMP'):
             strdr[i] = 'X'
     return strgr, strst, strft, strhy, strdr
 
-def create_docfile(ds, path=''):
+def create_docfile(ds, path):
     """
     Generate a reStructuredText (.rst) mission summary report for a specific glider deployment.
 
@@ -209,7 +210,7 @@ def create_docfile(ds, path=''):
         Dataset in **OG1 format**, containing metadata and profile data for the mission.
         Should include variables like **TIME**, **PLATFORM_SERIAL_NUMBER**, and measurement variables
         (e.g., TEMP, PSAL, DOXY, CHLA, etc.).
-    path : str, optional, default=''
+    path : Path()
         Output file path for the generated `.rst` document.
 
     Returns
@@ -231,7 +232,12 @@ def create_docfile(ds, path=''):
     - The function assumes supporting images (`gt.png`, `bv.png`) are available in the same directory.
     Original Author: Chiara  Monforte.
     """
-    with open(path, 'w', encoding='utf-8') as output_file:
+    if not (path / 'gt.png').exists():
+        raise ValueError(f"Did not find required file gt.png in supplied path {path}. Aborting")
+    if not (path / 'bv.png').exists():
+        raise ValueError(f"Did not find required file bv.png in supplied path {path}. Aborting")
+
+    with open(path/'summary.rst', 'w', encoding='utf-8') as output_file:
         doc = RstCloth(output_file)
         doc.title('Glidertest summary mission sheet')
         doc.newline()
@@ -349,15 +355,15 @@ def create_docfile(ds, path=''):
         doc.content(f'Created with glidertest on {todays_date}')
 
     return doc
-def rst_to_md(input_rst_path = '', output_md_path = ''):
+def rst_to_md(input_rst_path,  output_md_path):
     """
     Convert a reStructuredText (.rst) file to Markdown format using Pandoc.
 
     Parameters
     ----------
-    input_rst_path : str, optional, default=''
+    input_rst_path : Path()
         Path to the input `.rst` file.
-    output_md_path : str, optional, default=''
+    output_md_path : Path()
         Path where the converted `.md` file will be saved.
 
     Returns
@@ -371,12 +377,12 @@ def rst_to_md(input_rst_path = '', output_md_path = ''):
     Original Author: Chiara  Monforte.
     """
     pypandoc.convert_file(input_rst_path, 'md', format='rst', outputfile=output_md_path)
-    return print(f"Converted RST to Markdown and saved to: {output_md_path}")
+    print(f"Converted RST to Markdown and saved to: {output_md_path}")
 
-def mission_report(ds, report_name):
+def mission_report(ds, report_folder_path):
     """
     Generate a full mission report for a glider deployment, including figures and summary documents in .rst and .md format.
-    All is saved in a new folder (The report directory is created automatically if it doesn't exist).
+    All is saved in a new folder called summary_sheet_date.
 
     Parameters
     ----------
@@ -397,22 +403,23 @@ def mission_report(ds, report_name):
     ------
     Original Author: Chiara  Monforte.
     """
-    report_dir = report_name + datetime.today().strftime('%Y%m%d')
-    if not os.path.exists(report_dir):
-        os.makedirs(report_dir)
+    folder_name = 'summary_sheet'+str(datetime.today().strftime('%Y%m%d'))
+    report_dir = report_folder_path / folder_name
+    if not Path(report_dir).is_dir():
+        Path(report_dir).mkdir()
 
     matplotlib.use('Agg')
     fig_gt, ax_gt = plots.plot_glider_track(ds)
     fig_bv, ax_bv = plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1)
-    fig_gt.savefig(f'{report_dir}/gt.png')
-    fig_bv.savefig(f'{report_dir}/bv.png')
+    fig_gt.savefig(report_dir / 'gt.png')
+    fig_bv.savefig(report_dir / 'bv.png')
 
-    create_docfile(ds, f'{report_dir}/summary.rst')
-    rst_to_md(input_rst_path=f'{report_dir}/summary.rst',
-                    output_md_path=f'{report_dir}/summary.md')
+    create_docfile(ds, report_dir)
+    rst_to_md(report_dir/'summary.rst',
+              report_dir/'summary.md')
     print(f"Your report is saved in {report_dir} in rst and markdown")
 
-def template_docfile(ds, path=''):
+def template_docfile(ds, path):
     """
     Create a template reStructuredText (.rst) document with example text, image, and table.
 
@@ -432,7 +439,7 @@ def template_docfile(ds, path=''):
     ------
     Original Author: Chiara  Monforte.
     """
-    with open(path, 'w', encoding='utf-8') as output_file:
+    with open(Path(f'{path}/summary_template.rst'), 'w', encoding='utf-8') as output_file:
         doc = RstCloth(output_file)
         doc.title('Title of the document')
         doc.newline()
