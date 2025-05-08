@@ -276,7 +276,7 @@ def create_docfile(ds, path):
         # Add glider track image
 
         doc.newline()
-        doc.directive('image', 'gt.png', fields=[
+        doc.directive('image', './gt.png', fields=[
             ('alt', ''),
             ('width', '600px')
         ])
@@ -320,7 +320,7 @@ def create_docfile(ds, path):
         # Add basic water column structure
         doc.h1(text='Basic water column structure', char='-')
         doc.newline()
-        doc.directive('image', 'bv.png', fields=[
+        doc.directive('image', './bv.png', fields=[
             ('alt', ''),
             ('width', '600px')
         ])
@@ -357,7 +357,7 @@ def create_docfile(ds, path):
         doc.content(f'Created with glidertest on {todays_date}')
 
     return doc
-def rst_to_md(input_rst_path,  output_md_path):
+def rst_to_md(path):
     """
     Convert a reStructuredText (.rst) file to Markdown format using Pandoc.
 
@@ -378,8 +378,8 @@ def rst_to_md(input_rst_path,  output_md_path):
     - Requires `pypandoc` and a working Pandoc installation.
     Original Author: Chiara  Monforte.
     """
-    pypandoc.convert_file(input_rst_path, 'md', format='rst', outputfile=output_md_path)
-    print(f"Converted RST to Markdown and saved to: {output_md_path}")
+    pypandoc.convert_file(path / 'summary.rst', 'md', format='rst', outputfile=path/'summary.rst')
+    print(f"Converted RST to Markdown and saved to: {path}")
 
 def mission_report(ds, report_folder_path):
     """
@@ -417,8 +417,7 @@ def mission_report(ds, report_folder_path):
     fig_bv.savefig(report_dir / 'bv.png')
 
     create_docfile(ds, report_dir)
-    rst_to_md(report_dir/'summary.rst',
-              report_dir/'summary.md')
+    rst_to_md(Path(report_dir))
     print(f"Your report is saved in {report_dir} in rst and markdown")
 
 def template_docfile(ds, path):
