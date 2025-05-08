@@ -27,7 +27,6 @@ def test_summary_plot():
         Path(example_dir).mkdir()
     summary_sheet.mission_report(ds, example_dir)
     summary_sheet.create_docfile(ds,example_dir)
-    summary_sheet.rst_to_md(example_dir / 'ex_rst.rst',
-                            example_dir / 'ex_md.md')
+    summary_sheet.rst_to_md(example_dir )
     summary_sheet.template_docfile(ds, example_dir)
 
