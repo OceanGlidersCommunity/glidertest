@@ -23,4 +23,3 @@ folium
 Ipython
 ipywidgets
 pypandoc
-rstcloth
