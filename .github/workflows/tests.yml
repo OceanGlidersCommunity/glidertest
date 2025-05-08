@@ -32,7 +32,7 @@ jobs:
 
     - name: Install rstcloth (PyPI-only)
       run: |
-        micromamba run -n TEST pip install rstcloth
+        micromamba run pip install rstcloth
 
     - name: Install glidertest
       run: |
