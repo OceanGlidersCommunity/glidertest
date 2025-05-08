@@ -427,7 +427,7 @@ def template_docfile(ds, path):
     ----------
     ds : xarray.Dataset
         Dataset in **OG1 format**, used as a placeholder or reference for generating content.
-    path : str, optional, default=''
+    path : Path()
         Path to the output `.rst` file.
 
     Returns
@@ -439,7 +439,7 @@ def template_docfile(ds, path):
     ------
     Original Author: Chiara  Monforte.
     """
-    with open(Path(f'{path}/summary_template.rst'), 'w', encoding='utf-8') as output_file:
+    with open(Path(path/'summary_template.rst'), 'w', encoding='utf-8') as output_file:
         doc = RstCloth(output_file)
         doc.title('Title of the document')
         doc.newline()
