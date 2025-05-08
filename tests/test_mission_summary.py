@@ -21,13 +21,13 @@ def test_phrase_duration_check():
     summary_sheet.phrase_duration_check(ds)
 def test_summary_plot():
     ds = fetchers.load_sample_dataset()
-    library_dir = Path(__file__).parent
-    example_dir = Path(library_dir) / 'example-summarysheet'
+    library_dir = Path(__file__).parent.parent.absolute()
+    example_dir = library_dir / 'tests/example-summarysheet'
     if not Path(example_dir).is_dir():
         Path(example_dir).mkdir()
+    summary_sheet.mission_report(ds, example_dir)
     summary_sheet.create_docfile(ds,example_dir)
     summary_sheet.rst_to_md(example_dir / 'ex_rst.rst',
                             example_dir / 'ex_md.md')
-    summary_sheet.mission_report(ds, example_dir)
     summary_sheet.template_docfile(ds, example_dir)
 
