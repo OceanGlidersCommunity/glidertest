@@ -20,6 +20,7 @@ def test_phrase_duration_check():
     summary_sheet.phrase_numberprof_check(ds)
     summary_sheet.phrase_duration_check(ds)
 def test_summary_plot():
+    ds = fetchers.load_sample_dataset()
     library_dir = Path(__file__).parent.parent.absolute()
     example_dir = library_dir / 'tests/example-summarysheet/'
     if not Path(example_dir).is_dir():
