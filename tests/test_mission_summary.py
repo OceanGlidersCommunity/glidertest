@@ -29,9 +29,9 @@ def test_docs():
     summary_sheet.rst_to_md(example_dir, 'summary')
     summary_sheet.mission_report(ds, example_dir,type='General')
     summary_sheet.template_docfile(ds, example_dir)
-    create_hyst_plots(ds, example_dir)
-    create_drift_plots(ds, example_dir)
-    create_optics_doc(ds, example_dir)
+    summary_sheet.create_hyst_plots(ds, example_dir)
+    summary_sheet.create_drift_plots(ds, example_dir)
+    summary_sheet.create_optics_doc(ds, example_dir)
     summary_sheet.mission_report(ds, example_dir, type='Optics')
 
 def test_optics_func():
