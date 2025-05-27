@@ -5,8 +5,8 @@ from ioos_qc import qartod
 from datetime import datetime
 import pypandoc
 import matplotlib
-import os
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 configs = {
     "TEMP": {"gross_range_test": {
@@ -239,7 +239,7 @@ def create_docfile(ds, path):
     if not (path / 'bv.png').exists():
         raise ValueError(f"Did not find required file bv.png in supplied path {path}. Aborting")
     '''
-    with open(path/'summary.rst', 'w', encoding='utf-8') as output_file:
+    with open(f'{path}/summary.rst', 'w', encoding='utf-8') as output_file:
         doc = RstCloth(output_file)
         doc.title('Glidertest summary mission sheet')
         doc.newline()
@@ -357,16 +357,286 @@ def create_docfile(ds, path):
         doc.content(f'Created with glidertest on {todays_date}')
 
     return doc
-def rst_to_md(path):
+
+
+def optics_avaialble_data(ds):
+    """
+    Identify available bio-optical sensors and their variables in the dataset.
+
+    This function scans the dataset for bio-optical sensor variables and irradiance sensor variables,
+    then creates lists of sensor descriptions and recognized optical variable names present in the dataset.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset containing measurement variables and metadata.
+
+    Returns
+    -------
+    tuple of three lists:
+        available_sensor : list of str
+            Descriptions of available bio-optical and irradiance sensors found in the dataset.
+            If none are found, placeholders indicating missing data are returned.
+        available_optics : list of str
+            Human-readable names of recognized optical variables present in the dataset (e.g., 'Chlorophyll').
+        vars_optics : list of str
+            Corresponding variable names (dataset keys) for the available optical variables (e.g., 'CHLA').
+    Notes
+    -----
+    Original Author: Chiara  Monforte.
+    """
+    biooptics_var = [name for name in ds.data_vars if 'SENSOR_FLUOROMETERS' in name]
+    irradiance_var = [name for name in ds.data_vars if 'SENSOR_RADIOMETERS' in name]
+    available_sensor = []
+    if biooptics_var:
+        available_sensor.append(ds[biooptics_var[0]].long_name)
+    else:
+        available_sensor.append('No  bio optical data available')
+    if irradiance_var:
+        available_sensor.append(ds[irradiance_var[0]].long_name)
+    else:
+        available_sensor.append('No irradiance data available')
+    available_optics = []
+    vars_optics = []
+    if 'BBP700' in ds.data_vars:
+        available_optics.append('Backscatter at 700 nm')
+        vars_optics.append('BBP700')
+    if 'CHLA' in ds.data_vars:
+        available_optics.append('Chlorophyll')
+        vars_optics.append('CHLA')
+    if 'DPAR' in ds.data_vars:
+        available_optics.append('Downwelling PAR')
+        vars_optics.append('DPAR')
+    if 'CDOM' in ds.data_vars:
+        available_optics.append('CDOM')
+        vars_optics.append('CDOM')
+    if 'FDOM' in ds.data_vars:
+        available_optics.append('fDOM')
+        vars_optics.append('FDOM')
+    if 'TURBIDITY' in ds.data_vars:
+        available_optics.append('Turbidity')
+        vars_optics.append('TURBIDITY')
+    if 'PHYCOCYANIN' in ds.data_vars:
+        available_optics.append('Phycocyanin')
+        vars_optics.append('PHYCOCYANIN')
+    if 'PHYC' in ds.data_vars:
+        available_optics.append('Phycoerythrin')
+        vars_optics.append('PHYC')
+    return available_sensor, available_optics, vars_optics
+
+
+def optics_negative_check(ds):
+    """
+    Calculate the percentage of negative values for each available optical variable in the dataset.
+
+    This function identifies all available optical variables in the dataset, computes the proportion of
+    negative data points for each variable, and returns a list of these percentages rounded to one decimal place.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset containing optical sensor data in OG1 format.
+
+    Returns
+    -------
+    numpy.ndarray
+        An array of percentages representing the proportion of negative values for each optical variable,
+        rounded to one decimal place. The order corresponds to the list of available optical variables.
+
+    Notes
+    -----
+    Original Author: Chiara  Monforte.
+    """
+    available_sensor, available_optics, vars_optics = optics_avaialble_data(ds)
+    neg_perc = []
+    for var in vars_optics:
+        neg_val = len(ds[var].where(ds[var] < 0).dropna(dim='N_MEASUREMENTS'))
+        neg_perc.append((100 * neg_val) / len(ds[var]))
+    return np.round(neg_perc, 1)
+
+
+def optics_negative_string(ds):
+    """
+    Generate a summary string reporting the percentage of negative values in calibrated optical data variables.
+
+    This function retrieves available optical variables from the dataset, checks the percentage of negative
+    values in each variable using `optics_negative_check`, and returns a formatted string summarizing the results.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset containing optical sensor data in OG1 format.
+
+    Returns
+    -------
+    str
+        A human-readable string summarizing the percentage of negative values for each optical variable,
+        formatted as "<var> has <percentage>% negative data", joined by commas and 'and' before the last item.
+    Notes
+    -----
+    Original Author: Chiara  Monforte.
+    """
+    available_sensor, available_optics, vars_optics = optics_avaialble_data(ds)
+    neg_check = optics_negative_check(ds)
+
+    parts = [f"{var} has {neg:.1f}% negative data" for var, neg in zip(vars_optics, neg_check)]
+
+    if len(parts) > 1:
+        result_str = ", ".join(parts[:-1]) + ", and " + parts[-1]
+    else:
+        result_str = parts[0]
+    return result_str
+
+
+def create_hyst_plots(ds, path):
+    """
+    Generate and save hysteresis diagnostic plots for each available optical variable in the dataset.
+
+    For each optical variable detected in the dataset, this function computes hysteresis statistics
+    using `tools.compute_hyst_stat` and creates a hysteresis plot using `plots.plot_hysteresis`.
+    The resulting plot is saved as `<variable>_hyst.png` in the specified directory.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The dataset containing optical sensor data in OG1 format.
+
+    path : str or Path
+        Directory path where the generated hysteresis plot images will be saved.
+
+    Returns
+    -------
+    None
+        Saves PNG images for hysteresis plots for each optical variable found in the dataset.
+
+    Notes
+    -----
+    Original Author: Chiara  Monforte.
+    """
+    available_sensor, available_optics, vars_optics = optics_avaialble_data(ds)
+    for var in vars_optics:
+        df, diff, err_mean, err_range, rms = tools.compute_hyst_stat(ds, var=var, v_res=1)
+        fig, ax = plots.plot_hysteresis(ds, var=var)
+        fig_name = f'{var}_hyst.png'
+        fig.savefig(f'{path}/{fig_name}')
+
+
+def create_drift_plots(ds, path):
+    """
+    Generate and save drift diagnostic plots for each available optical variable in the dataset.
+
+    For each optical variable detected in the dataset, this function creates a drift assessment plot
+    using the `plots.process_optics_assess` function and saves the figure as `<variable>_drift.png`
+    in the specified directory.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The dataset containing optical sensor data in OG1 format.
+
+    path : str or Path
+        Directory path where the generated drift plot images will be saved.
+
+    Returns
+    -------
+    None
+        Saves PNG images for drift plots for each optical variable found in the dataset.
+    Notes
+    -----
+    Original Author: Chiara  Monforte.
+    """
+    available_sensor, available_optics, vars_optics = optics_avaialble_data(ds)
+    for var in vars_optics:
+        fig, ax = plots.process_optics_assess(ds, var='CHLA')
+        fig_name = f'{var}_drift.png'
+        fig.savefig(f'{path}/{fig_name}')
+
+def create_optics_doc(ds, path):
+    """
+    Generate a reStructuredText (.rst) summary report for bio-optical sensor data.
+
+    The report includes:
+    - A list of available optical variables and sensors
+    - General quality check notes
+    - Diagnostic plots for chlorophyll quenching, hysteresis, and drift (if available)
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The dataset containing optical sensor data (OG1 format recommended).
+
+    path : str or Path
+        Directory where the `optics.rst` file and associated plots are saved.
+
+    Returns
+    -------
+    RstCloth
+        The RstCloth document object used to create the report.
+
+    Notes
+    -----
+    Original Author: Chiara  Monforte.
+    """
+    with open(f'{path}/optics.rst', 'w', encoding='utf-8') as output_file:
+        doc = RstCloth(output_file)
+
+        doc.title('Mission summary - Bio optical sensors')
+        doc.newline()
+        doc.h1('Available variables and sensor info')
+        available_sensor, available_optics, vars_optics = optics_avaialble_data(ds)
+        doc.newline()
+        doc.content(f'The following variables are available in this dataset: {str(available_optics)[1:-1]}')
+        doc.newline()
+        doc.content(f'Data is collected by the following sensors: {str(available_sensor)[1:-1]}')
+
+        doc.newline()
+        doc.h1('General data quality checks')
+        doc.newline()
+        if vars_optics:
+            doc.content(
+                f'Negative values in the calibrated data: {optics_negative_string(ds)}. Negative values could indicate invalid calibration factors and/or issues with the sensor ')
+            if 'CHLA' in vars_optics:
+                ### Quenching
+                doc.newline()
+                doc.h2('Chlorophyll quenching')
+                doc.newline()
+                name= 'quench.png'
+                doc.directive('image', f'./{name}', fields=[
+                    ('alt', ''),
+                    ('width', '600px')
+                ])
+            doc.newline()
+
+            doc.h2('Hysteresis')
+            for var in vars_optics:
+                fig_name = f'{var}_hyst.png'
+                doc.directive('image', f'./{fig_name}', fields=[
+                    ('alt', ''),
+                    ('width', '600px')
+                ])
+            doc.h2('Drift')
+            for var in vars_optics:
+                fig_name = f'{var}_drift.png'
+                doc.directive('image', f'./{fig_name}', fields=[
+                    ('alt', ''),
+                    ('width', '600px')
+                ])
+        todays_date = datetime.today().strftime('%Y-%m-%d')
+        doc.content(f'Created with glidertest on {todays_date}')
+
+        return doc
+
+
+def rst_to_md(path, filename):
     """
     Convert a reStructuredText (.rst) file to Markdown format using Pandoc.
 
     Parameters
     ----------
-    input_rst_path : Path()
-        Path to the input `.rst` file.
-    output_md_path : Path()
-        Path where the converted `.md` file will be saved.
+    path : Path or str
+        Directory containing the input `.rst` file and where the output `.md` file will be saved.
+    filename : str
+        Base name of the file (without extension). For example, 'summary' will convert 'summary.rst' to 'summary.md'.
 
     Returns
     -------
@@ -378,46 +648,69 @@ def rst_to_md(path):
     - Requires `pypandoc` and a working Pandoc installation.
     Original Author: Chiara  Monforte.
     """
-    pypandoc.convert_file(path / 'summary.rst', 'md', format='rst', outputfile=path/'summary.rst')
+
+    pypandoc.convert_file(f'{path}/{filename}.rst', 'md', format='rst', outputfile=f'{path}/{filename}.md')
     print(f"Converted RST to Markdown and saved to: {path}")
 
-def mission_report(ds, report_folder_path):
+def mission_report(ds, report_folder_path, type='General'):
     """
-    Generate a full mission report for a glider deployment, including figures and summary documents in .rst and .md format.
-    All is saved in a new folder called summary_sheet_date.
+    Generate a full mission report for a glider deployment, including plots and summary documents
+    in both reStructuredText (.rst) and Markdown (.md) formats.
+
+    The output is saved in a new subfolder named `summary_sheet<Type><YYYYMMDD>` within the specified report folder path.
 
     Parameters
     ----------
     ds : xarray.Dataset
-        Dataset in **OG1 format**, containing metadata and measured variables for the deployment.
-    report_name : str
-        Base name for the report folder. The current date will be appended (format: YYYYMMDD).
+        Dataset in OG1 format, containing metadata and measured variables for the deployment.
+
+    report_folder_path : str or Path
+        Path to the parent directory where the report folder will be created.
+
+    type : str, optional
+        Type of report to generate. Accepts either 'General' (default) or 'Optics'.
+        - 'General' includes a glider track and basic variables.
+        - 'Optics' includes additional analyses and plots specific to optical sensors (e.g., CHLA, BBP700).
 
     Returns
     -------
     None
-        Saves the following in a new report folder:
-        - Glider track plot (`gt.png`)
-        - Basic variable structure plot (`bv.png`)
-        - Mission summary in `.rst` and `.md` formats
+        Creates a report folder containing:
+        - Plots (e.g., `gt.png`, `bv.png`, `quench.png`, hysteresis/drift images)
+        - A reStructuredText summary file (`summary.rst` or `optics.rst`)
+        - A corresponding Markdown version (`summary.md` or `optics.md`)
 
     Notes
-    ------
-    Original Author: Chiara  Monforte.
+    -----
+    - The `type='Optics'` report is only created if relevant optical sensors are found in the dataset.
+
+    Original Author: Chiara Monforte
     """
-    folder_name = 'summary_sheet'+str(datetime.today().strftime('%Y%m%d'))
-    report_dir = report_folder_path / folder_name
+    folder_name = 'summary_sheet'+type+str(datetime.today().strftime('%Y%m%d'))
+    report_dir = f'{report_folder_path}/{folder_name}'
     if not Path(report_dir).is_dir():
         Path(report_dir).mkdir()
 
     matplotlib.use('Agg')
-    fig_gt, ax_gt = plots.plot_glider_track(ds)
-    fig_bv, ax_bv = plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1)
-    fig_gt.savefig(report_dir / 'gt.png')
-    fig_bv.savefig(report_dir / 'bv.png')
+    if type=='General':
+        fig_gt, ax_gt = plots.plot_glider_track(ds)
+        fig_bv, ax_bv = plots.plot_basic_vars(ds, v_res=1, start_prof=0, end_prof=-1)
+        fig_gt.savefig(f'{report_dir}/gt.png')
+        fig_bv.savefig(f'{report_dir}/bv.png')
+        create_docfile(ds, report_dir)
+        rst_to_md(Path(report_dir), 'summary')
+    if type=='Optics':
+        available_sensor, _, _ = optics_avaialble_data(ds)
+        if available_sensor:
+            fig_quench, ax_quench = plt.subplots(1, 2, figsize=(15, 5), gridspec_kw={'width_ratios': [3, 2]})
+            plots.plot_quench_assess(ds, 'CHLA', ax=ax_quench[0], ylim=35);
+            plots.plot_daynight_avg(ds, var='CHLA', ax=ax_quench[1])
+            create_hyst_plots(ds, report_dir)
+            create_drift_plots(ds, report_dir)
+            fig_quench.savefig(f'{report_dir}/quench.png')
+            create_optics_doc(ds, report_dir)
+            rst_to_md(Path(report_dir), 'optics')
 
-    create_docfile(ds, report_dir)
-    rst_to_md(Path(report_dir))
     print(f"Your report is saved in {report_dir} in rst and markdown")
 
 def template_docfile(ds, path):

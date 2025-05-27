@@ -19,14 +19,23 @@ def test_phrase_duration_check():
     ds = fetchers.load_sample_dataset()
     summary_sheet.phrase_numberprof_check(ds)
     summary_sheet.phrase_duration_check(ds)
-def test_summary_plot():
+def test_docs():
     ds = fetchers.load_sample_dataset()
     library_dir = Path(__file__).parent.parent.absolute()
     example_dir = library_dir / 'tests/example-summarysheet'
     if not Path(example_dir).is_dir():
         Path(example_dir).mkdir()
-    summary_sheet.mission_report(ds, example_dir)
-    summary_sheet.create_docfile(ds,example_dir)
-    summary_sheet.rst_to_md(example_dir )
+    summary_sheet.create_docfile(ds, example_dir)
+    summary_sheet.rst_to_md(example_dir, 'summary')
+    summary_sheet.mission_report(ds, example_dir,type='General')
     summary_sheet.template_docfile(ds, example_dir)
+    create_hyst_plots(ds, example_dir)
+    create_drift_plots(ds, example_dir)
+    create_optics_doc(ds, example_dir)
+    summary_sheet.mission_report(ds, example_dir, type='Optics')
 
+def test_optics_func():
+    ds = fetchers.load_sample_dataset()
+    summary_sheet.optics_avaialble_data(ds)
+    summary_sheet.optics_negative_check(ds)
+    summary_sheet.optics_negative_string(ds)

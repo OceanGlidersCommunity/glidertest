@@ -229,14 +229,16 @@ def process_optics_assess(ds, var='CHLA'):
     
     Returns
     -------
-    ax : matplotlib.axes.Axes  
-        A plot of deep optical data with a **linear regression line** to highlight potential drift.  
+    fig : matplotlib.figure.Figure
+        Figure object containing the generated plot.
+    ax : matplotlib.axes.Axes
+        Axes object with the plotted data.
     text_output : str  
         Text displaying where and when negative values are present in the dataset.
 
     Returns
     -------
-    ax : matplotlib.axes.Axes  
+    fig, ax : matplotlib.axes.Axes
         Axes object with 
     text_output: str
         Text giving info on where and when negative data was observed
@@ -271,15 +273,24 @@ def process_optics_assess(ds, var='CHLA'):
 
     # Generate the plot
     with plt.style.context(glidertest_style_file):
-        ax = sns.regplot(data=ds, x=np.arange(0, len(bottom_opt_data)), y=bottom_opt_data,
-                         scatter_kws={"color": "grey"},
-                         line_kws={"color": "red", "label": "y={0:.8f} x+{1:.5f}".format(slope, intercept)},
-                         )
+        fig, ax = plt.subplots()  # Create figure and axes
+
+        sns.regplot(
+            data=ds,
+            x=np.arange(0, len(bottom_opt_data)),
+            y=bottom_opt_data,
+            scatter_kws={"color": "grey"},
+            line_kws={"color": "red", "label": f"y={slope:.8f} x+{intercept:.5f}"},
+            ax=ax  # Use our created ax
+        )
+
         ax.legend(loc=2)
         ax.grid()
-        ax.set(ylim=(np.nanpercentile(bottom_opt_data, 0.5), np.nanpercentile(bottom_opt_data, 99.5)),
-               xlabel='Measurements',
-               ylabel=f'{utilities.plotting_labels(var)} ({utilities.plotting_units(ds,var)})')
+        ax.set(
+            ylim=(np.nanpercentile(bottom_opt_data, 0.5), np.nanpercentile(bottom_opt_data, 99.5)),
+            xlabel='Measurements',
+            ylabel=f'{utilities.plotting_labels(var)} ({utilities.plotting_units(ds, var)})'
+        )
         plt.show()
     percentage_change = (((slope * len(bottom_opt_data) + intercept) - intercept) / abs(intercept)) * 100
 
@@ -291,7 +302,7 @@ def process_optics_assess(ds, var='CHLA'):
     else:
         print(
             f'Data from the deepest 10% of data has been analysed and data seems stable. These deep values can be used to re-assess the dark count if the no {var} at depth assumption is valid in this site and this depth')
-    return ax
+    return fig, ax
 
 
 def plot_daynight_avg(ds,var='PSAL', ax: plt.Axes = None, sel_day=None, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
