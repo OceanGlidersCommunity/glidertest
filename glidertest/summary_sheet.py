@@ -563,7 +563,7 @@ def create_optics_doc(ds, path):
     Parameters
     ----------
     ds : xarray.Dataset
-        The dataset containing optical sensor data (OG1 format recommended).
+        The dataset containing optical sensor data in OG1 format.
 
     path : str or Path
         Directory where the `optics.rst` file and associated plots are saved.

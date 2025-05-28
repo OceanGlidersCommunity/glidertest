@@ -281,7 +281,7 @@ def process_optics_assess(ds, var='CHLA'):
             y=bottom_opt_data,
             scatter_kws={"color": "grey"},
             line_kws={"color": "red", "label": f"y={slope:.8f} x+{intercept:.5f}"},
-            ax=ax  # Use our created ax
+            ax=ax
         )
 
         ax.legend(loc=2)
