@@ -311,14 +311,16 @@
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    ax : matplotlib.axes.Axes  </span>
-<span class="sd">        A plot of deep optical data with a **linear regression line** to highlight potential drift.  </span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        Figure object containing the generated plot.</span>
+<span class="sd">    ax : matplotlib.axes.Axes</span>
+<span class="sd">        Axes object with the plotted data.</span>
 <span class="sd">    text_output : str  </span>
 <span class="sd">        Text displaying where and when negative values are present in the dataset.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    ax : matplotlib.axes.Axes  </span>
+<span class="sd">    fig, ax : matplotlib.axes.Axes</span>
 <span class="sd">        Axes object with </span>
 <span class="sd">    text_output: str</span>
 <span class="sd">        Text giving info on where and when negative data was observed</span>
@@ -353,15 +355,24 @@
 
     <span class="c1"># Generate the plot</span>
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">regplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom_opt_data</span><span class="p">)),</span> <span class="n">y</span><span class="o">=</span><span class="n">bottom_opt_data</span><span class="p">,</span>
-                         <span class="n">scatter_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;grey&quot;</span><span class="p">},</span>
-                         <span class="n">line_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;y=</span><span class="si">{0:.8f}</span><span class="s2"> x+</span><span class="si">{1:.5f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">)},</span>
-                         <span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>  <span class="c1"># Create figure and axes</span>
+
+        <span class="n">sns</span><span class="o">.</span><span class="n">regplot</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom_opt_data</span><span class="p">)),</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">bottom_opt_data</span><span class="p">,</span>
+            <span class="n">scatter_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;grey&quot;</span><span class="p">},</span>
+            <span class="n">line_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;y=</span><span class="si">{</span><span class="n">slope</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> x+</span><span class="si">{</span><span class="n">intercept</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">},</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span>
+        <span class="p">)</span>
+
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">bottom_opt_data</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">bottom_opt_data</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">)),</span>
-               <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Measurements&#39;</span><span class="p">,</span>
-               <span class="n">ylabel</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">utilities</span><span class="o">.</span><span class="n">plotting_labels</span><span class="p">(</span><span class="n">var</span><span class="p">)</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">utilities</span><span class="o">.</span><span class="n">plotting_units</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span><span class="n">var</span><span class="p">)</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">bottom_opt_data</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">bottom_opt_data</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">)),</span>
+            <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Measurements&#39;</span><span class="p">,</span>
+            <span class="n">ylabel</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">utilities</span><span class="o">.</span><span class="n">plotting_labels</span><span class="p">(</span><span class="n">var</span><span class="p">)</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">utilities</span><span class="o">.</span><span class="n">plotting_units</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span><span class="w"> </span><span class="n">var</span><span class="p">)</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="n">percentage_change</span> <span class="o">=</span> <span class="p">(((</span><span class="n">slope</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom_opt_data</span><span class="p">)</span> <span class="o">+</span> <span class="n">intercept</span><span class="p">)</span> <span class="o">-</span> <span class="n">intercept</span><span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">intercept</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span>
 
@@ -373,7 +384,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span>
             <span class="sa">f</span><span class="s1">&#39;Data from the deepest 10% of data has been analysed and data seems stable. These deep values can be used to re-assess the dark count if the no </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> at depth assumption is valid in this site and this depth&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">ax</span></div>
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
 
 
 
