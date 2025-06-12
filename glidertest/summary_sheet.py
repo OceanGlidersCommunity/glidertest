@@ -1,6 +1,6 @@
 import numpy as np
 from rstcloth import RstCloth
-from glidertest import tools, plots, utilities
+from glidertest import tools, plots, utilities, __version__
 from ioos_qc import qartod
 from datetime import datetime
 import pypandoc
@@ -330,6 +330,7 @@ def create_docfile(ds, path):
         doc.newline()
         dur = phrase_duration_check(ds)
         doc.content(f"Issues with profile number: {profnum} ")
+        doc.newline()
         doc.content(f"Issues with profile duration: {dur}", )
         gr_strb = ['Global range', '✓', '✓', '✓', '✓']
         st_strb = ['Spike test', '✓', '✓', '✓', '✓']
@@ -354,7 +355,7 @@ def create_docfile(ds, path):
                 dr_strb,
             ])
         todays_date = datetime.today().strftime('%Y-%m-%d')
-        doc.content(f'Created with glidertest on {todays_date}')
+        doc.content(f'Created with glidertest version {__version__} on {todays_date}')
 
     return doc
 
@@ -547,7 +548,7 @@ def create_drift_plots(ds, path):
     """
     available_sensor, available_optics, vars_optics = optics_avaialble_data(ds)
     for var in vars_optics:
-        fig, ax = plots.process_optics_assess(ds, var='CHLA')
+        fig, ax = plots.process_optics_assess(ds, var=var)
         fig_name = f'{var}_drift.png'
         fig.savefig(f'{path}/{fig_name}')
 
@@ -614,6 +615,8 @@ def create_optics_doc(ds, path):
                     ('alt', ''),
                     ('width', '600px')
                 ])
+            doc.newline()
+
             doc.h2('Drift')
             for var in vars_optics:
                 fig_name = f'{var}_drift.png'
@@ -621,8 +624,10 @@ def create_optics_doc(ds, path):
                     ('alt', ''),
                     ('width', '600px')
                 ])
+            doc.newline()
+
         todays_date = datetime.today().strftime('%Y-%m-%d')
-        doc.content(f'Created with glidertest on {todays_date}')
+        doc.content(f'Created with glidertest {__version__} on {todays_date}')
 
         return doc
 
