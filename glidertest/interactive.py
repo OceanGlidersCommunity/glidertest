@@ -7,14 +7,14 @@ from IPython.display import display
 import matplotlib.pyplot as plt
 
 
-def mission_map(ds):
+def mission_map(ds_list):
     """
     Makes an interactive folium map of a glider mission. Needs to run in a jupyter notebook
 
     Parameters
     ----------
-    ds: xarray.DataSet
-        OG1 dataset of a glider mission
+    ds_list: xarray.DataSet or list of xarray.DataSets
+        OG1 dataset of a glider mission. can pass a list of missions
 
     Returns
     -------
@@ -25,35 +25,43 @@ def mission_map(ds):
     -----
     Original author: Callum Rollo
     """
-    _check_necessary_variables(ds, ["LONGITUDE", "LATITUDE", "DIVE_NUM"])
+    if type(ds_list) is not list:
+        ds_list = [ds_list]
+    for ds in ds_list:
+        _check_necessary_variables(ds, ["LONGITUDE", "LATITUDE", "DIVE_NUM"])
     df = ds.to_pandas()[["LONGITUDE", "LATITUDE", "DIVE_NUM"]].groupby("DIVE_NUM").median()
-    coordinates = [[lat, lon] for lat, lon in zip(ds['LATITUDE'].values, ds['LONGITUDE'].values)]
-    if len(coordinates) > 5000:
-        coordinates = coordinates[::int(np.ceil(len(coordinates) / 5000))]
-    df['DIVE_NUM'] = df.index
     m = folium.Map(location=[df.LATITUDE.mean(), df.LONGITUDE.mean()], zoom_start=8, tiles="cartodb positron")
     folium.WmsTileLayer(
         url="https://ows.emodnet-bathymetry.eu/wms",
-        layers= 'mean_atlas_land',
+        layers='mean_atlas_land',
         attr='EMODnet bathymetry'
     ).add_to(m)
+    color_cycle = ["red", "yellow", "green", "black", "pink"]
+    for i, ds in enumerate(ds_list):
+        df = ds.to_pandas()[["LONGITUDE", "LATITUDE", "DIVE_NUM"]].groupby("DIVE_NUM").median()
+        df = df.dropna()
+        df_points = ds.to_pandas()[["LONGITUDE", "LATITUDE"]].dropna()
+        coordinates = [[lat, lon] for lat, lon in zip(df_points['LATITUDE'], df_points['LONGITUDE'])]
+        if len(coordinates) > 5000:
+            coordinates = coordinates[::int(np.ceil(len(coordinates) / 5000))]
+        df['DIVE_NUM'] = df.index
 
-    folium.PolyLine(
-        locations=coordinates,
-        color="red",
-        weight=5,
-        tooltip="Glider track",
-    ).add_to(m)
-
-    for i, row in df.iterrows():
-        folium.CircleMarker(
-            location=[row['LATITUDE'], row['LONGITUDE']],
-            tooltip=f"Dive {int(row['DIVE_NUM'])}",
-            color= 'black',
-            fillOpacity= 1,
-            fillColor= "red",
-            weight = 2,
+        folium.PolyLine(
+            locations=coordinates,
+            color=color_cycle[i],
+            weight=5,
+            tooltip=f"{ds.attrs['id']}",
         ).add_to(m)
+
+        for j, row in df.iterrows():
+            folium.CircleMarker(
+                location=[row['LATITUDE'], row['LONGITUDE']],
+                tooltip=f"Dive {int(row['DIVE_NUM'])}",
+                color= 'black',
+                fillOpacity= 1,
+                fillColor= color_cycle[i],
+                weight = 2,
+            ).add_to(m)
     return m
 
 def interactive_profile(ds):
