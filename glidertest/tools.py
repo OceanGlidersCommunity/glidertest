@@ -52,6 +52,52 @@ def quant_updown_bias(ds, var='PSAL', v_res=1):
         df = pd.DataFrame()
     return df
 
+def mean_profile(ds, var='TEMP', v_res=1):
+    """
+    This function computes the mean vertical profile for a specific variable.
+
+    Parameters
+    ----------
+    ds: xarray.Dataset 
+        Dataset in **OG1 format**, containing at least **PROFILE_NUMBER, DEPTH**, and the selected variable.  
+        Data should **not** be gridded.
+    var: str, optional, default='PSAL'
+        Selected variable to average.
+    v_res: float
+        Vertical resolution in meters for binning the profile.
+
+    Returns
+    -------
+    df: pandas.DataFrame 
+        DataFrame containing the mean profile and corresponding depth bins.
+
+    Notes
+    -----
+    Original Author: Till Moritz
+    """
+    # Ensure required variables are in the dataset
+    utilities._check_necessary_variables(ds, ['PROFILE_NUMBER', 'DEPTH', var])
+
+    p = 1       # Horizontal resolution (not used here)
+    z = v_res   # Vertical resolution
+
+    if var in ds.variables:
+        # 2D gridding by profile and depth
+        varG, profG, depthG = utilities.construct_2dgrid(
+            ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z, x_bin_center=False)
+
+        # Compute mean across profiles for each depth level
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            mean_var = np.nanmean(varG, axis=0)
+
+        df = pd.DataFrame(data={'mean': mean_var, 'depth': depthG[0, :]})
+    else:
+        print(f'{var} is not in the dataset')
+        df = pd.DataFrame()
+
+    return df
+
 def compute_daynight_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof=None, end_prof=None):
     """
     Computes day and night averages for a selected variable over a specified time period or range of dives.  
@@ -605,7 +651,7 @@ def add_sigma_1(ds: xr.Dataset, var_sigma_1: str = "SIGMA_1") -> xr.Dataset:
     return ds
 
 def compute_mld(ds: xr.Dataset, variable, method: str = 'threshold', threshold = 0.03, ref_depth = 10,
-                 use_bins: bool = False, binning: float = 10):
+                 use_bins: bool = True, binning: float = 10):
     """
     Computes the mixed layer depth (MLD) for each profile in the dataset. Two methods are available:
     1. **Threshold Method**: Computes MLD based on a density threshold (default is 0.03 kg/m³).

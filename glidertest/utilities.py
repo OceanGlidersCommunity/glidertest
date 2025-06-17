@@ -7,6 +7,8 @@ from skyfield import api
 import gsw
 from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
+import cmocean.cm as cmo
+
 
 
 def _check_necessary_variables(ds: xr.Dataset, vars: list):
@@ -413,45 +415,102 @@ def calc_DEPTH_Z(ds):
     }
     return ds
 
-label_dict={
+label_dict = {
     "PSAL": {
         "label": "Practical salinity",
-        "units": "PSU"},
+        "units": "PSU",
+        "colormap": cmo.haline
+    },
+    "SA": {
+        "label": "Absolute salinity",
+        "units": "g kg⁻¹",
+        "colormap": cmo.haline  # Added best-guess
+    },
     "TEMP": {
         "label": "Temperature",
-        "units": "°C"},
-    "DENSITY":{
+        "units": "°C",
+        "colormap": cmo.thermal
+    },
+    "THETA": {
+        "label": "Potential temperature",
+        "units": "°C",
+        "colormap": cmo.thermal
+    },
+    "DENSITY": {
         "label": "In situ density",
-        "units": "kg m⁻³"
+        "units": "kg m⁻³",
+        "colormap": cmo.dense
     },
     "SIGMA": {
         "label": "Sigma-t",
-        "units": "kg m⁻³"
+        "units": "kg m⁻³",
+        "colormap": cmo.dense
+    },
+    "SIGMA_T": {
+        "label": "Sigma-t",
+        "units": "kg m⁻³",
+        "colormap": cmo.dense
+    },
+    "POTDENS0": {
+        "label": "Potential density (σ₀)",
+        "units": "kg m⁻³",
+        "colormap": cmo.dense
+    },
+    "SIGTHETA": {
+        "label": "Potential density (σθ)",
+        "units": "kg m⁻³",
+        "colormap": cmo.dense
+    },
+    "PRES": {
+        "label": "Pressure",
+        "units": "dbar",
+        "colormap": cmo.deep
+    },
+    "DEPTH_Z": {
+        "label": "Depth",
+        "units": "m",
+        "colormap": cmo.deep
+    },
+    "DEPTH": {
+        "label": "Depth",
+        "units": "m",
+        "colormap": cmo.deep
     },
     "DOXY": {
         "label": "Dissolved oxygen",
-        "units": "mmol m⁻³"
+        "units": "mmol m⁻³",
+        "colormap": cmo.oxy
     },
-    "SA":{
-        "label": "Absolute salinity",
-        "units": "g kg⁻¹"
-    },
-    "CHLA":{
+    "CHLA": {
         "label": "Chlorophyll",
-        "units": "mg m⁻³"
+        "units": "mg m⁻³",
+        "colormap": cmo.algae
     },
-    "CNDC":{
+    "CNDC": {
         "label": "Conductivity",
-        "units": "mS cm⁻¹"
+        "units": "mS cm⁻¹",
+        "colormap": cmo.haline
     },
-    "DPAR":{
+    "DPAR": {
         "label": "Irradiance PAR",
-        "units": "μE cm⁻² s⁻¹"
+        "units": "μE cm⁻² s⁻¹",
+        "colormap": cmo.solar  # Best guess
     },
-    "BBP700":{
+    "BBP700": {
         "label": "Red backscatter, b${bp}$(700)",
-        "units": "m⁻¹"
-    }
+        "units": "m⁻¹",
+        "colormap": cmo.matter  # Best guess
+    },
+    "GLIDER_VERT_VELO_MODEL": {
+        "label": "Vertical glider velocity",
+        "units": "cm s⁻¹",
+        "colormap": cmo.delta
+    },
+    "GLIDER_HORZ_VELO_MODEL": {
+        "label": "Horizontal glider velocity",
+        "units": "cm s⁻¹",
+        "colormap": cmo.delta
+    },
 }
 
 def plotting_labels(var: str):
@@ -481,6 +540,7 @@ def plotting_labels(var: str):
     else:
         label= f'{var}'
     return label
+
 def plotting_units(ds: xr.Dataset,var: str):
     """
     Retrieves the units associated with a variable from a dataset or a predefined dictionary.
@@ -512,6 +572,35 @@ def plotting_units(ds: xr.Dataset,var: str):
         return f'{ds[var].units}'
     else:
         return ""
+    
+def plotting_colormap(var: str):
+    """
+    Retrieves the colormap associated with a variable from a predefined dictionary.
+
+    This function checks if the given variable `var` exists as a key in the `label_dict` dictionary.
+    If found, it returns the associated colormap from `label_dict`. If not, it returns cmocean.cm.delta as a default colormap.
+
+    Parameters
+    ----------
+    var: str
+        The variable (key) whose colormap is to be retrieved.
+
+    Returns
+    -------
+    colormap: matplotlib colormap or None
+        The colormap corresponding to the variable `var`. If the variable is not found in `label_dict`,
+        the function returns None.
+
+    Notes
+    -----
+    Original Author: Till Moritz
+    """
+    if var in label_dict:
+        colormap = label_dict[var]["colormap"]
+    else:
+        colormap = cmo.delta
+    return colormap
+
 def group_by_profiles(ds, variables=None):
     """
     Group glider dataset by the dive profile number.

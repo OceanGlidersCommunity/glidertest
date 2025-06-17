@@ -2,6 +2,7 @@ netcdf4
 pooch
 xarray
 numpy
+cmocean
 matplotlib
 pandas  
 seaborn 

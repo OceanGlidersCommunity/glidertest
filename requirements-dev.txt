@@ -3,6 +3,7 @@ pooch
 sgp4>=2.14
 xarray
 numpy
+cmocean
 matplotlib
 pandas
 seaborn

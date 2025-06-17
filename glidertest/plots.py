@@ -6,6 +6,8 @@ import seaborn as sns
 import xarray as xr
 from matplotlib.dates import DateFormatter
 from scipy import stats
+from scipy.interpolate import interp1d
+import cmocean.cm as cmo
 import matplotlib.colors as mcolors
 import gsw
 import cartopy.crs as ccrs
@@ -1570,87 +1572,93 @@ def plot_max_depth_per_profile(ds: xr.Dataset, bins= 20, ax = None, **kw: dict) 
             plt.show()
     return fig, ax
 
-
-def plot_profile(ds: xr.Dataset, profile_num: int, vars: list = ['TEMP','PSAL','DENSITY'], use_bins: bool = False, binning: float = 2) -> tuple:
+def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP','PSAL','DENSITY'], use_bins: bool = False, binning: float = 2) -> tuple:
     """
-    Plots binned temperature, salinity, and density against depth on a single plot with three x-axes.
+    Plots the specified variables against depth for a given profile number from an OG1-format dataset.
+    If no profile number is provided, it plots the mean profile for the specified variables.
 
     Parameters
     ----------
     ds: xarray.Dataset
-        Xarray dataset in OG1 format with at least PROFILE_NUMBER, DEPTH, TEMPERATURE, SALINITY, and DENSITY.
-    profile_num: int
-        The profile number to plot.
+        Xarray dataset in OG1 format with at least PROFILE_NUMBER, DEPTH and the specified variables.
+    profile_num: int or None
+        Profile number to plot. If None, plots mean profile.
     vars: list
-        The variables to plot. Default is ['TEMP','PSAL','DENSITY'].
-    binning: int
-        The depth resolution for binning.
+        Variables to plot. Default is ['TEMP','PSAL','DENSITY'].
     use_bins: bool
-        If True, use binned data instead of raw data.
+        Whether to bin the data vertically.
+    binning: float
+        Bin size in meters if use_bins is True.
 
     Returns
     -------
     fig: matplotlib.figure.Figure
         The figure object containing the plot.
-    ax1: matplotlib.axes.Axes
-        The axis object containing the primary plot.
+    ax1: list of matplotlib.axes.Axes
+        The axis objects containing the subplots.
 
     Notes
     -----
     Original Author: Till Moritz
     """
-    # Remove empty strings from vars
-    vars = [v for v in vars if v] 
-    # If vars is empty, show an empty plot
+    vars = [v for v in vars if v]
     if not vars:
         fig, ax1 = plt.subplots(figsize=(12, 9))
-        ax1.set_title(f'Profile {profile_num} (No Variables Selected)')
+        ax1.set_title('No Variables Selected')
         ax1.set_ylabel('Depth (m)')
         ax1.invert_yaxis()
         ax1.grid(True)
         return fig, ax1
-    
+
     if len(vars) > 3:
-        raise ValueError("Only three variables can be plotted at once, chose less variables")
-    
+        raise ValueError("Only three variables can be plotted at once, chose fewer variables")
+
     with plt.style.context(glidertest_style_file):  
         fig, ax1 = plt.subplots(figsize=(12, 9)) 
+        axs = [ax1, ax1.twiny(), ax1.twiny()]
+        colors = ['red', 'blue', 'grey']
+        s = 10 + binning
 
-        profile = ds.where(ds.PROFILE_NUMBER == profile_num, drop=True)
-        if use_bins:
-            profile = utilities.bin_profile(profile, vars, binning)
+        if profile_num is not None:
+            profile = ds.where(ds.PROFILE_NUMBER == profile_num, drop=True)
+            if use_bins:
+                profile = utilities.bin_profile(profile, vars, binning)
+            title_str = f'Profile {profile_num}'
+        else:
+            # Mean profile logic
+            data = {}
+            for var in vars:
+                df = tools.mean_profile(ds, var=var, v_res=binning)
+                data[var] = df['mean'].values
+            depth = df['depth'].values
+            profile = xr.Dataset({var: (['depth'], data[var]) for var in vars})
+            profile['DEPTH'] = (['depth'], depth)
+            title_str = 'Mean Profile'
 
-        # Plot binned data
         mission = ds.id.split('_')[1][0:8]
         glider = ds.id.split('_')[0]
 
-        s=10+binning
-
-        axs = [ax1, ax1.twiny(), ax1.twiny()]
-        colors = ['red', 'blue', 'grey']
         for i, var in enumerate(vars):
             ax = axs[i]
-            ### add the long_name to the label, if it exists
-            long_name = getattr(profile[var], 'long_name', '')
-            ax.plot(profile[var], profile['DEPTH'], color=colors[i], label=f'{var} - {long_name}', ls='-')
-            ax.scatter(profile[var], profile['DEPTH'], color=colors[i], marker='o',s=s)
-            unit = getattr(profile[var], 'units', '')
-            ax.set_xlabel(f'{var} [{unit}]', color=colors[i])
-            ax.tick_params(axis='x', colors=colors[i], bottom=True, top=False, labelbottom=True, labeltop=False)
+            unit = utilities.plotting_units(ds, var)
+            label = utilities.plotting_labels(var)
+            ax.plot(profile[var], profile['DEPTH'], color=colors[i], label=label)
+            ax.scatter(profile[var], profile['DEPTH'], color=colors[i], marker='o', s=s)
+            ax.set_xlabel(f'{label} [{unit}]', color=colors[i])
+            ax.tick_params(axis='x', colors=colors[i])
             if i > 0:
                 ax.xaxis.set_ticks_position('bottom')
                 ax.spines['top'].set_visible(False)
                 ax.spines['bottom'].set_position(('axes', -0.09*i))
             ax.xaxis.set_label_coords(0.5, -0.05-0.105*i)
 
-        fig.legend(loc='upper right',fontsize=10)
-        # Set pressure as y-axis (Increasing Downward)
         ax1.grid(True)
         ax1.set_ylabel('Depth (m)')
-        ax1.invert_yaxis()  # Pressure increases downward
-        ax1.set_title(f'Profile {profile_num} ({glider} on mission: {mission})')
+        ax1.invert_yaxis()
+        ax1.set_title(f'{title_str} ({glider} on mission: {mission})')
 
     return fig, ax1
+
 
 def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: float = 2):
     """
@@ -1705,3 +1713,140 @@ def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: f
         plt.show()
     
     return fig, ax
+
+def plot_section(ds, vars=['PSAL', 'TEMP', 'DENSITY'], v_res=1, start=None, end=None, mld_df = None):
+    """
+    Plots a section of the dataset with PROFILE_NUMBER on the x-axis, DEPTH on the y-axis,
+    and mean TIME per profile as secondary x-axis (automatically spaced).
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset with at least PROFILE_NUMBER, TIME, DEPTH, and target variables.
+    vars : str or list of str
+        Variables to visualize. If a single variable is provided, it will be converted to a list.
+    v_res : float
+        Vertical resolution (DEPTH binning).
+    start : int or None
+        Start PROFILE_NUMBER (inclusive).
+    end : int or None
+        End PROFILE_NUMBER (inclusive).
+    mld_df : pd.DataFrame
+        MLD as a pandas Dataframe, which is the result of the MLD calculation compute_mld(). The dataframe should contain the profile number, MLD and the mean time profile.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+    ax : list of matplotlib.axes.Axes
+
+    Notes
+    -----
+    Original Author: Till Moritz
+    """
+    if not isinstance(vars, list):
+        vars = [vars]
+    utilities._check_necessary_variables(ds, vars + ['PROFILE_NUMBER', 'TIME', 'DEPTH'])
+
+    if start is not None or end is not None:
+        if start is None:
+            start = ds.PROFILE_NUMBER.min().values
+        if end is None:
+            end = ds.PROFILE_NUMBER.max().values
+        mask = (ds.PROFILE_NUMBER >= start) & (ds.PROFILE_NUMBER <= end)
+        ds = ds.sel(N_MEASUREMENTS=mask)
+        if mld_df is not None:
+            mld_df = mld_df[(mld_df['PROFILE_NUMBER'] >= start) & (mld_df['PROFILE_NUMBER'] <= end)]
+
+    num_vars = len(vars)
+    fig, ax = plt.subplots(num_vars, 1, figsize=(20, 5 * num_vars), sharex=True, gridspec_kw={'height_ratios': [8] * num_vars})
+    if num_vars == 1:
+        ax = [ax]
+
+    x_plot = ds['PROFILE_NUMBER'].values
+
+    has_density_plot = any(utilities.plotting_colormap(var) == cmo.dense for var in vars)
+
+    # Compute mean time per profile
+    df_time = ds[['TIME', 'PROFILE_NUMBER']].to_dataframe().dropna()
+    mean_times = df_time.groupby('PROFILE_NUMBER')['TIME'].mean()
+
+    for i, var in enumerate(vars):
+        if var not in ds:
+            raise ValueError(f'Variable "{var}" not found in dataset.')
+
+        values = ds[var].values
+        depth = ds['DEPTH'].values
+
+        p = 1
+        z = v_res
+
+        varG, profG, depthG = utilities.construct_2dgrid(x_plot, depth, values, p, z, x_bin_center=False)
+
+        cmap = utilities.plotting_colormap(var)
+        if cmap == cmo.delta and np.any(values < 0) and np.any(values > 0):
+            norm = mcolors.TwoSlopeNorm(
+                vmin=np.nanpercentile(values, 0.5),
+                vcenter=0,
+                vmax=np.nanpercentile(values, 99.5)
+            )
+            im = ax[i].pcolormesh(profG, depthG, varG, cmap=cmap, norm=norm)
+        else:
+            im = ax[i].pcolormesh(profG, depthG, varG, cmap=cmap,
+                                  vmin=np.nanpercentile(values, 0.5),
+                                  vmax=np.nanpercentile(values, 99.5))
+        if mld_df is not None:
+            if (has_density_plot and cmap == cmo.dense) or (not has_density_plot and i == 0):
+                ax[i].plot(mld_df['PROFILE_NUMBER'], mld_df['MLD'], color='black', marker='o', linewidth=1,
+                           label='Mixed Layer Depth', markersize=2)
+                ax[i].legend(loc='upper left', fontsize=8)
+
+        unit = utilities.plotting_units(ds,var)
+        label = utilities.plotting_labels(var)
+
+        total_profiles = x_plot[-1] - x_plot[0]
+        ax[i].invert_yaxis()
+        ax[i].set_ylabel('Depth (m)')
+        ax[i].grid(True)
+        ax[i].set_title(f'Section plot of {label}')
+        ax[i].set_xlim(np.min(x_plot)-total_profiles/50, np.max(x_plot)+total_profiles/50)
+
+        cbar = plt.colorbar(im, ax=ax[i], pad=0.03)
+        cbar.set_label(f'{label} [{unit}]', labelpad=20, rotation=270)
+
+    # Main x-axis: profile numbers
+    ax[-1].set_xlabel('Profile Number')
+
+    # Get mean time per profile (datetime) and profile numbers
+    times = pd.to_datetime(mean_times)
+    profiles = mean_times.index.values
+    time_nums = mdates.date2num(times)  # matplotlib float format for dates
+
+    # Build interpolators
+    to_time = interp1d(profiles, time_nums, bounds_error=False, fill_value="extrapolate")
+    to_profile = interp1d(time_nums, profiles, bounds_error=False, fill_value="extrapolate")
+
+    # Create a transform that maps profile numbers → time for the secondary x-axis
+    def forward(x):
+        return to_time(x)
+
+    def inverse(x):
+        return to_profile(x)
+
+    # Create the secondary axis (top), linked to the bottom profile axis
+    time_ax = ax[-1].secondary_xaxis("bottom", functions=(forward, inverse))
+    time_ax.set_xlabel("Mean Time per Profile")
+    time_ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    time_delta = time_nums[-1] - time_nums[0]
+    if time_delta < 5:
+        time_ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+    else:
+        time_ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+    
+    time_ax.spines['bottom'].set_position(('outward', 40))
+    time_ax.tick_params(rotation=35)
+    
+    plt.tight_layout()
+    plt.show()
+    
+    return fig, ax
+

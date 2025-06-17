@@ -13,6 +13,10 @@ def test_updown_bias(v_res=1):
     ncell = math.ceil(len(bins)/v_res)
     assert len(df) == ncell
 
+def test_mean_profile():
+    ds = fetchers.load_sample_dataset()
+    tools.mean_profile(ds, var='TEMP', v_res=1)
+
 def test_daynight():
     ds = fetchers.load_sample_dataset()
     if not "TIME" in ds.indexes.keys():
