@@ -506,10 +506,11 @@ def plotting_units(ds: xr.Dataset,var: str):
     -----
     Original Author: Chiara Monforte
     """
-    if var in label_dict:
-        return f'{label_dict[var]["units"]}'
-    elif 'units' in ds[var].attrs:
+
+    if 'units' in ds[var].attrs:
         return f'{ds[var].units}'
+    elif var in label_dict:
+        return f'{label_dict[var]["units"]}'
     else:
         return ""
 def group_by_profiles(ds, variables=None):
