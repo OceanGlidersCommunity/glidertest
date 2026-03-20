@@ -770,7 +770,7 @@ def mld_profile_treshhold(profile, variable: str = 'SIGMA_T', threshold: float =
 
     depth, density = depth[valid], density[valid]
     
-    if np.nanmean(np.diff(depth)) < 0:
+    if np.nanmean(depth) < 0:
         depth = -1 * depth
 
     # Sort by depth

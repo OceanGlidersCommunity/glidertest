@@ -451,6 +451,11 @@ label_dict = {
         "units": "kg m⁻³",
         "colormap": cmo.dense
     },
+    "SIGMA_1": {
+        "label": "Sigma-1",
+        "units": "kg m⁻³",
+        "colormap": cmo.dense
+    },
     "POTDENS0": {
         "label": "Potential density (σ₀)",
         "units": "kg m⁻³",

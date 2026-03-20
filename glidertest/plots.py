@@ -1572,7 +1572,7 @@ def plot_max_depth_per_profile(ds: xr.Dataset, bins= 20, ax = None, **kw: dict) 
             plt.show()
     return fig, ax
 
-def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP','PSAL','DENSITY'], use_bins: bool = False, binning: float = 2) -> tuple:
+def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP','PSAL','DENSITY'], use_bins: bool = False, binning: float = 2, ax=None):
     """
     Plots the specified variables against depth for a given profile number from an OG1-format dataset.
     If no profile number is provided, it plots the mean profile for the specified variables.
@@ -1613,8 +1613,15 @@ def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP','
     if len(vars) > 3:
         raise ValueError("Only three variables can be plotted at once, chose fewer variables")
 
-    with plt.style.context(glidertest_style_file):  
-        fig, ax1 = plt.subplots(figsize=(12, 9)) 
+    with plt.style.context(glidertest_style_file):
+        if ax is None:  
+            fig, ax1 = plt.subplots(figsize=(12, 9))   
+            force_plot = True
+        else:
+            fig = plt.gcf()
+            force_plot = False
+            ax1 = ax  # Use the first axis if provided
+        
         axs = [ax1, ax1.twiny(), ax1.twiny()]
         colors = ['red', 'blue', 'grey']
         s = 10 + binning
@@ -1646,9 +1653,9 @@ def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP','
             ax.scatter(profile[var], profile['DEPTH'], color=colors[i], marker='o', s=s)
             ax.set_xlabel(f'{label} [{unit}]', color=colors[i])
             ax.tick_params(axis='x', colors=colors[i])
+            ax.spines['top'].set_visible(False)
             if i > 0:
                 ax.xaxis.set_ticks_position('bottom')
-                ax.spines['top'].set_visible(False)
                 ax.spines['bottom'].set_position(('axes', -0.09*i))
             ax.xaxis.set_label_coords(0.5, -0.05-0.105*i)
 
@@ -1660,7 +1667,7 @@ def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP','
     return fig, ax1
 
 
-def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: float = 2):
+def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: float = 2, ax=None):
     """
     Plots the convective resistance (CR) of a profile against depth based on calculate_CR_for_all_depth function.
     For the calculation, the density anomaly with reference to 1000 kg/m3 is used ('SIGMA_1')
@@ -1701,7 +1708,13 @@ def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: f
     CR = CR_df['CR'].values
 
     with plt.style.context(glidertest_style_file):
-        fig, ax = plt.subplots(figsize=(12, 9))
+        if ax is None:  
+            fig, ax = plt.subplots(figsize=(12, 9))   
+            force_plot = True
+        else:
+            fig = plt.gcf()
+            force_plot = False
+
         ax.plot(CR, depth, label='CR')
         ax.scatter(CR, depth, marker='o', s=10+binning)
         ax.set_xlabel('Convective Resistance (CR)')
@@ -1710,7 +1723,6 @@ def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: f
         ax.set_title(f'Profile {profile_num} (Convective Resistance)')
         ax.grid(True)
         ax.legend()
-        plt.show()
     
     return fig, ax
 
