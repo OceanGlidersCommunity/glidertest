@@ -56,7 +56,7 @@ def mission_map(ds):
         ).add_to(m)
     return m
 
-def interactive_profile(ds):
+def profile(ds):
     """
     Creates an interactive profile viewer with external slider inputs.
 
@@ -134,7 +134,7 @@ def interactive_profile(ds):
     display(ui, out)
 
 
-def interactive_up_down_bias(ds):
+def up_down_bias(ds):
     """
     Creates an interactive up/down bias plot with external slider inputs.
 
@@ -174,7 +174,7 @@ def interactive_up_down_bias(ds):
 
     display(ui, out)
 
-def interactive_daynight_avg(ds):
+def daynight_avg(ds):
     """
     Creates an interactive day/night average plot with external slider inputs.
 
@@ -217,7 +217,7 @@ def interactive_daynight_avg(ds):
 
     display(ui, out)
 
-def interactive_ts_plot(ds):
+def ts_plot(ds):
     """
     Creates an interactive temperature-salinity plot with external slider inputs.
 
