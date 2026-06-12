@@ -2,6 +2,7 @@ import pytest
 from glidertest import fetchers, utilities
 import matplotlib
 matplotlib.use('agg')  # use agg backend to prevent creating plot windows during tests
+import cmocean.cm as cmo
 
 def test_utilitiesmix():
     ds = fetchers.load_sample_dataset()
@@ -30,11 +31,15 @@ def test_labels():
     var = 'PITCH'
     label = utilities.plotting_labels(var)
     assert label == 'PITCH'
+    colormap = utilities.plotting_colormap(var)
+    assert colormap == cmo.delta
     var = 'TEMP'
     label = utilities.plotting_labels(var)
     assert label == 'Temperature'
     unit=utilities.plotting_units(ds, var)
     assert unit == "°C"
+    colormap = utilities.plotting_colormap(var)
+    assert colormap == cmo.thermal
 
 def test_bin_profile():
     ds = fetchers.load_sample_dataset()
