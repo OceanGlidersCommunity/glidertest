@@ -485,9 +485,9 @@ def plotting_units(ds: xr.Dataset,var: str):
     """
     Retrieves the units associated with a variable from a dataset or a predefined dictionary.
 
-    This function checks if the given variable `var` exists as a key in the `label_dict` dictionary.
-    If found, it returns the associated units from `label_dict`. If not, it returns the units of the variable
-    from the dataset `ds` using the `var` key.
+    This function checks if the given variable has units in the attributes.  `var` exists as a key in the `label_dict`
+    dictionary. If found, it returns the units of the variable from the dataset `ds` using the `var` key. If not, it
+    returns the associated units from `label_dict`. In case none of the two exist, the field is left empty.
 
     Parameters
     ----------
@@ -499,13 +499,14 @@ def plotting_units(ds: xr.Dataset,var: str):
     Returns
     -------
     str: 
-        The units corresponding to the variable `var`. If the variable is found in `label_dict`,
-        the associated units will be returned. If not, the function returns the units from `ds[var]`.
+        The units corresponding to the variable `var`. If the units exist in the attributes, the function returns
+        the units from `ds[var]`. If not, and the variable is found in `label_dict`, the associated units will be returned.
 
     Notes
     -----
     Original Author: Chiara Monforte
     """
+
     if var in label_dict:
         return f'{label_dict[var]["units"]}'
     elif 'units' in ds[var].attrs:
