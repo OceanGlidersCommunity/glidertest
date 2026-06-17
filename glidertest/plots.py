@@ -168,7 +168,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
             ax1.xaxis.label.set_color('red')
             ax1.spines['top'].set_color('red')
             ax1.tick_params(axis='x', colors='red', labelsize=int(new_font))
-            ax2.set_xlabel(xlabel=f'{utilities.plotting_labels("SIGMA")} ({utilities.plotting_units(ds, "SIGMA")})',
+            ax2.set_xlabel(xlabel=f'{utilities.plotting_labels("DENSITY")} ({utilities.plotting_units(ds, "DENSITY")})',
                            fontsize=int(new_font))
             ax2.xaxis.label.set_color('black')
             ax2.spines['top'].set_color('black')
