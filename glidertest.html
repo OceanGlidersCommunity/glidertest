@@ -1356,9 +1356,9 @@ the function returns the variable name as the label.</p>
 <dt class="sig sig-object py" id="glidertest.utilities.plotting_units">
 <span class="sig-prename descclassname"><span class="pre">glidertest.utilities.</span></span><span class="sig-name descname"><span class="pre">plotting_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/utilities.html#plotting_units"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.utilities.plotting_units" title="Link to this definition"></a></dt>
 <dd><p>Retrieves the units associated with a variable from a dataset or a predefined dictionary.</p>
-<p>This function checks if the given variable <cite>var</cite> exists as a key in the <cite>label_dict</cite> dictionary.
-If found, it returns the associated units from <cite>label_dict</cite>. If not, it returns the units of the variable
-from the dataset <cite>ds</cite> using the <cite>var</cite> key.</p>
+<p>This function checks if the given variable has units in the attributes. If <cite>var</cite> exists as a key in the <cite>label_dict</cite>
+dictionary, it returns the units of the variable from the dataset <cite>ds</cite> using the <cite>var</cite> key. If not, it
+returns the associated units from <cite>label_dict</cite>. In case none of the two exist, the field is left empty.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1367,8 +1367,8 @@ from the dataset <cite>ds</cite> using the <cite>var</cite> key.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The units corresponding to the variable <cite>var</cite>. If the variable is found in <cite>label_dict</cite>,
-the associated units will be returned. If not, the function returns the units from <cite>ds[var]</cite>.</p>
+<dd class="field-even"><p>The units corresponding to the variable <cite>var</cite>. If the units exist in the attributes, the function returns
+the units from <cite>ds[var]</cite>. If not, and the variable is found in <cite>label_dict</cite>, the associated units will be returned.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
