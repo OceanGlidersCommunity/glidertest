@@ -15,12 +15,12 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
     - name: Setup Micromamba ${{ matrix.python-version }}
-      uses: mamba-org/setup-micromamba@v2.0.1
+      uses: mamba-org/setup-micromamba@v3
       with:
         environment-name: TEST
         init-shell: bash
