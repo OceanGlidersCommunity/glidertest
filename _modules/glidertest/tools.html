@@ -129,6 +129,55 @@
     <span class="k">return</span> <span class="n">df</span></div>
 
 
+<div class="viewcode-block" id="mean_profile">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.tools.mean_profile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mean_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">'TEMP'</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    This function computes the mean vertical profile for a specific variable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds: xarray.Dataset </span>
+<span class="sd">        Dataset in **OG1 format**, containing at least **PROFILE_NUMBER, DEPTH**, and the selected variable.  </span>
+<span class="sd">        Data should **not** be gridded.</span>
+<span class="sd">    var: str, optional, default='PSAL'</span>
+<span class="sd">        Selected variable to average.</span>
+<span class="sd">    v_res: float</span>
+<span class="sd">        Vertical resolution in meters for binning the profile.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    df: pandas.DataFrame </span>
+<span class="sd">        DataFrame containing the mean profile and corresponding depth bins.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Till Moritz</span>
+<span class="sd">    """</span>
+    <span class="c1"># Ensure required variables are in the dataset</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">'PROFILE_NUMBER'</span><span class="p">,</span> <span class="s1">'DEPTH'</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>       <span class="c1"># Horizontal resolution (not used here)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">v_res</span>   <span class="c1"># Vertical resolution</span>
+
+    <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+        <span class="c1"># 2D gridding by profile and depth</span>
+        <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">x_bin_center</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Compute mean across profiles for each depth level</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="n">mean_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">varG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">'mean'</span><span class="p">:</span> <span class="n">mean_var</span><span class="p">,</span> <span class="s1">'depth'</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> is not in the dataset'</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
 <div class="viewcode-block" id="compute_daynight_avg">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_daynight_avg">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_daynight_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sel_var</span><span class="o">=</span><span class="s1">'CHLA'</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -720,7 +769,7 @@
 <div class="viewcode-block" id="compute_mld">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_mld">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_mld</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'threshold'</span><span class="p">,</span> <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">ref_depth</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
-                 <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+                 <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Computes the mixed layer depth (MLD) for each profile in the dataset. Two methods are available:</span>
 <span class="sd">    1. **Threshold Method**: Computes MLD based on a density threshold (default is 0.03 kg/m³).</span>
@@ -845,7 +894,7 @@
 
     <span class="n">depth</span><span class="p">,</span> <span class="n">density</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">density</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
     
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">depth</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">depth</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">depth</span>
 
     <span class="c1"># Sort by depth</span>

@@ -61,12 +61,15 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.find_outlier_duration"><code class="docutils literal notranslate"><span class="pre">find_outlier_duration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.linear_interpolation"><code class="docutils literal notranslate"><span class="pre">linear_interpolation()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.max_depth_per_profile"><code class="docutils literal notranslate"><span class="pre">max_depth_per_profile()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.mean_profile"><code class="docutils literal notranslate"><span class="pre">mean_profile()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.mld_profile_CR"><code class="docutils literal notranslate"><span class="pre">mld_profile_CR()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.mld_profile_treshhold"><code class="docutils literal notranslate"><span class="pre">mld_profile_treshhold()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.quant_binavg"><code class="docutils literal notranslate"><span class="pre">quant_binavg()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.quant_hysteresis"><code class="docutils literal notranslate"><span class="pre">quant_hysteresis()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.tools.quant_updown_bias"><code class="docutils literal notranslate"><span class="pre">quant_updown_bias()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.check_temporal_drift"><code class="docutils literal notranslate"><span class="pre">check_temporal_drift()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.get_color_limits"><code class="docutils literal notranslate"><span class="pre">get_color_limits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.get_contour_levels"><code class="docutils literal notranslate"><span class="pre">get_contour_levels()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_CR"><code class="docutils literal notranslate"><span class="pre">plot_CR()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_basic_vars"><code class="docutils literal notranslate"><span class="pre">plot_basic_vars()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_combined_velocity_profiles"><code class="docutils literal notranslate"><span class="pre">plot_combined_velocity_profiles()</span></code></a></li>
@@ -83,6 +86,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_quench_assess"><code class="docutils literal notranslate"><span class="pre">plot_quench_assess()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_sampling_period"><code class="docutils literal notranslate"><span class="pre">plot_sampling_period()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_sampling_period_all"><code class="docutils literal notranslate"><span class="pre">plot_sampling_period_all()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_section"><code class="docutils literal notranslate"><span class="pre">plot_section()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_ts"><code class="docutils literal notranslate"><span class="pre">plot_ts()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_updown_bias"><code class="docutils literal notranslate"><span class="pre">plot_updown_bias()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.plots.plot_vertical_speeds_with_histograms"><code class="docutils literal notranslate"><span class="pre">plot_vertical_speeds_with_histograms()</span></code></a></li>
@@ -92,6 +96,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.compute_sunset_sunrise"><code class="docutils literal notranslate"><span class="pre">compute_sunset_sunrise()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.construct_2dgrid"><code class="docutils literal notranslate"><span class="pre">construct_2dgrid()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.group_by_profiles"><code class="docutils literal notranslate"><span class="pre">group_by_profiles()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.plotting_colormap"><code class="docutils literal notranslate"><span class="pre">plotting_colormap()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.plotting_labels"><code class="docutils literal notranslate"><span class="pre">plotting_labels()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.plotting_units"><code class="docutils literal notranslate"><span class="pre">plotting_units()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.fetchers.load_sample_dataset"><code class="docutils literal notranslate"><span class="pre">load_sample_dataset()</span></code></a></li>
@@ -361,7 +366,7 @@ Data should not be gridded.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.compute_mld">
-<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_mld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'threshold'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.03</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_mld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_mld" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_mld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'threshold'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.03</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_mld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_mld" title="Link to this definition"></a></dt>
 <dd><p>Computes the mixed layer depth (MLD) for each profile in the dataset. Two methods are available:
 1. <strong>Threshold Method</strong>: Computes MLD based on a density threshold (default is 0.03 kg/m³).
 2. <strong>Convective Resistance (CR) Method</strong>: Computes MLD based on the CR method. Values close to
@@ -458,6 +463,30 @@ Data should not be gridded.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>pandas dataframe containing the profile number and the maximum depth of that profile</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Till Moritz</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.tools.mean_profile">
+<span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">mean_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TEMP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#mean_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.mean_profile" title="Link to this definition"></a></dt>
+<dd><p>This function computes the mean vertical profile for a specific variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing at least <strong>PROFILE_NUMBER, DEPTH</strong>, and the selected variable.
+Data should <strong>not</strong> be gridded.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='PSAL'</em>) – Selected variable to average.</p></li>
+<li><p><strong>v_res</strong> (<em>float</em>) – Vertical resolution in meters for binning the profile.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>df</strong> – DataFrame containing the mean profile and corresponding depth bins.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -620,8 +649,18 @@ Data <strong>should not be gridded</strong>.</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots.get_color_limits">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">get_color_limits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#get_color_limits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.get_color_limits" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots.get_contour_levels">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">get_contour_levels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">levels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#get_contour_levels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.get_contour_levels" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_CR">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_CR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_CR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_CR" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_CR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_CR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_CR" title="Link to this definition"></a></dt>
 <dd><p>Plots the convective resistance (CR) of a profile against depth based on calculate_CR_for_all_depth function.
 For the calculation, the density anomaly with reference to 1000 kg/m3 is used (‘SIGMA_1’)</p>
 <dl class="field-list simple">
@@ -962,22 +1001,23 @@ difference was neither 0 nor 1 (meaning there are possibly issues with how the p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_profile">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['TEMP',</span> <span class="pre">'PSAL',</span> <span class="pre">'DENSITY']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="_modules/glidertest/plots.html#plot_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_profile" title="Link to this definition"></a></dt>
-<dd><p>Plots binned temperature, salinity, and density against depth on a single plot with three x-axes.</p>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['TEMP',</span> <span class="pre">'PSAL',</span> <span class="pre">'DENSITY']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_profile" title="Link to this definition"></a></dt>
+<dd><p>Plots the specified variables against depth for a given profile number from an OG1-format dataset.
+If no profile number is provided, it plots the mean profile for the specified variables.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Xarray dataset in OG1 format with at least PROFILE_NUMBER, DEPTH, TEMPERATURE, SALINITY, and DENSITY.</p></li>
-<li><p><strong>profile_num</strong> (<em>int</em>) – The profile number to plot.</p></li>
-<li><p><strong>vars</strong> (<em>list</em>) – The variables to plot. Default is [‘TEMP’,’PSAL’,’DENSITY’].</p></li>
-<li><p><strong>binning</strong> (<em>int</em>) – The depth resolution for binning.</p></li>
-<li><p><strong>use_bins</strong> (<em>bool</em>) – If True, use binned data instead of raw data.</p></li>
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Xarray dataset in OG1 format with at least PROFILE_NUMBER, DEPTH and the specified variables.</p></li>
+<li><p><strong>profile_num</strong> (<em>int</em><em> or </em><em>None</em>) – Profile number to plot. If None, plots mean profile.</p></li>
+<li><p><strong>vars</strong> (<em>list</em>) – Variables to plot. Default is [‘TEMP’,’PSAL’,’DENSITY’].</p></li>
+<li><p><strong>use_bins</strong> (<em>bool</em>) – Whether to bin the data vertically.</p></li>
+<li><p><strong>binning</strong> (<em>float</em>) – Bin size in meters if use_bins is True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The figure object containing the plot.</p></li>
-<li><p><strong>ax1</strong> (<em>matplotlib.axes.Axes</em>) – The axis object containing the primary plot.</p></li>
+<li><p><strong>ax1</strong> (<em>list of matplotlib.axes.Axes</em>) – The axis objects containing the subplots.</p></li>
 </ul>
 </p>
 </dd>
@@ -1061,6 +1101,38 @@ By default, it includes <strong>TEMP</strong> and <strong>PSAL</strong>, with <s
 </dl>
 <p class="rubric">Notes</p>
 <p>Original Author: Louis Clement</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots.plot_section">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_time_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pcolormesh'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_section" title="Link to this definition"></a></dt>
+<dd><p>Plots a section of the specified variable from the dataset <cite>ds</cite> against depth and profile number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing the variable to be plotted.</p></li>
+<li><p><strong>var</strong> (<em>str</em>) – The name of the variable to be plotted.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – The axes on which to plot. If None, a new figure and axes will be created.</p></li>
+<li><p><strong>v_res</strong> (<em>float</em><em>, </em><em>optional</em>) – The vertical resolution for the grid. Default is 2.</p></li>
+<li><p><strong>start</strong> (<em>int</em><em>, </em><em>optional</em>) – The starting profile number for the section. If None, it defaults to the minimum profile number in the dataset.</p></li>
+<li><p><strong>end</strong> (<em>int</em><em>, </em><em>optional</em>) – The ending profile number for the section. If None, it defaults to the maximum profile number in the dataset.</p></li>
+<li><p><strong>show_time_axis</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to show a secondary x-axis with time corresponding to the profile numbers. Default is True.</p></li>
+<li><p><strong>method</strong> (<em>str</em><em>, </em><em>optional</em>) – The method to use for plotting. Options are “contourf” for filled contour plot and “pcolormesh” for a pseudocolor plot. Default is “pcolormesh”.</p></li>
+<li><p><strong>log_scale</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to use a logarithmic scale for the color mapping. Default is False.</p></li>
+<li><p><strong>**kw</strong> – Additional keyword arguments to pass to the plotting function (e.g., cmap, vmin, vmax, levels).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – The axes on which the section plot was created.</p></li>
+<li><p><strong>cbar</strong> (<em>matplotlib.colorbar.Colorbar</em>) – The colorbar associated with the plot.</p></li>
+<li><p><strong>time_ax</strong> (<em>matplotlib.axes.Axes or None</em>) – The secondary x-axis for time, if <cite>show_time_axis</cite> is True; otherwise, None.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Till Moritz</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1328,6 +1400,28 @@ This can be further aggregated using methods like <cite>mean</cite> or <cite>sum
 <p>This function is based on the original GliderTools implementation and was modified by
 Chiara Monforte to ensure compliance with the OG1 standards.
 [Source Code](<a class="reference external" href="https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/utils.py">https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/utils.py</a>)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.utilities.plotting_colormap">
+<span class="sig-prename descclassname"><span class="pre">glidertest.utilities.</span></span><span class="sig-name descname"><span class="pre">plotting_colormap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/utilities.html#plotting_colormap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.utilities.plotting_colormap" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the colormap associated with a variable from a predefined dictionary.</p>
+<p>This function checks if the given variable <cite>var</cite> exists as a key in the <cite>label_dict</cite> dictionary.
+If found, it returns the associated colormap from <cite>label_dict</cite>. If not, it returns cmocean.cm.delta as a default colormap.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>var</strong> (<em>str</em>) – The variable (key) whose colormap is to be retrieved.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>colormap</strong> – The colormap corresponding to the variable <cite>var</cite>. If the variable is not found in <cite>label_dict</cite>,
+the function returns None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib colormap or None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Till Moritz</p>
 </dd></dl>
 
 <dl class="py function">

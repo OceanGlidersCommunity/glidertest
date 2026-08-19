@@ -81,6 +81,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">gsw</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateFormatter</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mdates</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cmocean.cm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cmo</span>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
@@ -499,45 +501,107 @@
     <span class="k">return</span> <span class="n">ds</span></div>
 
 
-<span class="n">label_dict</span><span class="o">=</span><span class="p">{</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"PSAL"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Practical salinity"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"PSU"</span><span class="p">},</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"PSU"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">haline</span>
+    <span class="p">},</span>
+    <span class="s2">"SA"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Absolute salinity"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"g kg⁻¹"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">haline</span>  <span class="c1"># Added best-guess</span>
+    <span class="p">},</span>
     <span class="s2">"TEMP"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Temperature"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"°C"</span><span class="p">},</span>
-    <span class="s2">"DENSITY"</span><span class="p">:{</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"°C"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">thermal</span>
+    <span class="p">},</span>
+    <span class="s2">"THETA"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Potential temperature"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"°C"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">thermal</span>
+    <span class="p">},</span>
+    <span class="s2">"DENSITY"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"In situ density"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"kg m⁻³"</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"kg m⁻³"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">dense</span>
     <span class="p">},</span>
     <span class="s2">"SIGMA"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Sigma-t"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"kg m⁻³"</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"kg m⁻³"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">dense</span>
+    <span class="p">},</span>
+    <span class="s2">"SIGMA_T"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Sigma-t"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"kg m⁻³"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">dense</span>
+    <span class="p">},</span>
+    <span class="s2">"SIGMA_1"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Sigma-1"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"kg m⁻³"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">dense</span>
+    <span class="p">},</span>
+    <span class="s2">"POTDENS0"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Potential density (σ₀)"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"kg m⁻³"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">dense</span>
+    <span class="p">},</span>
+    <span class="s2">"SIGTHETA"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Potential density (σθ)"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"kg m⁻³"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">dense</span>
+    <span class="p">},</span>
+    <span class="s2">"PRES"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Pressure"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"dbar"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">deep</span>
+    <span class="p">},</span>
+    <span class="s2">"DEPTH_Z"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Depth"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"m"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">deep</span>
+    <span class="p">},</span>
+    <span class="s2">"DEPTH"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Depth"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"m"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">deep</span>
     <span class="p">},</span>
     <span class="s2">"DOXY"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Dissolved oxygen"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"mmol m⁻³"</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"mmol m⁻³"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">oxy</span>
     <span class="p">},</span>
-    <span class="s2">"SA"</span><span class="p">:{</span>
-        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Absolute salinity"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"g kg⁻¹"</span>
-    <span class="p">},</span>
-    <span class="s2">"CHLA"</span><span class="p">:{</span>
+    <span class="s2">"CHLA"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Chlorophyll"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"mg m⁻³"</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"mg m⁻³"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">algae</span>
     <span class="p">},</span>
-    <span class="s2">"CNDC"</span><span class="p">:{</span>
+    <span class="s2">"CNDC"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Conductivity"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"mS cm⁻¹"</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"mS cm⁻¹"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">haline</span>
     <span class="p">},</span>
-    <span class="s2">"DPAR"</span><span class="p">:{</span>
+    <span class="s2">"DPAR"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Irradiance PAR"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"μE cm⁻² s⁻¹"</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"μE cm⁻² s⁻¹"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">solar</span>  <span class="c1"># Best guess</span>
     <span class="p">},</span>
-    <span class="s2">"BBP700"</span><span class="p">:{</span>
+    <span class="s2">"BBP700"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Red backscatter, b$</span><span class="si">{bp}</span><span class="s2">$(700)"</span><span class="p">,</span>
-        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"m⁻¹"</span>
-    <span class="p">}</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"m⁻¹"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">matter</span>  <span class="c1"># Best guess</span>
+    <span class="p">},</span>
+    <span class="s2">"GLIDER_VERT_VELO_MODEL"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Vertical glider velocity"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"cm s⁻¹"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">delta</span>
+    <span class="p">},</span>
+    <span class="s2">"GLIDER_HORZ_VELO_MODEL"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Horizontal glider velocity"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"cm s⁻¹"</span><span class="p">,</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="n">cmo</span><span class="o">.</span><span class="n">delta</span>
+    <span class="p">},</span>
 <span class="p">}</span>
 
 <div class="viewcode-block" id="plotting_labels">
@@ -569,6 +633,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">label</span><span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1">'</span>
     <span class="k">return</span> <span class="n">label</span></div>
+
 
 <div class="viewcode-block" id="plotting_units">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.plotting_units">[docs]</a>
@@ -604,6 +669,38 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">label_dict</span><span class="p">[</span><span class="n">var</span><span class="p">][</span><span class="s2">"units"</span><span class="p">]</span><span class="si">}</span><span class="s1">'</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">""</span></div>
+
+    
+<div class="viewcode-block" id="plotting_colormap">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.plotting_colormap">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plotting_colormap</span><span class="p">(</span><span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Retrieves the colormap associated with a variable from a predefined dictionary.</span>
+
+<span class="sd">    This function checks if the given variable `var` exists as a key in the `label_dict` dictionary.</span>
+<span class="sd">    If found, it returns the associated colormap from `label_dict`. If not, it returns cmocean.cm.delta as a default colormap.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    var: str</span>
+<span class="sd">        The variable (key) whose colormap is to be retrieved.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    colormap: matplotlib colormap or None</span>
+<span class="sd">        The colormap corresponding to the variable `var`. If the variable is not found in `label_dict`,</span>
+<span class="sd">        the function returns None.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Till Moritz</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">label_dict</span><span class="p">:</span>
+        <span class="n">colormap</span> <span class="o">=</span> <span class="n">label_dict</span><span class="p">[</span><span class="n">var</span><span class="p">][</span><span class="s2">"colormap"</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">colormap</span> <span class="o">=</span> <span class="n">cmo</span><span class="o">.</span><span class="n">delta</span>
+    <span class="k">return</span> <span class="n">colormap</span></div>
+
 
 <div class="viewcode-block" id="group_by_profiles">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.group_by_profiles">[docs]</a>

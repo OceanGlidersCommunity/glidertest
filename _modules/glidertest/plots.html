@@ -72,23 +72,28 @@
            <div itemprop="articleBody">
              
   <h1>Source code for glidertest.plots</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mdates</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">cartopy.crs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ccrs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cartopy.feature</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cfeature</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cmocean.cm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cmo</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gsw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mdates</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.ticker</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateFormatter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogNorm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">FormatStrFormatter</span><span class="p">,</span> <span class="n">MaxNLocator</span><span class="p">,</span> <span class="n">LogLocator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">gsw</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">cartopy.crs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ccrs</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">cartopy.feature</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cfeature</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.interpolate</span><span class="w"> </span><span class="kn">import</span> <span class="n">interp1d</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">utilities</span><span class="p">,</span> <span class="n">tools</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.ticker</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">FormatStrFormatter</span>
 
 <span class="nb">dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
 <span class="n">glidertest_style_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">dir</span><span class="si">}</span><span class="s2">/glidertest.mplstyle"</span>
@@ -1701,94 +1706,107 @@
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
 
 
-
 <div class="viewcode-block" id="plot_profile">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_profile">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">plot_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">profile_num</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'TEMP'</span><span class="p">,</span><span class="s1">'PSAL'</span><span class="p">,</span><span class="s1">'DENSITY'</span><span class="p">],</span> <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">profile_num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'TEMP'</span><span class="p">,</span><span class="s1">'PSAL'</span><span class="p">,</span><span class="s1">'DENSITY'</span><span class="p">],</span> <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Plots binned temperature, salinity, and density against depth on a single plot with three x-axes.</span>
+<span class="sd">    Plots the specified variables against depth for a given profile number from an OG1-format dataset.</span>
+<span class="sd">    If no profile number is provided, it plots the mean profile for the specified variables.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    ds: xarray.Dataset</span>
-<span class="sd">        Xarray dataset in OG1 format with at least PROFILE_NUMBER, DEPTH, TEMPERATURE, SALINITY, and DENSITY.</span>
-<span class="sd">    profile_num: int</span>
-<span class="sd">        The profile number to plot.</span>
+<span class="sd">        Xarray dataset in OG1 format with at least PROFILE_NUMBER, DEPTH and the specified variables.</span>
+<span class="sd">    profile_num: int or None</span>
+<span class="sd">        Profile number to plot. If None, plots mean profile.</span>
 <span class="sd">    vars: list</span>
-<span class="sd">        The variables to plot. Default is ['TEMP','PSAL','DENSITY'].</span>
-<span class="sd">    binning: int</span>
-<span class="sd">        The depth resolution for binning.</span>
+<span class="sd">        Variables to plot. Default is ['TEMP','PSAL','DENSITY'].</span>
 <span class="sd">    use_bins: bool</span>
-<span class="sd">        If True, use binned data instead of raw data.</span>
+<span class="sd">        Whether to bin the data vertically.</span>
+<span class="sd">    binning: float</span>
+<span class="sd">        Bin size in meters if use_bins is True.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    fig: matplotlib.figure.Figure</span>
 <span class="sd">        The figure object containing the plot.</span>
-<span class="sd">    ax1: matplotlib.axes.Axes</span>
-<span class="sd">        The axis object containing the primary plot.</span>
+<span class="sd">    ax1: list of matplotlib.axes.Axes</span>
+<span class="sd">        The axis objects containing the subplots.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    Original Author: Till Moritz</span>
 <span class="sd">    """</span>
-    <span class="c1"># Remove empty strings from vars</span>
-    <span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span> <span class="k">if</span> <span class="n">v</span><span class="p">]</span> 
-    <span class="c1"># If vars is empty, show an empty plot</span>
+    <span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span> <span class="k">if</span> <span class="n">v</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">vars</span><span class="p">:</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Profile </span><span class="si">{</span><span class="n">profile_num</span><span class="si">}</span><span class="s1"> (No Variables Selected)'</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'No Variables Selected'</span><span class="p">)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Depth (m)'</span><span class="p">)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span>
-    
+
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Only three variables can be plotted at once, chose less variables"</span><span class="p">)</span>
-    
-    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>  
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span> 
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Only three variables can be plotted at once, chose fewer variables"</span><span class="p">)</span>
 
-        <span class="n">profile</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span> <span class="o">==</span> <span class="n">profile_num</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">use_bins</span><span class="p">:</span>
-            <span class="n">profile</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">bin_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="nb">vars</span><span class="p">,</span> <span class="n">binning</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>   
+            <span class="n">force_plot</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+            <span class="n">force_plot</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">ax1</span> <span class="o">=</span> <span class="n">ax</span>  <span class="c1"># Use the first axis if provided</span>
+        
+        <span class="n">axs</span> <span class="o">=</span> <span class="p">[</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twiny</span><span class="p">(),</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twiny</span><span class="p">()]</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'red'</span><span class="p">,</span> <span class="s1">'blue'</span><span class="p">,</span> <span class="s1">'grey'</span><span class="p">]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">+</span> <span class="n">binning</span>
 
-        <span class="c1"># Plot binned data</span>
+        <span class="k">if</span> <span class="n">profile_num</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span> <span class="o">==</span> <span class="n">profile_num</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_bins</span><span class="p">:</span>
+                <span class="n">profile</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">bin_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="nb">vars</span><span class="p">,</span> <span class="n">binning</span><span class="p">)</span>
+            <span class="n">title_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'Profile </span><span class="si">{</span><span class="n">profile_num</span><span class="si">}</span><span class="s1">'</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Mean profile logic</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">mean_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'mean'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'depth'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span><span class="n">var</span><span class="p">:</span> <span class="p">([</span><span class="s1">'depth'</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">])</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">})</span>
+            <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s1">'depth'</span><span class="p">],</span> <span class="n">depth</span><span class="p">)</span>
+            <span class="n">title_str</span> <span class="o">=</span> <span class="s1">'Mean Profile'</span>
+
         <span class="n">mission</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span>
         <span class="n">glider</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="o">+</span><span class="n">binning</span>
-
-        <span class="n">axs</span> <span class="o">=</span> <span class="p">[</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twiny</span><span class="p">(),</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twiny</span><span class="p">()]</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'red'</span><span class="p">,</span> <span class="s1">'blue'</span><span class="p">,</span> <span class="s1">'grey'</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">vars</span><span class="p">):</span>
             <span class="n">ax</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="c1">### add the long_name to the label, if it exists</span>
-            <span class="n">long_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="s1">'long_name'</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> - </span><span class="si">{</span><span class="n">long_name</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">'-'</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'o'</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
-            <span class="n">unit</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="s1">'units'</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> [</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s1">]'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labeltop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">plotting_units</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">plotting_labels</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'o'</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1"> [</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s1">]'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">'top'</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s1">'bottom'</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">'top'</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">'bottom'</span><span class="p">]</span><span class="o">.</span><span class="n">set_position</span><span class="p">((</span><span class="s1">'axes'</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.09</span><span class="o">*</span><span class="n">i</span><span class="p">))</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_label_coords</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05</span><span class="o">-</span><span class="mf">0.105</span><span class="o">*</span><span class="n">i</span><span class="p">)</span>
 
-        <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'upper right'</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-        <span class="c1"># Set pressure as y-axis (Increasing Downward)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Depth (m)'</span><span class="p">)</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>  <span class="c1"># Pressure increases downward</span>
-        <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Profile </span><span class="si">{</span><span class="n">profile_num</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">glider</span><span class="si">}</span><span class="s1"> on mission: </span><span class="si">{</span><span class="n">mission</span><span class="si">}</span><span class="s1">)'</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">title_str</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">glider</span><span class="si">}</span><span class="s1"> on mission: </span><span class="si">{</span><span class="n">mission</span><span class="si">}</span><span class="s1">)'</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span></div>
 
 
+
 <div class="viewcode-block" id="plot_CR">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_CR">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">plot_CR</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">profile_num</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_CR</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">profile_num</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Plots the convective resistance (CR) of a profile against depth based on calculate_CR_for_all_depth function.</span>
 <span class="sd">    For the calculation, the density anomaly with reference to 1000 kg/m3 is used ('SIGMA_1')</span>
@@ -1829,7 +1847,13 @@
     <span class="n">CR</span> <span class="o">=</span> <span class="n">CR_df</span><span class="p">[</span><span class="s1">'CR'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
     <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>   
+            <span class="n">force_plot</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+            <span class="n">force_plot</span> <span class="o">=</span> <span class="kc">False</span>
+
         <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">CR</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'CR'</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">CR</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'o'</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="o">+</span><span class="n">binning</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'Convective Resistance (CR)'</span><span class="p">)</span>
@@ -1838,9 +1862,231 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Profile </span><span class="si">{</span><span class="n">profile_num</span><span class="si">}</span><span class="s1"> (Convective Resistance)'</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="get_color_limits">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots.get_color_limits">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_color_limits</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">log_scale</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">finite</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">log_scale</span><span class="p">:</span>
+        <span class="n">finite</span> <span class="o">=</span> <span class="n">finite</span><span class="p">[</span><span class="n">finite</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">finite</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No positive values available for LogNorm."</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">finite</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"Warning: Some non-positive values will be ignored in log scale."</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">finite</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">finite</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">),)</span></div>
+
+
+
+<div class="viewcode-block" id="get_contour_levels">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots.get_contour_levels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_contour_levels</span><span class="p">(</span><span class="n">levels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># If the user passed an explicit array/list of levels, use it directly</span>
+    <span class="k">if</span> <span class="n">levels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">levels</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">levels</span>
+        
+    <span class="c1"># If levels is an integer or None, use it as the target number of intervals</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">levels</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">levels</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">else</span> <span class="mi">10</span>
+
+    <span class="k">if</span> <span class="n">log_scale</span><span class="p">:</span>
+        <span class="c1"># Find clean decade limits that encompass vmin and vmax</span>
+        <span class="n">dec_min</span><span class="p">,</span> <span class="n">dec_max</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">vmin</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">vmax</span><span class="p">))</span>
+        
+        <span class="c1"># LogLocator naturally picks clean base-10 steps (e.g., 10^-5, 10^-4...)</span>
+        <span class="n">locator</span> <span class="o">=</span> <span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">num</span><span class="p">,</span> <span class="n">subs</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">)</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">locator</span><span class="o">.</span><span class="n">tick_values</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">dec_min</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">dec_max</span><span class="p">)</span>
+        
+        <span class="c1"># Filter levels to strictly fall within your desired vmin/vmax range</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">levels</span><span class="p">[(</span><span class="n">levels</span> <span class="o">&gt;=</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">levels</span> <span class="o">&lt;=</span> <span class="n">vmax</span><span class="p">)]</span>
+        <span class="c1"># If not enough levels are found, fallback to geometric spacing</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">levels</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">num</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># MaxNLocator finds clean intervals (multiples of 1, 2, 5, 10)</span>
+        <span class="n">locator</span> <span class="o">=</span> <span class="n">MaxNLocator</span><span class="p">(</span><span class="n">nbins</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">num</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">locator</span><span class="o">.</span><span class="n">tick_values</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
+        
+        <span class="c1"># Filter and append strict boundary limits</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">levels</span><span class="p">[(</span><span class="n">levels</span> <span class="o">&gt;=</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">levels</span> <span class="o">&lt;=</span> <span class="n">vmax</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">levels</span></div>
+
+
+
+<div class="viewcode-block" id="plot_section">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots.plot_section">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_section</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_time_axis</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"pcolormesh"</span><span class="p">,</span> <span class="n">log_scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">,):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Plots a section of the specified variable from the dataset `ds` against depth and profile number.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds: xarray.Dataset</span>
+<span class="sd">        The dataset containing the variable to be plotted.</span>
+<span class="sd">    var: str</span>
+<span class="sd">        The name of the variable to be plotted.</span>
+<span class="sd">    ax: matplotlib.axes.Axes, optional</span>
+<span class="sd">        The axes on which to plot. If None, a new figure and axes will be created.</span>
+<span class="sd">    v_res: float, optional</span>
+<span class="sd">        The vertical resolution for the grid. Default is 2.</span>
+<span class="sd">    start: int, optional</span>
+<span class="sd">        The starting profile number for the section. If None, it defaults to the minimum profile number in the dataset.</span>
+<span class="sd">    end: int, optional</span>
+<span class="sd">        The ending profile number for the section. If None, it defaults to the maximum profile number in the dataset.</span>
+<span class="sd">    show_time_axis: bool, optional</span>
+<span class="sd">        Whether to show a secondary x-axis with time corresponding to the profile numbers. Default is True.</span>
+<span class="sd">    method: str, optional</span>
+<span class="sd">        The method to use for plotting. Options are "contourf" for filled contour plot and "pcolormesh" for a pseudocolor plot. Default is "pcolormesh".</span>
+<span class="sd">    log_scale: bool, optional</span>
+<span class="sd">        Whether to use a logarithmic scale for the color mapping. Default is False.</span>
+<span class="sd">    **kw:</span>
+<span class="sd">        Additional keyword arguments to pass to the plotting function (e.g., cmap, vmin, vmax, levels).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ax: matplotlib.axes.Axes</span>
+<span class="sd">        The axes on which the section plot was created.</span>
+<span class="sd">    cbar: matplotlib.colorbar.Colorbar</span>
+<span class="sd">        The colorbar associated with the plot.</span>
+<span class="sd">    time_ax: matplotlib.axes.Axes or None</span>
+<span class="sd">        The secondary x-axis for time, if `show_time_axis` is True; otherwise, None.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Till Moritz</span>
+<span class="sd">    """</span>
+
+    <span class="c1"># -------------------------</span>
+    <span class="c1"># subset profiles</span>
+    <span class="c1"># -------------------------</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">start</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">end</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">)</span>
+
+        <span class="n">dim</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">dims</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">({</span><span class="n">dim</span><span class="p">:</span> <span class="n">mask</span><span class="p">})</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">profiles</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="k">if</span> <span class="n">log_scale</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">values</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+    <span class="c1"># -------------------------</span>
+    <span class="c1"># grid</span>
+    <span class="c1"># -------------------------</span>
+    <span class="n">Z</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span>
+        <span class="n">profiles</span><span class="p">,</span>
+        <span class="n">depth</span><span class="p">,</span>
+        <span class="n">values</span><span class="p">,</span>
+        <span class="mi">1</span><span class="p">,</span>
+        <span class="n">v_res</span><span class="p">,</span>
+        <span class="n">x_bin_center</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"vmin"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"vmax"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">get_color_limits</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">log_scale</span><span class="o">=</span><span class="n">log_scale</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"vmin"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s2">"vmin"</span><span class="p">]</span> <span class="o">=</span> <span class="n">vmin</span>
+        <span class="k">if</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"vmax"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s2">"vmax"</span><span class="p">]</span> <span class="o">=</span> <span class="n">vmax</span>
+
+    <span class="k">if</span> <span class="n">log_scale</span><span class="p">:</span>
+        <span class="n">kw</span><span class="p">[</span><span class="s2">"norm"</span><span class="p">]</span> <span class="o">=</span> <span class="n">LogNorm</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">kw</span><span class="p">[</span><span class="s2">"vmin"</span><span class="p">],</span> <span class="n">vmax</span><span class="o">=</span><span class="n">kw</span><span class="p">[</span><span class="s2">"vmax"</span><span class="p">])</span>
+
+    <span class="c1"># -------------------------</span>
+    <span class="c1"># plotting</span>
+    <span class="c1"># -------------------------</span>
+
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">glidertest_style_file</span><span class="p">):</span>
+        <span class="c1"># --- Handle provided axes ---</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Create new figure and axes if none provided</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cmap"</span><span class="p">):</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s2">"cmap"</span><span class="p">]</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">plotting_colormap</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"levels"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"contourf"</span><span class="p">:</span>
+            <span class="n">levels</span> <span class="o">=</span> <span class="n">get_contour_levels</span><span class="p">(</span><span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">,</span> <span class="n">log_scale</span><span class="o">=</span><span class="n">log_scale</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">kw</span><span class="p">[</span><span class="s2">"vmin"</span><span class="p">],</span> <span class="n">vmax</span><span class="o">=</span><span class="n">kw</span><span class="p">[</span><span class="s2">"vmax"</span><span class="p">])</span>
+            <span class="n">mappable</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="o">**</span><span class="n">kw</span><span class="p">,</span><span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">,</span> <span class="n">extend</span><span class="o">=</span><span class="s2">"both"</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"pcolormesh"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"norm"</span><span class="p">):</span>
+                <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"vmin"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"vmax"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">mappable</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown method '</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+
+        <span class="c1"># -------------------------</span>
+        <span class="c1"># axes formatting</span>
+        <span class="c1"># -------------------------</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">plotting_labels</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">plotting_units</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Depth (m)"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Profile Number"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Section plot of </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># -------------------------</span>
+        <span class="c1"># colorbar</span>
+        <span class="c1"># -------------------------</span>
+        <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mappable</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="s2">"proportional"</span><span class="p">,</span><span class="n">extend</span><span class="o">=</span><span class="s2">"both"</span><span class="p">)</span>
+        <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">log_scale</span><span class="p">:</span>
+            <span class="n">cbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">'log'</span><span class="p">)</span>
+
+        <span class="c1"># -------------------------</span>
+        <span class="c1"># optional time axis</span>
+        <span class="c1"># -------------------------</span>
+        <span class="n">time_ax</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">show_time_axis</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[[</span><span class="s2">"TIME"</span><span class="p">,</span> <span class="s2">"PROFILE_NUMBER"</span><span class="p">]]</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"TIME"</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+            <span class="n">mean_times</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"PROFILE_NUMBER"</span><span class="p">)[</span><span class="s2">"TIME"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+            <span class="n">t</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">mean_times</span><span class="p">))</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">mean_times</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+
+            <span class="n">to_time</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">fill_value</span><span class="o">=</span><span class="s2">"extrapolate"</span><span class="p">,)</span>
+
+            <span class="n">to_profile</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">fill_value</span><span class="o">=</span><span class="s2">"extrapolate"</span><span class="p">,)</span>
+
+            <span class="n">time_ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">secondary_xaxis</span><span class="p">(</span><span class="s2">"bottom"</span><span class="p">,</span><span class="n">functions</span><span class="o">=</span><span class="p">(</span><span class="n">to_time</span><span class="p">,</span> <span class="n">to_profile</span><span class="p">),)</span>
+
+            <span class="n">time_ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">"bottom"</span><span class="p">]</span><span class="o">.</span><span class="n">set_position</span><span class="p">((</span><span class="s2">"outward"</span><span class="p">,</span> <span class="mi">40</span><span class="p">))</span>
+
+            <span class="n">time_ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">mdates</span><span class="o">.</span><span class="n">AutoDateLocator</span><span class="p">())</span>
+
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M"</span> <span class="k">if</span> <span class="n">dt</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="k">else</span> <span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">time_ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">mdates</span><span class="o">.</span><span class="n">DateFormatter</span><span class="p">(</span><span class="n">fmt</span><span class="p">))</span>
+
+            <span class="n">time_ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">35</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ax</span><span class="p">,</span> <span class="n">cbar</span><span class="p">,</span> <span class="n">time_ax</span></div>
+
 
 </pre></div>
 
