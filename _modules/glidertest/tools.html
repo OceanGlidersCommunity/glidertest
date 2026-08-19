@@ -86,8 +86,8 @@
 
 <div class="viewcode-block" id="quant_updown_bias">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_updown_bias">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">quant_updown_bias</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quant_updown_bias</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">'PSAL'</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    This function computes up and downcast averages for a specific variable</span>
 
 <span class="sd">    Parameters</span>
@@ -95,7 +95,7 @@
 <span class="sd">    ds: Dataset.xarray </span>
 <span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH, LATITUDE, LONGITUDE,** and the selected variable.  </span>
 <span class="sd">        Data should **not** be gridded.</span>
-<span class="sd">    var: str, optional, default=&#39;PSAL&#39;</span>
+<span class="sd">    var: str, optional, default='PSAL'</span>
 <span class="sd">        Selected variable.</span>
 <span class="sd">    v_res: float</span>
 <span class="sd">        Vertical resolution for the gridding in meters.</span>
@@ -108,8 +108,8 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    Original Author: Chiara Monforte</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
+<span class="sd">    """</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">'PROFILE_NUMBER'</span><span class="p">,</span> <span class="s1">'DEPTH'</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
     <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Horizontal resolution</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">v_res</span>  <span class="c1"># Vertical resolution</span>
 
@@ -118,21 +118,21 @@
 
         <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">varG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Horizontal gradients</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
             <span class="n">dc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Dive - CLimb</span>
             <span class="n">cd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Climb - Dive</span>
 
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;dc&#39;</span><span class="p">:</span> <span class="n">dc</span><span class="p">,</span> <span class="s1">&#39;cd&#39;</span><span class="p">:</span> <span class="n">cd</span><span class="p">,</span> <span class="s1">&#39;depth&#39;</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">'dc'</span><span class="p">:</span> <span class="n">dc</span><span class="p">,</span> <span class="s1">'cd'</span><span class="p">:</span> <span class="n">cd</span><span class="p">,</span> <span class="s1">'depth'</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> is not in the dataset&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> is not in the dataset'</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">df</span></div>
 
 
 <div class="viewcode-block" id="compute_daynight_avg">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_daynight_avg">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">compute_daynight_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sel_var</span><span class="o">=</span><span class="s1">&#39;CHLA&#39;</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_daynight_avg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sel_var</span><span class="o">=</span><span class="s1">'CHLA'</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_prof</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Computes day and night averages for a selected variable over a specified time period or range of dives.  </span>
 <span class="sd">    Day and night are determined based on **sunrise and sunset times** from the `compute_sunset_sunrise` function in GliderTools.  </span>
 <span class="sd">    A sufficient number of dives is required to ensure both **day and night data** are present; otherwise, the function will not run.  </span>
@@ -142,7 +142,7 @@
 <span class="sd">    ds : xarray.Dataset  </span>
 <span class="sd">        Dataset in **OG1 format**, containing at least **TIME, DEPTH, LATITUDE, LONGITUDE,** and the selected variable.  </span>
 <span class="sd">        Data should **not** be gridded.  </span>
-<span class="sd">    sel_var : str, optional, default=&#39;CHLA&#39;  </span>
+<span class="sd">    sel_var : str, optional, default='CHLA'  </span>
 <span class="sd">        The variable for which day and night averages will be computed.  </span>
 <span class="sd">    start_time : str or datetime-like, optional  </span>
 <span class="sd">        The **start date** for data selection.  </span>
@@ -173,19 +173,19 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Chiara Monforte  </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="s2">&quot;TIME&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_xindex</span><span class="p">(</span><span class="s1">&#39;TIME&#39;</span><span class="p">)</span>
+<span class="sd">    """</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">'TIME'</span><span class="p">,</span> <span class="n">sel_var</span><span class="p">,</span> <span class="s1">'DEPTH'</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s2">"TIME"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">set_xindex</span><span class="p">(</span><span class="s1">'TIME'</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">start_time</span><span class="p">:</span>
-        <span class="n">start_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">'D'</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">end_time</span><span class="p">:</span>
-        <span class="n">end_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">'D'</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">start_prof</span> <span class="ow">and</span> <span class="n">end_prof</span><span class="p">:</span>
-        <span class="n">t1</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">==</span><span class="n">start_prof</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">t2</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">==</span><span class="n">end_prof</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">==</span><span class="n">start_prof</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">'N_MEASUREMENTS'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="o">==</span><span class="n">end_prof</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">'N_MEASUREMENTS'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">ds_sel</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">TIME</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">ds_sel</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">TIME</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">))</span>
@@ -200,16 +200,16 @@
     <span class="n">batch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">daynight_batches</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
 
     <span class="c1"># Create day and night averages to then have easy to plot</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">ds_sel</span><span class="p">[</span><span class="n">sel_var</span><span class="p">],</span> <span class="n">day</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">ds_sel</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]],</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dat&#39;</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="s1">&#39;batch&#39;</span><span class="p">,</span> <span class="s1">&#39;depth&#39;</span><span class="p">])</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">ds_sel</span><span class="p">[</span><span class="n">sel_var</span><span class="p">],</span> <span class="n">day</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">ds_sel</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]],</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">'dat'</span><span class="p">,</span> <span class="s1">'day'</span><span class="p">,</span> <span class="s1">'batch'</span><span class="p">,</span> <span class="s1">'depth'</span><span class="p">])</span>
     <span class="n">ave</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dat</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">batch</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">depth</span><span class="p">)])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
     <span class="n">day_av</span> <span class="o">=</span> <span class="n">ave</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
     <span class="n">night_av</span> <span class="o">=</span> <span class="n">ave</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
     <span class="c1">#Assign date value</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">day_av</span><span class="o">.</span><span class="n">batch</span><span class="p">):</span>
-        <span class="n">date_val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ds_sel</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">batch</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)[:</span><span class="mi">10</span><span class="p">]</span>
-        <span class="n">day_av</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">day_av</span><span class="o">.</span><span class="n">batch</span> <span class="o">==</span> <span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">date_val</span>
-        <span class="n">night_av</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">night_av</span><span class="o">.</span><span class="n">batch</span> <span class="o">==</span> <span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">date_val</span>
+        <span class="n">date_val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ds_sel</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">batch</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">'N_MEASUREMENTS'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)[:</span><span class="mi">10</span><span class="p">]</span>
+        <span class="n">day_av</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">day_av</span><span class="o">.</span><span class="n">batch</span> <span class="o">==</span> <span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">'date'</span><span class="p">]</span> <span class="o">=</span> <span class="n">date_val</span>
+        <span class="n">night_av</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">night_av</span><span class="o">.</span><span class="n">batch</span> <span class="o">==</span> <span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">'date'</span><span class="p">]</span> <span class="o">=</span> <span class="n">date_val</span>
     <span class="k">return</span> <span class="n">day_av</span><span class="p">,</span> <span class="n">night_av</span></div>
 
 
@@ -217,7 +217,7 @@
 <div class="viewcode-block" id="check_monotony">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.check_monotony">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_monotony</span><span class="p">(</span><span class="n">da</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Checks whether the selected variable is **monotonically increasing** throughout the mission.  </span>
 <span class="sd">    This function is particularly designed to check **profile numbers** to ensure they are assigned correctly.  </span>
 <span class="sd">    If the profile number is not monotonically increasing, it may indicate misassignment due to an error in data processing.  </span>
@@ -236,19 +236,19 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Chiara Monforte</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">da</span><span class="p">)</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is not always monotonically increasing&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is not always monotonically increasing'</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is always monotonically increasing&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is always monotonically increasing'</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
 
 <div class="viewcode-block" id="calc_w_meas">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calc_w_meas">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calc_w_meas</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Calculates the vertical velocity of a glider using changes in pressure with time.</span>
 
 <span class="sd">    Parameters</span>
@@ -264,11 +264,11 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Eleanor Frajka-Williams</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">])</span>
+<span class="sd">    """</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">'TIME'</span><span class="p">])</span>
     <span class="c1"># Ensure inputs are numpy arrays</span>
     <span class="n">time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span>
-    <span class="k">if</span> <span class="s1">&#39;DEPTH_Z&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">var</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;PRES&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">]):</span>
+    <span class="k">if</span> <span class="s1">'DEPTH_Z'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">var</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'PRES'</span><span class="p">,</span> <span class="s1">'LATITUDE'</span><span class="p">,</span> <span class="s1">'LONGITUDE'</span><span class="p">]):</span>
         <span class="n">ds</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">calc_DEPTH_Z</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
     <span class="n">depth</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH_Z</span><span class="o">.</span><span class="n">values</span>
 
@@ -281,19 +281,19 @@
     <span class="c1"># seconds to 10 seconds, there may be some uneven weighting of the differences.</span>
     <span class="n">delta_z_meters</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">depth</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> 
     <span class="n">delta_time_datetime64ns</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">time</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> 
-    <span class="n">delta_time_sec</span> <span class="o">=</span> <span class="n">delta_time_datetime64ns</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">)</span>  <span class="c1"># Convert to seconds</span>
+    <span class="n">delta_time_sec</span> <span class="o">=</span> <span class="n">delta_time_datetime64ns</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'s'</span><span class="p">)</span>  <span class="c1"># Convert to seconds</span>
 
     <span class="c1"># Calculate vertical velocity (rate of change of pressure with time)</span>
     <span class="n">vertical_velocity</span> <span class="o">=</span> <span class="n">delta_z_meters</span> <span class="o">/</span> <span class="n">delta_time_sec</span>
 
     <span class="c1"># Pad the result to match the original array length</span>
-    <span class="n">vertical_velocity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">vertical_velocity</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;edge&#39;</span><span class="p">)</span> 
+    <span class="n">vertical_velocity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">vertical_velocity</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s1">'edge'</span><span class="p">)</span> 
 
     <span class="c1"># No - Convert vertical velocity from m/s to cm/s</span>
     <span class="n">vertical_velocity</span> <span class="o">=</span> <span class="n">vertical_velocity</span> 
 
     <span class="c1"># Add vertical velocity to the dataset</span>
-    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">GLIDER_VERT_VELO_DZDT</span><span class="o">=</span><span class="p">((</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">),</span> <span class="n">vertical_velocity</span><span class="p">,</span>  <span class="p">{</span><span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;glider_vertical_speed_from_pressure&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;m s-1&#39;</span><span class="p">}))</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">GLIDER_VERT_VELO_DZDT</span><span class="o">=</span><span class="p">((</span><span class="s1">'N_MEASUREMENTS'</span><span class="p">),</span> <span class="n">vertical_velocity</span><span class="p">,</span>  <span class="p">{</span><span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'glider_vertical_speed_from_pressure'</span><span class="p">,</span> <span class="s1">'units'</span><span class="p">:</span> <span class="s1">'m s-1'</span><span class="p">}))</span>
 
     <span class="k">return</span> <span class="n">ds</span></div>
 
@@ -301,7 +301,7 @@
 <div class="viewcode-block" id="calc_w_sw">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calc_w_sw">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calc_w_sw</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Calculate the vertical seawater velocity and add it to the dataset.</span>
 
 <span class="sd">    Parameters</span>
@@ -318,22 +318,22 @@
 <span class="sd">    -----</span>
 <span class="sd">    - This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user.</span>
 <span class="sd">    Original Author: Eleanor Frajka-Williams</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Eleanor&#39;s note: This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. </span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;GLIDER_VERT_VELO_MODEL&#39;</span><span class="p">,</span> <span class="s1">&#39;GLIDER_VERT_VELO_DZDT&#39;</span><span class="p">])</span>
+<span class="sd">    """</span>
+    <span class="c1"># Eleanor's note: This could be bundled with calc_glider_w_from_depth, but keeping them separate allows for some extra testing/flexibility for the user. </span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">'GLIDER_VERT_VELO_MODEL'</span><span class="p">,</span> <span class="s1">'GLIDER_VERT_VELO_DZDT'</span><span class="p">])</span>
     
     <span class="c1"># Calculate the vertical seawater velocity</span>
-    <span class="n">vert_sw_speed</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;GLIDER_VERT_VELO_DZDT&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;GLIDER_VERT_VELO_MODEL&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> 
+    <span class="n">vert_sw_speed</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">'GLIDER_VERT_VELO_DZDT'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">ds</span><span class="p">[</span><span class="s1">'GLIDER_VERT_VELO_MODEL'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> 
 
     <span class="c1"># Add vertical seawater velocity to the dataset as a data variable</span>
-    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">VERT_CURR_MODEL</span><span class="o">=</span><span class="p">((</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">),</span> <span class="n">vert_sw_speed</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;vertical_current_of_seawater_derived_from_glider_flight_model&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;m s-1&#39;</span><span class="p">}))</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">VERT_CURR_MODEL</span><span class="o">=</span><span class="p">((</span><span class="s1">'N_MEASUREMENTS'</span><span class="p">),</span> <span class="n">vert_sw_speed</span><span class="p">,</span> <span class="p">{</span><span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'vertical_current_of_seawater_derived_from_glider_flight_model'</span><span class="p">,</span> <span class="s1">'units'</span><span class="p">:</span> <span class="s1">'m s-1'</span><span class="p">}))</span>
     <span class="k">return</span> <span class="n">ds</span></div>
 
 
 <div class="viewcode-block" id="quant_binavg">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_binavg">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">quant_binavg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;VERT_CURR&#39;</span><span class="p">,</span> <span class="n">zgrid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quant_binavg</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">'VERT_CURR'</span><span class="p">,</span> <span class="n">zgrid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Calculate the bin average of vertical velocities within specified depth ranges.</span>
 <span class="sd">    This function computes the bin average of all vertical velocities within depth ranges,</span>
 <span class="sd">    accounting for the uneven vertical spacing of seaglider data in depth (but regular in time).</span>
@@ -357,19 +357,19 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ----</span>
 <span class="sd">    Original Author: Eleanor Frajka-Williams</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;PRES&#39;</span><span class="p">])</span>
+<span class="sd">    """</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="s1">'PRES'</span><span class="p">])</span>
     <span class="n">press</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">PRES</span><span class="o">.</span><span class="n">values</span>
     <span class="n">ww</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
     <span class="c1"># Calculate depth from pressure using gsw</span>
-    <span class="k">if</span> <span class="s1">&#39;DEPTH_Z&#39;</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s1">'DEPTH_Z'</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
         <span class="n">depth</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH_Z</span><span class="o">.</span><span class="n">values</span>
-    <span class="k">elif</span> <span class="s1">&#39;LATITUDE&#39;</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="s1">'LATITUDE'</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
         <span class="n">latmean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">LATITUDE</span><span class="p">)</span>
         <span class="n">depth</span> <span class="o">=</span> <span class="n">gsw</span><span class="o">.</span><span class="n">z_from_p</span><span class="p">(</span><span class="n">press</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="n">latmean</span><span class="p">)</span>  <span class="c1"># Assuming latitude is 0, adjust as necessary</span>
     <span class="k">else</span><span class="p">:</span> 
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;DEPTH_Z and LATITUDE are missing. At least one of the two variables is needed.&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"DEPTH_Z and LATITUDE are missing. At least one of the two variables is needed."</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">zgrid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -393,7 +393,7 @@
 
     <span class="c1"># Cycle through the bins and calculate the mean vertical velocity</span>
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">zdo</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">zgrid</span><span class="p">)):</span>
             <span class="n">z1</span> <span class="o">=</span> <span class="n">bin_edges</span><span class="p">[</span><span class="n">zdo</span><span class="p">]</span>
             <span class="n">z2</span> <span class="o">=</span> <span class="n">bin_edges</span><span class="p">[</span><span class="n">zdo</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
@@ -422,16 +422,16 @@
     <span class="c1"># Package the outputs into an xarray dataset</span>
     <span class="n">ds_out</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
         <span class="p">{</span>
-            <span class="s2">&quot;meanw&quot;</span><span class="p">:</span> <span class="p">([</span><span class="s2">&quot;zgrid&quot;</span><span class="p">],</span> <span class="n">meanw</span><span class="p">),</span>
-            <span class="s2">&quot;w_lower&quot;</span><span class="p">:</span> <span class="p">([</span><span class="s2">&quot;zgrid&quot;</span><span class="p">],</span> <span class="n">w_lower</span><span class="p">),</span>
-            <span class="s2">&quot;w_upper&quot;</span><span class="p">:</span> <span class="p">([</span><span class="s2">&quot;zgrid&quot;</span><span class="p">],</span> <span class="n">w_upper</span><span class="p">),</span>
-            <span class="s2">&quot;NNz&quot;</span><span class="p">:</span> <span class="p">([</span><span class="s2">&quot;zgrid&quot;</span><span class="p">],</span> <span class="n">NNz</span><span class="p">),</span>
+            <span class="s2">"meanw"</span><span class="p">:</span> <span class="p">([</span><span class="s2">"zgrid"</span><span class="p">],</span> <span class="n">meanw</span><span class="p">),</span>
+            <span class="s2">"w_lower"</span><span class="p">:</span> <span class="p">([</span><span class="s2">"zgrid"</span><span class="p">],</span> <span class="n">w_lower</span><span class="p">),</span>
+            <span class="s2">"w_upper"</span><span class="p">:</span> <span class="p">([</span><span class="s2">"zgrid"</span><span class="p">],</span> <span class="n">w_upper</span><span class="p">),</span>
+            <span class="s2">"NNz"</span><span class="p">:</span> <span class="p">([</span><span class="s2">"zgrid"</span><span class="p">],</span> <span class="n">NNz</span><span class="p">),</span>
         <span class="p">},</span>
         <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;zgrid&quot;</span><span class="p">:</span> <span class="n">zgrid</span>
+            <span class="s2">"zgrid"</span><span class="p">:</span> <span class="n">zgrid</span>
         <span class="p">},</span>
         <span class="n">attrs</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;CIlimits&quot;</span><span class="p">:</span> <span class="n">CIlimits</span>
+            <span class="s2">"CIlimits"</span><span class="p">:</span> <span class="n">CIlimits</span>
         <span class="p">}</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">ds_out</span></div>
@@ -440,8 +440,8 @@
 
 <div class="viewcode-block" id="quant_hysteresis">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_hysteresis">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">quant_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quant_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">'DOXY'</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    This function computes up and downcast averages for a specific variable</span>
 
 <span class="sd">    Parameters</span>
@@ -449,7 +449,7 @@
 <span class="sd">    ds: xarray.Dataset </span>
 <span class="sd">        Dataset in **OG1 format**, containing at least **DEPTH, PROFILE_NUMBER,** and the selected variable.  </span>
 <span class="sd">        Data should **not** be gridded.</span>
-<span class="sd">    var: str, optional, default=&#39;DOXY&#39; </span>
+<span class="sd">    var: str, optional, default='DOXY' </span>
 <span class="sd">        Selected variable</span>
 <span class="sd">    v_res: float</span>
 <span class="sd">        Vertical resolution for the gridding in meters.</span>
@@ -462,25 +462,25 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Chiara Monforte</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
+<span class="sd">    """</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">'PROFILE_NUMBER'</span><span class="p">,</span> <span class="s1">'DEPTH'</span><span class="p">,</span> <span class="n">var</span><span class="p">])</span>
     <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Horizontal resolution</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">v_res</span>  <span class="c1"># Vertical resolution</span>
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
         <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">x_bin_center</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="c1">## included x_bin_center = False to take left edge of the bin (profile number i.e. 1,2 ....)</span>
 
         <span class="n">dive</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">varG</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Dive</span>
         <span class="n">climb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">varG</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Climb</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;dive&#39;</span><span class="p">:</span> <span class="n">dive</span><span class="p">,</span> <span class="s1">&#39;climb&#39;</span><span class="p">:</span> <span class="n">climb</span><span class="p">,</span> <span class="s1">&#39;depth&#39;</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">'dive'</span><span class="p">:</span> <span class="n">dive</span><span class="p">,</span> <span class="s1">'climb'</span><span class="p">:</span> <span class="n">climb</span><span class="p">,</span> <span class="s1">'depth'</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
     <span class="k">return</span> <span class="n">df</span></div>
 
 
 
 <div class="viewcode-block" id="compute_hyst_stat">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_hyst_stat">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">compute_hyst_stat</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_hyst_stat</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">'DOXY'</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    This function computes some basic statistics for the differences between climb and dive data</span>
 
 <span class="sd">    Parameters</span>
@@ -488,7 +488,7 @@
 <span class="sd">    ds: xarray.Dataset </span>
 <span class="sd">        Dataset in **OG1 format**, containing at least **DEPTH, PROFILE_NUMBER,** and the selected variable.</span>
 <span class="sd">        Data should not be gridded.</span>
-<span class="sd">    var: str, optional, default=&#39;DOXY&#39; </span>
+<span class="sd">    var: str, optional, default='DOXY' </span>
 <span class="sd">        Selected variable</span>
 <span class="sd">    v_res: float</span>
 <span class="sd">        Vertical resolution for the gridding</span>
@@ -511,10 +511,10 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Chiara  Monforte</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">quant_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="n">v_res</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
         <span class="n">diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span> <span class="o">-</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">)</span>
         <span class="n">err_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">dive</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">climb</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
@@ -527,7 +527,7 @@
 <div class="viewcode-block" id="compute_prof_duration">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_prof_duration">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_prof_duration</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    This function computes some basic statistics for the differences between climb and dive data.</span>
 
 <span class="sd">    Parameters</span>
@@ -544,18 +544,18 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Chiara  Monforte</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">,</span> <span class="s1">&#39;TIME&#39;</span><span class="p">])</span>
+<span class="sd">    """</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="s1">'PROFILE_NUMBER'</span><span class="p">,</span> <span class="s1">'TIME'</span><span class="p">])</span>
     <span class="n">deltat</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-    <span class="n">deltat_min</span> <span class="o">=</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">deltat</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;timedelta64[s]&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int64&#39;</span><span class="p">)</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;profile_num&#39;</span><span class="p">:</span> <span class="n">deltat</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="s1">&#39;profile_duration&#39;</span><span class="p">:</span> <span class="n">deltat_min</span><span class="p">})</span>
+    <span class="n">deltat_min</span> <span class="o">=</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">deltat</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'timedelta64[s]'</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'int64'</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">'profile_num'</span><span class="p">:</span> <span class="n">deltat</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="s1">'profile_duration'</span><span class="p">:</span> <span class="n">deltat_min</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">df</span></div>
 
 
 <div class="viewcode-block" id="find_outlier_duration">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.find_outlier_duration">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_outlier_duration</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">rolling</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Identifies **outlier profile durations** based on a rolling mean and standard deviation threshold.  </span>
 <span class="sd">    This helps detect profiles with significantly longer or shorter durations compared to surrounding profiles. </span>
 
@@ -566,7 +566,7 @@
 <span class="sd">    rolling: int, default = 20</span>
 <span class="sd">        Window size for the rolling mean</span>
 <span class="sd">    std: int, default = 2</span>
-<span class="sd">        Number of standard deviations to use for &#39;odd&#39; profile duration</span>
+<span class="sd">        Number of standard deviations to use for 'odd' profile duration</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -579,21 +579,21 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Chiara  Monforte</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">rolling_mean</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">rolling</span><span class="p">,</span> <span class="n">min_periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-    <span class="n">overtime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">rolling_mean</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">))</span> <span class="o">|</span> <span class="p">(</span>
-                <span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_duration&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">rolling_mean</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">)))</span>
-    <span class="n">overt_prof</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;profile_num&#39;</span><span class="p">][</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
+<span class="sd">    """</span>
+    <span class="n">rolling_mean</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'profile_duration'</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">rolling</span><span class="p">,</span> <span class="n">min_periods</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">overtime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s1">'profile_duration'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">rolling_mean</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">))</span> <span class="o">|</span> <span class="p">(</span>
+                <span class="n">df</span><span class="p">[</span><span class="s1">'profile_duration'</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">rolling_mean</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">)))</span>
+    <span class="n">overt_prof</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'profile_num'</span><span class="p">][</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s1">&#39;There are </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s1"> profiles where the duration differs by </span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s1"> standard deviations of the nearby </span><span class="si">{</span><span class="n">rolling</span><span class="si">}</span><span class="s1"> profiles. Further checks are recommended&#39;</span><span class="p">)</span>
+            <span class="sa">f</span><span class="s1">'There are </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s1"> profiles where the duration differs by </span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s1"> standard deviations of the nearby </span><span class="si">{</span><span class="n">rolling</span><span class="si">}</span><span class="s1"> profiles. Further checks are recommended'</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rolling_mean</span><span class="p">,</span> <span class="n">overt_prof</span></div>
 
 
 <div class="viewcode-block" id="compute_global_range">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_global_range">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">compute_global_range</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DOXY&#39;</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_global_range</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">'DOXY'</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Applies a gross filter to the dataset by removing observations outside the specified global range.</span>
 
 <span class="sd">    This function checks if any values of the specified variable (`var`) fall outside the provided</span>
@@ -604,7 +604,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    ds : xarray.Dataset </span>
 <span class="sd">        Dataset containing the variable to be filtered.</span>
-<span class="sd">    var : str, optional, default=&#39;DOXY&#39; </span>
+<span class="sd">    var : str, optional, default='DOXY' </span>
 <span class="sd">        The name of the variable to apply the range filter on.</span>
 <span class="sd">    min_val : float, default = -5</span>
 <span class="sd">        The minimum allowable value for the variable.</span>
@@ -620,16 +620,16 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Chiara Monforte</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="p">])</span>
     <span class="n">out_range</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">&lt;</span><span class="n">min_val</span> <span class="p">)</span><span class="o">|</span> <span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">&gt;</span><span class="n">max_val</span> <span class="p">))</span>
-    <span class="k">return</span> <span class="n">out_range</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">out_range</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s1">'N_MEASUREMENTS'</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="max_depth_per_profile">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.max_depth_per_profile">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">max_depth_per_profile</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    This function computes the maximum depth for each profile in the dataset</span>
 
 <span class="sd">    Parameters</span>
@@ -645,17 +645,17 @@
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Till Moritz</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">max_depths</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;PROFILE_NUMBER&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+<span class="sd">    """</span>
+    <span class="n">max_depths</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'PROFILE_NUMBER'</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
     <span class="c1">### add the unit to the dataarray</span>
-    <span class="n">max_depths</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span>
+    <span class="n">max_depths</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">'units'</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">'units'</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">max_depths</span></div>
 
 
 <div class="viewcode-block" id="add_sigma_1">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.add_sigma_1">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">add_sigma_1</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var_sigma_1</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SIGMA_1&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_sigma_1</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var_sigma_1</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"SIGMA_1"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Computes the potential density anomaly (sigma_1) referenced to 1000 dbar </span>
 <span class="sd">    and adds it to the dataset if not already present.</span>
 
@@ -664,7 +664,7 @@
 <span class="sd">    ds : xr.Dataset</span>
 <span class="sd">        OG1-format dataset with required variables: DEPTH, TEMP, PSAL, LATITUDE, LONGITUDE.</span>
 <span class="sd">    var_sigma_1 : str, optional</span>
-<span class="sd">        Name of the variable to be added to the dataset. Default is &quot;SIGMA_1&quot;.</span>
+<span class="sd">        Name of the variable to be added to the dataset. Default is "SIGMA_1".</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -674,30 +674,30 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    Original author: Till Moritz</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;TEMP&#39;</span><span class="p">,</span> <span class="s1">&#39;PSAL&#39;</span><span class="p">,</span> <span class="s1">&#39;LATITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;LONGITUDE&#39;</span><span class="p">]</span>
+<span class="sd">    """</span>
+    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">,</span> <span class="s1">'TEMP'</span><span class="p">,</span> <span class="s1">'PSAL'</span><span class="p">,</span> <span class="s1">'LATITUDE'</span><span class="p">,</span> <span class="s1">'LONGITUDE'</span><span class="p">]</span>
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">required_vars</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">var_sigma_1</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variable &#39;</span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">&#39; already exists in the dataset. Skipping calculation.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Variable '</span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">' already exists in the dataset. Skipping calculation."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ds</span>
 
     <span class="c1"># Extract required variables</span>
-    <span class="n">TEMP</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;TEMP&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">PSAL</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;PSAL&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">PRES</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">LAT</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;LATITUDE&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">LON</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;LONGITUDE&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">TEMP</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">'TEMP'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">PSAL</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">'PSAL'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">PRES</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">LAT</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">'LATITUDE'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">LON</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s1">'LONGITUDE'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
     <span class="c1"># Filter valid entries</span>
     <span class="n">valid</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">TEMP</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">PSAL</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">PRES</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">LAT</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">LON</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">valid</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All values are invalid for </span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">; output will contain only NaNs.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"All values are invalid for </span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">; output will contain only NaNs."</span><span class="p">)</span>
         <span class="n">ds</span><span class="p">[</span><span class="n">var_sigma_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">PRES</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span> 
-            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">,),</span>
-            <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;kg/m^3&#39;</span><span class="p">,</span> <span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;potential density anomaly with respect to 1000 dbar&#39;</span><span class="p">}</span>
+            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">'N_MEASUREMENTS'</span><span class="p">,),</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">'units'</span><span class="p">:</span> <span class="s1">'kg/m^3'</span><span class="p">,</span> <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'potential density anomaly with respect to 1000 dbar'</span><span class="p">}</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">ds</span>
 
@@ -710,8 +710,8 @@
     <span class="n">full_sigma_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">PRES</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     <span class="n">full_sigma_1</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span> <span class="o">=</span> <span class="n">SIGMA_1</span>
 
-    <span class="n">ds</span><span class="p">[</span><span class="n">var_sigma_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">full_sigma_1</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;N_MEASUREMENTS&#39;</span><span class="p">,),</span>
-        <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;kg/m^3&#39;</span><span class="p">,</span> <span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;potential density anomaly with respect to 1000 dbar&#39;</span><span class="p">}</span>
+    <span class="n">ds</span><span class="p">[</span><span class="n">var_sigma_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">full_sigma_1</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">'N_MEASUREMENTS'</span><span class="p">,),</span>
+        <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">'units'</span><span class="p">:</span> <span class="s1">'kg/m^3'</span><span class="p">,</span> <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'potential density anomaly with respect to 1000 dbar'</span><span class="p">}</span>
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">ds</span></div>
@@ -719,9 +719,9 @@
 
 <div class="viewcode-block" id="compute_mld">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_mld">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">compute_mld</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">ref_depth</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_mld</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'threshold'</span><span class="p">,</span> <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">ref_depth</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
                  <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Computes the mixed layer depth (MLD) for each profile in the dataset. Two methods are available:</span>
 <span class="sd">    1. **Threshold Method**: Computes MLD based on a density threshold (default is 0.03 kg/m³).</span>
 <span class="sd">    2. **Convective Resistance (CR) Method**: Computes MLD based on the CR method. Values close to</span>
@@ -733,12 +733,12 @@
 <span class="sd">    ds : xr.Dataset</span>
 <span class="sd">        The dataset containing the profiles.</span>
 <span class="sd">    variable : str</span>
-<span class="sd">        Variable used for the MLD calculation. For the CR method use density anomaly with reference to 1000 dbar (&#39;SIGMA_1&#39;).</span>
+<span class="sd">        Variable used for the MLD calculation. For the CR method use density anomaly with reference to 1000 dbar ('SIGMA_1').</span>
 <span class="sd">    method : str, optional</span>
-<span class="sd">        The method to use for MLD calculation. Options are &#39;threshold&#39; or &#39;CR&#39;. Default is &#39;threshold&#39;.</span>
+<span class="sd">        The method to use for MLD calculation. Options are 'threshold' or 'CR'. Default is 'threshold'.</span>
 <span class="sd">    threshold : float, optional</span>
-<span class="sd">        If using &#39;threshold&#39;, this is the density threshold for MLD calculation. Default is 0.03 kg/m³.</span>
-<span class="sd">        If using &#39;CR&#39;, this is the CR threshold for the convective resistance. A value of -2 is recommended.</span>
+<span class="sd">        If using 'threshold', this is the density threshold for MLD calculation. Default is 0.03 kg/m³.</span>
+<span class="sd">        If using 'CR', this is the CR threshold for the convective resistance. A value of -2 is recommended.</span>
 <span class="sd">    use_bins : bool, optional</span>
 <span class="sd">        Whether to use binned data for MLD calculation. Default is True.</span>
 <span class="sd">    binning : float, optional</span>
@@ -748,49 +748,49 @@
 <span class="sd">    -------</span>
 <span class="sd">    mld_values : pd.DataFrame</span>
 <span class="sd">        A DataFrame containing the MLD values for each profile, along with the mean time for each profile.</span>
-<span class="sd">        The DataFrame has columns: &#39;PROFILE_NUMBER&#39;, &#39;MLD&#39; and &#39;TIME&#39;.</span>
+<span class="sd">        The DataFrame has columns: 'PROFILE_NUMBER', 'MLD' and 'TIME'.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    Original Author: Till Moritz</span>
 <span class="sd">    Based on the convective resistance caluclation, following the method described in FW2014 (https://doi.org/10.1175/JPO-D-13-069.1))</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span><span class="s2">&quot;DEPTH&quot;</span><span class="p">,</span> <span class="s2">&quot;PROFILE_NUMBER&quot;</span><span class="p">,</span><span class="s2">&quot;TIME&quot;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;threshold&#39;</span><span class="p">:</span>
-        <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">&quot;DEPTH&quot;</span><span class="p">,</span><span class="s2">&quot;TIME&quot;</span><span class="p">])</span>
+<span class="sd">    """</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span><span class="s2">"DEPTH"</span><span class="p">,</span> <span class="s2">"PROFILE_NUMBER"</span><span class="p">,</span><span class="s2">"TIME"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">'threshold'</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">"DEPTH"</span><span class="p">,</span><span class="s2">"TIME"</span><span class="p">])</span>
         <span class="n">mld</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mld_profile_treshhold</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
                             <span class="n">ref_depth</span><span class="o">=</span><span class="n">ref_depth</span><span class="p">,</span> <span class="n">use_bins</span><span class="o">=</span><span class="n">use_bins</span><span class="p">,</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;CR&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">variable</span> <span class="o">!=</span> <span class="s1">&#39;SIGMA_1&#39;</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: </span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2"> can not be used for convective resistance calulation. Instead use SIGMA_1 for CR calculation.&quot;</span><span class="p">)</span>
-            <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;SIGMA_1&#39;</span>
-        <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">&quot;DEPTH&quot;</span><span class="p">,</span><span class="s2">&quot;TIME&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">'CR'</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">variable</span> <span class="o">!=</span> <span class="s1">'SIGMA_1'</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: </span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2"> can not be used for convective resistance calulation. Instead use SIGMA_1 for CR calculation."</span><span class="p">)</span>
+            <span class="n">variable</span> <span class="o">=</span> <span class="s1">'SIGMA_1'</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">"DEPTH"</span><span class="p">,</span><span class="s2">"TIME"</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: CR threshold should be negative. Using -2 as default.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"Warning: CR threshold should be negative. Using -2 as default."</span><span class="p">)</span>
             <span class="n">threshold</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
         <span class="n">mld</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mld_profile_CR</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">use_bins</span><span class="o">=</span><span class="n">use_bins</span><span class="p">,</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid MLD calculation method. Use &#39;threshold&#39; or &#39;CR&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid MLD calculation method. Use 'threshold' or 'CR'."</span><span class="p">)</span>
     <span class="c1"># Convert the result to a DataFrame and name the MLD column</span>
-    <span class="n">mld</span> <span class="o">=</span> <span class="n">mld</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MLD&#39;</span><span class="p">)</span>
+    <span class="n">mld</span> <span class="o">=</span> <span class="n">mld</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'MLD'</span><span class="p">)</span>
     <span class="c1"># Add mean time for each profile to the DataFrame</span>
-    <span class="n">mld</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">mld</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mld</span><span class="p">[</span><span class="s1">&#39;TIME&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="s1">&#39;1min&#39;</span><span class="p">)</span>
+    <span class="n">mld</span><span class="p">[</span><span class="s1">'TIME'</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">mld</span><span class="p">[</span><span class="s1">'TIME'</span><span class="p">]</span> <span class="o">=</span> <span class="n">mld</span><span class="p">[</span><span class="s1">'TIME'</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="s1">'1min'</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mld</span></div>
 
 
 <div class="viewcode-block" id="linear_interpolation">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.linear_interpolation">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">linear_interpolation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_new</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Linearly interpolates y over x to estimate y at x_new.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Linearly interpolates y over x to estimate y at x_new."""</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">x_new</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="mld_profile_treshhold">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.mld_profile_treshhold">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">mld_profile_treshhold</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;SIGMA_T&#39;</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mld_profile_treshhold</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'SIGMA_T'</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">ref_depth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
                           <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Computes the mixed layer depth (MLD) from a profile dataset based on the density profile, </span>
 <span class="sd">    using a threshold of 0.03 kg/m³</span>
 
@@ -799,7 +799,7 @@
 <span class="sd">    profile : pd.DataFrame or xr.Dataset</span>
 <span class="sd">        Dataset or DataFrame containing depth and density columns.</span>
 <span class="sd">    variable : str</span>
-<span class="sd">        The name of the variable to use for the threshold calculation (default is &#39;SIGMA_T&#39;).</span>
+<span class="sd">        The name of the variable to use for the threshold calculation (default is 'SIGMA_T').</span>
 <span class="sd">    threshold : float</span>
 <span class="sd">        Density threshold for MLD estimation (default is 0.03 kg/m³).</span>
 <span class="sd">    ref_depth : float</span>
@@ -817,21 +817,21 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    Original Author: Till Moritz</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     
     <span class="k">if</span> <span class="n">use_bins</span><span class="p">:</span>
         <span class="n">profile</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">bin_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">],</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
-        <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
         <span class="n">density</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
-            <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
             <span class="n">density</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
-            <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
             <span class="n">density</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input must be a pandas.DataFrame or xarray.Dataset&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Input must be a pandas.DataFrame or xarray.Dataset"</span><span class="p">)</span>
 
     <span class="c1"># Convert to float arrays to avoid isfinite errors</span>
     <span class="n">depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
@@ -840,7 +840,7 @@
     <span class="c1"># Remove NaNs and check if valid data remains</span>
     <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">valid</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No valid depth or density data for MLD calculation.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"No valid depth or density data for MLD calculation."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="n">depth</span><span class="p">,</span> <span class="n">density</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">density</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
@@ -865,11 +865,11 @@
     <span class="n">density_below</span> <span class="o">=</span> <span class="n">density</span><span class="p">[</span><span class="n">mask_below</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">depth_below</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No data below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No data below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">density_below</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">density_ref</span> <span class="o">+</span> <span class="n">threshold</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No density values below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m exceed the threshold.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No density values below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m exceed the threshold."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="c1"># Find first crossing of the threshold</span>
@@ -885,14 +885,14 @@
 <div class="viewcode-block" id="mld_profile_CR">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.mld_profile_CR">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">mld_profile_CR</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">use_bins</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">binning</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Calculate the mixed layer depth (MLD) using the Convective Resistance (CR) method.</span>
 <span class="sd">    Returns NaN if no valid depth data below 10m is available or no CR values meet the threshold.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    profile : xarray.Dataset or pandas.DataFrame</span>
-<span class="sd">        Profile data containing &#39;DEPTH&#39; and &#39;SIGMA_1&#39;.</span>
+<span class="sd">        Profile data containing 'DEPTH' and 'SIGMA_1'.</span>
 <span class="sd">    threshold : float, optional</span>
 <span class="sd">        CR threshold for determining MLD. Default is -2.</span>
 <span class="sd">    use_bins : bool, optional</span>
@@ -908,13 +908,13 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    Original author: Till Moritz</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">use_bins</span><span class="p">:</span>
-        <span class="n">profile</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">bin_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;SIGMA_1&#39;</span><span class="p">],</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">bin_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="p">[</span><span class="s1">'SIGMA_1'</span><span class="p">],</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
 
     <span class="n">CR_df</span> <span class="o">=</span> <span class="n">calculate_CR_for_all_depth</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
-    <span class="n">depth</span> <span class="o">=</span> <span class="n">CR_df</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-    <span class="n">CR_values</span> <span class="o">=</span> <span class="n">CR_df</span><span class="p">[</span><span class="s1">&#39;CR&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">CR_df</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">CR_values</span> <span class="o">=</span> <span class="n">CR_df</span><span class="p">[</span><span class="s1">'CR'</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
     <span class="c1"># Filter out NaNs</span>
     <span class="n">valid</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">CR_values</span><span class="p">)</span>
@@ -938,7 +938,7 @@
 <div class="viewcode-block" id="calculate_CR_for_all_depth">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.calculate_CR_for_all_depth">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calculate_CR_for_all_depth</span><span class="p">(</span><span class="n">profile</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Calculate CR for all depths in the profile.</span>
 
 <span class="sd">    Parameters</span>
@@ -958,41 +958,41 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    Original Author: Till Moritz</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;SIGMA_1&#39;</span><span class="p">]</span>
+<span class="sd">    """</span>
+    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">,</span> <span class="s1">'SIGMA_1'</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
         <span class="n">df_profile</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">required_vars</span><span class="p">]</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
         <span class="n">df_profile</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">required_vars</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input must be an xarray.Dataset or pandas.DataFrame.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Input must be an xarray.Dataset or pandas.DataFrame."</span><span class="p">)</span>
 
     <span class="c1"># Drop NaNs in SIGMA_1 to avoid problems</span>
-    <span class="n">df_profile</span> <span class="o">=</span> <span class="n">df_profile</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;SIGMA_1&#39;</span><span class="p">])</span>
+    <span class="n">df_profile</span> <span class="o">=</span> <span class="n">df_profile</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">'SIGMA_1'</span><span class="p">])</span>
 
     <span class="c1"># Prepare CR values</span>
     <span class="n">CR_values</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">depths</span> <span class="o">=</span> <span class="n">df_profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">depths</span> <span class="o">=</span> <span class="n">df_profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
     <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">depths</span><span class="p">:</span>
         <span class="n">CR_h</span> <span class="o">=</span> <span class="n">compute_CR</span><span class="p">(</span><span class="n">df_profile</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
         <span class="n">CR_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CR_h</span><span class="p">)</span>
     
     <span class="c1">#return CR_values, depths</span>
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">:</span> <span class="n">depths</span><span class="p">,</span> <span class="s1">&#39;CR&#39;</span><span class="p">:</span> <span class="n">CR_values</span><span class="p">})</span></div>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'DEPTH'</span><span class="p">:</span> <span class="n">depths</span><span class="p">,</span> <span class="s1">'CR'</span><span class="p">:</span> <span class="n">CR_values</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="compute_CR">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.compute_CR">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_CR</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Compute the CR (density anomaly integral) up to the reference depth h.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    profile : xarray.Dataset or pandas.DataFrame</span>
-<span class="sd">        Profile data containing &#39;DEPTH&#39; and &#39;SIGMA_1&#39;.</span>
+<span class="sd">        Profile data containing 'DEPTH' and 'SIGMA_1'.</span>
 <span class="sd">    h : float</span>
 <span class="sd">        Reference depth up to which CR is computed.</span>
 
@@ -1004,16 +1004,16 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    Original Author: Till Moritz</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Extract depth and sigma_1 depending on input type</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
-        <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-        <span class="n">sigma1</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;SIGMA_1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">sigma1</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'SIGMA_1'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
-        <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;DEPTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-        <span class="n">sigma1</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;SIGMA_1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'DEPTH'</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">sigma1</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="s1">'SIGMA_1'</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input must be an xarray.Dataset or pandas.DataFrame.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Input must be an xarray.Dataset or pandas.DataFrame."</span><span class="p">)</span>
 
     <span class="c1"># Filter out NaNs</span>
     <span class="n">valid</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">sigma1</span><span class="p">)</span>
@@ -1031,7 +1031,7 @@
     <span class="c1"># Select depths up to h</span>
     <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth</span> <span class="o">&lt;=</span> <span class="n">h</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">depth</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not enough data points for depth </span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Not enough data points for depth </span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s2"> m"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="n">depth_masked</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
