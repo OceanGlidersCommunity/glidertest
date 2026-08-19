@@ -100,11 +100,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.plotting_labels"><code class="docutils literal notranslate"><span class="pre">plotting_labels()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.utilities.plotting_units"><code class="docutils literal notranslate"><span class="pre">plotting_units()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.fetchers.load_sample_dataset"><code class="docutils literal notranslate"><span class="pre">load_sample_dataset()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#glidertest.interactive.interactive_daynight_avg"><code class="docutils literal notranslate"><span class="pre">interactive_daynight_avg()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#glidertest.interactive.interactive_profile"><code class="docutils literal notranslate"><span class="pre">interactive_profile()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#glidertest.interactive.interactive_ts_plot"><code class="docutils literal notranslate"><span class="pre">interactive_ts_plot()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#glidertest.interactive.interactive_up_down_bias"><code class="docutils literal notranslate"><span class="pre">interactive_up_down_bias()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.interactive.daynight_avg"><code class="docutils literal notranslate"><span class="pre">daynight_avg()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#glidertest.interactive.mission_map"><code class="docutils literal notranslate"><span class="pre">mission_map()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.interactive.profile"><code class="docutils literal notranslate"><span class="pre">profile()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.interactive.ts_plot"><code class="docutils literal notranslate"><span class="pre">ts_plot()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest.interactive.up_down_bias"><code class="docutils literal notranslate"><span class="pre">up_down_bias()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -622,7 +622,7 @@ Data should <strong>not</strong> be gridded.</p></li>
 
 <dl class="py function" id="module-glidertest.plots">
 <dt class="sig sig-object py" id="glidertest.plots.check_temporal_drift">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">check_temporal_drift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#check_temporal_drift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.check_temporal_drift" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">check_temporal_drift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#check_temporal_drift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.check_temporal_drift" title="Link to this definition"></a></dt>
 <dd><p>Assesses potential <strong>temporal drift</strong> in a selected variable by generating a figure with two subplots:
 1. <strong>Time series scatter plot</strong> of the variable.
 2. <strong>Depth profile scatter plot</strong>, colored by date.</p>
@@ -749,7 +749,7 @@ and customizes the plot with labels, legends, and axis settings.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_daynight_avg">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_daynight_avg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var='PSAL'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_day=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_daynight_avg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_daynight_avg" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_daynight_avg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var='PSAL'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_day=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_daynight_avg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_daynight_avg" title="Link to this definition"></a></dt>
 <dd><p>This function can be used to plot the day and night averages computed with the day_night_avg function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -774,7 +774,7 @@ and customizes the plot with labels, legends, and axis settings.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_glider_track">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_glider_track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_glider_track"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_glider_track" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_glider_track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_glider_track"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_glider_track" title="Link to this definition"></a></dt>
 <dd><p>Plots the <strong>glider track</strong> on a map, with latitude and longitude colored by time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -827,7 +827,7 @@ identify whether values fall within expected limits.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_grid_spacing">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_grid_spacing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_grid_spacing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_grid_spacing" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_grid_spacing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_grid_spacing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_grid_spacing" title="Link to this definition"></a></dt>
 <dd><p>Plots <strong>histograms of the grid spacing</strong>, showing depth and time differences while excluding the outer 1% of values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -915,7 +915,7 @@ on thresholds, and another for marking specific suspect and fail ranges.</p></li
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_max_depth_per_profile">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_max_depth_per_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins=20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_max_depth_per_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_max_depth_per_profile" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_max_depth_per_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins=20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_max_depth_per_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_max_depth_per_profile" title="Link to this definition"></a></dt>
 <dd><p>Plots the maximum depth of each profile in a dataset.</p>
 <p>This function generates two plots: one showing the maximum depth of each profile and another
 histogram illustrating the distribution of maximum depths. It provides a visual representation
@@ -973,7 +973,7 @@ outliers.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_prof_monotony">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_prof_monotony</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_prof_monotony"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_prof_monotony" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_prof_monotony</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_prof_monotony"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_prof_monotony" title="Link to this definition"></a></dt>
 <dd><p>Checks for potential issues with the assigned <strong>profile index</strong> by plotting its progression over time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1028,7 +1028,7 @@ If no profile number is provided, it plots the mean profile for the specified va
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_quench_assess">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_quench_assess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_var:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_prof=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_prof=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylim=35</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_quench_assess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_quench_assess" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_quench_assess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_var:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_prof=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_prof=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylim=35</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_quench_assess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_quench_assess" title="Link to this definition"></a></dt>
 <dd><p>Generates a <strong>section plot</strong> of the selected variable over time and depth,
 with <strong>sunrise and sunset</strong> times marked to assess potential Non-Photochemical Quenching (NPQ) effects.</p>
 <dl class="field-list simple">
@@ -1084,7 +1084,7 @@ Data <strong>should not</strong> be gridded.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_sampling_period_all">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_sampling_period_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_sampling_period_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_sampling_period_all" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_sampling_period_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_sampling_period_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_sampling_period_all" title="Link to this definition"></a></dt>
 <dd><p>Plots <strong>histograms of the sampling period</strong> for multiple variables.
 By default, it includes <strong>TEMP</strong> and <strong>PSAL</strong>, with <strong>DOXY</strong> and <strong>CHLA</strong> added if present in the dataset.</p>
 <dl class="field-list simple">
@@ -1137,7 +1137,7 @@ By default, it includes <strong>TEMP</strong> and <strong>PSAL</strong>, with <s
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_ts">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset,</span> <span class="pre">percentile:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">99.5],</span> <span class="pre">axs:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_ts" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset,</span> <span class="pre">percentile:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">99.5],</span> <span class="pre">axs:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_ts" title="Link to this definition"></a></dt>
 <dd><p>Plots <strong>temperature and salinity distributions</strong> using histograms and a 2D density plot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1171,7 +1171,7 @@ By default, it includes <strong>TEMP</strong> and <strong>PSAL</strong>, with <s
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_updown_bias">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_updown_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var='TEMP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_updown_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_updown_bias" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_updown_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var='TEMP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_updown_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_updown_bias" title="Link to this definition"></a></dt>
 <dd><p>This function can be used to plot the up and downcast differences computed with the updown_bias function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1493,8 +1493,8 @@ the units from <cite>ds[var]</cite>. If not, and the variable is found in <cite>
 </dd></dl>
 
 <dl class="py function" id="module-glidertest.interactive">
-<dt class="sig sig-object py" id="glidertest.interactive.interactive_daynight_avg">
-<span class="sig-prename descclassname"><span class="pre">glidertest.interactive.</span></span><span class="sig-name descname"><span class="pre">interactive_daynight_avg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/interactive.html#interactive_daynight_avg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.interactive.interactive_daynight_avg" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="glidertest.interactive.daynight_avg">
+<span class="sig-prename descclassname"><span class="pre">glidertest.interactive.</span></span><span class="sig-name descname"><span class="pre">daynight_avg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/interactive.html#daynight_avg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.interactive.daynight_avg" title="Link to this definition"></a></dt>
 <dd><p>Creates an interactive day/night average plot with external slider inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1505,67 +1505,6 @@ the units from <cite>ds[var]</cite>. If not, and the variable is found in <cite>
 <dt>The function provides the following interactive widgets:</dt><dd><ul class="simple">
 <li><p>Variable: Dropdown to choose the variable to plot.</p></li>
 <li><p>Select the specific day to plot.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Original author: Till Moritz</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="glidertest.interactive.interactive_profile">
-<span class="sig-prename descclassname"><span class="pre">glidertest.interactive.</span></span><span class="sig-name descname"><span class="pre">interactive_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/interactive.html#interactive_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.interactive.interactive_profile" title="Link to this definition"></a></dt>
-<dd><p>Creates an interactive profile viewer with external slider inputs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing profile information.</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>The function provides the following interactive widgets:</dt><dd><ul class="simple">
-<li><p>Profile Number: Selects the profile number from available profiles.</p></li>
-<li><p>Variable 1, Variable 2, Variable 3: Dropdowns to choose up to three variables to plot.</p></li>
-<li><p>Use Binned Data: Checkbox to toggle between raw and binned data.</p></li>
-<li><p>Binning Resolution: Slider to adjust the binning resolution if binned data is used.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Original author: Till Moritz</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="glidertest.interactive.interactive_ts_plot">
-<span class="sig-prename descclassname"><span class="pre">glidertest.interactive.</span></span><span class="sig-name descname"><span class="pre">interactive_ts_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/interactive.html#interactive_ts_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.interactive.interactive_ts_plot" title="Link to this definition"></a></dt>
-<dd><p>Creates an interactive temperature-salinity plot with external slider inputs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing profile information.</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>The function provides the following interactive widgets:</dt><dd><ul class="simple">
-<li><p>Percentile: Slider to adjust the percentiles for filtering the data.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Original author: Till Moritz</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="glidertest.interactive.interactive_up_down_bias">
-<span class="sig-prename descclassname"><span class="pre">glidertest.interactive.</span></span><span class="sig-name descname"><span class="pre">interactive_up_down_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/interactive.html#interactive_up_down_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.interactive.interactive_up_down_bias" title="Link to this definition"></a></dt>
-<dd><p>Creates an interactive up/down bias plot with external slider inputs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing profile information.</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>The function provides the following interactive widgets:</dt><dd><ul class="simple">
-<li><p>Variable: Dropdown to choose the variable to plot.</p></li>
-<li><p>Vertical Resolution: Slider to adjust the vertical resolution for binning.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1590,6 +1529,67 @@ the units from <cite>ds[var]</cite>. If not, and the variable is found in <cite>
 </dl>
 <p class="rubric">Notes</p>
 <p>Original author: Callum Rollo</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.interactive.profile">
+<span class="sig-prename descclassname"><span class="pre">glidertest.interactive.</span></span><span class="sig-name descname"><span class="pre">profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/interactive.html#profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.interactive.profile" title="Link to this definition"></a></dt>
+<dd><p>Creates an interactive profile viewer with external slider inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing profile information.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>The function provides the following interactive widgets:</dt><dd><ul class="simple">
+<li><p>Profile Number: Selects the profile number from available profiles.</p></li>
+<li><p>Variable 1, Variable 2, Variable 3: Dropdowns to choose up to three variables to plot.</p></li>
+<li><p>Use Binned Data: Checkbox to toggle between raw and binned data.</p></li>
+<li><p>Binning Resolution: Slider to adjust the binning resolution if binned data is used.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original author: Till Moritz</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.interactive.ts_plot">
+<span class="sig-prename descclassname"><span class="pre">glidertest.interactive.</span></span><span class="sig-name descname"><span class="pre">ts_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/interactive.html#ts_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.interactive.ts_plot" title="Link to this definition"></a></dt>
+<dd><p>Creates an interactive temperature-salinity plot with external slider inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing profile information.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>The function provides the following interactive widgets:</dt><dd><ul class="simple">
+<li><p>Percentile: Slider to adjust the percentiles for filtering the data.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original author: Till Moritz</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.interactive.up_down_bias">
+<span class="sig-prename descclassname"><span class="pre">glidertest.interactive.</span></span><span class="sig-name descname"><span class="pre">up_down_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/interactive.html#up_down_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.interactive.up_down_bias" title="Link to this definition"></a></dt>
+<dd><p>Creates an interactive up/down bias plot with external slider inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing profile information.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>The function provides the following interactive widgets:</dt><dd><ul class="simple">
+<li><p>Variable: Dropdown to choose the variable to plot.</p></li>
+<li><p>Vertical Resolution: Slider to adjust the vertical resolution for binning.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original author: Till Moritz</p>
 </dd></dl>
 
 </section>
