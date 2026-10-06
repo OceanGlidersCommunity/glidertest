@@ -15,6 +15,8 @@ import re
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     import xarray as xr
 
 #: The 16 mandatory OG1 global attributes (manual: "Global attributes" table). "PI" and "Operator"
@@ -43,6 +45,54 @@ DATETIME_FORMAT_GLOBALS: tuple[str, ...] = ("start_date", "date_created")
 
 #: Mandatory attributes with a fixed required value.
 FIXED_VALUE_GLOBALS: dict[str, str] = {"featureType": "trajectory"}
+
+#: Canonical order of OG1 global attributes, transcribed from ``OG_Format.adoc``'s "Global
+#: attributes" table (document order, mandatory through suggested). Used to present a dataset's
+#: global attributes predictably: :func:`order_globals` lists those present in this order, then any
+#: attribute not in this list in the file's own order.
+GLOBAL_ATTR_ORDER: tuple[str, ...] = (
+    "title",
+    "platform",
+    "platform_vocabulary",
+    "id",
+    "naming_authority",
+    "institution",
+    "internal_mission_identifier",
+    "geospatial_lat_min",
+    "geospatial_lat_max",
+    "geospatial_lon_min",
+    "geospatial_lon_max",
+    "geospatial_vertical_min",
+    "geospatial_vertical_max",
+    "time_coverage_start",
+    "time_coverage_end",
+    "site",
+    "site_vocabulary",
+    "program",
+    "program_vocabulary",
+    "project",
+    "network",
+    "contributor_name",
+    "contributor_email",
+    "contributor_id",
+    "contributor_role",
+    "contributor_role_vocabulary",
+    "contributing_institutions",
+    "contributing_institutions_vocabulary",
+    "contributing_institutions_role",
+    "contributing_institutions_role_vocabulary",
+    "uri",
+    "data_url",
+    "doi",
+    "rtqc_method",
+    "rtqc_method_doi",
+    "web_link",
+    "comment",
+    "start_date",
+    "date_created",
+    "featureType",
+    "Conventions",
+)
 
 _DATETIME_RE = re.compile(r"^\d{8}T\d{6}$")  # YYYYmmddTHHMMss
 
@@ -83,3 +133,30 @@ def check_globals(ds: xr.Dataset) -> list[tuple[str, Status, str]]:
             status = "match"
         results.append((attr, status, "" if raw is None else str(raw)))
     return results
+
+
+def order_globals(attrs: Mapping[str, object]) -> list[str]:
+    """Return *attrs*' keys in OG1 canonical order, with non-OG1 keys after, in their given order.
+
+    Keys present in :data:`GLOBAL_ATTR_ORDER` come first, in that order; any remaining key (not an
+    OG1 global attribute) follows in *attrs*' own iteration order. No key is added or dropped — only
+    reordered.
+
+    Parameters
+    ----------
+    attrs : collections.abc.Mapping
+        A dataset's global attributes (``ds.attrs``).
+
+    Returns
+    -------
+    list of str
+        The keys of *attrs*, canonical OG1 attributes first, then the rest in file order.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams.
+    """
+    canonical = set(GLOBAL_ATTR_ORDER)
+    ordered = [k for k in GLOBAL_ATTR_ORDER if k in attrs]
+    ordered += [k for k in attrs if k not in canonical]
+    return ordered

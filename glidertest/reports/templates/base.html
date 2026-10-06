@@ -15,6 +15,22 @@
 }
 /* Package-local: non-conforming OG1 metadata value cells in amber. */
 .meta td.nonconform { background: var(--warn-bg); }
+/* Wide file-contents tables: cells stay on one line by default (take only their content width);
+   tagged columns wrap and are capped with max-width so none dominates — the browser auto-distributes
+   the remaining width (table-layout: auto). Narrowing N/Min-Max/Variable frees width so the
+   attribute dropdown expands the table less when opened. */
+table.nc td, table.nc th { white-space: nowrap; }
+table.nc .wrap  { white-space: normal; overflow-wrap: anywhere; max-width: 20rem; } /* long name, std name, attr value */
+table.nc .wrapv { white-space: normal; overflow-wrap: anywhere; max-width: 12rem; } /* variable name */
+table.nc .wrapn { white-space: normal; max-width: 4.5rem; } /* N (valid): wraps at the space */
+table.nc .wrapr { white-space: normal; max-width: 7rem; }   /* Min / Max: wraps at the slash */
+/* Attribute dropdown: a readable minimum when open; values wrap, keys do not. */
+table.nc details.attrs table { min-width: 16rem; }
+table.nc details.attrs td { white-space: normal; overflow-wrap: anywhere; }
+table.nc details.attrs td.mono { white-space: nowrap; }
+/* An html/table panel is one full-width item of the flex .fig-row, so its caption, headings and
+   tables stack as normal block flow instead of sitting side by side. */
+.html-panel { flex: 1 1 100%; min-width: 0; }
 /* Subtle in-table links: underline only, keep the text colour. */
 .meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 /* Expandable per-variable attribute list in a table cell (ported from ctdcast). */

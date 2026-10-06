@@ -34,7 +34,7 @@ class Ctx:
 
 def _duration(t0: np.datetime64, t1: np.datetime64) -> str:
     """Return a ``Nd Nh`` duration string between two datetimes (hours carry into days)."""
-    total_hours = int(round(float((t1 - t0) / np.timedelta64(1, "h"))))
+    total_hours = round(float((t1 - t0) / np.timedelta64(1, "h")))
     days, hours = divmod(total_hours, 24)
     return f"{days}d {hours}h"
 
@@ -146,9 +146,14 @@ def _payload_table(ds: xr.Dataset) -> str:
     )
 
 
-def _table(headers: list[str], rows: list[str]) -> str:
-    """Return a column-header table: *headers* (``<th>`` cells) over *rows* (each a full ``<tr>``)."""
-    return "<table><thead><tr>" + "".join(headers) + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
+def _table(headers: list[str], rows: list[str], *, cls: str = "") -> str:
+    """Return a column-header table: *headers* (``<th>`` cells) over *rows* (each a full ``<tr>``).
+
+    *cls* sets the table element's class; ``"nc"`` marks the wide file-contents tables whose long
+    text cells are allowed to wrap so the table fits the page width.
+    """
+    tag = f"<table class='{cls}'>" if cls else "<table>"
+    return tag + "<thead><tr>" + "".join(headers) + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
 
 
 _GEOSPATIAL = (
@@ -235,7 +240,7 @@ def _qc_sample_cell(flags: np.ndarray) -> str:
 def _gross_cell(r: tuple, ds: xr.Dataset, v: str) -> str:
     """Matrix cell for the gross-range test (suspect span only): out-of-range count + a small bar."""
     n = ds.sizes["N_MEASUREMENTS"] if "N_MEASUREMENTS" in ds.sizes else int(np.asarray(ds[v].values).size)
-    nv = int(len(r[0]))
+    nv = len(r[0])
     if nv == 0:
         return "<td class='qc-good'>clean</td>"
     bar = _dist_bar({"good": n - nv, "suspect": nv}, n, small=True)
@@ -410,7 +415,14 @@ def _attrs_details(attrs: dict, exclude: tuple[str, ...] = ()) -> str:
 
 
 def _var_row(name: str, v: xr.DataArray, *, has_qc: bool) -> str:
-    """Return one file-contents table row inventorying a variable: dims, dtype, N, valid, range, CF names."""
+    """Return one file-contents table row inventorying a variable: dtype, N (valid), range, CF names.
+
+    The dimension is omitted — every variable in a table shares the dimension named in the table
+    heading. A variable with a companion ``*_QC`` flag has a green ``(_QC)`` appended to its name
+    instead of a separate column. The point count shows ``N`` alone when every point is finite, or
+    ``N (valid)`` when some are not; the value range is a single ``min / max`` cell (``—`` when there
+    is no numeric range).
+    """
     n = int(np.prod(v.shape)) if v.shape else 1
     v_min = v_max = None
     n_valid = n
@@ -421,28 +433,25 @@ def _var_row(name: str, v: xr.DataArray, *, has_qc: bool) -> str:
         if n_valid:
             v_min = vals[finite].min().item()
             v_max = vals[finite].max().item()
-    dims = ", ".join(str(d) for d in v.dims) or "()"
-    qc_mark = "<span class='qc-good'>✓</span>" if has_qc else "—"
+    name_cell = html.escape(name) + (" <span class='qc-good'>(_QC)</span>" if has_qc else "")
+    n_cell = f"{n:,}" if n_valid == n else f"{n:,} ({n_valid:,})"
+    rng = "—" if v_min is None and v_max is None else f"{_fmt_scalar(v_min)} / {_fmt_scalar(v_max)}"
     return (
-        f"<tr><td class='mono'>{html.escape(name)}</td>"
-        f"<td class='mono'>{html.escape(dims)}</td>"
+        f"<tr><td class='mono wrapv'>{name_cell}</td>"
         f"<td class='mono'>{html.escape(str(v.dtype))}</td>"
-        f"<td class='num'>{n:,}</td><td class='num'>{n_valid:,}</td>"
-        f"<td class='num'>{html.escape(_fmt_scalar(v_min))}</td>"
-        f"<td class='num'>{html.escape(_fmt_scalar(v_max))}</td>"
+        f"<td class='num wrapn'>{n_cell}</td>"
+        f"<td class='num wrapr'>{html.escape(rng)}</td>"
         f"<td>{html.escape(v.attrs.get('units', ''))}</td>"
-        f"<td>{html.escape(v.attrs.get('long_name', ''))}</td>"
-        f"<td class='mono'>{html.escape(v.attrs.get('standard_name', ''))}</td>"
-        f"<td>{qc_mark}</td>"
+        f"<td class='wrap'>{html.escape(v.attrs.get('long_name', ''))}</td>"
+        f"<td class='mono wrap'>{html.escape(v.attrs.get('standard_name', ''))}</td>"
         f"<td>{_attrs_details(v.attrs, exclude=('units', 'long_name', 'standard_name'))}</td></tr>"
     )
 
 
 _VAR_HEADERS = [
-    "<th>Variable</th>", "<th>Dims</th>", "<th>Dtype</th>", "<th class='num'>N</th>",
-    "<th class='num'>Valid</th>", "<th class='num'>Min</th>", "<th class='num'>Max</th>",
-    "<th>Units</th>", "<th>Long name</th>", "<th>Standard name</th>", "<th>QC</th>",
-    "<th>Attributes</th>",
+    "<th>Variable</th>", "<th>Dtype</th>", "<th class='num wrapn'>N (valid)</th>",
+    "<th class='num wrapr'>Min / Max</th>", "<th>Units</th>", "<th>Long name</th>",
+    "<th>Standard name</th>", "<th>Attributes</th>",
 ]
 
 #: Columns for the sensor-catalog table: OG1 ``SENSOR_*`` variables are NaN scalars whose content
@@ -458,7 +467,7 @@ def _var_table(ds: xr.Dataset, names: list[str]) -> str:
     if not names:
         return ""
     rows = [_var_row(n, ds[n], has_qc=f"{n}_QC" in ds.variables) for n in names]
-    return _table(_VAR_HEADERS, rows)
+    return _table(_VAR_HEADERS, rows, cls="nc")
 
 
 def _sensor_row(name: str, v: xr.DataArray) -> str:
@@ -466,7 +475,7 @@ def _sensor_row(name: str, v: xr.DataArray) -> str:
     a = v.attrs
     return (
         f"<tr><td class='mono'>{html.escape(name)}</td>"
-        f"<td>{html.escape(str(a.get('sensor_model', '')))}</td>"
+        f"<td class='wrap'>{html.escape(str(a.get('sensor_model', '')))}</td>"
         f"<td class='mono'>{html.escape(str(a.get('serial_number', '')))}</td>"
         f"<td>{html.escape(str(a.get('calibration_date', '')))}</td>"
         f"<td>{_attrs_details(a, exclude=('sensor_model', 'serial_number', 'calibration_date'))}</td></tr>"
@@ -490,7 +499,12 @@ def _file_contents(ds: xr.Dataset) -> str:
     for n in science:
         by_dims.setdefault(tuple(str(d) for d in ds[n].dims), []).append(n)
 
-    blocks = [f"<h3>Coordinates</h3>{_var_table(ds, sorted(ds.coords))}"]
+    coords = sorted(ds.coords)
+    coord_dims = {tuple(str(d) for d in ds[n].dims) for n in coords}
+    coord_title = "Coordinates"
+    if len(coord_dims) == 1 and (only := next(iter(coord_dims))):
+        coord_title = f"Coordinates on {', '.join(only)}"
+    blocks = [f"<h3>{coord_title}</h3>{_var_table(ds, coords)}"]
     measurement = by_dims.pop(("N_MEASUREMENTS",), None)
     if measurement:
         blocks.append(f"<h3>Variables on N_MEASUREMENTS</h3>{_var_table(ds, measurement)}")
@@ -501,18 +515,20 @@ def _file_contents(ds: xr.Dataset) -> str:
         blocks.append(f"<h3>Scalar variables</h3>{_var_table(ds, scalars)}")
     if sensors:
         sensor_rows = [_sensor_row(n, ds[n]) for n in sensors]
-        blocks.append(f"<h3>Sensor catalog</h3>{_table(_SENSOR_HEADERS, sensor_rows)}")
+        blocks.append(f"<h3>Sensor catalog</h3>{_table(_SENSOR_HEADERS, sensor_rows, cls='nc')}")
 
     attr_rows = [
-        f"<tr><td>{html.escape(str(k))}</td><td>{_linkify(html.escape(str(val)))}</td></tr>"
-        for k, val in ds.attrs.items()
+        f"<tr><td>{html.escape(k)}</td>"
+        f"<td class='wrap'>{_linkify(html.escape(str(ds.attrs[k])))}</td></tr>"
+        for k in og1_attrs.order_globals(ds.attrs)
     ]
     return (
         f"<p class='caption'>{len(science)} data variables, {len(sensors)} sensors, "
         f"{len(qc_vars)} QC-flag variables (shown in the QC section, not listed here), "
         f"{len(ds.coords)} coordinates, {len(ds.attrs)} global attributes.</p>" + "".join(blocks)
-        + "<h3>Global attributes</h3><p class='caption'>In file order.</p>"
-        + _table(["<th>Attribute</th>", "<th>Value</th>"], attr_rows)
+        + "<h3>Global attributes</h3><p class='caption'>OG1 canonical order; attributes that are "
+        "not OG1 global attributes follow, in file order.</p>"
+        + _table(["<th>Attribute</th>", "<th>Value</th>"], attr_rows, cls="nc")
     )
 
 

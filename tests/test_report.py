@@ -52,7 +52,12 @@ def test_payload_and_file_contents(tmp_path):
         assert label in html
     assert "SENSOR_CTD_205048" in html  # TEMP's source sensor, shown in the payload Source column
     # File-contents inventory: dimension-grouped tables, a sensor catalog, and the attr dump.
-    for heading in ("Coordinates", "Variables on N_MEASUREMENTS", "Sensor catalog", "Global attributes"):
+    for heading in (
+        "Coordinates on N_MEASUREMENTS",
+        "Variables on N_MEASUREMENTS",
+        "Sensor catalog",
+        "Global attributes",
+    ):
         assert f"<h3>{heading}</h3>" in html
     assert "Standard name" in html
     assert "TEMP" in html
@@ -82,6 +87,14 @@ def test_flag_labels_read_from_file():
     assert labels[1] == "Good"
     assert labels[2] == "Unknown"
     assert labels[4] == "Fail"
+
+
+def test_order_globals_canonical_then_file_order():
+    from glidertest import og1_attrs
+
+    attrs = {"glider_serial": "x", "Conventions": "CF", "title": "t", "zzz_custom": "q"}
+    # title before Conventions (canonical order), then the two non-OG1 keys in file order.
+    assert og1_attrs.order_globals(attrs) == ["title", "Conventions", "glider_serial", "zzz_custom"]
 
 
 def test_flag_labels_fall_back_without_attrs():

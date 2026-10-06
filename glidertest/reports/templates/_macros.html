@@ -18,7 +18,9 @@
     {{- dbg(p.payload, sl) }}
   </figure>
 {%- else %}{# html | table #}
-  {{ p.payload | safe }}
+  {# One full-width flex item so the panel's caption, headings and tables flow as normal blocks
+     instead of becoming side-by-side flex items of the .fig-row. #}
+  <div class="html-panel">{{ p.payload | safe }}</div>
 {%- endif %}
 {% endmacro %}
 
