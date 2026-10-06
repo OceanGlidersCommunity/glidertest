@@ -144,3 +144,23 @@ def test_plot_section():
     ds = fetchers.load_sample_dataset()
     plots.plot_section(ds,var='TEMP', start=475, end=500, method='pcolormesh')
     plots.plot_section(ds,var='PSAL', start=None, end=475, method='contourf')
+
+
+def test_style_override():
+    # Setting _ACTIVE_STYLE (including the list form) restyles the figures the
+    # wrappers produce; restoring it returns to the default. figure.facecolor is
+    # not set in the package style, so a distinct value proves the override reached
+    # the figure.
+    ds = fetchers.load_sample_dataset()
+    distinct = matplotlib.colors.to_rgba('#123456')
+    override = [plots.glidertest_style_file, {'figure.facecolor': '#123456'}]
+    original = plots._ACTIVE_STYLE
+    try:
+        plots._ACTIVE_STYLE = override
+        fig, ax = plots.plot_updown_bias(ds, var='PSAL', v_res=1)
+        assert fig.get_facecolor() == distinct
+    finally:
+        plots._ACTIVE_STYLE = original
+    # Default restored: a fresh figure no longer carries the override.
+    fig, ax = plots.plot_updown_bias(ds, var='PSAL', v_res=1)
+    assert fig.get_facecolor() != distinct
