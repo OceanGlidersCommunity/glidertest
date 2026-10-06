@@ -24,6 +24,24 @@ from glidertest import utilities, tools
 dir = os.path.dirname(os.path.realpath(__file__))
 glidertest_style_file = f"{dir}/glidertest.mplstyle"
 
+# The style spec the plotters apply. A str path by default; a report builder may
+# set it to a list of style specs (paths and rcParams dicts, as accepted by
+# ``matplotlib.style.context``) for the duration of a build, then restore it.
+_ACTIVE_STYLE = glidertest_style_file
+
+
+def _style():
+    """
+    Return the matplotlib style spec the plotting functions apply.
+
+    Returns
+    -------
+    str or list
+        The package mplstyle path by default, or whatever a report builder has
+        set ``_ACTIVE_STYLE`` to for the current build.
+    """
+    return _ACTIVE_STYLE
+
 
 def _show():
     """
@@ -67,7 +85,7 @@ def plot_updown_bias(ds: xr.Dataset, var='TEMP', v_res=1, ax: plt.Axes = None, *
     -----
     Original Author: Chiara Monforte
     """
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots()
             third_width = fig.get_size_inches()[0] / 3.11
@@ -143,7 +161,7 @@ def plot_basic_vars(ds: xr.Dataset, v_res=1, start_prof=0, end_prof=-1, ax=None)
     denG = denG[start_prof:end_prof, :]
     depthG = depthG[start_prof:end_prof, :]
 
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             if ax is None:
@@ -295,7 +313,7 @@ def process_optics_assess(ds, var='CHLA'):
     slope, intercept, r_value, p_value, std_err = stats.linregress(np.arange(0, len(bottom_opt_data)), bottom_opt_data)
 
     # Generate the plot
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         fig, ax = plt.subplots()  # Create figure and axes
 
         sns.regplot(
@@ -360,7 +378,7 @@ def plot_daynight_avg(ds,var='PSAL', ax: plt.Axes = None, sel_day=None, **kw: di
         dates = list(day.date.dropna().values) + list(night.date.dropna().values)
         dates.sort()
         sel_day = dates[int(len(dates)/2)]
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots()
             force_plot = True
@@ -422,7 +440,7 @@ def plot_quench_assess(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_
     Original Author: Chiara Monforte
     """
     utilities._check_necessary_variables(ds, ['TIME', sel_var, 'DEPTH'])
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots()
             full_width = fig.get_size_inches()[0] 
@@ -501,7 +519,7 @@ def check_temporal_drift(ds: xr.Dataset, var: str, ax: plt.Axes = None, **kw: di
     Original Author: Chiara Monforte
     """
     utilities._check_necessary_variables(ds, ['TIME', var, 'DEPTH'])
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots(1, 2)
             force_plot = True
@@ -578,7 +596,7 @@ def plot_prof_monotony(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict, ) -> tup
     Original Author: Chiara Monforte
     """
     utilities._check_necessary_variables(ds, ['TIME', 'PROFILE_NUMBER', 'DEPTH'])
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots(2, 1, sharex=True)
         else:
@@ -629,7 +647,7 @@ def plot_glider_track(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
     Original Author: Eleanor Frajka-Williams
     """
     utilities._check_necessary_variables(ds, ['TIME', 'LONGITUDE', 'LATITUDE'])
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()})
         else:
@@ -732,7 +750,7 @@ def plot_grid_spacing(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
     Original Author: Eleanor Frajka-Williams
     """
     utilities._check_necessary_variables(ds, ['TIME', 'DEPTH'])
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots(1, 2)
             # Set aspect ration of plot to be 2:1
@@ -954,7 +972,7 @@ def plot_ts(ds: xr.Dataset, percentile: list = [0.5,99.5], axs: plt.Axes = None,
     Original Author: Eleanor Frajka-Williams
     """
     utilities._check_necessary_variables(ds, ['DEPTH', 'LONGITUDE', 'LATITUDE', 'PSAL', 'TEMP'])
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if axs is None:
             fig, ax = plt.subplots(2, 3)
             plt.subplots_adjust(wspace=0.03, hspace=0.03)
@@ -1069,7 +1087,7 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
     Original Author: Eleanor Frajka-Williams
     """
     utilities._check_necessary_variables(ds, ['GLIDER_VERT_VELO_MODEL', 'GLIDER_VERT_VELO_DZDT', 'VERT_CURR_MODEL','PROFILE_NUMBER'])
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if start_prof is None:
             start_prof = int(ds['PROFILE_NUMBER'].values.mean())-10
 
@@ -1238,7 +1256,7 @@ def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.
     zgrid_climbs = ds_out_climbs.zgrid.values * -1
     w_lower_climbs = ds_out_climbs.w_lower.values * conv_factor
     w_upper_climbs = ds_out_climbs.w_upper.values * conv_factor
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         fig, ax = plt.subplots(1, 1)
         # Resize to half-width
         half_width = fig.get_size_inches()[0] / 2.07
@@ -1303,7 +1321,7 @@ def plot_hysteresis(ds, var='DOXY', v_res=1, threshold=2, ax=None):
     """
     varG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], 1, v_res,x_bin_center=False)
     df, diff, err_mean, err_range, rms = tools.compute_hyst_stat(ds, var=var, v_res=v_res)
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig = plt.figure()
             ax = [plt.subplot(4, 4, 1), plt.subplot(4, 4, 2), plt.subplot(4, 4, 3), plt.subplot(4, 4, 4), plt.subplot(4, 1, 2)]
@@ -1378,7 +1396,7 @@ def plot_outlier_duration(ds: xr.Dataset, rolling_mean: pd.Series, overtime, std
     -----
     Original Author: Chiara Monforte
     """
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig,ax = plt.subplots(1,2)
             force_plot = True
@@ -1447,7 +1465,7 @@ def plot_global_range(ds, var='DOXY', min_val=-5, max_val=600, ax=None):
     -----
     Original Author: Chiara Monforte
     """
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots()
             force_plot = True
@@ -1502,7 +1520,7 @@ def plot_ioosqc(data, suspect_threshold=[25], fail_threshold=[50], title='', ax=
       on thresholds, and another for marking specific suspect and fail ranges.
     Original Author: Chiara Monforte
     """
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots()
             force_plot = True
@@ -1572,7 +1590,7 @@ def plot_max_depth_per_profile(ds: xr.Dataset, bins= 20, ax = None, **kw: dict) 
     Original Author: Till Moritz
     """
     max_depths = tools.max_depth_per_profile(ds)
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:  
             fig, ax = plt.subplots(1, 2)  
             force_plot = True
@@ -1634,7 +1652,7 @@ def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP','
     if len(vars) > 3:
         raise ValueError("Only three variables can be plotted at once, chose fewer variables")
 
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:  
             fig, ax1 = plt.subplots(figsize=(12, 9))   
             force_plot = True
@@ -1728,7 +1746,7 @@ def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: f
     depth = CR_df['DEPTH'].values
     CR = CR_df['CR'].values
 
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         if ax is None:  
             fig, ax = plt.subplots(figsize=(12, 9))   
             force_plot = True
@@ -1881,7 +1899,7 @@ def plot_section(ds, var, v_res=2, start=None, end=None, show_time_axis=True, me
     # plotting
     # -------------------------
 
-    with plt.style.context(glidertest_style_file):
+    with plt.style.context(_style()):
         # --- Handle provided axes ---
         if ax is not None:
             fig = ax.get_figure()
