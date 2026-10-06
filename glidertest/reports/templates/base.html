@@ -17,10 +17,16 @@
 .meta tr.nonconform td { background: var(--warn-bg); }
 /* Subtle in-table links: underline only, keep the text colour. */
 .meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-/* QC palette — good / suspect / fail. */
-.qc-good { color: #27ae60; }
-.qc-susp { color: #f39c12; }
-.qc-fail { color: #e74c3c; }
+/* QC palette — one source for text colours and bar-segment backgrounds. */
+:root { --qc-good: #27ae60; --qc-suspect: #f39c12; --qc-fail: #e74c3c; --qc-not_eval: #bdc3c7; --qc-missing: #7f8c8d; }
+.qc-good { color: var(--qc-good); }
+.qc-susp { color: var(--qc-suspect); }
+.qc-fail { color: var(--qc-fail); }
+.qc-seg-good { background: var(--qc-good); }
+.qc-seg-suspect { background: var(--qc-suspect); }
+.qc-seg-fail { background: var(--qc-fail); }
+.qc-seg-not_eval { background: var(--qc-not_eval); }
+.qc-seg-missing { background: var(--qc-missing); }
 /* QC distribution bar: a flex row of percent-width segments with tooltips. */
 .qc-bar {
   display: flex; width: 14rem; height: 1.1rem; vertical-align: middle;
@@ -30,7 +36,7 @@
 /* glidertest-diagnostics bars: smaller + dashed outline, so they read as computed, not delivered. */
 .qc-bar-sm { width: 6rem; height: 0.6rem; border-style: dashed; }
 /* Visible failure block for an html panel that raised — the failure shows on the page. */
-.none-note { background: #fdecea; border-left: 3px solid #e74c3c; padding: 0.3rem 0.6rem; color: #333; }
+.none-note { background: #fdecea; border-left: 3px solid var(--qc-fail); padding: 0.3rem 0.6rem; color: #333; }
 </style>
 {% block head_extra %}{% endblock %}
 </head>

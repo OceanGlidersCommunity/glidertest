@@ -246,14 +246,7 @@ def fill_str(strgr, strst, strft, strhy, strdr, ds, var='TEMP'):
     - Column indices are mapped as: `TEMP=1`, `PSAL=2`, `DOXY=3`, `CHLA=4`.
     Original Author: Chiara  Monforte.
     """
-    if var == 'TEMP':
-        i = 1
-    if var == 'PSAL':
-        i = 2
-    if var == 'DOXY':
-        i = 3
-    if var == 'CHLA':
-        i = 4
+    i = {"TEMP": 1, "PSAL": 2, "DOXY": 3, "CHLA": 4}[var]
     if var not in ds.variables:
         strgr[i] = 'No data'
         strft[i] = 'No data'

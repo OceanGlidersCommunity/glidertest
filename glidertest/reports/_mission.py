@@ -107,6 +107,11 @@ def _metadata_table(ds: xr.Dataset) -> str:
     )
 
 
+def _table(headers: list[str], rows: list[str]) -> str:
+    """Return a column-header table: *headers* (``<th>`` cells) over *rows* (each a full ``<tr>``)."""
+    return "<table><thead><tr>" + "".join(headers) + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
+
+
 _GEOSPATIAL = (
     ("geospatial_lat_min", "LATITUDE", "min"),
     ("geospatial_lat_max", "LATITUDE", "max"),
@@ -131,8 +136,8 @@ def _geospatial_table(ds: xr.Dataset) -> str:
         rows.append(f"<tr><td>{attr}</td><td{cls}>{html.escape(file_val) or '—'}</td><td>{computed}</td></tr>")
     return (
         "<p class='caption'>Geospatial extent — suggested attributes versus the extent computed from "
-        "the data</p><table><thead><tr><th>Attribute</th><th>File value</th><th>Computed</th>"
-        "</tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
+        "the data</p>"
+        + _table(["<th>Attribute</th>", "<th>File value</th>", "<th>Computed</th>"], rows)
     )
 
 
@@ -147,30 +152,21 @@ def _pct(count: int, n: int) -> str:
     return f"&lt;0.1% ({count})" if p < 0.1 else f"{p:.1f}"
 
 
-#: QC category -> colour for the distribution bars (good/suspect/fail plus the non-graded two).
-_QC_COLORS = {
-    "good": "#27ae60",
-    "suspect": "#f39c12",
-    "fail": "#e74c3c",
-    "not_eval": "#bdc3c7",
-    "missing": "#7f8c8d",
-}
-
-
 def _dist_bar(counts: dict[str, int], n: int, *, small: bool = False) -> str:
     """Return a stacked distribution bar over all QARTOD categories; segments sum to *n*.
 
-    *counts* is a ``{category: count}`` dict from :func:`glidertest.qc.flag_counts`. *small* selects
-    the dashed glidertest-diagnostics style; the default is the solid delivered-census style.
+    *counts* is a ``{category: count}`` dict from :func:`glidertest.qc.flag_counts`. Segment colours
+    come from the ``qc-seg-*`` CSS classes; *small* selects the dashed glidertest-diagnostics style.
     """
     if n == 0:
         return ""
-    divs = "".join(
-        f"<div style='width:{100 * counts.get(key, 0) / n:.1f}%;background:{_QC_COLORS[key]}' "
-        f"title='{label}: {100 * counts.get(key, 0) / n:.1f}%'></div>"
-        for _value, key, label in qc.QC_FLAG_CATEGORIES
-        if counts.get(key, 0)
-    )
+    divs = ""
+    for _value, key, label in qc.QC_FLAG_CATEGORIES:
+        count = counts.get(key, 0)
+        if not count:
+            continue
+        pct = 100 * count / n
+        divs += f"<div class='qc-seg-{key}' style='width:{pct:.1f}%' title='{label}: {pct:.1f}%'></div>"
     cls = "qc-bar qc-bar-sm" if small else "qc-bar"
     return f"<div class='{cls}'>{divs}</div>"
 
@@ -189,6 +185,34 @@ def _qc_sample_cell(flags: np.ndarray) -> str:
     return f"<td>{' '.join(label)}<br>{_dist_bar(c, n, small=True)}</td>"
 
 
+def _gross_cell(r: tuple, ds: xr.Dataset, v: str) -> str:
+    """Matrix cell for the gross-range test (suspect span only): out-of-range count + a small bar."""
+    n = ds.sizes["N_MEASUREMENTS"] if "N_MEASUREMENTS" in ds.sizes else int(np.asarray(ds[v].values).size)
+    nv = int(len(r[0]))
+    if nv == 0:
+        return "<td class='qc-good'>clean</td>"
+    bar = _dist_bar({"good": n - nv, "suspect": nv}, n, small=True)
+    return f"<td><span class='qc-susp'>{nv:,} out of range</span><br>{bar}</td>"
+
+
+def _hyst_cell(err: np.ndarray) -> str:
+    """Matrix cell for a hysteresis test: depth bins over threshold, graded by the shared verdict."""
+    arr = np.asarray(err)
+    n_over, flagged = qc.hysteresis_verdict(arr)
+    cls = "qc-fail" if flagged else ("qc-susp" if n_over else "qc-good")
+    return f"<td class='{cls}'>{n_over}/{arr.size} bins</td>"
+
+
+#: Diagnostics matrix rows: (row label, cell kind, index into the qc_checks tuple).
+_MATRIX_ROWS = (
+    ("Gross range", "gross", 0),
+    ("Spike", "sample", 1),
+    ("Flat line", "sample", 2),
+    ("Hysteresis (mean)", "hyst", 3),
+    ("Hysteresis (range)", "hyst", 4),
+)
+
+
 def _qc_delivered(ds: xr.Dataset) -> str:
     """Return the 'QC as delivered' block: a per-variable census of the file's own ``*_QC`` flags.
 
@@ -202,11 +226,7 @@ def _qc_delivered(ds: xr.Dataset) -> str:
             f"<p class='caption'>No QC flags delivered in the file (rtqc_method: {html.escape(rtqc)}) "
             "— itself a finding.</p>"
         )
-    rows = [
-        "<table><thead><tr><th>Variable</th><th class='num'>N</th><th class='num'>Good %</th>"
-        "<th class='num'>Suspect %</th><th class='num'>Fail %</th><th class='num'>Not eval %</th>"
-        "<th class='num'>Missing %</th><th>Distribution</th></tr></thead><tbody>"
-    ]
+    rows = []
     for var, qcv in pairs:
         f = np.asarray(ds[qcv].values)
         n = int(f.size)
@@ -220,10 +240,14 @@ def _qc_delivered(ds: xr.Dataset) -> str:
             f"<td class='num'>{_pct(c['missing'], n)}</td>"
             f"<td>{_dist_bar(c, n)}</td></tr>"
         )
-    rows.append("</tbody></table>")
+    headers = [
+        "<th>Variable</th>", "<th class='num'>N</th>", "<th class='num'>Good %</th>",
+        "<th class='num'>Suspect %</th>", "<th class='num'>Fail %</th>",
+        "<th class='num'>Not eval %</th>", "<th class='num'>Missing %</th>", "<th>Distribution</th>",
+    ]
     return (
         f"<p class='caption'>As delivered — rtqc_method: {html.escape(rtqc)}. "
-        "The file does not record the thresholds used.</p>" + "".join(rows)
+        "The file does not record the thresholds used.</p>" + _table(headers, rows)
     )
 
 
@@ -239,24 +263,24 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
     if not present:
         return None
 
-    thr = [
-        "<table><thead><tr><th>Variable</th><th>Test</th>"
-        "<th>Suspect range / threshold</th><th>Fail range / threshold</th></tr></thead><tbody>"
-    ]
+    thr_rows = []
     for v in present:
         g = config[v]["gross_range_test"]
         s = config[v]["spike_test"]
-        thr.append(
+        thr_rows.append(
             f"<tr><td>{v}</td><td>gross-range</td>"
             f"<td class='mono qc-susp'>[{g['suspect_span'][0]}, {g['suspect_span'][1]}]</td>"
             f"<td class='mono qc-fail'>[{g['fail_span'][0]}, {g['fail_span'][1]}] (not applied)</td></tr>"
         )
-        thr.append(
+        thr_rows.append(
             f"<tr><td>{v}</td><td>spike</td>"
             f"<td class='mono qc-susp'>|Δ| &gt; {s['suspect_threshold']}</td>"
             f"<td class='mono qc-fail'>|Δ| &gt; {s['fail_threshold']}</td></tr>"
         )
-    thr.append("</tbody></table>")
+    thr_html = _table(
+        ["<th>Variable</th>", "<th>Test</th>", "<th>Suspect range / threshold</th>", "<th>Fail range / threshold</th>"],
+        thr_rows,
+    )
 
     results: dict[str, tuple | None] = {}
     for v in present:
@@ -265,49 +289,30 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
         except Exception:  # noqa: BLE001  # QC runs QARTOD/hysteresis on real data; a failure blanks the column
             results[v] = None
 
-    matrix = ["<table><thead><tr><th>Test</th>" + "".join(f"<th>{v}</th>" for v in present) + "</tr></thead><tbody>"]
-    matrix.append("<tr><td>Gross range</td>")
-    for v in present:
-        r = results[v]
-        if r is None:
-            matrix.append("<td>–</td>")
-            continue
-        n = int(np.asarray(ds[v].values).size)
-        nv = int(len(r[0]))
-        if nv == 0:
-            matrix.append("<td class='qc-good'>clean</td>")
-        else:
-            bar = _dist_bar({"good": n - nv, "suspect": nv}, n, small=True)
-            matrix.append(f"<td><span class='qc-susp'>{nv:,} out of range</span><br>{bar}</td>")
-    matrix.append("</tr>")
-    for label, idx in (("Spike", 1), ("Flat line", 2)):
-        matrix.append(f"<tr><td>{label}</td>")
-        for v in present:
-            r = results[v]
-            matrix.append(_qc_sample_cell(np.asarray(r[idx])) if r is not None else "<td>–</td>")
-        matrix.append("</tr>")
-    for label, idx in (("Hysteresis (mean)", 3), ("Hysteresis (range)", 4)):
-        matrix.append(f"<tr><td>{label}</td>")
+    matrix_rows = []
+    for label, kind, idx in _MATRIX_ROWS:
+        cells = []
         for v in present:
             r = results[v]
             if r is None:
-                matrix.append("<td>–</td>")
-                continue
-            n_over, flagged = qc.hysteresis_verdict(np.asarray(r[idx]))
-            total = np.asarray(r[idx]).size
-            cls = "qc-fail" if flagged else ("qc-susp" if n_over else "qc-good")
-            matrix.append(f"<td class='{cls}'>{n_over}/{total} bins</td>")
-        matrix.append("</tr>")
-    matrix.append("</tbody></table>")
+                cells.append("<td>–</td>")
+            elif kind == "gross":
+                cells.append(_gross_cell(r, ds, v))
+            elif kind == "sample":
+                cells.append(_qc_sample_cell(np.asarray(r[idx])))
+            else:
+                cells.append(_hyst_cell(r[idx]))
+        matrix_rows.append(f"<tr><td>{label}</td>{''.join(cells)}</tr>")
+    matrix_html = _table(["<th>Test</th>", *(f"<th>{v}</th>" for v in present)], matrix_rows)
 
     return (
         "<p class='caption'>glidertest diagnostics — run on the fly, not written to the file. "
         "Thresholds are glidertest's own (hardcoded for the Baltic), shown so the verdict can be "
-        "reproduced.</p>" + "".join(thr)
+        "reproduced.</p>" + thr_html
         + "<p class='caption'>Test × variable: flagged-sample counts (per-sample tests show a small "
         "dashed bar). Gross range applies the suspect span only — the fail span above is not yet "
         "evaluated. Hysteresis counts depth bins with &gt;5% dive–climb error; a variable is flagged "
-        "when more than 5 bins exceed it.</p>" + "".join(matrix)
+        "when more than 5 bins exceed it.</p>" + matrix_html
     )
 
 
