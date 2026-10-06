@@ -1,8 +1,8 @@
 """The mission report page: render context, panel registry, and section profile.
 
-Defines what a glidertest mission report contains — a masthead header card plus Track, Hydrography
-and Sampling sections — by binding the plot adapters to panels and ordering them in a profile. The
-page is resolved against a dataset by :func:`build`, then rendered by
+Defines what a glidertest mission report contains — a masthead meta-grid plus Metadata, Track,
+Hydrography, Sampling and QC sections — by binding the plot adapters to panels and ordering them in
+a profile. The page is resolved against a dataset by :func:`build`, then rendered by
 :func:`glidertest.reports.report`.
 """
 
@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from .. import og1_attrs, tools
+from .. import og1_attrs, qc, tools
 from . import _plots
 from ._manifest import Panel, Profile, ResolvedReport, Section, resolve
 
@@ -33,11 +33,10 @@ class Ctx:
 
 
 def _duration(t0: np.datetime64, t1: np.datetime64) -> str:
-    """Return a ``Nd Nh`` duration string between two datetimes."""
-    days = float((t1 - t0) / np.timedelta64(1, "D"))
-    whole = int(days)
-    hours = int(round((days - whole) * 24))
-    return f"{whole}d {hours}h"
+    """Return a ``Nd Nh`` duration string between two datetimes (hours carry into days)."""
+    total_hours = int(round(float((t1 - t0) / np.timedelta64(1, "h"))))
+    days, hours = divmod(total_hours, 24)
+    return f"{days}d {hours}h"
 
 
 def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
@@ -45,7 +44,11 @@ def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
 
     The report title is the OG1 ``id`` (set separately); this grid carries the serial and the
     overview statistics, derived from the data where possible. A field whose source is absent in the
-    file is skipped.
+    file is skipped; a field that cannot be computed (all-NaN) shows ``UNK``.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams.
     """
     fields: list[tuple[str, str]] = []
     if "PLATFORM_SERIAL_NUMBER" in ds:
@@ -60,11 +63,13 @@ def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
         fields.append(("Start", str(t0.astype("datetime64[m]")).replace("T", " ")))
         fields.append(("End", str(t1.astype("datetime64[m]")).replace("T", " ")))
         fields.append(("Duration", _duration(t0, t1)))
-        dt = np.median(np.diff(np.asarray(ds["TIME"].values)).astype("timedelta64[s]").astype(float))
-        fields.append(("Sampling", f"{dt:.0f} s"))
+        diffs = np.diff(np.asarray(ds["TIME"].values)).astype("timedelta64[s]").astype(float)
+        fields.append(("Sampling", f"{np.median(diffs):.0f} s" if diffs.size else "UNK"))
     if "DEPTH" in ds and "PROFILE_NUMBER" in ds:
         md = tools.max_depth_per_profile(ds)
-        fields.append(("Dive depth", f"{int(md.min())}–{int(md.max())} m"))
+        lo, hi = float(md.min()), float(md.max())
+        depth = f"{int(lo)}–{int(hi)} m" if np.isfinite(lo) and np.isfinite(hi) else "UNK"
+        fields.append(("Dive depth", depth))
     if "N_MEASUREMENTS" in ds.sizes:
         fields.append(("Records", f"{ds.sizes['N_MEASUREMENTS']:,}"))
     return fields
@@ -96,7 +101,39 @@ def _metadata_table(ds: xr.Dataset) -> str:
     head = f"{present} of {len(rows)} mandatory global attributes present"
     if nonconform:
         head += f"; {nonconform} not conforming"
-    return f"<p class='caption'>{html.escape(head)}</p><table class='meta'>{''.join(cells)}</table>"
+    return (
+        f"<p class='caption'>{html.escape(head)}</p><table class='meta'>{''.join(cells)}</table>"
+        + _geospatial_table(ds)
+    )
+
+
+_GEOSPATIAL = (
+    ("geospatial_lat_min", "LATITUDE", "min"),
+    ("geospatial_lat_max", "LATITUDE", "max"),
+    ("geospatial_lon_min", "LONGITUDE", "min"),
+    ("geospatial_lon_max", "LONGITUDE", "max"),
+)
+
+
+def _geospatial_table(ds: xr.Dataset) -> str:
+    """Return the suggested OG1 geospatial-extent attributes beside the extent computed from the data.
+
+    ``geospatial_lat/lon_min/max`` are OG1-suggested attributes; each file value sits next to the
+    value computed from LATITUDE/LONGITUDE, so the attribute and its check read as one line. A row
+    whose file value is absent is highlighted.
+    """
+    rows = []
+    for attr, var, op in _GEOSPATIAL:
+        raw = ds.attrs.get(attr)
+        file_val = "" if raw is None else str(raw)
+        computed = f"{float(getattr(ds[var], op)()):.4f}" if var in ds else "—"
+        cls = "" if file_val.strip() else ' class="nonconform"'
+        rows.append(f"<tr><td>{attr}</td><td{cls}>{html.escape(file_val) or '—'}</td><td>{computed}</td></tr>")
+    return (
+        "<p class='caption'>Geospatial extent — suggested attributes versus the extent computed from "
+        "the data</p><table><thead><tr><th>Attribute</th><th>File value</th><th>Computed</th>"
+        "</tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
+    )
 
 
 _QC_VARS = ("TEMP", "PSAL", "DOXY", "CHLA")
@@ -110,49 +147,46 @@ def _pct(count: int, n: int) -> str:
     return f"&lt;0.1% ({count})" if p < 0.1 else f"{p:.1f}"
 
 
-def _dist_bar(good: int, suspect: int, bad: int, n: int) -> str:
-    """Return a stacked distribution bar (oceanarray style): percent-width segments with tooltips."""
-    if n == 0:
-        return ""
-    segs = (
-        ("good", good, "#27ae60"),
-        ("suspect", suspect, "#f39c12"),
-        ("bad", bad, "#e74c3c"),
-    )
-    divs = "".join(
-        f"<div style='width:{100 * c / n:.1f}%;background:{col}' title='{label}: {100 * c / n:.1f}%'></div>"
-        for label, c, col in segs
-        if c
-    )
-    return f"<div class='qc-bar'>{divs}</div>"
+#: QC category -> colour for the distribution bars (good/suspect/fail plus the non-graded two).
+_QC_COLORS = {
+    "good": "#27ae60",
+    "suspect": "#f39c12",
+    "fail": "#e74c3c",
+    "not_eval": "#bdc3c7",
+    "missing": "#7f8c8d",
+}
 
 
-def _dist_bar_sm(good: int, suspect: int, bad: int, n: int) -> str:
-    """A small, dashed-outline distribution bar for the glidertest-diagnostics cells (Option 2)."""
+def _dist_bar(counts: dict[str, int], n: int, *, small: bool = False) -> str:
+    """Return a stacked distribution bar over all QARTOD categories; segments sum to *n*.
+
+    *counts* is a ``{category: count}`` dict from :func:`glidertest.qc.flag_counts`. *small* selects
+    the dashed glidertest-diagnostics style; the default is the solid delivered-census style.
+    """
     if n == 0:
         return ""
-    segs = (("good", good, "#27ae60"), ("suspect", suspect, "#f39c12"), ("bad", bad, "#e74c3c"))
     divs = "".join(
-        f"<div style='width:{100 * c / n:.1f}%;background:{col}' title='{label}: {100 * c / n:.1f}%'></div>"
-        for label, c, col in segs
-        if c
+        f"<div style='width:{100 * counts.get(key, 0) / n:.1f}%;background:{_QC_COLORS[key]}' "
+        f"title='{label}: {100 * counts.get(key, 0) / n:.1f}%'></div>"
+        for _value, key, label in qc.QC_FLAG_CATEGORIES
+        if counts.get(key, 0)
     )
-    return f"<div class='qc-bar qc-bar-sm'>{divs}</div>"
+    cls = "qc-bar qc-bar-sm" if small else "qc-bar"
+    return f"<div class='{cls}'>{divs}</div>"
 
 
 def _qc_sample_cell(flags: np.ndarray) -> str:
     """Matrix cell for a per-sample QARTOD test (spike, flat): flagged counts + a small bar."""
-    n = int(flags.size)
-    ns = int((flags == 3).sum())
-    nb = int((flags == 4).sum())
-    if ns == 0 and nb == 0:
+    c = qc.flag_counts(flags)
+    n = int(np.asarray(flags).size)
+    if c["suspect"] == 0 and c["fail"] == 0:
         return "<td class='qc-good'>clean</td>"
     label = []
-    if ns:
-        label.append(f"<span class='qc-susp'>{ns:,} susp</span>")
-    if nb:
-        label.append(f"<span class='qc-fail'>{nb:,} fail</span>")
-    return f"<td>{' '.join(label)}<br>{_dist_bar_sm(n - ns - nb, ns, nb, n)}</td>"
+    if c["suspect"]:
+        label.append(f"<span class='qc-susp'>{c['suspect']:,} susp</span>")
+    if c["fail"]:
+        label.append(f"<span class='qc-fail'>{c['fail']:,} fail</span>")
+    return f"<td>{' '.join(label)}<br>{_dist_bar(c, n, small=True)}</td>"
 
 
 def _qc_delivered(ds: xr.Dataset) -> str:
@@ -170,19 +204,21 @@ def _qc_delivered(ds: xr.Dataset) -> str:
         )
     rows = [
         "<table><thead><tr><th>Variable</th><th class='num'>N</th><th class='num'>Good %</th>"
-        "<th class='num'>Suspect %</th><th class='num'>Bad %</th><th>Distribution</th>"
-        "</tr></thead><tbody>"
+        "<th class='num'>Suspect %</th><th class='num'>Fail %</th><th class='num'>Not eval %</th>"
+        "<th class='num'>Missing %</th><th>Distribution</th></tr></thead><tbody>"
     ]
     for var, qcv in pairs:
         f = np.asarray(ds[qcv].values)
         n = int(f.size)
-        ng, ns, nb = int((f == 1).sum()), int((f == 3).sum()), int((f == 4).sum())
+        c = qc.flag_counts(f)
         rows.append(
             f"<tr><td>{var}</td><td class='num'>{n:,}</td>"
-            f"<td class='num qc-good'>{_pct(ng, n)}</td>"
-            f"<td class='num qc-susp'>{_pct(ns, n)}</td>"
-            f"<td class='num qc-fail'>{_pct(nb, n)}</td>"
-            f"<td>{_dist_bar(ng, ns, nb, n)}</td></tr>"
+            f"<td class='num qc-good'>{_pct(c['good'], n)}</td>"
+            f"<td class='num qc-susp'>{_pct(c['suspect'], n)}</td>"
+            f"<td class='num qc-fail'>{_pct(c['fail'], n)}</td>"
+            f"<td class='num'>{_pct(c['not_eval'], n)}</td>"
+            f"<td class='num'>{_pct(c['missing'], n)}</td>"
+            f"<td>{_dist_bar(c, n)}</td></tr>"
         )
     rows.append("</tbody></table>")
     return (
@@ -195,12 +231,10 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
     """Return the glidertest-diagnostics block: thresholds plus a graded test×variable matrix.
 
     glidertest runs the checks on the fly and writes no flags; thresholds come from
-    ``summary_sheet.configs`` (the single config source — hardcoded for the Baltic today). Each cell
-    is a count, with a small dashed bar for the per-sample tests, marking it as computed here.
+    :data:`glidertest.qc.configs` (the single config source — hardcoded for the Baltic today). Each
+    cell is a count, with a small dashed bar for the per-sample tests, marking it as computed here.
     """
-    from .. import summary_sheet
-
-    config = summary_sheet.configs
+    config = qc.configs
     present = [v for v in _QC_VARS if v in ds]
     if not present:
         return None
@@ -215,7 +249,7 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
         thr.append(
             f"<tr><td>{v}</td><td>gross-range</td>"
             f"<td class='mono qc-susp'>[{g['suspect_span'][0]}, {g['suspect_span'][1]}]</td>"
-            f"<td class='mono qc-fail'>[{g['fail_span'][0]}, {g['fail_span'][1]}]</td></tr>"
+            f"<td class='mono qc-fail'>[{g['fail_span'][0]}, {g['fail_span'][1]}] (not applied)</td></tr>"
         )
         thr.append(
             f"<tr><td>{v}</td><td>spike</td>"
@@ -227,7 +261,7 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
     results: dict[str, tuple | None] = {}
     for v in present:
         try:
-            results[v] = summary_sheet.qc_checks(ds, var=v)
+            results[v] = qc.qc_checks(ds, var=v)
         except Exception:  # noqa: BLE001  # QC runs QARTOD/hysteresis on real data; a failure blanks the column
             results[v] = None
 
@@ -243,9 +277,8 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
         if nv == 0:
             matrix.append("<td class='qc-good'>clean</td>")
         else:
-            matrix.append(
-                f"<td><span class='qc-susp'>{nv:,} out of range</span><br>{_dist_bar_sm(n - nv, nv, 0, n)}</td>"
-            )
+            bar = _dist_bar({"good": n - nv, "suspect": nv}, n, small=True)
+            matrix.append(f"<td><span class='qc-susp'>{nv:,} out of range</span><br>{bar}</td>")
     matrix.append("</tr>")
     for label, idx in (("Spike", 1), ("Flat line", 2)):
         matrix.append(f"<tr><td>{label}</td>")
@@ -253,17 +286,17 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
             r = results[v]
             matrix.append(_qc_sample_cell(np.asarray(r[idx])) if r is not None else "<td>–</td>")
         matrix.append("</tr>")
-    for label, idx in (("Hysteresis (mean)", 3), ("Drift (range)", 4)):
+    for label, idx in (("Hysteresis (mean)", 3), ("Hysteresis (range)", 4)):
         matrix.append(f"<tr><td>{label}</td>")
         for v in present:
             r = results[v]
             if r is None:
                 matrix.append("<td>–</td>")
                 continue
-            arr = np.asarray(r[idx])
-            flagged = int((arr > 5).sum())
-            cls = "qc-good" if flagged == 0 else "qc-susp"
-            matrix.append(f"<td class='{cls}'>{flagged}/{arr.size} profiles</td>")
+            n_over, flagged = qc.hysteresis_verdict(np.asarray(r[idx]))
+            total = np.asarray(r[idx]).size
+            cls = "qc-fail" if flagged else ("qc-susp" if n_over else "qc-good")
+            matrix.append(f"<td class='{cls}'>{n_over}/{total} bins</td>")
         matrix.append("</tr>")
     matrix.append("</tbody></table>")
 
@@ -272,15 +305,17 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
         "Thresholds are glidertest's own (hardcoded for the Baltic), shown so the verdict can be "
         "reproduced.</p>" + "".join(thr)
         + "<p class='caption'>Test × variable: flagged-sample counts (per-sample tests show a small "
-        "dashed bar); Hysteresis/Drift are profiles with &gt;5% dive–climb error.</p>" + "".join(matrix)
+        "dashed bar). Gross range applies the suspect span only — the fail span above is not yet "
+        "evaluated. Hysteresis counts depth bins with &gt;5% dive–climb error; a variable is flagged "
+        "when more than 5 bins exceed it.</p>" + "".join(matrix)
     )
 
 
 def _qc_section(ds: xr.Dataset) -> str:
     """Return the QC section: 'QC as delivered' (the file's own flags) then glidertest diagnostics.
 
-    The two are never merged (plan §10.2): delivered flags are what the provider wrote; the
-    diagnostics are what glidertest found on the fly.
+    The two are never merged: delivered flags are what the provider's pipeline wrote; the
+    diagnostics are what glidertest computed on the fly.
     """
     parts = ["<h3>As delivered</h3>", _qc_delivered(ds)]
     diagnostics = _qc_diagnostics(ds)
@@ -289,13 +324,35 @@ def _qc_section(ds: xr.Dataset) -> str:
     return "".join(parts)
 
 
+def _guarded(fn: Callable[[Ctx], str]) -> Callable[[Ctx], str]:
+    """Wrap an html-panel render so a failure is a visible block on the page, not a dead report.
+
+    The vendored encoder guards figure panels; html panels (which call live-data numpy/xarray ops)
+    get the same resilience here — on exception they render a ``.none-note`` block naming the error,
+    and the page still writes.
+    """
+
+    def render(ctx: Ctx) -> str:
+        try:
+            return fn(ctx)
+        except Exception as exc:  # noqa: BLE001  # surface any html-panel failure on the page; never abort the report
+            return f"<p class='none-note'>{html.escape(type(exc).__name__)}: {html.escape(str(exc))}</p>"
+
+    return render
+
+
+def _qc_applies(c: Ctx) -> bool:
+    """QC section applies when a QC variable or its delivered ``*_QC`` flags are present."""
+    return any(v in c.ds for v in _QC_VARS) or any(f"{v}_QC" in c.ds for v in _QC_VARS)
+
+
 def _has(var: str) -> Callable[[Ctx], bool]:
     """Return an ``applies_to`` predicate: the panel applies only when *var* is in the dataset."""
     return lambda c: var in c.ds
 
 
 PANELS: dict[str, Panel] = {
-    "metadata": Panel(id="metadata", kind="html", render=lambda c: _metadata_table(c.ds)),
+    "metadata": Panel(id="metadata", kind="html", render=_guarded(lambda c: _metadata_table(c.ds))),
     "track": Panel(id="track", render=lambda c: _plots.track(c.ds), caption="Glider track"),
     "basic_vars": Panel(
         id="basic_vars",
@@ -343,7 +400,7 @@ PANELS: dict[str, Panel] = {
         render=lambda c: _plots.prof_monotony(c.ds),
         caption="Profile-number monotonicity",
     ),
-    "qc": Panel(id="qc", kind="html", render=lambda c: _qc_section(c.ds)),
+    "qc": Panel(id="qc", kind="html", render=_guarded(lambda c: _qc_section(c.ds))),
 }
 
 PROFILE = Profile(
@@ -364,7 +421,7 @@ PROFILE = Profile(
             id="qc",
             title="QC",
             panels=("qc",),
-            applies_to=lambda c: any(v in c.ds for v in _QC_VARS),
+            applies_to=_qc_applies,
         ),
     ),
 )

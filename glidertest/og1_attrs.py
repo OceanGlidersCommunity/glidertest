@@ -63,6 +63,10 @@ def check_globals(ds: xr.Dataset) -> list[tuple[str, Status, str]]:
         One ``(attribute, status, value)`` tuple per mandatory attribute, in manual order.
         ``"match"`` — present and any format/value check passes; ``"differ"`` — present but the
         format or fixed value is wrong; ``"none"`` — absent or present-but-empty.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams.
     """
     results: list[tuple[str, Status, str]] = []
     for attr in MANDATORY_GLOBALS:
