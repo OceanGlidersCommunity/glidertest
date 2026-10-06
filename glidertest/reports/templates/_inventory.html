@@ -1,0 +1,33 @@
+{% import "_macros.html" as m %}
+<p class="caption">{{ n_vars }} data variables, {{ n_sensors }} sensors, {{ n_qc }} QC-flag variables (shown in the QC section, not listed here), {{ n_coords }} coordinates, {{ n_attrs }} global attributes.</p>
+{% for g in groups %}
+<h3>{{ g.title }}</h3>
+{% if g.variables %}
+<table class="nc">
+<thead><tr><th>Variable</th><th>Dtype</th><th class="num wrapn">N (valid)</th><th class="num wrapr">Min / Max</th><th>Units</th><th>Long name</th><th>Standard name</th><th>Attributes</th></tr></thead>
+<tbody>
+{% for v in g.variables %}<tr><td class="mono wrapv">{{ v.name }}{% if v.has_qc %} <span class="qc-good">(_QC)</span>{% endif %}</td><td class="mono">{{ v.dtype }}</td><td class="num wrapn">{{ v.n_cell }}</td><td class="num wrapr">{{ v.rng }}</td><td>{{ v.units }}</td><td class="wrap">{{ v.long_name }}</td><td class="mono wrap">{{ v.standard_name }}</td><td>{{ m.attrs_details(v.attrs) }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% endfor %}
+{% if sensors %}
+<h3>Sensor catalog</h3>
+<table class="nc">
+<thead><tr><th>Variable</th><th>Model</th><th>Serial</th><th>Calibration</th><th>Attributes</th></tr></thead>
+<tbody>
+{% for s in sensors %}<tr><td class="mono">{{ s.name }}</td><td class="wrap">{{ s.model }}</td><td class="mono">{{ s.serial }}</td><td>{{ s.calibration }}</td><td>{{ m.attrs_details(s.attrs) }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+<h3>Global attributes</h3>
+<p class="caption">OG1 canonical order; attributes that are not OG1 global attributes follow, in file order.</p>
+<table class="nc">
+<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+<tbody>
+{% for k, val in global_attrs %}<tr><td>{{ k }}</td><td class="wrap">{{ val|urlize }}</td></tr>
+{% endfor %}
+</tbody>
+</table>

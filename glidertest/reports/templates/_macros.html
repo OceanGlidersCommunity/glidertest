@@ -24,6 +24,14 @@
 {%- endif %}
 {% endmacro %}
 
+{# Stacked QC distribution bar: segments are {key, width, title}; colour comes from the qc-seg-*
+   class. The width % is the one allowed inline style. small=True selects the dashed diagnostics bar. #}
+{% macro dist_bar(segments, small=False) %}{% if segments %}<div class="qc-bar{% if small %} qc-bar-sm{% endif %}">{% for s in segments %}<div class="qc-seg-{{ s.key }}" style="width:{{ s.width }}%" title="{{ s.title }}"></div>{% endfor %}</div>{% endif %}{% endmacro %}
+
+{# Expandable per-row attribute dropdown: the attrs dict minus those already shown as columns
+   (the caller excludes them). Autoescape handles values; urlize linkifies URLs. Em dash when empty. #}
+{% macro attrs_details(attrs) %}{% if attrs %}<details class="attrs"><summary>{{ attrs|length }} attrs</summary><table>{% for k, val in attrs.items() %}<tr><td class="mono">{{ k }}</td><td>{{ val|urlize }}</td></tr>{% endfor %}</table></details>{% else %}—{% endif %}{% endmacro %}
+
 {# The one place a section number + title is formatted: "(1) Overview", or just
    "Overview" when there is no number. Every page — the manifest-driven bodies AND
    the hand-authored casts/sections/timeseries listing pages — renders headings and

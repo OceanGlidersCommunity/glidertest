@@ -1,0 +1,37 @@
+{% import "_macros.html" as m %}
+{% if basic_checks %}<p class="caption">Profile number: {{ basic_checks.profnum }}. Profile duration: {{ basic_checks.dur }}.</p>
+{% endif %}
+<h3>As delivered</h3>
+{% if delivered.no_flags %}
+<p class="caption">No QC flags delivered in the file (rtqc_method: {{ delivered.rtqc }}) — itself a finding.</p>
+{% else %}
+<p class="caption">{{ delivered.caption }}</p>
+{% if delivered.mismatch %}<p class="none-note">Inconsistent flag scale — {{ delivered.mismatch }}. Default category names used for these.</p>
+{% endif %}
+<table>
+<thead><tr><th>Variable</th><th class="num">N</th>{% for c in delivered.cats %}<th class="num">{{ c.label }} %</th>{% endfor %}{% if delivered.show_other %}<th class="num">Other %</th>{% endif %}<th>Distribution</th></tr></thead>
+<tbody>
+{% for row in delivered.rows %}<tr><td>{{ row.var }}</td><td class="num">{{ row.n }}</td>{% for cell in row.cells %}<td class="num{% if cell.cls %} {{ cell.cls }}{% endif %}">{{ cell.pct }}</td>{% endfor %}{% if delivered.show_other %}<td class="num">{{ row.other }}</td>{% endif %}<td>{{ m.dist_bar(row.bar) }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% if diagnostics %}
+<h3>glidertest diagnostics</h3>
+<p class="caption">glidertest diagnostics — run on the fly, not written to the file. Thresholds are glidertest's own (hardcoded for the Baltic), shown so the verdict can be reproduced.</p>
+<table>
+<thead><tr><th>Variable</th><th>Test</th><th>Suspect range / threshold</th><th>Fail range / threshold</th></tr></thead>
+<tbody>
+{% for t in diagnostics.thresholds %}<tr><td>{{ t.var }}</td><td>{{ t.test }}</td><td class="mono qc-susp">{{ t.suspect }}</td><td class="mono qc-fail">{{ t.fail }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+<p class="caption">Test × variable: flagged-sample counts (per-sample tests show a small dashed bar). Gross range applies the suspect span only — the fail span above is not yet evaluated. Hysteresis counts depth bins with &gt;5% dive–climb error; a variable is flagged when more than 5 bins exceed it.</p>
+<table>
+<thead><tr><th>Test</th>{% for v in diagnostics.present %}<th>{{ v }}</th>{% endfor %}</tr></thead>
+<tbody>
+{% for row in diagnostics.matrix %}<tr><td>{{ row.label }}</td>{% for cell in row.cells %}{% if cell.spans is defined %}<td>{% for s in cell.spans %}<span class="{{ s.cls }}">{{ s.text }}</span>{% if not loop.last %} {% endif %}{% endfor %}<br>{{ m.dist_bar(cell.bar, small=True) }}</td>{% else %}<td{% if cell.cls %} class="{{ cell.cls }}"{% endif %}>{{ cell.text }}</td>{% endif %}{% endfor %}</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}

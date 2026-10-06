@@ -11,13 +11,8 @@ from PIL import Image  # noqa: E402
 from glidertest import fetchers, plots  # noqa: E402
 from glidertest.config.report_tokens import FIG_DPI, W_FULL  # noqa: E402
 from glidertest.reports import _slots, report  # noqa: E402
-from glidertest.reports._mission import (  # noqa: E402
-    _attrs_details,
-    _file_contents,
-    _fmt_scalar,
-    _var_table,
-    build,
-)
+from glidertest.reports._mission import build  # noqa: E402
+from glidertest.reports.inventory import _fmt_scalar, inventory_data  # noqa: E402
 
 
 def test_report_writes_files(tmp_path):
@@ -73,16 +68,14 @@ def test_qc_section_has_basic_checks_sentences(tmp_path):
 
 
 def test_qc_delivered_covers_all_qc_variables(tmp_path):
-    from glidertest.reports._mission import _qc_delivered
-
     ds = fetchers.load_sample_dataset()
-    delivered = _qc_delivered(ds)
+    html = report(ds, tmp_path).read_text(encoding="utf-8")
     # Every *_QC variable in the file must appear, not just the four with diagnostics thresholds.
     for parent in ("TEMP", "PSAL", "DOXY", "CHLA", "CNDC", "DENSITY", "POTDENS0", "THETA"):
-        assert f"<td>{parent}</td>" in delivered
+        assert f"<td>{parent}</td>" in html
     # Column labels come from the file's flag_meanings: flag 2 is "Unknown" here, not QARTOD wording.
-    assert "Unknown %" in delivered
-    assert "Not eval %" not in delivered
+    assert "Unknown %" in html
+    assert "Not eval %" not in html
 
 
 def test_flag_labels_read_from_file():
@@ -144,21 +137,8 @@ def test_fmt_scalar():
     assert len(_fmt_scalar("x" * 50)) == 40  # non-float falls back to a 40-char string
 
 
-def test_attrs_details():
-    assert _attrs_details({}) == "—"
-    assert _attrs_details({"a": "1"}, exclude=("a",)) == "—"  # all attrs excluded
-    two = _attrs_details({"a": "1", "b": "2"})
-    assert "<details" in two and "2 attrs" in two
-    one = _attrs_details({"a": "1", "b": "2"}, exclude=("a",))
-    assert "1 attrs" in one
-
-
-def test_var_table_empty():
-    assert _var_table(xr.Dataset(), []) == ""
-
-
-def test_file_contents_groups_each_dimension_signature():
-    # A variable on a second dimension gets its own "Variables on ..." table.
+def test_inventory_data_groups_each_dimension_signature():
+    # A variable on a second dimension gets its own "Variables on ..." group.
     ds = xr.Dataset(
         {
             "TEMP": ("N_MEASUREMENTS", np.arange(5.0)),
@@ -166,9 +146,19 @@ def test_file_contents_groups_each_dimension_signature():
         },
         coords={"TIME": ("N_MEASUREMENTS", np.arange(5))},
     )
-    html = _file_contents(ds)
-    assert "<h3>Variables on N_MEASUREMENTS</h3>" in html
-    assert "<h3>Variables on N_MEASUREMENTS, N_CELLS</h3>" in html
+    titles = [g["title"] for g in inventory_data(ds)["groups"]]
+    assert "Variables on N_MEASUREMENTS" in titles
+    assert "Variables on N_MEASUREMENTS, N_CELLS" in titles
+
+
+def test_inventory_data_var_meta_fields():
+    ds = fetchers.load_sample_dataset()
+    data = inventory_data(ds)
+    # TEMP is on N_MEASUREMENTS, has a TEMP_QC companion, and its attrs dropdown excludes the columns.
+    temp = next(v for g in data["groups"] for v in g["variables"] if v["name"] == "TEMP")
+    assert temp["has_qc"] is True
+    assert "units" not in temp["attrs"] and "long_name" not in temp["attrs"]
+    assert data["n_sensors"] == len(data["sensors"]) > 0
 
 
 def test_header_card_degrades_on_nat_and_nan():

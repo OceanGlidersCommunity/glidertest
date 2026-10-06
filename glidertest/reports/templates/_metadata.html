@@ -1,0 +1,21 @@
+<p class="caption">{{ summary }}</p>
+<table class="meta">
+{% for r in conformance %}<tr><td>{{ r.attr }}</td><td{% if r.missing %} class="nonconform"{% endif %}>{% if r.value %}{{ r.value|urlize }}{% else %}—{% endif %}</td></tr>
+{% endfor %}
+</table>
+<p class="caption">Payload — a sensor counts as present when its OG1 variable exists in the file; the source is the <code>SENSOR_*</code> catalog entry named by the variable's <code>sensor</code> attribute (see the File-contents sensor catalog).</p>
+<table>
+<thead><tr><th>Sensor</th><th>Present</th><th>Variable</th><th>Source</th></tr></thead>
+<tbody>
+{% for p in payload %}<tr><td>{{ p.label }}</td><td>{% if p.present %}<span class="qc-good">✓</span>{% else %}✗{% endif %}</td><td class="mono">{{ p.var }}</td><td class="mono">{{ p.source or "—" }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+<p class="caption">Geospatial extent — suggested attributes versus the extent computed from the data</p>
+<table>
+<thead><tr><th>Attribute</th><th>File value</th><th>Computed</th></tr></thead>
+<tbody>
+{% for g in geospatial %}<tr><td>{{ g.attr }}</td><td{% if g.missing %} class="nonconform"{% endif %}>{{ g.file_val or "—" }}</td><td>{{ g.computed }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
