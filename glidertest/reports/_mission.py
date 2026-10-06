@@ -9,10 +9,13 @@ page is resolved against a dataset by :func:`build`, then rendered by
 from __future__ import annotations
 
 import html
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .. import og1_attrs
+import numpy as np
+
+from .. import og1_attrs, tools
 from . import _plots
 from ._manifest import Panel, Profile, ResolvedReport, Section, resolve
 
@@ -30,36 +33,84 @@ class Ctx:
 
 
 def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
-    """Return (label, value) pairs for the masthead header card from the dataset's global attributes.
+    """Return (label, value) pairs for the masthead header card.
 
-    Values absent from the file show as ``UNK`` rather than being guessed.
+    Labels follow the OG1 names: ``id`` (the formatted mission name ``<serial>_<start>_<mode>``), the
+    platform serial from the ``PLATFORM_SERIAL_NUMBER`` variable, and the contributor (with
+    contributing institutions). ``platform`` is not repeated here — it appears in the Metadata
+    section. Values absent from the file show as ``UNK``.
     """
     a = ds.attrs
+    if "PLATFORM_SERIAL_NUMBER" in ds:
+        sv = np.atleast_1d(ds["PLATFORM_SERIAL_NUMBER"].values)
+        serial = str(sv.ravel()[0]) if sv.size else "UNK"
+    else:
+        serial = "UNK"
+    creator = str(a.get("contributor_name", "UNK"))
+    institutions = a.get("contributing_institutions")
+    if institutions:
+        creator = f"{creator} ({institutions})"
     return [
         ("ID", str(a.get("id", "UNK"))),
-        ("Platform", str(a.get("platform", "UNK"))),
-        ("Serial", str(a.get("glider_serial", "UNK"))),
-        ("Start", str(a.get("start_date", "UNK"))),
-        ("Contributor", str(a.get("contributor_name", "UNK"))),
+        ("Platform serial", serial),
+        ("Contributor", creator),
     ]
+
+
+def _mission_summary(ds: xr.Dataset) -> str:
+    """Return an HTML table of mission overview statistics, derived from the data (not attributes).
+
+    Rows are included only for the variables present; a variable absent from the file is skipped.
+    """
+    rows: list[tuple[str, str]] = []
+    if "PROFILE_NUMBER" in ds:
+        pn = np.asarray(ds["PROFILE_NUMBER"].values)
+        rows.append(("Profiles", str(int(np.unique(pn[np.isfinite(pn)]).size))))
+    if "TIME" in ds:
+        t0 = ds["TIME"].min().values
+        t1 = ds["TIME"].max().values
+        rows.append(("Deployment date", str(t0.astype("datetime64[D]"))))
+        rows.append(("Recovery date", str(t1.astype("datetime64[D]"))))
+        rows.append(("Duration", f"{(t1 - t0) / np.timedelta64(1, 'D'):.1f} days"))
+    if "LATITUDE" in ds:
+        rows.append(("Latitude", f"{float(ds['LATITUDE'].min()):.3f} to {float(ds['LATITUDE'].max()):.3f} °N"))
+    if "LONGITUDE" in ds:
+        rows.append(("Longitude", f"{float(ds['LONGITUDE'].min()):.3f} to {float(ds['LONGITUDE'].max()):.3f} °E"))
+    if "DEPTH" in ds and "PROFILE_NUMBER" in ds:
+        md = tools.max_depth_per_profile(ds)
+        rows.append(("Diving depth range", f"{int(md.min())} to {int(md.max())} m"))
+    rows.append(("Variables", str(len(ds.data_vars))))
+    body = "".join(f"<tr><th>{html.escape(k)}</th><td>{html.escape(v)}</td></tr>" for k, v in rows)
+    return f"<table class='meta'>{body}</table>"
+
+
+_URL_RE = re.compile(r"(https?://[^\s,]+)")
+
+
+def _linkify(escaped: str) -> str:
+    """Wrap bare http(s) URLs in *escaped* (already HTML-escaped text) in anchor tags."""
+    return _URL_RE.sub(r'<a href="\1">\1</a>', escaped)
 
 
 def _metadata_table(ds: xr.Dataset) -> str:
     """Return an HTML conformance table for the 16 mandatory OG1 global attributes.
 
-    Each row is a status pip (present / present-but-wrong-format / missing), the attribute name and
-    its value. A present-but-empty value counts as missing.
+    Each row shows the attribute name and its value; a row that does not conform — missing,
+    present-but-empty, or failing the format/value check — has its value cell highlighted in amber.
+    A present-but-empty value counts as missing.
     """
     rows = og1_attrs.check_globals(ds)
     present = sum(1 for _, status, _ in rows if status != "none")
-    glyph = {"match": "✓", "differ": "!", "none": "–"}
-    body = "".join(
-        f"<tr><td><span class='conf conf-{status}'>{glyph[status]}</span></td>"
-        f"<th>{html.escape(attr)}</th><td>{html.escape(value) if value else '—'}</td></tr>"
-        for attr, status, value in rows
-    )
-    head = f"<p class='caption'>{present} of {len(rows)} mandatory global attributes present</p>"
-    return f"{head}<table class='meta'>{body}</table>"
+    nonconform = sum(1 for _, status, _ in rows if status != "match")
+    cells = []
+    for attr, status, value in rows:
+        cls = ' class="nonconform"' if status != "match" else ""
+        val = _linkify(html.escape(value)) if value else "—"
+        cells.append(f"<tr{cls}><th>{html.escape(attr)}</th><td>{val}</td></tr>")
+    head = f"{present} of {len(rows)} mandatory global attributes present"
+    if nonconform:
+        head += f"; {nonconform} not conforming"
+    return f"<p class='caption'>{html.escape(head)}</p><table class='meta'>{''.join(cells)}</table>"
 
 
 def _has(var: str) -> Callable[[Ctx], bool]:
@@ -68,6 +119,7 @@ def _has(var: str) -> Callable[[Ctx], bool]:
 
 
 PANELS: dict[str, Panel] = {
+    "summary": Panel(id="summary", kind="html", render=lambda c: _mission_summary(c.ds)),
     "metadata": Panel(id="metadata", kind="html", render=lambda c: _metadata_table(c.ds)),
     "track": Panel(id="track", render=lambda c: _plots.track(c.ds), caption="Glider track"),
     "basic_vars": Panel(
@@ -120,6 +172,7 @@ PANELS: dict[str, Panel] = {
 
 PROFILE = Profile(
     entries=(
+        Section(id="summary", title="Summary", panels=("summary",)),
         Section(id="metadata", title="Metadata", panels=("metadata",)),
         Section(id="track", title="Track", panels=("track",)),
         Section(

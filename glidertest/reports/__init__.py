@@ -58,7 +58,7 @@ def report(ds: xr.Dataset, outdir: Path | str) -> Path:
         mission_id=str(ds.attrs.get("id", "mission")),
         version=__version__,
         generated_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        masthead_bg="#021489",
+        masthead_bg=PACKAGE_ACCENT,
     )
     out = outdir / "mission.html"
     out.write_text(rendered)

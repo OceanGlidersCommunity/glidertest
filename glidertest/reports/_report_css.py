@@ -9,9 +9,10 @@ from __future__ import annotations
 
 from ._css import _JS_TOP_LINKS, emit_css
 
-#: glidertest's package accent — VOTO blue, sampled from the VOTO wordmark.
+#: glidertest's package accent — VOTO brand blue (#07264f). Sits next to the shared palette's
+#: ``--ocean`` (#1a3a5c), slightly deeper, so the masthead reads as the same family.
 #: Applied to the wordmark, table header and footer rule; change this one line to rebrand.
-PACKAGE_ACCENT: str = "#021489"
+PACKAGE_ACCENT: str = "#07264f"
 
 #: The generated stylesheet, ready to concatenate into a page ``<style>`` block.
 SHARED_CSS: str = emit_css(PACKAGE_ACCENT)

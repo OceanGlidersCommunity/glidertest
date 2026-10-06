@@ -18,6 +18,10 @@
 .header-card > div { display: flex; gap: 0.4rem; }
 .header-card dt { font-weight: 700; opacity: 0.8; margin: 0; }
 .header-card dd { margin: 0; }
+/* Package-local: non-conforming OG1 metadata value cells in amber. */
+.meta tr.nonconform td { background: var(--warn-bg); }
+/* Subtle in-table links: underline only, keep the text colour. */
+.meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 </style>
 {% block head_extra %}{% endblock %}
 </head>
