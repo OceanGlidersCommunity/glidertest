@@ -77,6 +77,40 @@ def flag_counts(flags):
     return {key: int((arr == value).sum()) for value, key, _ in QC_FLAG_CATEGORIES}
 
 
+def flag_labels(da):
+    """Return a ``{flag_value: label}`` map read from a QC variable's ``flag_values``/``flag_meanings``.
+
+    OG1 ``*_QC`` variables carry their own flag scale in attributes (for example
+    ``flag_values = [1, 2, 3, 4, 9]`` with ``flag_meanings = "GOOD UNKNOWN SUSPECT FAIL MISSING"``),
+    so the label of each flag is read from the file rather than assumed. Flag values the file does
+    not label fall back to the default labels in :data:`QC_FLAG_CATEGORIES`. Only the label is
+    file-specific; the colour category of a flag stays fixed by its numeric value (1 good, 3
+    suspect, 4 fail).
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        A QC flag variable. Only its ``attrs`` are read, not its values.
+
+    Returns
+    -------
+    dict of int to str
+        Label per flag value, covering at least the values in :data:`QC_FLAG_CATEGORIES`.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams.
+    """
+    labels = {value: label for value, _key, label in QC_FLAG_CATEGORIES}
+    values = da.attrs.get("flag_values")
+    meanings = da.attrs.get("flag_meanings")
+    if values is not None and meanings is not None:
+        names = meanings.split() if isinstance(meanings, str) else [str(m) for m in meanings]
+        for value, name in zip(np.asarray(values).ravel().tolist(), names):
+            labels[int(value)] = name.replace("_", " ").capitalize()
+    return labels
+
+
 def hysteresis_verdict(err, pct_threshold=5, bin_threshold=5):
     """Return ``(n_over, flagged)`` for a hysteresis dive-climb error array.
 

@@ -4,12 +4,20 @@ import matplotlib
 
 matplotlib.use("agg")  # no display; the CLI forces this too
 
+import numpy as np  # noqa: E402
+import xarray as xr  # noqa: E402
 from PIL import Image  # noqa: E402
 
 from glidertest import fetchers, plots  # noqa: E402
 from glidertest.config.report_tokens import FIG_DPI, W_FULL  # noqa: E402
 from glidertest.reports import _slots, report  # noqa: E402
-from glidertest.reports._mission import build  # noqa: E402
+from glidertest.reports._mission import (  # noqa: E402
+    _attrs_details,
+    _file_contents,
+    _fmt_scalar,
+    _var_table,
+    build,
+)
 
 
 def test_report_writes_files(tmp_path):
@@ -60,6 +68,63 @@ def test_qc_delivered_covers_all_qc_variables(tmp_path):
     # Every *_QC variable in the file must appear, not just the four with diagnostics thresholds.
     for parent in ("TEMP", "PSAL", "DOXY", "CHLA", "CNDC", "DENSITY", "POTDENS0", "THETA"):
         assert f"<td>{parent}</td>" in delivered
+    # Column labels come from the file's flag_meanings: flag 2 is "Unknown" here, not QARTOD wording.
+    assert "Unknown %" in delivered
+    assert "Not eval %" not in delivered
+
+
+def test_flag_labels_read_from_file():
+    from glidertest import qc
+
+    ds = fetchers.load_sample_dataset()
+    labels = qc.flag_labels(ds["TEMP_QC"])
+    # flag_values [1,2,3,4,9] / flag_meanings "GOOD UNKNOWN SUSPECT FAIL MISSING".
+    assert labels[1] == "Good"
+    assert labels[2] == "Unknown"
+    assert labels[4] == "Fail"
+
+
+def test_flag_labels_fall_back_without_attrs():
+    from glidertest import qc
+
+    bare = xr.DataArray(np.array([1, 3, 4], dtype="int8"))  # no flag_values/flag_meanings
+    labels = qc.flag_labels(bare)
+    assert labels[2] == "Not evaluated"  # default from QC_FLAG_CATEGORIES
+
+
+def test_fmt_scalar():
+    assert _fmt_scalar(None) == "—"
+    assert _fmt_scalar(float("nan")) == "—"
+    assert _fmt_scalar(1.5) == "1.5"
+    assert _fmt_scalar(1234.5678) == "1235"  # 4 significant figures
+    assert len(_fmt_scalar("x" * 50)) == 40  # non-float falls back to a 40-char string
+
+
+def test_attrs_details():
+    assert _attrs_details({}) == "—"
+    assert _attrs_details({"a": "1"}, exclude=("a",)) == "—"  # all attrs excluded
+    two = _attrs_details({"a": "1", "b": "2"})
+    assert "<details" in two and "2 attrs" in two
+    one = _attrs_details({"a": "1", "b": "2"}, exclude=("a",))
+    assert "1 attrs" in one
+
+
+def test_var_table_empty():
+    assert _var_table(xr.Dataset(), []) == ""
+
+
+def test_file_contents_groups_each_dimension_signature():
+    # A variable on a second dimension gets its own "Variables on ..." table.
+    ds = xr.Dataset(
+        {
+            "TEMP": ("N_MEASUREMENTS", np.arange(5.0)),
+            "ADCP_VEL": (("N_MEASUREMENTS", "N_CELLS"), np.zeros((5, 3))),
+        },
+        coords={"TIME": ("N_MEASUREMENTS", np.arange(5))},
+    )
+    html = _file_contents(ds)
+    assert "<h3>Variables on N_MEASUREMENTS</h3>" in html
+    assert "<h3>Variables on N_MEASUREMENTS, N_CELLS</h3>" in html
 
 
 def test_report_style_reaches_figure():

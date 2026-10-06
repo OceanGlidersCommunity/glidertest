@@ -191,21 +191,29 @@ def _pct(count: int, n: int) -> str:
     return f"&lt;0.1% ({count})" if p < 0.1 else f"{p:.1f}"
 
 
-def _dist_bar(counts: dict[str, int], n: int, *, small: bool = False) -> str:
-    """Return a stacked distribution bar over all QARTOD categories; segments sum to *n*.
+def _dist_bar(
+    counts: dict[str, int], n: int, *, small: bool = False, labels: dict[int, str] | None = None
+) -> str:
+    """Return a stacked distribution bar over all flag categories; segments sum to *n*.
 
     *counts* is a ``{category: count}`` dict from :func:`glidertest.qc.flag_counts`. Segment colours
     come from the ``qc-seg-*`` CSS classes; *small* selects the dashed glidertest-diagnostics style.
+    *labels* overrides the segment tooltip text with the file's own flag meanings (keyed by flag
+    value); when ``None`` the default :data:`glidertest.qc.QC_FLAG_CATEGORIES` labels are used.
     """
     if n == 0:
         return ""
     divs = ""
-    for _value, key, label in qc.QC_FLAG_CATEGORIES:
+    for value, key, default_label in qc.QC_FLAG_CATEGORIES:
         count = counts.get(key, 0)
         if not count:
             continue
+        label = labels.get(value, default_label) if labels else default_label
         pct = 100 * count / n
-        divs += f"<div class='qc-seg-{key}' style='width:{pct:.1f}%' title='{label}: {pct:.1f}%'></div>"
+        divs += (
+            f"<div class='qc-seg-{key}' style='width:{pct:.1f}%' "
+            f"title='{html.escape(label)}: {pct:.1f}%'></div>"
+        )
     cls = "qc-bar qc-bar-sm" if small else "qc-bar"
     return f"<div class='{cls}'>{divs}</div>"
 
@@ -252,11 +260,17 @@ _MATRIX_ROWS = (
 )
 
 
+#: Fixed colour class per flag category (by numeric value), independent of the file's labels.
+_DELIVERED_CELL_CLASS = {"good": "qc-good", "suspect": "qc-susp", "fail": "qc-fail"}
+
+
 def _qc_delivered(ds: xr.Dataset) -> str:
     """Return the 'QC as delivered' block: a per-variable census of the file's own ``*_QC`` flags.
 
-    These are the flags the provider's pipeline wrote (QARTOD 1/2/3/4/9). The file does not record
-    the thresholds used, so only the distribution and the ``rtqc_method`` are shown.
+    These are the flags the provider's pipeline wrote. Column labels come from each variable's
+    ``flag_meanings`` (read via :func:`glidertest.qc.flag_labels`), so the page reports the file's
+    own scale rather than an assumed one; the colour of a category stays fixed by flag value. The
+    file does not record the thresholds used, so only the distribution and ``rtqc_method`` are shown.
     """
     rtqc = str(ds.attrs.get("rtqc_method", "") or "—")
     qc_vars = sorted(n for n in ds.data_vars if n.endswith("_QC"))
@@ -265,29 +279,30 @@ def _qc_delivered(ds: xr.Dataset) -> str:
             f"<p class='caption'>No QC flags delivered in the file (rtqc_method: {html.escape(rtqc)}) "
             "— itself a finding.</p>"
         )
+    labels = qc.flag_labels(ds[qc_vars[0]])
+    cats = [(key, labels[value], _DELIVERED_CELL_CLASS.get(key, "")) for value, key, _ in qc.QC_FLAG_CATEGORIES]
+    headers = [
+        "<th>Variable</th>", "<th class='num'>N</th>",
+        *(f"<th class='num'>{html.escape(label)} %</th>" for _key, label, _cls in cats),
+        "<th>Distribution</th>",
+    ]
     rows = []
     for qcv in qc_vars:
         var = qcv[:-3]
         f = np.asarray(ds[qcv].values)
         n = int(f.size)
         c = qc.flag_counts(f)
-        rows.append(
-            f"<tr><td>{var}</td><td class='num'>{n:,}</td>"
-            f"<td class='num qc-good'>{_pct(c['good'], n)}</td>"
-            f"<td class='num qc-susp'>{_pct(c['suspect'], n)}</td>"
-            f"<td class='num qc-fail'>{_pct(c['fail'], n)}</td>"
-            f"<td class='num'>{_pct(c['not_eval'], n)}</td>"
-            f"<td class='num'>{_pct(c['missing'], n)}</td>"
-            f"<td>{_dist_bar(c, n)}</td></tr>"
+        cells = "".join(
+            f"<td class='{f'num {cls}'.strip()}'>{_pct(c[key], n)}</td>" for key, _label, cls in cats
         )
-    headers = [
-        "<th>Variable</th>", "<th class='num'>N</th>", "<th class='num'>Good %</th>",
-        "<th class='num'>Suspect %</th>", "<th class='num'>Fail %</th>",
-        "<th class='num'>Not eval %</th>", "<th class='num'>Missing %</th>", "<th>Distribution</th>",
-    ]
+        rows.append(
+            f"<tr><td>{var}</td><td class='num'>{n:,}</td>{cells}"
+            f"<td>{_dist_bar(c, n, labels=labels)}</td></tr>"
+        )
     return (
-        f"<p class='caption'>As delivered — rtqc_method: {html.escape(rtqc)}. "
-        "The file does not record the thresholds used.</p>" + _table(headers, rows)
+        f"<p class='caption'>As delivered — rtqc_method: {html.escape(rtqc)}. Flag labels are read "
+        "from each variable's flag_meanings; the file does not record the thresholds used.</p>"
+        + _table(headers, rows)
     )
 
 
@@ -510,6 +525,7 @@ def _guarded(fn: Callable[[Ctx], str]) -> Callable[[Ctx], str]:
     """
 
     def render(ctx: Ctx) -> str:
+        """Render *fn*, returning a ``.none-note`` failure block instead of raising."""
         try:
             return fn(ctx)
         except Exception as exc:  # noqa: BLE001  # surface any html-panel failure on the page; never abort the report
