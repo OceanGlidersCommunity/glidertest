@@ -20,8 +20,10 @@ def report(ds: xr.Dataset, outdir: Path | str) -> Path:
     panel to ``<outdir>/figures/<id>.png`` alongside the copy embedded in the page, and writes the
     page to ``<outdir>/mission.html``.
 
-    This function does not set a Matplotlib backend; call it from a context that has one (the CLI
-    forces ``Agg``). Figure rendering is suppressed from interactive display during the build.
+    Figures are rendered under the non-interactive ``Agg`` backend for the duration of the build,
+    then the caller's backend is restored. glidertest's plotters call ``plt.show()`` when they draw
+    their own figure, which would pop a window per panel on an interactive backend (e.g. ``macosx``);
+    ``Agg`` makes that a no-op. Switching the backend closes any figures the caller had open.
 
     Parameters
     ----------
@@ -35,6 +37,9 @@ def report(ds: xr.Dataset, outdir: Path | str) -> Path:
     pathlib.Path
         The path to the written ``mission.html``.
     """
+    import matplotlib
+    import matplotlib.pyplot as plt
+
     from .._version import __version__
     from . import _figdebug
     from ._env import get_template
@@ -44,8 +49,18 @@ def report(ds: xr.Dataset, outdir: Path | str) -> Path:
     outdir = Path(outdir)
     (outdir / "figures").mkdir(parents=True, exist_ok=True)
 
-    _figdebug.clear()
-    resolved = build(ds)
+    # Render figures headless so the plotters' plt.show() calls never pop a window; restore after.
+    orig_backend = matplotlib.get_backend()
+    switch = orig_backend.lower() != "agg"
+    if switch:
+        plt.switch_backend("Agg")
+    try:
+        _figdebug.clear()
+        resolved = build(ds)
+    finally:
+        if switch:
+            plt.switch_backend(orig_backend)
+
     for section in resolved.sections:
         for panel in section.panels:
             if panel.kind == "figure" and panel.payload is not None:

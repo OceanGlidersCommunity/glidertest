@@ -14,9 +14,13 @@
   margin: -0.4rem 0 0.6rem;
 }
 /* Package-local: non-conforming OG1 metadata value cells in amber. */
-.meta tr.nonconform td { background: var(--warn-bg); }
+.meta td.nonconform { background: var(--warn-bg); }
 /* Subtle in-table links: underline only, keep the text colour. */
 .meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+/* Expandable per-variable attribute list in a table cell (ported from ctdcast). */
+details.attrs > summary { cursor: pointer; color: var(--ocean); font-size: var(--fs-xs); user-select: none; }
+details.attrs table { margin: 0.3rem 0 0.2rem; width: auto; }
+details.attrs td { font-size: var(--fs-xs); border: none; }
 /* QC palette — one source for text colours and bar-segment backgrounds. */
 :root { --qc-good: #27ae60; --qc-suspect: #f39c12; --qc-fail: #e74c3c; --qc-not_eval: #bdc3c7; --qc-missing: #7f8c8d; }
 .qc-good { color: var(--qc-good); }

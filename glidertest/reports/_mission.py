@@ -97,13 +97,52 @@ def _metadata_table(ds: xr.Dataset) -> str:
     for attr, status, value in rows:
         cls = ' class="nonconform"' if status != "match" else ""
         val = _linkify(html.escape(value)) if value else "—"
-        cells.append(f"<tr{cls}><th>{html.escape(attr)}</th><td>{val}</td></tr>")
+        cells.append(f"<tr><td>{html.escape(attr)}</td><td{cls}>{val}</td></tr>")
     head = f"{present} of {len(rows)} mandatory global attributes present"
     if nonconform:
         head += f"; {nonconform} not conforming"
     return (
         f"<p class='caption'>{html.escape(head)}</p><table class='meta'>{''.join(cells)}</table>"
+        + _payload_table(ds)
         + _geospatial_table(ds)
+    )
+
+
+#: Payload sensors and the OG1 variable whose presence marks the sensor (from create_docfile).
+_PAYLOAD = (
+    ("Temperature", "TEMP"),
+    ("Salinity", "PSAL"),
+    ("Oxygen", "DOXY"),
+    ("Chlorophyll", "CHLA"),
+    ("Backscatter", "BBP700"),
+    ("Altimeter", "ALTITUDE"),
+    ("ADCP", "PRES_ADCP"),
+)
+
+
+def _payload_table(ds: xr.Dataset) -> str:
+    """Return the payload table: each sensor's presence by whether its OG1 variable is in the file.
+
+    Mirrors ``summary_sheet.create_docfile``'s "Basic payload configuration": presence is whether
+    the variable exists, not whether it carries valid data. Absence is not flagged — a glider need
+    not carry every sensor.
+    """
+    rows = []
+    for label, var in _PAYLOAD:
+        present = var in ds.variables
+        mark = "<span class='qc-good'>✓</span>" if present else "✗"
+        source = html.escape(str(ds[var].attrs.get("sensor", ""))) if present else ""
+        rows.append(
+            f"<tr><td>{label}</td><td>{mark}</td><td class='mono'>{var}</td>"
+            f"<td class='mono'>{source or '—'}</td></tr>"
+        )
+    return (
+        "<p class='caption'>Payload — a sensor counts as present when its OG1 variable exists in the "
+        "file; the source is the <code>SENSOR_*</code> catalog entry named by the variable's "
+        "<code>sensor</code> attribute (see the File-contents sensor catalog).</p>"
+        + _table(
+            ["<th>Sensor</th>", "<th>Present</th>", "<th>Variable</th>", "<th>Source</th>"], rows
+        )
     )
 
 
@@ -220,14 +259,15 @@ def _qc_delivered(ds: xr.Dataset) -> str:
     the thresholds used, so only the distribution and the ``rtqc_method`` are shown.
     """
     rtqc = str(ds.attrs.get("rtqc_method", "") or "—")
-    pairs = [(v, f"{v}_QC") for v in _QC_VARS if f"{v}_QC" in ds]
-    if not pairs:
+    qc_vars = sorted(n for n in ds.data_vars if n.endswith("_QC"))
+    if not qc_vars:
         return (
             f"<p class='caption'>No QC flags delivered in the file (rtqc_method: {html.escape(rtqc)}) "
             "— itself a finding.</p>"
         )
     rows = []
-    for var, qcv in pairs:
+    for qcv in qc_vars:
+        var = qcv[:-3]
         f = np.asarray(ds[qcv].values)
         n = int(f.size)
         c = qc.flag_counts(f)
@@ -329,6 +369,138 @@ def _qc_section(ds: xr.Dataset) -> str:
     return "".join(parts)
 
 
+def _fmt_scalar(x: float | None) -> str:
+    """Format a scalar min/max compactly: ``—`` for None/non-finite, 4 significant figures else."""
+    if x is None:
+        return "—"
+    if isinstance(x, (float, np.floating)):
+        return f"{x:.4g}" if np.isfinite(x) else "—"
+    return str(x)[:40]
+
+
+def _attrs_details(attrs: dict, exclude: tuple[str, ...] = ()) -> str:
+    """Return a ``<details>`` dropdown listing *attrs* (minus *exclude*), or ``—`` when none remain.
+
+    Attributes already shown as their own columns are passed in *exclude* so the dropdown holds only
+    what the columns do not — matching ctdcast's inventory cells.
+    """
+    rows = [
+        f"<tr><td class='mono'>{html.escape(str(k))}</td><td>{_linkify(html.escape(str(val)))}</td></tr>"
+        for k, val in attrs.items()
+        if k not in exclude
+    ]
+    if not rows:
+        return "—"
+    return f"<details class='attrs'><summary>{len(rows)} attrs</summary><table>{''.join(rows)}</table></details>"
+
+
+def _var_row(name: str, v: xr.DataArray, *, has_qc: bool) -> str:
+    """Return one file-contents table row inventorying a variable: dims, dtype, N, valid, range, CF names."""
+    n = int(np.prod(v.shape)) if v.shape else 1
+    v_min = v_max = None
+    n_valid = n
+    if v.dtype.kind in "fiu" and n:
+        vals = np.asarray(v.values)
+        finite = np.isfinite(vals)
+        n_valid = int(finite.sum())
+        if n_valid:
+            v_min = vals[finite].min().item()
+            v_max = vals[finite].max().item()
+    dims = ", ".join(str(d) for d in v.dims) or "()"
+    qc_mark = "<span class='qc-good'>✓</span>" if has_qc else "—"
+    return (
+        f"<tr><td class='mono'>{html.escape(name)}</td>"
+        f"<td class='mono'>{html.escape(dims)}</td>"
+        f"<td class='mono'>{html.escape(str(v.dtype))}</td>"
+        f"<td class='num'>{n:,}</td><td class='num'>{n_valid:,}</td>"
+        f"<td class='num'>{html.escape(_fmt_scalar(v_min))}</td>"
+        f"<td class='num'>{html.escape(_fmt_scalar(v_max))}</td>"
+        f"<td>{html.escape(v.attrs.get('units', ''))}</td>"
+        f"<td>{html.escape(v.attrs.get('long_name', ''))}</td>"
+        f"<td class='mono'>{html.escape(v.attrs.get('standard_name', ''))}</td>"
+        f"<td>{qc_mark}</td>"
+        f"<td>{_attrs_details(v.attrs, exclude=('units', 'long_name', 'standard_name'))}</td></tr>"
+    )
+
+
+_VAR_HEADERS = [
+    "<th>Variable</th>", "<th>Dims</th>", "<th>Dtype</th>", "<th class='num'>N</th>",
+    "<th class='num'>Valid</th>", "<th class='num'>Min</th>", "<th class='num'>Max</th>",
+    "<th>Units</th>", "<th>Long name</th>", "<th>Standard name</th>", "<th>QC</th>",
+    "<th>Attributes</th>",
+]
+
+#: Columns for the sensor-catalog table: OG1 ``SENSOR_*`` variables are NaN scalars whose content
+#: is in their attributes, so min/max/valid are meaningless — show the sensor attributes instead.
+_SENSOR_HEADERS = [
+    "<th>Variable</th>", "<th>Model</th>", "<th>Serial</th>", "<th>Calibration</th>",
+    "<th>Attributes</th>",
+]
+
+
+def _var_table(ds: xr.Dataset, names: list[str]) -> str:
+    """Return a standard inventory table over *names*, or ``""`` if *names* is empty."""
+    if not names:
+        return ""
+    rows = [_var_row(n, ds[n], has_qc=f"{n}_QC" in ds.variables) for n in names]
+    return _table(_VAR_HEADERS, rows)
+
+
+def _sensor_row(name: str, v: xr.DataArray) -> str:
+    """Return one sensor-catalog row: model, serial, calibration date and the rest of the attrs."""
+    a = v.attrs
+    return (
+        f"<tr><td class='mono'>{html.escape(name)}</td>"
+        f"<td>{html.escape(str(a.get('sensor_model', '')))}</td>"
+        f"<td class='mono'>{html.escape(str(a.get('serial_number', '')))}</td>"
+        f"<td>{html.escape(str(a.get('calibration_date', '')))}</td>"
+        f"<td>{_attrs_details(a, exclude=('sensor_model', 'serial_number', 'calibration_date'))}</td></tr>"
+    )
+
+
+def _file_contents(ds: xr.Dataset) -> str:
+    """Return the file-contents inventory: variable tables grouped by dimension, then the attr dump.
+
+    Variables are split into tables by their dimension signature — coordinates, the
+    ``N_MEASUREMENTS`` science variables, any other dimension group, and dimensionless scalars.
+    OG1 ``SENSOR_*`` variables (dimensionless, NaN-valued, carrying their content in attributes) get
+    a separate catalog table. The attribute dump then shows every global attribute in file order.
+    """
+    qc_vars = sorted(n for n in ds.data_vars if n.endswith("_QC"))
+    sensors = sorted(n for n in ds.data_vars if n.startswith("SENSOR_"))
+    science = sorted(
+        n for n in ds.data_vars if not n.startswith("SENSOR_") and not n.endswith("_QC")
+    )
+    by_dims: dict[tuple[str, ...], list[str]] = {}
+    for n in science:
+        by_dims.setdefault(tuple(str(d) for d in ds[n].dims), []).append(n)
+
+    blocks = [f"<h3>Coordinates</h3>{_var_table(ds, sorted(ds.coords))}"]
+    measurement = by_dims.pop(("N_MEASUREMENTS",), None)
+    if measurement:
+        blocks.append(f"<h3>Variables on N_MEASUREMENTS</h3>{_var_table(ds, measurement)}")
+    scalars = by_dims.pop((), None)
+    for dims in sorted(by_dims, key=lambda d: (len(d), d)):
+        blocks.append(f"<h3>Variables on {', '.join(dims)}</h3>{_var_table(ds, by_dims[dims])}")
+    if scalars:
+        blocks.append(f"<h3>Scalar variables</h3>{_var_table(ds, scalars)}")
+    if sensors:
+        sensor_rows = [_sensor_row(n, ds[n]) for n in sensors]
+        blocks.append(f"<h3>Sensor catalog</h3>{_table(_SENSOR_HEADERS, sensor_rows)}")
+
+    attr_rows = [
+        f"<tr><td>{html.escape(str(k))}</td><td>{_linkify(html.escape(str(val)))}</td></tr>"
+        for k, val in ds.attrs.items()
+    ]
+    return (
+        f"<p class='caption'>{len(science)} data variables, {len(sensors)} sensors, "
+        f"{len(qc_vars)} QC-flag variables (shown in the QC section, not listed here), "
+        f"{len(ds.coords)} coordinates, {len(ds.attrs)} global attributes.</p>" + "".join(blocks)
+        + "<h3>Global attributes</h3><p class='caption'>In file order.</p>"
+        + _table(["<th>Attribute</th>", "<th>Value</th>"], attr_rows)
+    )
+
+
 def _guarded(fn: Callable[[Ctx], str]) -> Callable[[Ctx], str]:
     """Wrap an html-panel render so a failure is a visible block on the page, not a dead report.
 
@@ -347,8 +519,8 @@ def _guarded(fn: Callable[[Ctx], str]) -> Callable[[Ctx], str]:
 
 
 def _qc_applies(c: Ctx) -> bool:
-    """QC section applies when a QC variable or its delivered ``*_QC`` flags are present."""
-    return any(v in c.ds for v in _QC_VARS) or any(f"{v}_QC" in c.ds for v in _QC_VARS)
+    """QC section applies when a QC variable or any delivered ``*_QC`` flag variable is present."""
+    return any(v in c.ds for v in _QC_VARS) or any(n.endswith("_QC") for n in c.ds.data_vars)
 
 
 def _has(var: str) -> Callable[[Ctx], bool]:
@@ -406,6 +578,9 @@ PANELS: dict[str, Panel] = {
         caption="Profile-number monotonicity",
     ),
     "qc": Panel(id="qc", kind="html", render=_guarded(lambda c: _qc_section(c.ds))),
+    "file_contents": Panel(
+        id="file_contents", kind="html", render=_guarded(lambda c: _file_contents(c.ds))
+    ),
 }
 
 PROFILE = Profile(
@@ -428,6 +603,7 @@ PROFILE = Profile(
             panels=("qc",),
             applies_to=_qc_applies,
         ),
+        Section(id="file_contents", title="File contents", panels=("file_contents",)),
     ),
 )
 
