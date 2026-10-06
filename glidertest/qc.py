@@ -56,8 +56,10 @@ QC_FLAG_CATEGORIES = (
 def flag_counts(flags):
     """Return a ``{category_key: count}`` dict for a QARTOD/OceanSITES flag array.
 
-    Covers all five flag values (good=1, suspect=3, fail=4, not-evaluated=2, missing=9), so the
-    returned counts sum to the array size.
+    Counts the five graded/non-graded categories (good=1, suspect=3, fail=4, not-evaluated=2,
+    missing=9) and adds an ``"other"`` bucket holding every remaining value — for example OG1's
+    ``0`` ("no QC applied") or any non-standard flag — so the returned counts always sum to the
+    array size and no flagged sample is silently dropped.
 
     Parameters
     ----------
@@ -67,14 +69,48 @@ def flag_counts(flags):
     Returns
     -------
     dict of str to int
-        Count per category key, in :data:`QC_FLAG_CATEGORIES` order.
+        Count per category key in :data:`QC_FLAG_CATEGORIES` order, plus ``"other"``; the values
+        sum to ``size``.
 
     Notes
     -----
     Original Author: Eleanor Frajka-Williams.
     """
     arr = np.asarray(flags)
-    return {key: int((arr == value).sum()) for value, key, _ in QC_FLAG_CATEGORIES}
+    counts = {key: int((arr == value).sum()) for value, key, _ in QC_FLAG_CATEGORIES}
+    counts["other"] = int(arr.size) - sum(counts.values())
+    return counts
+
+
+def flag_scale_mismatch(da):
+    """Return ``(n_values, n_meanings)`` when a QC variable's declared flag scale is inconsistent.
+
+    An OG1 ``*_QC`` variable should declare ``flag_values`` and ``flag_meanings`` of equal length.
+    When they differ the file's flag scale cannot be trusted — a finding a diagnose tool should
+    surface rather than silently use a partial scale.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        A QC flag variable. Only its ``attrs`` are read.
+
+    Returns
+    -------
+    tuple of (int, int) or None
+        ``(len(flag_values), len(flag_meanings))`` when the two differ, else ``None`` (consistent,
+        or one/both attributes absent).
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams.
+    """
+    values = da.attrs.get("flag_values")
+    meanings = da.attrs.get("flag_meanings")
+    if values is None or meanings is None:
+        return None
+    n_values = int(np.asarray(values).size)
+    n_meanings = len(meanings.split() if isinstance(meanings, str) else list(meanings))
+    return (n_values, n_meanings) if n_values != n_meanings else None
 
 
 def flag_labels(da):
@@ -106,8 +142,10 @@ def flag_labels(da):
     meanings = da.attrs.get("flag_meanings")
     if values is not None and meanings is not None:
         names = meanings.split() if isinstance(meanings, str) else [str(m) for m in meanings]
-        for value, name in zip(np.asarray(values).ravel().tolist(), names):
-            labels[int(value)] = name.replace("_", " ").capitalize()
+        vals = np.asarray(values).ravel().tolist()
+        if len(vals) == len(names):  # on a length mismatch keep defaults; flag_scale_mismatch reports it
+            for value, name in zip(vals, names):
+                labels[int(value)] = name.replace("_", " ").capitalize()
     return labels
 
 

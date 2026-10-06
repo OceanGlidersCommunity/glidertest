@@ -38,7 +38,7 @@ details.attrs > summary { cursor: pointer; color: var(--ocean); font-size: var(-
 details.attrs table { margin: 0.3rem 0 0.2rem; width: auto; }
 details.attrs td { font-size: var(--fs-xs); border: none; }
 /* QC palette — one source for text colours and bar-segment backgrounds. */
-:root { --qc-good: #27ae60; --qc-suspect: #f39c12; --qc-fail: #e74c3c; --qc-not_eval: #bdc3c7; --qc-missing: #7f8c8d; }
+:root { --qc-good: #27ae60; --qc-suspect: #f39c12; --qc-fail: #e74c3c; --qc-not_eval: #bdc3c7; --qc-missing: #7f8c8d; --qc-other: #4a4a4a; }
 .qc-good { color: var(--qc-good); }
 .qc-susp { color: var(--qc-suspect); }
 .qc-fail { color: var(--qc-fail); }
@@ -47,6 +47,7 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
 .qc-seg-fail { background: var(--qc-fail); }
 .qc-seg-not_eval { background: var(--qc-not_eval); }
 .qc-seg-missing { background: var(--qc-missing); }
+.qc-seg-other { background: var(--qc-other); }
 /* QC distribution bar: a flex row of percent-width segments with tooltips. */
 .qc-bar {
   display: flex; width: 14rem; height: 1.1rem; vertical-align: middle;

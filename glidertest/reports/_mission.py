@@ -58,7 +58,19 @@ def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
         fields.append(("Platform serial", serial))
     if "PROFILE_NUMBER" in ds:
         pn = np.asarray(ds["PROFILE_NUMBER"].values)
-        fields.append(("Profiles", str(int(np.unique(pn[np.isfinite(pn)]).size))))
+        finite = np.isfinite(pn)
+        n_prof = int(np.unique(pn[finite]).size)
+        label = str(n_prof)
+        if "PROFILE_DIRECTION" in ds:
+            # Each profile is one cast: a dive (downcast, direction -1) or a climb (upcast, +1).
+            pdir = np.asarray(ds["PROFILE_DIRECTION"].values)
+            m = finite & np.isfinite(pdir)
+            _uniq, idx = np.unique(pn[m], return_index=True)
+            prof_dir = pdir[m][idx]
+            n_dive = int((prof_dir == -1).sum())
+            n_climb = int((prof_dir == 1).sum())
+            label = f"{n_prof} ({n_dive} dive, {n_climb} climb)"
+        fields.append(("Profiles", label))
     if "TIME" in ds:
         t0 = ds["TIME"].min().values
         t1 = ds["TIME"].max().values
@@ -91,23 +103,22 @@ def _linkify(escaped: str) -> str:
 
 
 def _metadata_table(ds: xr.Dataset) -> str:
-    """Return an HTML conformance table for the 16 mandatory OG1 global attributes.
+    """Return an HTML presence table for the 16 mandatory OG1 global attributes.
 
-    Each row shows the attribute name and its value; a row that does not conform — missing,
-    present-but-empty, or failing the format/value check — has its value cell highlighted in amber.
-    A present-but-empty value counts as missing.
+    Each row shows the attribute name and its value; a missing or present-but-empty attribute has
+    its value cell highlighted in amber. Values are not format-checked — amber means missing only.
     """
     rows = og1_attrs.check_globals(ds)
     present = sum(1 for _, status, _ in rows if status != "none")
-    nonconform = sum(1 for _, status, _ in rows if status != "match")
+    missing = len(rows) - present
     cells = []
     for attr, status, value in rows:
         cls = ' class="nonconform"' if status != "match" else ""
         val = _linkify(html.escape(value)) if value else "—"
         cells.append(f"<tr><td>{html.escape(attr)}</td><td{cls}>{val}</td></tr>")
     head = f"{present} of {len(rows)} mandatory global attributes present"
-    if nonconform:
-        head += f"; {nonconform} not conforming"
+    if missing:
+        head += f"; {missing} missing"
     return (
         f"<p class='caption'>{html.escape(head)}</p><table class='meta'>{''.join(cells)}</table>"
         + _payload_table(ds)
@@ -227,6 +238,13 @@ def _dist_bar(
             f"<div class='qc-seg-{key}' style='width:{pct:.1f}%' "
             f"title='{html.escape(label)}: {pct:.1f}%'></div>"
         )
+    other = counts.get("other", 0)
+    if other:
+        pct = 100 * other / n
+        divs += (
+            f"<div class='qc-seg-other' style='width:{pct:.1f}%' "
+            f"title='Other (non-standard flag): {pct:.1f}%'></div>"
+        )
     cls = "qc-bar qc-bar-sm" if small else "qc-bar"
     return f"<div class='{cls}'>{divs}</div>"
 
@@ -292,31 +310,64 @@ def _qc_delivered(ds: xr.Dataset) -> str:
             f"<p class='caption'>No QC flags delivered in the file (rtqc_method: {html.escape(rtqc)}) "
             "— itself a finding.</p>"
         )
-    labels = qc.flag_labels(ds[qc_vars[0]])
+
+    # Labels come from each variable's flag_meanings; use them for the headers only when every QC
+    # variable agrees, otherwise fall back to the default category names and say which differ.
+    per_var = {v: qc.flag_labels(ds[v]) for v in qc_vars}
+    consistent = len({tuple(sorted(m.items())) for m in per_var.values()}) == 1
+    if consistent:
+        labels = per_var[qc_vars[0]]
+        differ_note = ""
+    else:
+        labels = {value: default for value, _key, default in qc.QC_FLAG_CATEGORIES}
+        names = ", ".join(v[:-3] for v in qc_vars)
+        differ_note = (
+            f" The QC variables ({html.escape(names)}) declare differing flag scales, so the default "
+            "category names are shown."
+        )
+
+    counts = {v: qc.flag_counts(np.asarray(ds[v].values)) for v in qc_vars}
+    show_other = any(c["other"] for c in counts.values())
+
     cats = [(key, labels[value], _DELIVERED_CELL_CLASS.get(key, "")) for value, key, _ in qc.QC_FLAG_CATEGORIES]
-    headers = [
-        "<th>Variable</th>", "<th class='num'>N</th>",
-        *(f"<th class='num'>{html.escape(label)} %</th>" for _key, label, _cls in cats),
-        "<th>Distribution</th>",
-    ]
+    headers = ["<th>Variable</th>", "<th class='num'>N</th>"]
+    headers += [f"<th class='num'>{html.escape(label)} %</th>" for _key, label, _cls in cats]
+    if show_other:
+        headers.append("<th class='num'>Other %</th>")
+    headers.append("<th>Distribution</th>")
+
     rows = []
     for qcv in qc_vars:
-        var = qcv[:-3]
-        f = np.asarray(ds[qcv].values)
-        n = int(f.size)
-        c = qc.flag_counts(f)
+        c = counts[qcv]
+        n = sum(c.values())  # flag_counts sums to size, so no need to re-read the array
         cells = "".join(
             f"<td class='{f'num {cls}'.strip()}'>{_pct(c[key], n)}</td>" for key, _label, cls in cats
         )
+        if show_other:
+            cells += f"<td class='num'>{_pct(c['other'], n)}</td>"
         rows.append(
-            f"<tr><td>{var}</td><td class='num'>{n:,}</td>{cells}"
+            f"<tr><td>{qcv[:-3]}</td><td class='num'>{n:,}</td>{cells}"
             f"<td>{_dist_bar(c, n, labels=labels)}</td></tr>"
         )
-    return (
-        f"<p class='caption'>As delivered — rtqc_method: {html.escape(rtqc)}. Flag labels are read "
-        "from each variable's flag_meanings; the file does not record the thresholds used.</p>"
-        + _table(headers, rows)
+
+    mismatches = [
+        f"{qcv[:-3]} (flag_values has {mm[0]}, flag_meanings has {mm[1]})"
+        for qcv in qc_vars
+        if (mm := qc.flag_scale_mismatch(ds[qcv])) is not None
+    ]
+    mismatch_note = (
+        f"<p class='none-note'>Inconsistent flag scale — {html.escape('; '.join(mismatches))}. "
+        "Default category names used for these.</p>"
+        if mismatches
+        else ""
     )
+
+    caption = (
+        f"<p class='caption'>As delivered — rtqc_method: {html.escape(rtqc)}. Flag labels are read "
+        f"from each variable's flag_meanings.{differ_note} The file does not record the thresholds "
+        "used.</p>"
+    )
+    return caption + mismatch_note + _table(headers, rows)
 
 
 def _qc_diagnostics(ds: xr.Dataset) -> str | None:
@@ -368,8 +419,10 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
                 cells.append(_gross_cell(r, ds, v))
             elif kind == "sample":
                 cells.append(_qc_sample_cell(np.asarray(r[idx])))
-            else:
+            elif kind == "hyst":
                 cells.append(_hyst_cell(r[idx]))
+            else:
+                raise ValueError(f"unknown matrix cell kind: {kind!r}")
         matrix_rows.append(f"<tr><td>{label}</td>{''.join(cells)}</tr>")
     matrix_html = _table(["<th>Test</th>", *(f"<th>{v}</th>" for v in present)], matrix_rows)
 
@@ -384,13 +437,30 @@ def _qc_diagnostics(ds: xr.Dataset) -> str | None:
     )
 
 
-def _qc_section(ds: xr.Dataset) -> str:
-    """Return the QC section: 'QC as delivered' (the file's own flags) then glidertest diagnostics.
+def _basic_checks(ds: xr.Dataset) -> str:
+    """Return the basic-checks sentences (profile-number monotonicity, profile duration), or ``""``.
 
-    The two are never merged: delivered flags are what the provider's pipeline wrote; the
-    diagnostics are what glidertest computed on the fly.
+    Uses :func:`glidertest.qc.phrase_numberprof_check` and :func:`glidertest.qc.phrase_duration_check`
+    verbatim; returns an empty string if the inputs those need (PROFILE_NUMBER, TIME) are absent.
     """
-    parts = ["<h3>As delivered</h3>", _qc_delivered(ds)]
+    try:
+        profnum = qc.phrase_numberprof_check(ds)
+        dur = qc.phrase_duration_check(ds)
+    except Exception:  # noqa: BLE001  # the phrases need PROFILE_NUMBER/TIME; omit the line if absent
+        return ""
+    return (
+        f"<p class='caption'>Profile number: {html.escape(profnum)}. "
+        f"Profile duration: {html.escape(dur)}.</p>"
+    )
+
+
+def _qc_section(ds: xr.Dataset) -> str:
+    """Return the QC section: basic checks, then 'as delivered' flags, then glidertest diagnostics.
+
+    The delivered census and the diagnostics are never merged: delivered flags are what the
+    provider's pipeline wrote; the diagnostics are what glidertest computed on the fly.
+    """
+    parts = [_basic_checks(ds), "<h3>As delivered</h3>", _qc_delivered(ds)]
     diagnostics = _qc_diagnostics(ds)
     if diagnostics is not None:
         parts += ["<h3>glidertest diagnostics</h3>", diagnostics]

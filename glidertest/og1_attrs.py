@@ -1,17 +1,15 @@
 """OG1 global-attribute requirements, transcribed from the OceanGliders format user manual.
 
 Source: ``OG_Format.adoc``, "Global attributes" table, OceanGlidersCommunity/OG-format-user-manual.
-Lists the 16 mandatory global attributes and the value checks the manual states: ``start_date`` and
-``date_created`` are datetime strings ``YYYYmmddTHHMMss``; ``featureType`` has the fixed value
-``"trajectory"``. :func:`check_globals` reports, per attribute, whether it is present and valid.
-
-A present-but-empty-string value counts as missing. This checks presence and the two documented
-value formats only — it does not reproduce the full OG1 compliance checker.
+Lists the 16 mandatory global attributes. :func:`check_globals` reports, per attribute, whether it
+is present: a mandatory attribute that is absent or an empty string is the only non-conformance
+flagged. Attribute *values* are not format-checked — a present value is reported as present whatever
+its content — so the report's amber marking means one thing: a required attribute is missing. This
+does not reproduce the full OG1 compliance checker.
 """
 
 from __future__ import annotations
 
-import re
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
@@ -39,12 +37,6 @@ MANDATORY_GLOBALS: tuple[str, ...] = (
     "featureType",
     "Conventions",
 )
-
-#: Mandatory attributes whose value must be a ``YYYYmmddTHHMMss`` datetime string.
-DATETIME_FORMAT_GLOBALS: tuple[str, ...] = ("start_date", "date_created")
-
-#: Mandatory attributes with a fixed required value.
-FIXED_VALUE_GLOBALS: dict[str, str] = {"featureType": "trajectory"}
 
 #: Canonical order of OG1 global attributes, transcribed from ``OG_Format.adoc``'s "Global
 #: attributes" table (document order, mandatory through suggested). Used to present a dataset's
@@ -94,13 +86,13 @@ GLOBAL_ATTR_ORDER: tuple[str, ...] = (
     "Conventions",
 )
 
-_DATETIME_RE = re.compile(r"^\d{8}T\d{6}$")  # YYYYmmddTHHMMss
-
-Status = Literal["match", "differ", "none"]
+Status = Literal["match", "none"]
 
 
 def check_globals(ds: xr.Dataset) -> list[tuple[str, Status, str]]:
-    """Check *ds*'s global attributes against the 16 mandatory OG1 attributes.
+    """Check whether *ds* carries each of the 16 mandatory OG1 global attributes.
+
+    Presence only — attribute values are not format-checked (see the module docstring).
 
     Parameters
     ----------
@@ -109,10 +101,9 @@ def check_globals(ds: xr.Dataset) -> list[tuple[str, Status, str]]:
 
     Returns
     -------
-    list of (str, {"match", "differ", "none"}, str)
+    list of (str, {"match", "none"}, str)
         One ``(attribute, status, value)`` tuple per mandatory attribute, in manual order.
-        ``"match"`` — present and any format/value check passes; ``"differ"`` — present but the
-        format or fixed value is wrong; ``"none"`` — absent or present-but-empty.
+        ``"match"`` — present and non-empty; ``"none"`` — absent or present-but-empty.
 
     Notes
     -----
@@ -122,15 +113,7 @@ def check_globals(ds: xr.Dataset) -> list[tuple[str, Status, str]]:
     for attr in MANDATORY_GLOBALS:
         raw = ds.attrs.get(attr)
         value = "" if raw is None else str(raw).strip()
-        status: Status
-        if value == "":
-            status = "none"
-        elif attr in DATETIME_FORMAT_GLOBALS and not _DATETIME_RE.match(value):
-            status = "differ"
-        elif attr in FIXED_VALUE_GLOBALS and value != FIXED_VALUE_GLOBALS[attr]:
-            status = "differ"
-        else:
-            status = "match"
+        status: Status = "none" if value == "" else "match"
         results.append((attr, status, "" if raw is None else str(raw)))
     return results
 

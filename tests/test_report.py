@@ -65,6 +65,13 @@ def test_payload_and_file_contents(tmp_path):
     assert "QC-flag variables" in html
 
 
+def test_qc_section_has_basic_checks_sentences(tmp_path):
+    ds = fetchers.load_sample_dataset()
+    html = report(ds, tmp_path).read_text(encoding="utf-8")
+    assert "Profile number:" in html
+    assert "Profile duration:" in html
+
+
 def test_qc_delivered_covers_all_qc_variables(tmp_path):
     from glidertest.reports._mission import _qc_delivered
 
@@ -95,6 +102,30 @@ def test_order_globals_canonical_then_file_order():
     attrs = {"glider_serial": "x", "Conventions": "CF", "title": "t", "zzz_custom": "q"}
     # title before Conventions (canonical order), then the two non-OG1 keys in file order.
     assert og1_attrs.order_globals(attrs) == ["title", "Conventions", "glider_serial", "zzz_custom"]
+
+
+def test_flag_counts_sums_to_size_with_other_bucket():
+    from glidertest import qc
+
+    arr = np.array([1, 1, 0, 3, 4, 7, 9, 2])  # 0 and 7 are non-standard -> "other"
+    c = qc.flag_counts(arr)
+    assert sum(c.values()) == arr.size  # invariant: nothing dropped
+    assert c["other"] == 2
+
+
+def test_flag_scale_mismatch_and_label_fallback():
+    from glidertest import qc
+
+    good = xr.DataArray(
+        np.array([1], dtype="int8"), attrs={"flag_values": [1, 2, 3], "flag_meanings": "a b c"}
+    )
+    bad = xr.DataArray(
+        np.array([1], dtype="int8"), attrs={"flag_values": [1, 2, 3], "flag_meanings": "a b"}
+    )
+    assert qc.flag_scale_mismatch(good) is None
+    assert qc.flag_scale_mismatch(bad) == (3, 2)
+    # on a mismatch, flag_labels keeps the defaults rather than apply a partial scale
+    assert qc.flag_labels(bad)[2] == "Not evaluated"
 
 
 def test_flag_labels_fall_back_without_attrs():

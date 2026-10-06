@@ -33,21 +33,22 @@ def test_empty_string_counts_as_missing():
     assert status["title"] == "none"
 
 
-def test_bad_datetime_format_is_differ():
-    status = {a: s for a, s, _ in og1_attrs.check_globals(_ds_with({"start_date": "20230604T1253"}))}
-    assert status["start_date"] == "differ"  # missing seconds
-
-
-def test_wrong_featuretype_is_differ():
-    status = {a: s for a, s, _ in og1_attrs.check_globals(_ds_with({"featureType": "profile"}))}
-    assert status["featureType"] == "differ"
+def test_present_value_is_match_regardless_of_format():
+    # Values are not format-checked: amber means missing only. A seconds-less datetime and a
+    # non-"trajectory" featureType are present, so both are "match".
+    status = {
+        a: s
+        for a, s, _ in og1_attrs.check_globals(
+            _ds_with({"start_date": "20230604T1253", "featureType": "profile"})
+        )
+    }
+    assert status["start_date"] == "match"
+    assert status["featureType"] == "match"
 
 
 def test_sample_dataset_conformance():
     ds = fetchers.load_sample_dataset()
     rows = og1_attrs.check_globals(ds)
-    status = {a: s for a, s, _ in rows}
-    # the VOTO sample has all 16 present, but the two datetimes lack seconds
+    # the VOTO sample has all 16 mandatory attributes present
     assert sum(1 for _, s, _ in rows if s != "none") == 16
-    assert status["start_date"] == "differ"
-    assert status["date_created"] == "differ"
+    assert all(s in ("match", "none") for _, s, _ in rows)
