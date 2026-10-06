@@ -76,5 +76,5 @@ def report(ds: xr.Dataset, outdir: Path | str) -> Path:
         masthead_bg=PACKAGE_ACCENT,
     )
     out = outdir / "mission.html"
-    out.write_text(rendered)
+    out.write_text(rendered, encoding="utf-8")  # page has ✓/✗/⚠/– glyphs; Windows default is cp1252
     return out
