@@ -585,7 +585,7 @@ def max_depth_per_profile(ds: xr.Dataset):
     """
     max_depths = ds.groupby('PROFILE_NUMBER').apply(lambda x: x['DEPTH'].max())
     ### add the unit to the dataarray
-    max_depths.attrs['units'] = ds['DEPTH'].attrs.get('units', '')
+    max_depths.attrs['units'] = ds['DEPTH'].attrs.get('units', 'UNK')
     return max_depths
 
 def add_sigma_1(ds: xr.Dataset, var_sigma_1: str = "SIGMA_1") -> xr.Dataset:

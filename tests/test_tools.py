@@ -67,7 +67,21 @@ def test_sop():
 def test_maxdepth():
     ds = fetchers.load_sample_dataset()
     tools.max_depth_per_profile(ds)
-    
+
+
+def test_maxdepth_units_unknown_when_missing():
+    import xarray as xr
+
+    ds = xr.Dataset(
+        {
+            "DEPTH": ("N_MEASUREMENTS", np.array([1.0, 5.0, 2.0, 8.0])),  # no units attr
+            "PROFILE_NUMBER": ("N_MEASUREMENTS", np.array([1, 1, 2, 2])),
+        }
+    )
+    # Units must not be silently blanked when DEPTH has no units attribute.
+    assert tools.max_depth_per_profile(ds).attrs["units"] == "UNK"
+
+
 def test_mld():
     ds = fetchers.load_sample_dataset()
     ds = tools.add_sigma_1(ds)

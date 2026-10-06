@@ -33,10 +33,12 @@ class Ctx:
 
 
 def _duration(t0: np.datetime64, t1: np.datetime64) -> str:
-    """Return a ``Nd Nh`` duration string between two datetimes (hours carry into days)."""
-    total_hours = round(float((t1 - t0) / np.timedelta64(1, "h")))
-    days, hours = divmod(total_hours, 24)
-    return f"{days}d {hours}h"
+    """Return a ``Nd Nh`` duration string between two datetimes, or ``UNK`` if either is NaT."""
+    hours = float((t1 - t0) / np.timedelta64(1, "h"))
+    if not np.isfinite(hours):
+        return "UNK"
+    days, rem = divmod(round(hours), 24)
+    return f"{days}d {rem}h"
 
 
 def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
@@ -44,27 +46,32 @@ def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
 
     The report title is the OG1 ``id`` (set separately); this grid carries the serial and the
     overview statistics, derived from the data where possible. A field whose source is absent in the
-    file is skipped; a field that cannot be computed (all-NaN) shows ``UNK``.
-
-    Notes
-    -----
-    Original Author: Eleanor Frajka-Williams.
+    file is skipped; a field that cannot be computed (all-NaN, all-NaT) shows ``UNK``.
     """
     fields: list[tuple[str, str]] = []
     if "PLATFORM_SERIAL_NUMBER" in ds:
         sv = np.atleast_1d(ds["PLATFORM_SERIAL_NUMBER"].values)
-        fields.append(("Platform serial", str(sv.ravel()[0]) if sv.size else "UNK"))
+        first = sv.ravel()[0] if sv.size else None
+        serial = "UNK" if first is None else str(first)
+        if isinstance(first, (float, np.floating)) and not np.isfinite(first):
+            serial = "UNK"
+        fields.append(("Platform serial", serial))
     if "PROFILE_NUMBER" in ds:
         pn = np.asarray(ds["PROFILE_NUMBER"].values)
         fields.append(("Profiles", str(int(np.unique(pn[np.isfinite(pn)]).size))))
     if "TIME" in ds:
         t0 = ds["TIME"].min().values
         t1 = ds["TIME"].max().values
-        fields.append(("Start", str(t0.astype("datetime64[m]")).replace("T", " ")))
-        fields.append(("End", str(t1.astype("datetime64[m]")).replace("T", " ")))
-        fields.append(("Duration", _duration(t0, t1)))
-        diffs = np.diff(np.asarray(ds["TIME"].values)).astype("timedelta64[s]").astype(float)
-        fields.append(("Sampling", f"{np.median(diffs):.0f} s" if diffs.size else "UNK"))
+        if np.isnat(t0) or np.isnat(t1):
+            fields += [("Start", "UNK"), ("End", "UNK"), ("Duration", "UNK")]
+        else:
+            fields.append(("Start", str(t0.astype("datetime64[m]")).replace("T", " ")))
+            fields.append(("End", str(t1.astype("datetime64[m]")).replace("T", " ")))
+            fields.append(("Duration", _duration(t0, t1)))
+        dt = np.diff(np.asarray(ds["TIME"].values))  # timedelta64; NaT where either end is NaT
+        valid = dt[~np.isnat(dt)]
+        med = np.median(valid.astype("timedelta64[s]").astype(float)) if valid.size else np.nan
+        fields.append(("Sampling", f"{med:.0f} s" if np.isfinite(med) else "UNK"))
     if "DEPTH" in ds and "PROFILE_NUMBER" in ds:
         md = tools.max_depth_per_profile(ds)
         lo, hi = float(md.min()), float(md.max())
@@ -175,7 +182,8 @@ def _geospatial_table(ds: xr.Dataset) -> str:
     for attr, var, op in _GEOSPATIAL:
         raw = ds.attrs.get(attr)
         file_val = "" if raw is None else str(raw)
-        computed = f"{float(getattr(ds[var], op)()):.4f}" if var in ds else "—"
+        val = float(getattr(ds[var], op)()) if var in ds else float("nan")
+        computed = f"{val:.4f}" if np.isfinite(val) else "—"
         cls = "" if file_val.strip() else ' class="nonconform"'
         rows.append(f"<tr><td>{attr}</td><td{cls}>{html.escape(file_val) or '—'}</td><td>{computed}</td></tr>")
     return (

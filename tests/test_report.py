@@ -140,9 +140,27 @@ def test_file_contents_groups_each_dimension_signature():
     assert "<h3>Variables on N_MEASUREMENTS, N_CELLS</h3>" in html
 
 
+def test_header_card_degrades_on_nat_and_nan():
+    from glidertest.reports._mission import header_card
+
+    nat = np.array(["NaT", "NaT", "NaT"], dtype="datetime64[ns]")
+    ds = xr.Dataset(
+        {
+            "PLATFORM_SERIAL_NUMBER": ((), np.float64("nan")),
+            "PROFILE_NUMBER": ("N_MEASUREMENTS", np.array([1.0, 1.0, 2.0])),
+        },
+        coords={"TIME": ("N_MEASUREMENTS", nat)},
+    )
+    fields = dict(header_card(ds))  # must not raise
+    assert fields["Platform serial"] == "UNK"
+    assert fields["Start"] == "UNK"
+    assert fields["Duration"] == "UNK"
+    assert fields["Sampling"] == "UNK"
+
+
 def test_report_style_reaches_figure():
-    # Review 2.4 / PR #269: setting _ACTIVE_STYLE must drive the figure width through the
-    # plotter's own inner style context, independent of _force_width.
+    # Setting _ACTIVE_STYLE must drive the figure width through the plotter's own inner
+    # style context, independent of _force_width.
     ds = fetchers.load_sample_dataset()
     original = plots._ACTIVE_STYLE
     plots._ACTIVE_STYLE = _slots._report_spec(W_FULL)
