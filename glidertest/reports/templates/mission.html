@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}glidertest report — {{ mission_id }}{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+<main>
+{{ m.report_body(report) }}
+</main>
+{% endblock %}
