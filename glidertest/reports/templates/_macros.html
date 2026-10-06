@@ -13,9 +13,9 @@
   <figure class="slot-{{ sl }}"><p class="warn">{{ p.caption or p.id }} — {{ p.stub_reason }}</p></figure>
 {%- elif p.kind == "figure" %}
   <figure class="slot-{{ sl }}">
+    {%- if p.caption %}<figcaption>{{ p.caption }}</figcaption>{% endif %}
     <img src="data:image/png;base64,{{ p.payload }}" alt="{{ p.caption or p.id }}">
     {{- dbg(p.payload, sl) }}
-    {%- if p.caption %}<figcaption>{{ p.caption }}</figcaption>{% endif %}
   </figure>
 {%- else %}{# html | table #}
   {{ p.payload | safe }}

@@ -38,7 +38,7 @@ def report(ds: xr.Dataset, outdir: Path | str) -> Path:
     from .._version import __version__
     from . import _figdebug
     from ._env import get_template
-    from ._mission import build
+    from ._mission import build, header_card
     from ._report_css import PACKAGE_ACCENT, SHARED_CSS
 
     outdir = Path(outdir)
@@ -54,6 +54,7 @@ def report(ds: xr.Dataset, outdir: Path | str) -> Path:
     rendered = get_template("mission.html").render(
         report=resolved,
         css=SHARED_CSS,
+        header=header_card(ds),
         mission_id=str(ds.attrs.get("id", "mission")),
         version=__version__,
         generated_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),

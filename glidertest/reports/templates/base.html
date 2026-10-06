@@ -13,6 +13,11 @@
   border-left: 3px solid var(--rule); padding: 0.15rem 0.5rem;
   margin: -0.4rem 0 0.6rem;
 }
+/* Package-local: masthead header card (mission id / platform / serial / start / contributor). */
+.header-card { display: flex; flex-wrap: wrap; gap: 0.3rem 1.6rem; margin: 0.4rem 0 0.2rem; color: #fff; }
+.header-card > div { display: flex; gap: 0.4rem; }
+.header-card dt { font-weight: 700; opacity: 0.8; margin: 0; }
+.header-card dd { margin: 0; }
 </style>
 {% block head_extra %}{% endblock %}
 </head>
@@ -27,6 +32,12 @@
     <span class="masthead-type">{% block masthead_type %}{% endblock %}</span>
   </div>
   <p class="sub" style="margin:0 0 0.6rem; text-align:right;">generated {{ generated_at }}</p>
+  {% if header %}
+  <dl class="header-card">
+    {% for label, value in header %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
+    {% endfor %}
+  </dl>
+  {% endif %}
   {% block masthead_meta %}{% endblock %}
   <a class="wordmark" href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a>
 </div>

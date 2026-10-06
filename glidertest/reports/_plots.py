@@ -36,3 +36,29 @@ def ts(ds: xr.Dataset) -> str | None:
 def max_depth(ds: xr.Dataset) -> str | None:
     """Render the maximum-depth-per-profile panel."""
     return _slots.render(lambda: plots.plot_max_depth_per_profile(ds)[0], optional=True)
+
+
+def section(ds: xr.Dataset, var: str) -> str | None:
+    """Render a depth–time section panel for *var* over the whole mission (pcolormesh).
+
+    ``plot_section`` returns ``(ax, cbar, time_ax)`` rather than ``(fig, ax)``, so the figure is
+    taken from the axes.
+    """
+    return _slots.render(
+        lambda: plots.plot_section(ds, var, method="pcolormesh")[0].get_figure(), optional=True
+    )
+
+
+def grid_spacing(ds: xr.Dataset) -> str | None:
+    """Render the horizontal/vertical grid-spacing panel."""
+    return _slots.render(lambda: plots.plot_grid_spacing(ds)[0], optional=True)
+
+
+def sampling_period(ds: xr.Dataset) -> str | None:
+    """Render the sampling-period panel."""
+    return _slots.render(lambda: plots.plot_sampling_period_all(ds)[0], optional=True)
+
+
+def prof_monotony(ds: xr.Dataset) -> str | None:
+    """Render the profile-number monotonicity panel."""
+    return _slots.render(lambda: plots.plot_prof_monotony(ds)[0], optional=True)
