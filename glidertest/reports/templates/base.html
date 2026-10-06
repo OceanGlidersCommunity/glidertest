@@ -13,15 +13,22 @@
   border-left: 3px solid var(--rule); padding: 0.15rem 0.5rem;
   margin: -0.4rem 0 0.6rem;
 }
-/* Package-local: masthead header card (mission id / platform / serial / start / contributor). */
-.header-card { display: flex; flex-wrap: wrap; gap: 0.3rem 1.6rem; margin: 0.4rem 0 0.2rem; color: #fff; }
-.header-card > div { display: flex; gap: 0.4rem; }
-.header-card dt { font-weight: 700; opacity: 0.8; margin: 0; }
-.header-card dd { margin: 0; }
 /* Package-local: non-conforming OG1 metadata value cells in amber. */
 .meta tr.nonconform td { background: var(--warn-bg); }
 /* Subtle in-table links: underline only, keep the text colour. */
 .meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+/* QC palette — matches oceanarray's flag colours (good / suspect / bad). */
+.qc-good { color: #27ae60; }
+.qc-susp { color: #f39c12; }
+.qc-fail { color: #e74c3c; }
+/* QC distribution bar (oceanarray style): a flex row of percent-width segments with tooltips. */
+.qc-bar {
+  display: flex; width: 14rem; height: 1.1rem; vertical-align: middle;
+  border: 1px solid var(--rule); border-radius: 3px; overflow: hidden;
+}
+.qc-bar div { height: 100%; }
+/* glidertest-diagnostics bars: smaller + dashed outline, so they read as computed, not delivered. */
+.qc-bar-sm { width: 6rem; height: 0.6rem; border-style: dashed; }
 </style>
 {% block head_extra %}{% endblock %}
 </head>
@@ -37,7 +44,7 @@
   </div>
   <p class="sub" style="margin:0 0 0.6rem; text-align:right;">generated {{ generated_at }}</p>
   {% if header %}
-  <dl class="header-card">
+  <dl class="meta-grid">
     {% for label, value in header %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
     {% endfor %}
   </dl>
