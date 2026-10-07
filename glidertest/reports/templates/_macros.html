@@ -15,6 +15,7 @@
   <figure class="slot-{{ sl }}">
     {%- if p.caption %}<figcaption>{{ p.caption }}</figcaption>{% endif %}
     <img src="data:image/png;base64,{{ p.payload }}" alt="{{ p.caption or p.id }}">
+    {%- set src = figsource(p.payload) %}{% if src %}<div class="fig-source">source: {{ src }}</div>{% endif %}
     {{- dbg(p.payload, sl) }}
   </figure>
 {%- else %}{# html | table #}
@@ -23,6 +24,12 @@
   <div class="html-panel">{{ p.payload | safe }}</div>
 {%- endif %}
 {% endmacro %}
+
+{# Cross-page nav, rendered inside the masthead as role-coloured pills with a "Pages:" label
+   (the ctdcast/oceanarray shape). Each entry is {label, href, role, current}; role picks the CSS
+   class (nav-landing / nav-component / nav-map); the current page is a muted non-link pill.
+   Rendered only when there is more than one page, so a single-page report shows no nav. #}
+{% macro page_nav(nav) %}{% if nav and nav|length > 1 %}<nav class="page-nav"><span class="page-nav-label">Pages:</span>{% for b in nav %}{% if b.current %}<span class="nav-pill nav-{{ b.role }} nav-current">{{ b.label }}</span>{% else %}<a class="nav-pill nav-{{ b.role }}" href="{{ b.href }}">{{ b.label }}</a>{% endif %}{% endfor %}</nav>{% endif %}{% endmacro %}
 
 {# Stacked QC distribution bar: segments are {key, width, title}; colour comes from the qc-seg-*
    class. The width % is the one allowed inline style. small=True selects the dashed diagnostics bar. #}

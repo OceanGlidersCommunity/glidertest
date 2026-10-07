@@ -58,6 +58,7 @@ def render(
     /,
     *args: Any,  # noqa: ANN401  # forwarded verbatim to *draw*
     slot: str = "full",
+    source: str = "",
     optional: bool = False,
     **kwargs: Any,  # noqa: ANN401  # forwarded verbatim to *draw*
 ) -> str | None:
@@ -75,7 +76,10 @@ def render(
         Must return a ``Figure``, not a ``(fig, ax)`` tuple — the plot adapters unwrap glidertest's
         plotters before passing them here.
     slot : str
-        Slot name from :data:`SLOTS` (glidertest uses ``"full"``).
+        Slot name from :data:`SLOTS` (``"full"``, ``"half"``, …); sets the render width.
+    source : str
+        The glidertest plotter function name that produced the figure, recorded against the PNG and
+        shown as a ``source:`` line under it. Empty to omit.
     optional : bool
         Forwarded to the encoder; when ``True`` a ``None`` figure is dropped silently.
 
@@ -87,9 +91,10 @@ def render(
     width_in = SLOTS[slot][1]
     original = plots._ACTIVE_STYLE
     plots._ACTIVE_STYLE = _report_spec(width_in)
+    b64 = None
     try:
         with plt.ioff():
-            return _figdebug.render_b64(
+            b64 = _figdebug.render_b64(
                 lambda *a, **k: _force_width(draw(*a, **k), width_in),
                 *args,
                 optional=optional,
@@ -97,3 +102,5 @@ def render(
             )
     finally:
         plots._ACTIVE_STYLE = original
+    _figdebug.record_source(b64, source)  # the plotter name for the figure's "source:" line
+    return b64

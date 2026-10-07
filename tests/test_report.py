@@ -11,7 +11,7 @@ from PIL import Image  # noqa: E402
 from glidertest import fetchers, plots  # noqa: E402
 from glidertest.config.report_tokens import FIG_DPI, W_FULL  # noqa: E402
 from glidertest.reports import _slots, report  # noqa: E402
-from glidertest.reports._mission import build  # noqa: E402
+from glidertest.reports._mission import PROFILE, build  # noqa: E402
 from glidertest.reports.inventory import _fmt_scalar, inventory_data  # noqa: E402
 
 
@@ -28,9 +28,48 @@ def test_report_writes_files(tmp_path):
         assert f'id="{section_id}"' in html
 
 
+def test_sensor_pages_rendered(tmp_path):
+    ds = fetchers.load_sample_dataset()
+    landing = report(ds, tmp_path)
+    assert landing.name == "mission.html"  # landing is the first applicable page
+    for page in ("ctd.html", "oxygen.html", "optics.html"):
+        p = tmp_path / page
+        assert p.exists()  # the sensor's variables are present -> its page is written
+        html = p.read_text(encoding="utf-8")
+        assert "page-nav" in html  # cross-page nav appears with >1 page
+        slug = page[:-5]
+        figs = list((tmp_path / "figures").glob(f"{slug}_*.png"))
+        assert len(figs) >= 3  # page-prefixed figures, sharing figures/
+
+
+def test_sensor_page_panels_in_canonical_order():
+    from glidertest.reports import _mission as m
+
+    # Each variable-parameterised panel's rank: (plot-type order, variable order).
+    rank = {
+        pid: (m.DIAGNOSTIC_ORDER.index(adapter.__name__), m.VARIABLE_ORDER.index(var))
+        for pid, adapter, var, _cap, _slot in m._VAR_FIGURE_PANELS
+    }
+    for profile in (m.CTD, m.OXYGEN, m.OPTICS):
+        for section in profile.entries:
+            ranked = [rank[p] for p in section.panels if p in rank]
+            assert ranked == sorted(ranked), f"{section.id} panels are out of canonical order"
+
+
+def test_flight_absent_and_cr_on_ctd(tmp_path):
+    ds = fetchers.load_sample_dataset()
+    report(ds, tmp_path)
+    # The flight page needs the glider flight-model velocity, which the sample lacks -> no flight page.
+    assert not (tmp_path / "flight.html").exists()
+    # Convective resistance is a mixed-layer diagnostic and lives on the CTD page (needs TEMP+PSAL).
+    ctd = (tmp_path / "ctd.html").read_text(encoding="utf-8")
+    assert "Convective resistance" in ctd and "Mixed layer" in ctd
+    assert list((tmp_path / "figures").glob("ctd_ctd_cr.png"))
+
+
 def test_sections_resolve_in_order():
     ds = fetchers.load_sample_dataset()
-    resolved = build(ds)
+    resolved = build(ds, PROFILE)
     titles = [s.title for s in resolved.sections]
     assert titles[:5] == ["Metadata", "Track", "Hydrography", "Sampling", "QC"]
     assert titles[-1] == "File contents"
@@ -193,10 +232,18 @@ def test_report_style_reaches_figure():
 
 
 def test_png_width(tmp_path):
+    from glidertest.config.report_tokens import SLOTS
+    from glidertest.reports._mission import PANELS
+
     ds = fetchers.load_sample_dataset()
     report(ds, tmp_path)
-    expected = round(W_FULL * FIG_DPI)
+    # Each figure PNG is rendered at exactly its panel's declared slot width (round(slot_in * dpi)),
+    # not merely at some valid width: a half-slot panel mis-declared as full (or vice versa) must
+    # fail here. The filename is "<page>_<panel.id>.png" and page slugs are single tokens, so the
+    # panel id is everything after the first underscore.
     pngs = list((Path(tmp_path) / "figures").glob("*.png"))
     assert pngs
     for png in pngs:
-        assert Image.open(png).size[0] == expected
+        _page, pid = png.stem.split("_", 1)
+        expected = round(SLOTS[PANELS[pid].slot][1] * FIG_DPI)
+        assert Image.open(png).size[0] == expected, f"{pid} rendered at the wrong slot width"

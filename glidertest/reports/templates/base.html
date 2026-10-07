@@ -1,3 +1,4 @@
+{% import "_macros.html" as _m %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,6 +14,8 @@
   border-left: 3px solid var(--rule); padding: 0.15rem 0.5rem;
   margin: -0.4rem 0 0.6rem;
 }
+/* Always-on: the glidertest plotter that produced a figure, under it. */
+.fig-source { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); margin-top: 0.1rem; }
 /* Package-local: non-conforming OG1 metadata value cells in amber. */
 .meta td.nonconform { background: var(--warn-bg); }
 /* Wide file-contents tables: cells stay on one line by default (take only their content width);
@@ -58,6 +61,15 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
 .qc-bar-sm { width: 6rem; height: 0.6rem; border-style: dashed; }
 /* Visible failure block for an html panel that raised — the failure shows on the page. */
 .none-note { background: #fdecea; border-left: 3px solid var(--qc-fail); padding: 0.3rem 0.6rem; color: #333; }
+/* Cross-page nav inside the masthead: role-coloured pills, the current page muted (ctdcast shape). */
+.page-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin: 0.65rem 0 0.2rem; }
+.page-nav-label { font-size: var(--fs-dt); opacity: 0.75; margin-right: 0.2rem; }
+.nav-pill { padding: 0.2em 0.7em; border-radius: 999px; font-size: var(--fs-nav); font-weight: 700;
+  text-decoration: none; color: #fff; }
+.nav-landing { background: var(--role-landing); }
+.nav-component { background: var(--role-component); }
+.nav-map { background: var(--role-map); }
+.nav-current { opacity: 0.5; pointer-events: none; }
 </style>
 {% block head_extra %}{% endblock %}
 </head>
@@ -72,6 +84,7 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
     <span class="masthead-type">{% block masthead_type %}{% endblock %}</span>
   </div>
   <p class="sub" style="margin:0 0 0.6rem; text-align:right;">generated {{ generated_at }}</p>
+  {{ _m.page_nav(nav) }}
   {% if header %}
   <dl class="meta-grid">
     {% for label, value in header %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>

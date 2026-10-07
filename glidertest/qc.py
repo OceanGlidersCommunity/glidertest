@@ -241,7 +241,7 @@ def phrase_duration_check(ds):
     Original Author: Chiara  Monforte.
     """
     duration = tools.compute_prof_duration(ds)
-    rolling_mean, overtime = tools.find_outlier_duration(duration, rolling=20, std=2)
+    _rolling_mean, overtime = tools.find_outlier_duration(duration, rolling=20, std=2)
     if len(overtime) > 0:
         duration_check = f'{len(overtime)} profiles have abnormal duration'
     else:

@@ -25,6 +25,8 @@ _env: Environment = Environment(
 # Per-figure debug overlay (opt-in via GLIDERTEST_REPORT_DEBUG); figdbg() returns "" when off,
 # so the template macro guarding on it emits nothing in normal builds.
 _env.globals["figdbg"] = _figdebug.figdbg
+# Always-on per-figure source line: the glidertest plotter function that produced the figure.
+_env.globals["figsource"] = _figdebug.figsource
 
 
 def get_template(name: str) -> Template:

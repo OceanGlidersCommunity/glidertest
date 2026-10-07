@@ -1,0 +1,12 @@
+{% import "_macros.html" as m %}
+{% if sensors %}
+<table class="nc">
+<thead><tr><th>Sensor</th><th>Model</th><th>Serial</th><th>Calibration</th><th>Attributes</th></tr></thead>
+<tbody>
+{% for s in sensors %}<tr><td class="mono">{{ s.name }}</td><td class="wrap">{{ s.model }}</td><td class="mono">{{ s.serial }}</td><td>{{ s.calibration }}</td><td>{{ m.attrs_details(s.attrs) }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p class="caption">No sensor-catalog entry linked to this page's variables.</p>
+{% endif %}

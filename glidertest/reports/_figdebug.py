@@ -26,6 +26,20 @@ if TYPE_CHECKING:
 #: b64 PNG string -> {"func": str, "figsize_in": (w, h), "png_px": (w, h)}.
 _COLLECTED: dict[str, dict[str, Any]] = {}
 
+#: b64 PNG string -> the glidertest plotter function name that produced it (always on, not debug).
+_SOURCES: dict[str, str] = {}
+
+
+def record_source(b64: str | None, source: str) -> None:
+    """Store the *source* plotter name for a figure's *b64* payload (no-op when either is empty)."""
+    if b64 and source:
+        _SOURCES[b64] = source
+
+
+def figsource(b64: str | None) -> str:
+    """Return the plotter function name recorded for *b64*, or ``""``. Registered as a Jinja global."""
+    return _SOURCES.get(b64 or "", "")
+
 
 def enabled() -> bool:
     """Return True when the ``GLIDERTEST_REPORT_DEBUG`` env var is set to a truthy value."""
@@ -44,6 +58,7 @@ def clear() -> None:
     a stale entry for a byte-identical PNG produced by a later run.
     """
     _COLLECTED.clear()
+    _SOURCES.clear()
 
 
 def _draw_name(draw: Callable[..., object]) -> str:

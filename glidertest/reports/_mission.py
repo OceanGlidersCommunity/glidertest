@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from .. import tools
-from . import _plots, inventory, metadata, qc_section
+from . import _plots, inventory, metadata, qc_section, sensors
 from ._env import get_template
 from ._manifest import Panel, Profile, ResolvedReport, Section, resolve
 
@@ -135,7 +135,7 @@ PANELS: dict[str, Panel] = {
     "basic_vars": Panel(
         id="basic_vars",
         render=lambda c: _plots.basic_vars(c.ds),
-        caption="Core variables versus depth",
+        caption="Mission-mean profiles (1 m bins)",
     ),
     "ts": Panel(id="ts", render=lambda c: _plots.ts(c.ds), caption="Temperature–salinity diagram"),
     "section_temp": Panel(
@@ -190,6 +190,104 @@ PANELS: dict[str, Panel] = {
     ),
 }
 
+
+def _sensor_row_panel(pid: str, variables: tuple[str, ...]) -> Panel:
+    """Return an html panel showing the SENSOR_* catalog entries behind *variables* (page header)."""
+    return Panel(
+        id=pid,
+        kind="html",
+        render=_guarded(
+            lambda c: get_template("_sensor_row.html").render(**sensors.sensor_row_data(c.ds, variables))
+        ),
+    )
+
+
+#: Canonical variable precedence on the sensor pages — plots (and the sensor-row columns) follow it.
+VARIABLE_ORDER: tuple[str, ...] = ("TEMP", "PSAL", "CNDC", "DOXY", "CHLA", "BBP700")
+
+#: Canonical plot-type order within a sensor-page section (by the adapter's name). Panels in a
+#: section are listed in this order, then by :data:`VARIABLE_ORDER`; the sections themselves run in
+#: the fixed order Sensor, Sections, Drift, Dive–climb bias, Day/night offset, QC checks. Enforced by
+#: ``test_sensor_page_panels_in_canonical_order``.
+DIAGNOSTIC_ORDER: tuple[str, ...] = (
+    "process_optics", "temporal_drift", "updown_bias", "hysteresis",
+    "daynight", "quench", "global_range", "sampling_period_var",
+)
+
+#: Variable-parameterised figure panels for the sensor pages: (id, adapter, var, caption, slot).
+#: Generated into PANELS below so the sensor pages do not each hand-write near-identical Panel
+#: definitions. The slot is the one source of truth for the panel's width: it sets Panel.slot and is
+#: passed into the adapter call, so the display width and the render width can never diverge.
+_VAR_FIGURE_PANELS: tuple[tuple[str, Callable[[xr.Dataset, str], str | None], str, str, str], ...] = (
+    ("oxy_hysteresis", _plots.hysteresis, "DOXY", "Dissolved oxygen hysteresis (dive vs climb)", "full"),
+    ("oxy_updown", _plots.updown_bias, "DOXY", "Dissolved oxygen up/down-cast bias", "half"),
+    ("oxy_drift", _plots.temporal_drift, "DOXY", "Dissolved oxygen temporal drift", "full"),
+    ("oxy_global_range", _plots.global_range, "DOXY", "Dissolved oxygen global-range check", "half"),
+    ("oxy_sampling", _plots.sampling_period_var, "DOXY", "Dissolved oxygen sampling period", "half"),
+    ("ctd_hyst_temp", _plots.hysteresis, "TEMP", "Temperature hysteresis (dive vs climb)", "full"),
+    ("ctd_hyst_psal", _plots.hysteresis, "PSAL", "Salinity hysteresis (dive vs climb)", "full"),
+    ("ctd_updown_temp", _plots.updown_bias, "TEMP", "Temperature up/down-cast bias", "half"),
+    ("ctd_updown_psal", _plots.updown_bias, "PSAL", "Salinity up/down-cast bias", "half"),
+    ("ctd_drift_temp", _plots.temporal_drift, "TEMP", "Temperature temporal drift", "full"),
+    ("ctd_drift_psal", _plots.temporal_drift, "PSAL", "Salinity temporal drift", "full"),
+    ("ctd_global_temp", _plots.global_range, "TEMP", "Temperature global-range check", "half"),
+    ("ctd_global_psal", _plots.global_range, "PSAL", "Salinity global-range check", "half"),
+    ("ctd_daynight_psal", _plots.daynight, "PSAL", "Salinity day/night average", "half"),
+    ("ctd_sampling_temp", _plots.sampling_period_var, "TEMP", "Temperature sampling period", "half"),
+    ("ctd_sampling_psal", _plots.sampling_period_var, "PSAL", "Salinity sampling period", "half"),
+    ("opt_process_chla", _plots.process_optics, "CHLA", "Optics assessment (deep drift and negatives)", "half"),
+    ("opt_quench_chla", _plots.quench, "CHLA", "Chlorophyll quenching assessment", "full"),
+    ("opt_daynight_chla", _plots.daynight, "CHLA", "Chlorophyll day/night average", "half"),
+    ("opt_hyst_chla", _plots.hysteresis, "CHLA", "Chlorophyll hysteresis (dive vs climb)", "full"),
+    ("opt_hyst_bbp", _plots.hysteresis, "BBP700", "Backscatter hysteresis (dive vs climb)", "full"),
+    ("opt_updown_chla", _plots.updown_bias, "CHLA", "Chlorophyll up/down-cast bias", "half"),
+    ("opt_updown_bbp", _plots.updown_bias, "BBP700", "Backscatter up/down-cast bias", "half"),
+    ("opt_drift_chla", _plots.temporal_drift, "CHLA", "Chlorophyll temporal drift", "full"),
+    ("opt_drift_bbp", _plots.temporal_drift, "BBP700", "Backscatter temporal drift", "full"),
+)
+
+PANELS["oxy_sensor"] = _sensor_row_panel("oxy_sensor", ("DOXY",))
+PANELS["ctd_sensor"] = _sensor_row_panel("ctd_sensor", ("TEMP", "PSAL"))
+PANELS["opt_sensor"] = _sensor_row_panel("opt_sensor", ("CHLA", "BBP700"))
+PANELS["section_cndc"] = Panel(
+    id="section_cndc",
+    render=lambda c: _plots.section(c.ds, "CNDC"),
+    caption="Conductivity section",
+    applies_to=_has("CNDC"),
+)
+PANELS["section_bbp700"] = Panel(
+    id="section_bbp700",
+    render=lambda c: _plots.section(c.ds, "BBP700"),
+    caption="Backscatter section",
+    applies_to=_has("BBP700"),
+)
+PANELS["flight_vspeed"] = Panel(
+    id="flight_vspeed",
+    render=lambda c: _plots.vertical_speeds(c.ds),
+    caption="Vertical speeds and histograms (glider dz/dt versus the flight-model velocity)",
+    applies_to=_has("GLIDER_VERT_VELO_MODEL"),
+)
+# Convective resistance is a mixed-layer diagnostic (needs TEMP+PSAL for SIGMA_1), so it lives on
+# the CTD page, not the flight page.
+PANELS["ctd_cr"] = Panel(
+    id="ctd_cr",
+    render=lambda c: _plots.convective_resistance(c.ds),
+    caption="Convective resistance for the deepest profile (mixed-layer diagnostic); the plot title names the profile number",
+    applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
+)
+for _pid, _adapter, _var, _cap, _slot in _VAR_FIGURE_PANELS:
+    # The slot sets both the Panel's display width and the adapter's render width (passed through),
+    # so a narrow plot (updown_bias → half) renders small and tiles at that same width. The panel
+    # applies only when its variable is present, so a page never lists a panel for an absent sibling
+    # variable (a PSAL-only CTD page drops the TEMP panels rather than relying on the plotter to raise).
+    PANELS[_pid] = Panel(
+        id=_pid,
+        render=(lambda c, a=_adapter, v=_var, s=_slot: a(c.ds, v, slot=s)),
+        caption=_cap,
+        slot=_slot,
+        applies_to=_has(_var),
+    )
+
 PROFILE = Profile(
     entries=(
         Section(id="metadata", title="Metadata", panels=("metadata",)),
@@ -215,6 +313,77 @@ PROFILE = Profile(
 )
 
 
-def build(ds: xr.Dataset) -> ResolvedReport:
-    """Resolve the mission profile against *ds* into a numbered report."""
-    return resolve(PROFILE, Ctx(ds=ds), PANELS)
+@dataclass(frozen=True)
+class Page:
+    """One output page: filename, nav title + role, the Profile it renders, and when it applies.
+
+    ``applies_to`` decides whether the page is written for a given dataset (e.g. an oxygen page only
+    when DOXY is present); ``role`` selects the nav button's CSS class (landing / component / map).
+    """
+
+    filename: str
+    title: str
+    role: str
+    profile: Profile
+    applies_to: Callable[[Ctx], bool]
+
+
+# Sensor pages share a typed-subsection shape (each becomes an in-page jump-nav entry): Sensor,
+# Sections (the depth–time fields), Drift, Dive–climb bias, Day/night offset, QC checks. A section
+# with no panels for a given page is simply omitted.
+CTD = Profile(
+    entries=(
+        Section(id="sensor", title="Sensor", panels=("ctd_sensor",)),
+        Section(id="sections", title="Sections", panels=("ts", "section_temp", "section_psal", "section_cndc")),
+        Section(id="drift", title="Drift", panels=("ctd_drift_temp", "ctd_drift_psal")),
+        Section(id="bias", title="Dive–climb bias",
+                panels=("ctd_updown_temp", "ctd_updown_psal", "ctd_hyst_temp", "ctd_hyst_psal")),
+        Section(id="offset", title="Day/night offset", panels=("ctd_daynight_psal",)),
+        Section(id="mld", title="Mixed layer", panels=("ctd_cr",)),
+        Section(id="qc", title="QC checks",
+                panels=("ctd_global_temp", "ctd_global_psal", "ctd_sampling_temp", "ctd_sampling_psal")),
+    ),
+)
+
+OXYGEN = Profile(
+    entries=(
+        Section(id="sensor", title="Sensor", panels=("oxy_sensor",)),
+        Section(id="sections", title="Sections", panels=("section_doxy",)),
+        Section(id="drift", title="Drift", panels=("oxy_drift",)),
+        Section(id="bias", title="Dive–climb bias", panels=("oxy_updown", "oxy_hysteresis")),
+        Section(id="qc", title="QC checks", panels=("oxy_global_range", "oxy_sampling")),
+    ),
+)
+
+OPTICS = Profile(
+    entries=(
+        Section(id="sensor", title="Sensor", panels=("opt_sensor",)),
+        Section(id="sections", title="Sections", panels=("section_chla", "section_bbp700")),
+        Section(id="drift", title="Drift", panels=("opt_process_chla", "opt_drift_chla", "opt_drift_bbp")),
+        Section(id="bias", title="Dive–climb bias",
+                panels=("opt_updown_chla", "opt_updown_bbp", "opt_hyst_chla", "opt_hyst_bbp")),
+        Section(id="offset", title="Day/night offset", panels=("opt_daynight_chla", "opt_quench_chla")),
+    ),
+)
+
+# Flight needs the glider flight-model velocity (GLIDER_VERT_VELO_MODEL), which SeaExplorer sample
+# data lacks — the page applies only to datasets that carry it (e.g. Seaglider).
+FLIGHT = Profile(
+    entries=(Section(id="velocity", title="Vertical velocity", panels=("flight_vspeed",)),),
+)
+
+
+#: The report's pages, in nav order. Sensor pages apply only when their variables are present.
+PAGES: tuple[Page, ...] = (
+    Page("mission.html", "Mission", "landing", PROFILE, lambda _c: True),
+    Page("ctd.html", "CTD", "component", CTD, lambda c: "TEMP" in c.ds or "PSAL" in c.ds),
+    Page("oxygen.html", "Oxygen", "component", OXYGEN, _has("DOXY")),
+    Page("optics.html", "Optics", "component", OPTICS,
+         lambda c: any(v in c.ds for v in ("CHLA", "BBP700"))),
+    Page("flight.html", "Flight", "component", FLIGHT, _has("GLIDER_VERT_VELO_MODEL")),
+)
+
+
+def build(ds: xr.Dataset, profile: Profile) -> ResolvedReport:
+    """Resolve *profile* against *ds* into a numbered report."""
+    return resolve(profile, Ctx(ds=ds), PANELS)
