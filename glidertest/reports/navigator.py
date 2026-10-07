@@ -181,13 +181,14 @@ def build_navigator(root: Path | str) -> Path:
     """
     from .._version import __version__
     from ._env import get_template
-    from ._report_css import PACKAGE_ACCENT, SHARED_CSS
+    from ._report_css import _JS_TOP_LINKS, PACKAGE_ACCENT, SHARED_CSS
 
     root = Path(root)
     data = navigator_data(root)
     html = get_template("navigator.html").render(
         css=SHARED_CSS,
         masthead_bg=PACKAGE_ACCENT,
+        js_top_links=_JS_TOP_LINKS,
         version=__version__,
         generated_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
         mission_id=root.name or "missions",

@@ -45,12 +45,15 @@ def _var_meta(ds: xr.Dataset, name: str) -> dict[str, Any]:
             v_min = vals[finite].min().item()
             v_max = vals[finite].max().item()
     rng = "—" if v_min is None and v_max is None else f"{_fmt_scalar(v_min)} / {_fmt_scalar(v_max)}"
+    # A scalar variable (0-d) has one value, not a range: show the value, drop min/max and N.
+    value = _fmt_scalar(v.values.item()) if v.ndim == 0 else None
     return {
         "name": name,
         "has_qc": f"{name}_QC" in ds.variables,
         "dtype": str(v.dtype),
         "n_cell": f"{n:,}" if n_valid == n else f"{n:,} ({n_valid:,})",
         "rng": rng,
+        "value": value,
         "units": v.attrs.get("units", ""),
         "long_name": v.attrs.get("long_name", ""),
         "standard_name": v.attrs.get("standard_name", ""),
@@ -105,20 +108,25 @@ def inventory_data(ds: xr.Dataset) -> dict[str, Any]:
     def rows(names: list[str]) -> list[dict[str, Any]]:
         return [_var_meta(ds, n) for n in names]
 
+    # Each group carries a `header` (the h3 subheader) and a `label` (a sub-caption within it). The
+    # coordinates and the variables on the same dimension share one header ("On N_MEASUREMENTS") so
+    # the template renders them under a single subheader, with "Coordinates"/"Variables" sub-labels.
     coords = sorted(ds.coords)
     coord_dims = {tuple(str(d) for d in ds[n].dims) for n in coords}
-    coord_title = "Coordinates"
+    coord_header = "Coordinates"
     if len(coord_dims) == 1 and (only := next(iter(coord_dims))):
-        coord_title = f"Coordinates on {', '.join(only)}"
-    groups = [{"title": coord_title, "variables": rows(coords)}]
+        coord_header = f"On {', '.join(only)}"
+    groups = [{"header": coord_header, "label": "Coordinates", "variables": rows(coords)}]
     measurement = by_dims.pop(("N_MEASUREMENTS",), None)
     if measurement:
-        groups.append({"title": "Variables on N_MEASUREMENTS", "variables": rows(measurement)})
+        groups.append({"header": "On N_MEASUREMENTS", "label": "Variables", "variables": rows(measurement)})
     scalars = by_dims.pop((), None)
     for dims in sorted(by_dims, key=lambda d: (len(d), d)):
-        groups.append({"title": f"Variables on {', '.join(dims)}", "variables": rows(by_dims[dims])})
+        groups.append({"header": f"On {', '.join(dims)}", "label": "Variables", "variables": rows(by_dims[dims])})
     if scalars:
-        groups.append({"title": "Scalar variables", "variables": rows(scalars)})
+        groups.append(
+            {"header": "Scalar variables", "label": None, "variables": rows(scalars), "scalar": True}
+        )
 
     n_with_qc = sum(1 for n in science if f"{n}_QC" in ds.variables)
     return {

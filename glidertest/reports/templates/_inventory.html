@@ -1,9 +1,20 @@
 {% import "_macros.html" as m %}
 <p class="caption">{{ n_vars }} data variables, {{ n_sensors }} sensors, {{ n_qc }} QC-flag variables (shown in the QC section, not listed here), {{ n_coords }} coordinates.</p>
 <p class="caption">{{ n_with_qc }} of {{ n_vars }} data variables carry a <code>_QC</code> companion.</p>
+{% set ns = namespace(header=None) %}
 {% for g in groups %}
-<h3>{{ g.title }}</h3>
+{% if g.header != ns.header %}<h3>{{ g.header }}</h3>{% set ns.header = g.header %}{% endif %}
+{% if g.label %}<p class="caption"><strong>{{ g.label }}</strong></p>{% endif %}
 {% if g.variables %}
+{% if g.scalar %}
+<table class="nc">
+<thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="wrapr">Value</th><th>Attributes</th></tr></thead>
+<tbody>
+{% for v in g.variables %}<tr><td class="mono wrapv">{{ v.name }}{% if v.has_qc %} <span class="qc-good">(_QC)</span>{% endif %}</td><td class="mono">{{ v.dtype }}</td><td>{{ v.units }}</td><td class="wrap">{% if v.standard_name %}<strong class="mono">{{ v.standard_name }}</strong>{% if v.long_name %}<br>{% endif %}{% endif %}{{ v.long_name }}</td><td class="wrapr">{{ v.value or "—" }}</td><td>{{ m.attrs_details(v.attrs) }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
 <table class="nc">
 <thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="num wrapr">Min / Max</th><th class="num wrapn">N (valid)</th><th>Attributes</th></tr></thead>
 <tbody>
@@ -11,6 +22,7 @@
 {% endfor %}
 </tbody>
 </table>
+{% endif %}
 {% endif %}
 {% endfor %}
 {% if sensors %}

@@ -166,9 +166,9 @@ TYPE: dict[str, dict[str, str]] = {
     "type": {"size": "1.35rem", "weight": "700"},  # .masthead-type page label
     "h2": {"size": "1rem"},  # section headings — colour/weight/underline, not size
     "meta": {"size": "0.84rem"},  # meta-grid <dd>
-    "note": {"size": "0.82rem"},  # .note, .caption, .explainer
+    "note": {"size": "0.92rem"},  # .note, .caption, .explainer
     "nav": {"size": "0.8rem"},  # jump-nav, .btn-nav
-    "cap": {"size": "0.76rem"},  # figcaption
+    "cap": {"size": "0.86rem"},  # figcaption
     "xs": {"size": "0.75rem"},  # breadcrumb, footer
     "top": {"size": "0.72rem"},  # ↑ top link
     "dt": {"size": "0.7rem"},  # meta-grid <dt>, jump-nav ▸

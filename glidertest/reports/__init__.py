@@ -55,17 +55,18 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
     from . import _figdebug
     from ._env import get_template
     from ._mission import PAGES, Ctx, build, header_card, mission_id
-    from ._report_css import PACKAGE_ACCENT, SHARED_CSS
+    from ._report_css import _JS_TOP_LINKS, PACKAGE_ACCENT, SHARED_CSS
     from .manifest import mission_manifest
 
     root = Path(outdir)
-    missiondir = root / mission_id(ds)
+    mid = mission_id(ds)
+    missiondir = root / mid
     (missiondir / "figures").mkdir(parents=True, exist_ok=True)
 
     ctx = Ctx(ds=ds)
     pages = [p for p in PAGES if p.applies_to(ctx)]
     source = ds.encoding.get("source")
-    source_name = Path(source).name if source else f"{ds.attrs.get('id') or 'mission'}.nc"
+    source_name = Path(source).name if source else f"{ds.attrs.get('id') or mid}.nc"
     source_size = None
     if source:
         try:
@@ -83,7 +84,7 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
             prev = {}
         if prev.get("source_file") and prev["source_file"] != source_name:
             warnings.warn(
-                f"mission id {mission_id(ds)!r} already reported from {prev['source_file']!r}; "
+                f"mission id {mid!r} already reported from {prev['source_file']!r}; "
                 f"overwriting with {source_name!r}. Two files sharing one OG1 id is a metadata "
                 f"problem — check the 'id' attribute of both files.",
                 stacklevel=2,
@@ -93,12 +94,13 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
     common = {
         "css": SHARED_CSS,
         "header": header_card(ds),
-        "mission_id": str(ds.attrs.get("id", "mission")),
+        "mission_id": mid,
         "source_name": source_name,
         "has_navigator": navigator,
         "version": __version__,
         "generated_at": generated_at,
         "masthead_bg": PACKAGE_ACCENT,
+        "js_top_links": _JS_TOP_LINKS,
     }
     template = get_template("mission.html")
 
@@ -122,13 +124,19 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
                 {"label": p.title, "href": p.filename, "role": p.role, "current": p is page}
                 for p in pages
             ]
-            rendered = template.render(report=resolved, nav=nav, **common)
+            rendered = template.render(
+                report=resolved,
+                nav=nav,
+                page_title=page.title,
+                page_landing=page.role == "landing",
+                **common,
+            )
             # page has ✓/✗/⚠/– glyphs; Windows default is cp1252
             (missiondir / page.filename).write_text(rendered, encoding="utf-8")
 
         manifest = mission_manifest(
             ds,
-            mission_id=mission_id(ds),
+            mission_id=mid,
             source_name=source_name,
             source_size_bytes=source_size,
             pages=[(p.filename, p.title) for p in pages],

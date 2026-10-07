@@ -94,12 +94,11 @@ def test_payload_and_file_contents(tmp_path):
         assert label in index
     assert "SENSOR_CTD_205048" in index  # TEMP's source sensor, shown in the payload Source column
     # File-contents inventory moved to inventory.html: dimension-grouped tables + sensor catalog.
-    for heading in (
-        "Coordinates on N_MEASUREMENTS",
-        "Variables on N_MEASUREMENTS",
-        "Sensor catalog",
-    ):
+    for heading in ("On N_MEASUREMENTS", "Sensor catalog"):
         assert f"<h3>{heading}</h3>" in inventory
+    # Coordinates and variables share the "On N_MEASUREMENTS" subheader, with sub-labels.
+    assert "<strong>Coordinates</strong>" in inventory
+    assert "<strong>Variables</strong>" in inventory
     assert "Standard / long name" in inventory  # combined standard+long name column
     assert "TEMP" in inventory
     # The _QC companions are not listed as inventory rows (shown in the QC section instead).
@@ -226,9 +225,9 @@ def test_inventory_data_groups_each_dimension_signature():
         },
         coords={"TIME": ("N_MEASUREMENTS", np.arange(5))},
     )
-    titles = [g["title"] for g in inventory_data(ds)["groups"]]
-    assert "Variables on N_MEASUREMENTS" in titles
-    assert "Variables on N_MEASUREMENTS, N_CELLS" in titles
+    headers = [g["header"] for g in inventory_data(ds)["groups"]]
+    assert "On N_MEASUREMENTS" in headers
+    assert "On N_MEASUREMENTS, N_CELLS" in headers
 
 
 def test_inventory_data_var_meta_fields():
@@ -308,14 +307,11 @@ def test_root_convention_and_manifest(tmp_path):
     assert manifest["source_file"] == "sea045_20230604T1253_delayed.nc"
 
 
-def test_mission_id_requires_id_or_source():
-    import pytest
+def test_mission_id_falls_back_to_labeled_placeholder():
+    from glidertest.reports._mission import MISSING_ID, mission_id
 
-    from glidertest.reports._mission import mission_id
-
-    # No id and no source file -> raise rather than fall back to a colliding default directory.
-    with pytest.raises(ValueError, match="mission id"):
-        mission_id(xr.Dataset(attrs={}))
+    # No id and no source file -> a labelled placeholder (flags the problem, does not crash).
+    assert mission_id(xr.Dataset(attrs={})) == MISSING_ID == "mission (id missing)"
     assert mission_id(xr.Dataset(attrs={"id": "foo_R"})) == "foo_R"
     ds = xr.Dataset()
     ds.encoding["source"] = "/data/bar_20230101_delayed.nc"
@@ -361,6 +357,48 @@ def test_navigator_indexes_manifests(tmp_path):
     assert "data:image/png;base64" in html  # the tracks map rendered
     assert 'href="m_a/index.html"' in html  # page buttons link into the mission subdir
     assert "no_manifest" in html  # a manifest-less directory is surfaced, not hidden
+
+
+def test_titles_and_top_links(tmp_path):
+    ds = fetchers.load_sample_dataset()
+    mdir = report(ds, tmp_path, navigator=False).parent
+    index = (mdir / "index.html").read_text(encoding="utf-8")
+    ctd = (mdir / "ctd.html").read_text(encoding="utf-8")
+    # Title: page name first so tabs are distinguishable; the landing page is just the id.
+    assert "<title>sea045_20230604T1253_delayed</title>" in index
+    assert "<title>CTD — sea045_20230604T1253_delayed</title>" in ctd
+    # The vendored "↑ top" per-section script is injected on every page.
+    assert "↑ top" in index and "top-link" in index
+    # Payload surfaces the sensor model (from the SENSOR_* catalog) as its own column.
+    assert "<th>Model</th>" in index
+
+
+def test_payload_model_from_sensor_catalog():
+    from glidertest.reports.metadata import metadata_data
+
+    ds = fetchers.load_sample_dataset()
+    temp = next(p for p in metadata_data(ds)["payload"] if p["var"] == "TEMP")
+    assert temp["model"]  # model read from the source SENSOR_* catalog entry
+    assert isinstance(temp["attrs"], dict)
+
+
+def test_scalar_table_shows_value_not_minmax():
+    from glidertest.reports import inventory
+    from glidertest.reports._env import get_template
+
+    ds = xr.Dataset(
+        {"TEMP": ("N_MEASUREMENTS", np.arange(5.0)), "WMO_IDENTIFIER": ((), "6801673")},
+        coords={"TIME": ("N_MEASUREMENTS", np.arange(5))},
+    )
+    data = inventory.inventory_data(ds)
+    scalar = next(g for g in data["groups"] if g.get("scalar"))
+    assert scalar["variables"][0]["value"] == "6801673"
+    html = get_template("_inventory.html").render(**data)
+    # Scalars get their own subheader and a Value column instead of Min/Max + N (valid).
+    assert "<h3>Scalar variables</h3>" in html
+    assert "Value</th>" in html
+    assert "6801673" in html  # the scalar value is shown
+    assert "N (valid)" not in html.split("Scalar variables")[1]  # not in the scalar table
 
 
 def test_report_warns_when_id_reused_for_different_file(tmp_path):

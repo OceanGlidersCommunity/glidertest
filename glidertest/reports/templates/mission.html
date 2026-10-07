@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}glidertest report — {{ mission_id }}{% endblock %}
+{% block title %}{% if page_landing %}{{ mission_id }}{% else %}{{ page_title }} — {{ mission_id }}{% endif %}{% endblock %}
 {% block content %}
 {% import "_macros.html" as m %}
 <main>

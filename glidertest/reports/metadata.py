@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from .. import og1_attrs
+from . import inventory
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -62,15 +63,23 @@ def metadata_data(ds: xr.Dataset) -> dict[str, Any]:
         ``payload`` (``{label, var, present, source}`` per expected sensor). The full conformance
         table lives on the inventory page (see :func:`conformance_data`).
     """
-    payload = [
-        {
-            "label": label,
-            "var": var,
-            "present": var in ds.variables,
-            "source": str(ds[var].attrs.get("sensor", "")) if var in ds.variables else "",
-        }
-        for label, var in _PAYLOAD
-    ]
+    payload = []
+    for label, var in _PAYLOAD:
+        present = var in ds.variables
+        source = str(ds[var].attrs.get("sensor", "")) if present else ""
+        # Surface the sensor model and its attrs dropdown from the SENSOR_* catalog entry, the same
+        # as the inventory sensor catalog, so the payload table answers "which instrument" on its own.
+        meta = inventory._sensor_meta(ds, source) if source and source in ds.variables else None
+        payload.append(
+            {
+                "label": label,
+                "var": var,
+                "present": present,
+                "source": source,
+                "model": meta["model"] if meta else "",
+                "attrs": meta["attrs"] if meta else {},
+            }
+        )
     return {"summary": _summary(ds), "payload": payload}
 
 
