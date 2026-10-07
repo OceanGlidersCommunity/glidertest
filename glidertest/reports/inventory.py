@@ -25,6 +25,25 @@ def _fmt_scalar(x: float | None) -> str:
     return str(x)[:40]
 
 
+def _scalar_value(v: xr.DataArray) -> str:
+    """Format a 0-d variable's single value, rendering datetime-like scalars as dates.
+
+    A ``datetime64`` scalar, or a numeric scalar whose ``standard_name`` is ``"time"`` (epoch
+    seconds, as OG1 writes ``DEPLOYMENT_TIME``), is shown as ``YYYY-MM-DD HH:MM`` rather than a raw
+    ``1.686e+09``; everything else goes through :func:`_fmt_scalar`.
+    """
+    if v.dtype.kind == "M":  # datetime64
+        t = v.values
+        return "—" if np.isnat(t) else str(t.astype("datetime64[m]")).replace("T", " ")
+    item = v.values.item()
+    if v.attrs.get("standard_name") == "time" and isinstance(item, (int, float)) and np.isfinite(item):
+        try:
+            return str(np.datetime64(round(item), "s").astype("datetime64[m]")).replace("T", " ")
+        except (ValueError, OverflowError):
+            pass
+    return _fmt_scalar(item)
+
+
 def _var_meta(ds: xr.Dataset, name: str) -> dict[str, Any]:
     """Return the inventory row for one variable or coordinate.
 
@@ -46,7 +65,7 @@ def _var_meta(ds: xr.Dataset, name: str) -> dict[str, Any]:
             v_max = vals[finite].max().item()
     rng = "—" if v_min is None and v_max is None else f"{_fmt_scalar(v_min)} / {_fmt_scalar(v_max)}"
     # A scalar variable (0-d) has one value, not a range: show the value, drop min/max and N.
-    value = _fmt_scalar(v.values.item()) if v.ndim == 0 else None
+    value = _scalar_value(v) if v.ndim == 0 else None
     return {
         "name": name,
         "has_qc": f"{name}_QC" in ds.variables,

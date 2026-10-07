@@ -25,8 +25,8 @@ def test_report_writes_files(tmp_path):
     html = out.read_text(encoding="utf-8")
     assert "#07264f" in html  # package accent
     # The landing page is about the mission; File contents moved to inventory.html. QC is split into
-    # two jumpable sections (as delivered / glidertest diagnostics).
-    for section_id in ("metadata", "track", "hydrography", "sampling", "qc_delivered", "qc_glidertest"):
+    # two jumpable sections (as delivered / glidertest diagnostics). The sensor list is "Payload".
+    for section_id in ("track", "payload", "hydrography", "sampling", "qc_delivered", "qc_glidertest"):
         assert f'id="{section_id}"' in html
     assert 'id="file_contents"' not in html
     inventory = (mdir / "inventory.html").read_text(encoding="utf-8")
@@ -78,13 +78,13 @@ def test_sections_resolve_in_order():
     ds = fetchers.load_sample_dataset()
     resolved = build(ds, PROFILE)
     titles = [s.title for s in resolved.sections]
-    # The landing profile ends with the two QC sections; File contents moved to the inventory page.
+    # Track leads, then Payload (the sensor list); the landing ends with the two QC sections.
     assert titles == [
-        "Metadata", "Track", "Hydrography", "Sampling",
+        "Track", "Payload", "Hydrography", "Sampling",
         "QC — as delivered", "QC — glidertest diagnostics",
     ]
-    # the metadata panel is html and always renders (never a stub)
-    assert not resolved.sections[0].panels[0].is_stub
+    # the track panel is a figure and always resolves; the payload panel is html and never a stub
+    assert not resolved.sections[1].panels[0].is_stub
 
 
 def test_payload_and_file_contents(tmp_path):

@@ -61,29 +61,30 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
 .qc-bar-sm { width: 6rem; height: 0.6rem; border-style: dashed; }
 /* Visible failure block for an html panel that raised — the failure shows on the page. */
 .none-note { background: #fdecea; border-left: 3px solid var(--qc-fail); padding: 0.3rem 0.6rem; color: #333; }
-/* Cross-page nav inside the masthead: role-coloured pills, the current page muted (ctdcast shape). */
-.page-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin: 0.65rem 0 0.2rem; }
-.page-nav-label { font-size: var(--fs-dt); opacity: 0.75; margin-right: 0.2rem; }
-.nav-pill { padding: 0.2em 0.7em; border-radius: 999px; font-size: var(--fs-nav); font-weight: 700;
+/* Masthead nav, grouped rows (shared-design-system §2 shape, kept in glidertest's layer for now —
+   replaced by vendored _css rules at re-vendor): an optional back pill, then one row per group of
+   role-coloured pills, the current page muted. Row labels share a min-width so the rows line up. */
+.page-nav { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; margin: 0.65rem 0 0.2rem; }
+.nav-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
+.page-nav-label { font-size: var(--fs-dt); opacity: 0.75; margin-right: 0.2rem; min-width: 5rem; }
+.nav-pill { padding: 0.2em 0.65em; border-radius: 4px; font-size: var(--fs-nav); font-weight: 700;
   text-decoration: none; color: #fff; }
 .nav-landing { background: var(--role-landing); }
+.nav-entity { background: var(--role-entity); }
+.nav-collection { background: var(--role-collection); }
 .nav-component { background: var(--role-component); }
+.nav-aggregate-a { background: var(--role-aggregate-a); }
+.nav-aggregate-b { background: var(--role-aggregate-b); }
 .nav-map { background: var(--role-map); }
+.nav-back { background: #5d6d7e; }  /* "up" role; vendored ROLE_ACCENT gains this key at re-vendor */
 .nav-current { opacity: 0.5; pointer-events: none; }
-/* Inventory link strip, below the masthead (ctdcast "Data inventory:" shape): the file-contents
-   page lives here rather than among the role pills, since it is about the file, not the mission. */
-.inventory-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem;
-  margin: 0.5rem 0 0.9rem; font-size: var(--fs-nav); }
-.inventory-strip .label { font-size: var(--fs-dt); opacity: 0.75; }
-/* ctdcast shape: rounded monospace file pills; the current page's pill is filled dark, the rest are
-   light links. */
-.file-pill { font-family: var(--font-mono); padding: 0.2em 0.8em; border-radius: 999px;
+/* "Data inventory:" strip, folded into the masthead (rounded monospace file pills; current is dark).
+   The label shares the nav row-label width so it lines up under Summary/Reports/Derived. */
+.inventory-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0.2rem; font-size: var(--fs-nav); }
+.inventory-strip .label { font-size: var(--fs-dt); opacity: 0.75; min-width: 5rem; }
+.file-pill { font-family: var(--font-mono); padding: 0.2em 0.65em; border-radius: 4px;
   text-decoration: none; color: var(--ink); background: var(--rule); }
-.file-pill-active { background: #07264f; color: #fff; pointer-events: none; }
-/* "All missions" back-link to the fleet navigator, top of a mission masthead. */
-.all-missions { display: inline-block; color: #fff; opacity: 0.85; text-decoration: none;
-  font-size: var(--fs-nav); margin-bottom: 0.3rem; }
-.all-missions:hover { opacity: 1; text-decoration: underline; }
+.file-pill-active { background: var(--package-accent); color: #fff; pointer-events: none; }
 /* Navigator missions table: page-button cells keep their pills on one line. */
 td.nav-cell { white-space: nowrap; }
 td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-right: 0.15rem; }
@@ -96,13 +97,13 @@ td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-ri
 {% block topbar %}{% endblock %}
 
 <div class="masthead" style="background:{{ masthead_bg }};">
-  {% if has_navigator %}<a class="all-missions" href="../index.html">← All missions</a>{% endif %}
   <div class="masthead-header">
     <h1>{% block masthead_title %}{{ mission_id }}{% endblock %}</h1>
     <span class="masthead-type">{% block masthead_type %}{% endblock %}</span>
   </div>
-  <p class="sub" style="margin:0 0 0.6rem; text-align:right;">generated {{ generated_at }}</p>
+  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>{{ source_name }}</span><span>generated {{ generated_at }}</span></p>
   {{ _m.page_nav(nav) }}
+  {{ _m.inventory_strip(nav) }}
   {% if header %}
   <dl class="meta-grid">
     {% for label, value in header %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
@@ -112,8 +113,6 @@ td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-ri
   {% block masthead_meta %}{% endblock %}
   <a class="wordmark" href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a>
 </div>
-
-{{ _m.inventory_link(nav, source_name) }}
 
 {% block content %}{% endblock %}
 

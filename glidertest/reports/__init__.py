@@ -7,12 +7,51 @@ import json
 import warnings
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import xarray as xr
 
+    from ._mission import Page
+
 __all__ = ["navigator", "report"]
+
+#: Masthead nav rows, in order: (``Page.nav_group`` key, row label). The inventory group is a
+#: separate strip, not a row. Built in the planned shared-design-system shape
+#: (``notes/2026-10-07-shared-masthead-nav-plan.md`` §2) so the eventual vendored macro is a drop-in.
+_NAV_ROWS: tuple[tuple[str, str], ...] = (("summary", "Summary"), ("reports", "Reports"), ("derived", "Derived"))
+
+
+def _build_nav(pages: list[Page], current: Page, source_name: str, *, back: bool) -> dict[str, Any]:
+    """Build the masthead nav for the *current* page: grouped pill rows, inventory strip, back pill.
+
+    Shape matches the planned vendored contract (notes/2026-10-07-shared-masthead-nav-plan §2):
+    ``{"rows": [{"label", "pills": [{"label", "href", "role", "state"}]}], "back": pill|None,
+    "inventory": [pill]}``; ``state`` is ``"current"`` for *current*, else ``"link"``.
+    """
+
+    def pill(p: Page) -> dict[str, str]:
+        return {
+            "label": p.title,
+            "href": p.filename,
+            "role": p.role,
+            "state": "current" if p is current else "link",
+        }
+
+    rows = [
+        {"label": label, "pills": [pill(p) for p in group]}
+        for key, label in _NAV_ROWS
+        if (group := [p for p in pages if p.nav_group == key])
+    ]
+    inventory = [
+        {**pill(p), "label": source_name} for p in pages if p.nav_group == "inventory"
+    ]
+    back_pill = (
+        {"label": "← All missions", "href": "../index.html", "role": "up", "state": "link"}
+        if back
+        else None
+    )
+    return {"rows": rows, "back": back_pill, "inventory": inventory}
 
 
 def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Path:
@@ -96,7 +135,6 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
         "header": header_card(ds),
         "mission_id": mid,
         "source_name": source_name,
-        "has_navigator": navigator,
         "version": __version__,
         "generated_at": generated_at,
         "masthead_bg": PACKAGE_ACCENT,
@@ -120,10 +158,7 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
                         (missiondir / "figures" / f"{slug}_{panel.id}.png").write_bytes(
                             base64.b64decode(panel.payload)
                         )
-            nav = [
-                {"label": p.title, "href": p.filename, "role": p.role, "current": p is page}
-                for p in pages
-            ]
+            nav = _build_nav(pages, page, source_name, back=navigator)
             rendered = template.render(
                 report=resolved,
                 nav=nav,

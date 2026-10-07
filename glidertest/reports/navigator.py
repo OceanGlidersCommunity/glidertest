@@ -99,6 +99,8 @@ def _qc_cell(qc: dict[str, Any]) -> str:
     var, pct = qc.get("worst_var"), qc.get("worst_bad_pct")
     if var is None or pct is None:
         return "—"
+    if pct == 0:
+        return "clean"
     return f"{var} {pct:.0f}% bad"
 
 
@@ -110,8 +112,8 @@ def _mission_row(m: dict[str, Any], roles: dict[str, str]) -> dict[str, Any]:
     return {
         "id": m["id"],
         "platform": m.get("platform_serial") or m.get("platform") or "—",
-        "start": (m.get("start") or "").replace("T", " ") or "UNK",
-        "end": (m.get("end") or "").replace("T", " ") or "UNK",
+        "start": (m.get("start") or "")[:10] or "UNK",  # date only; drop the HH:MM
+        "end": (m.get("end") or "")[:10] or "UNK",
         "duration": _fmt_duration(m.get("duration_s")),
         "profiles": str(m.get("n_profiles", 0)),
         "max_depth": f"{depth:.0f} m" if depth is not None else "—",
@@ -129,22 +131,28 @@ def _mission_row(m: dict[str, Any], roles: dict[str, str]) -> dict[str, Any]:
 
 def navigator_data(root: Path) -> dict[str, Any]:
     """Return the navigator page as data: masthead counts, mission rows, completeness matrix, map."""
-    from ._mission import PAGES
+    from ._mission import PAGES, _deg_range
 
     roles = {p.filename: p.role for p in PAGES}
     missions, orphans = _load_manifests(root)
     missions.sort(key=lambda m: m.get("start") or "")
 
-    platforms = {m.get("platform_serial") or m.get("platform") for m in missions}
-    platforms.discard(None)
+    # Unique vehicles by PLATFORM_SERIAL_NUMBER (not the free-text platform attribute).
+    vehicles = {m.get("platform_serial") for m in missions}
+    vehicles.discard(None)
     starts = sorted(m["start"] for m in missions if m.get("start"))
+    ends = sorted(m["end"] for m in missions if m.get("end"))
     total_profiles = sum(m.get("n_profiles", 0) for m in missions)
-    span = f"{starts[0][:10]} – {starts[-1][:10]}" if starts else "UNK"
+    lats = [m[k] for m in missions for k in ("lat_min", "lat_max") if m.get(k) is not None]
+    lons = [m[k] for m in missions for k in ("lon_min", "lon_max") if m.get(k) is not None]
     counts = [
         ("Missions", str(len(missions))),
-        ("Platforms", str(len(platforms))),
-        ("Date span", span),
+        ("Vehicles", str(len(vehicles))),
         ("Total profiles", f"{total_profiles:,}"),
+        ("Start", starts[0][:10] if starts else "UNK"),
+        ("End", ends[-1][:10] if ends else "UNK"),
+        ("Lat", _deg_range(min(lats), max(lats), "N", "S") if lats else "UNK"),
+        ("Lon", _deg_range(min(lons), max(lons), "E", "W") if lons else "UNK"),
     ]
 
     matrix = {
@@ -193,8 +201,7 @@ def build_navigator(root: Path | str) -> Path:
         generated_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
         mission_id=root.name or "missions",
         source_name="",
-        has_navigator=False,
-        nav=[],
+        nav={"rows": [], "back": None, "inventory": []},
         header=data["counts"],
         rows=data["rows"],
         matrix=data["matrix"],

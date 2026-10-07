@@ -9,13 +9,14 @@
 {% endfor %}
 </tbody>
 </table>
-{% endfor %}
-<h3>Geospatial extent</h3>
-<p class="caption">The file's suggested <code>geospatial_*</code> attributes versus the extent computed from the data.</p>
+{% if g.title == "Spatiotemporal coverage" %}
+<p class="caption">Geospatial extent — the file's suggested <code>geospatial_*</code> attributes versus the extent computed from the data.</p>
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>File value</th><th>Computed</th></tr></thead>
 <tbody>
-{% for g in geospatial %}<tr><td class="mono">{{ g.attr }}</td><td>{{ g.file_val or "—" }}</td><td>{{ g.computed }}</td></tr>
+{% for gg in geospatial %}<tr><td class="mono">{{ gg.attr }}</td><td>{{ gg.file_val or "—" }}</td><td>{{ gg.computed }}</td></tr>
 {% endfor %}
 </tbody>
 </table>
+{% endif %}
+{% endfor %}

@@ -112,18 +112,14 @@ def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
             fields.append(("Lon", _deg_range(float(lo_.min()), float(lo_.max()), "E", "W")))
     if "N_MEASUREMENTS" in ds.sizes:
         fields.append(("Records", f"{ds.sizes['N_MEASUREMENTS']:,}"))
-    # Source file + size, from the path xarray recorded when the dataset was opened; UNK for an
-    # in-memory dataset (report(ds) takes a Dataset, so a file is not guaranteed).
+    # File size, from the path xarray recorded when the dataset was opened (the file name itself is
+    # the masthead subtitle, not a meta-grid cell). Omitted for an in-memory dataset.
     source = ds.encoding.get("source")
     if source:
-        path = Path(str(source))
-        fields.append(("Source", path.name))
         try:
-            fields.append(("Size", f"{path.stat().st_size / 1e6:.1f} MB"))
+            fields.append(("Size", f"{Path(str(source)).stat().st_size / 1e6:.1f} MB"))
         except OSError:
             fields.append(("Size", "UNK"))
-    else:
-        fields.append(("Source", "UNK"))
     return fields
 
 
@@ -362,8 +358,8 @@ for _pid, _adapter, _var, _cap, _slot in _VAR_FIGURE_PANELS:
 
 PROFILE = Profile(
     entries=(
-        Section(id="metadata", title="Metadata", panels=("metadata",)),
         Section(id="track", title="Track", panels=("track",)),
+        Section(id="payload", title="Payload", panels=("metadata",)),
         Section(
             id="hydrography",
             title="Hydrography",
@@ -405,7 +401,8 @@ class Page:
     """One output page: filename, nav title + role, the Profile it renders, and when it applies.
 
     ``applies_to`` decides whether the page is written for a given dataset (e.g. an oxygen page only
-    when DOXY is present); ``role`` selects the nav button's CSS class (landing / component / map);
+    when DOXY is present); ``role`` is the pill's ``ROLE_ACCENT`` colour role; ``nav_group`` is the
+    masthead nav row it sits in (``summary`` / ``reports`` / ``derived`` / ``inventory``);
     ``type_label`` is the masthead's top-right page label ("Mission report", "CTD", "netCDF Inventory").
     """
 
@@ -413,6 +410,7 @@ class Page:
     title: str
     type_label: str
     role: str
+    nav_group: str
     profile: Profile
     applies_to: Callable[[Ctx], bool]
 
@@ -467,14 +465,20 @@ FLIGHT = Profile(
 #: The report's pages. The landing page (``index.html``) and the sensor pages are the nav pills;
 #: the inventory (``role="inventory"``) is linked from a strip below the masthead, not a pill, and is
 #: listed last so the landing page stays first (the returned path and the nav's leading pill).
+# Pill colours (the role) per nav group — bright and varied in the oceanarray style: the mission
+# summary blue, the sensor reports green, the derived flight purple. (Provisional: the role=colour
+# mapping is reconciled when the masthead nav is vendored, per the shared-nav plan §3.2.)
 PAGES: tuple[Page, ...] = (
-    Page("index.html", "Mission", "Mission report", "landing", PROFILE, lambda _c: True),
-    Page("ctd.html", "CTD", "CTD", "component", CTD, lambda c: "TEMP" in c.ds or "PSAL" in c.ds),
-    Page("oxygen.html", "Oxygen", "Oxygen", "component", OXYGEN, _has("DOXY")),
-    Page("optics.html", "Optics", "Optics", "component", OPTICS,
+    Page("index.html", "Mission", "Mission report", "landing", "summary", PROFILE, lambda _c: True),
+    Page("ctd.html", "CTD", "CTD", "aggregate-b", "reports", CTD,
+         lambda c: "TEMP" in c.ds or "PSAL" in c.ds),
+    Page("oxygen.html", "Oxygen", "Oxygen", "aggregate-b", "reports", OXYGEN, _has("DOXY")),
+    Page("optics.html", "Optics", "Optics", "aggregate-b", "reports", OPTICS,
          lambda c: any(v in c.ds for v in ("CHLA", "BBP700"))),
-    Page("flight.html", "Flight", "Flight", "component", FLIGHT, _has("GLIDER_VERT_VELO_MODEL")),
-    Page("inventory.html", "File contents", "netCDF Inventory", "inventory", INVENTORY, lambda _c: True),
+    Page("flight.html", "Flight", "Flight", "aggregate-a", "derived", FLIGHT,
+         _has("GLIDER_VERT_VELO_MODEL")),
+    Page("inventory.html", "File contents", "netCDF Inventory", "inventory", "inventory", INVENTORY,
+         lambda _c: True),
 )
 
 

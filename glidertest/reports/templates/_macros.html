@@ -29,12 +29,15 @@
    (the ctdcast/oceanarray shape). Each entry is {label, href, role, current}; role picks the CSS
    class (nav-landing / nav-component / nav-map); the current page is a muted non-link pill.
    Rendered only when there is more than one page, so a single-page report shows no nav. #}
-{% macro page_nav(nav) %}{% set pills = nav | rejectattr("role", "equalto", "inventory") | list %}{% if pills|length > 1 %}<nav class="page-nav"><span class="page-nav-label">Pages:</span>{% for b in pills %}{% if b.current %}<span class="nav-pill nav-{{ b.role }} nav-current">{{ b.label }}</span>{% else %}<a class="nav-pill nav-{{ b.role }}" href="{{ b.href }}">{{ b.label }}</a>{% endif %}{% endfor %}</nav>{% endif %}{% endmacro %}
+{# Masthead nav: an optional back pill, then one row per group (label + role-coloured pills).
+   `nav` is the shape built by reports._build_nav (shared-design-system §2): {rows, back, inventory}.
+   A pill is {label, href, role, state}; state "current" renders a muted non-link. This macro stays
+   in glidertest's layer for now and is replaced by the vendored _nav.html macro at re-vendor. #}
+{% macro _pill(p) %}{% if p.state == "current" %}<span class="nav-pill nav-{{ p.role }} nav-current">{{ p.label }}</span>{% else %}<a class="nav-pill nav-{{ p.role }}" href="{{ p.href }}">{{ p.label }}</a>{% endif %}{% endmacro %}
+{% macro page_nav(nav) %}{% if nav.back or nav.rows %}<nav class="page-nav">{% if nav.back %}<a class="nav-pill nav-back" href="{{ nav.back.href }}">{{ nav.back.label }}</a>{% endif %}{% for row in nav.rows %}<span class="nav-row"><span class="page-nav-label">{{ row.label }}:</span>{% for p in row.pills %}{{ _pill(p) }}{% endfor %}</span>{% endfor %}</nav>{% endif %}{% endmacro %}
 
-{# The inventory link, rendered as a strip below the masthead (ctdcast's "Data inventory:" shape),
-   kept out of the role pills above. The pill is labelled with the source file name. Appears on every
-   page; the inventory page shows its pill active (dark). #}
-{% macro inventory_link(nav, source_name) %}{% set inv = nav | selectattr("role", "equalto", "inventory") | list %}{% if inv %}<nav class="inventory-strip"><span class="label">Data inventory:</span>{% for b in inv %}{% if b.current %}<span class="file-pill file-pill-active">{{ source_name }}</span>{% else %}<a class="file-pill" href="{{ b.href }}">{{ source_name }}</a>{% endif %}{% endfor %}</nav>{% endif %}{% endmacro %}
+{# The "Data inventory:" strip (role-neutral file pills). Folded into the masthead, not below it. #}
+{% macro inventory_strip(nav) %}{% if nav.inventory %}<nav class="inventory-strip"><span class="label">Data inventory:</span>{% for p in nav.inventory %}{% if p.state == "current" %}<span class="file-pill file-pill-active">{{ p.label }}</span>{% else %}<a class="file-pill" href="{{ p.href }}">{{ p.label }}</a>{% endif %}{% endfor %}</nav>{% endif %}{% endmacro %}
 
 {# Stacked QC distribution bar: segments are {key, width, title}; colour comes from the qc-seg-*
    class. The width % is the one allowed inline style. small=True selects the dashed diagnostics bar. #}
