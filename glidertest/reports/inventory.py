@@ -1,8 +1,9 @@
 """File-contents inventory as data for ``templates/_inventory.html``.
 
-:func:`inventory_data` returns the dataset's variables grouped by dimension signature, the
-``SENSOR_*`` catalog, and the global attributes in OG1 canonical order — plain dicts the template
-renders. No HTML is built here (the template owns markup and escaping).
+:func:`inventory_data` returns the dataset's variables grouped by dimension signature and the
+``SENSOR_*`` catalog — plain dicts the template renders. No HTML is built here (the template owns
+markup and escaping). The global attributes live on the inventory page's Global-attributes section
+(:func:`glidertest.reports.metadata.conformance_data`), not here.
 """
 
 from __future__ import annotations
@@ -10,8 +11,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-
-from .. import og1_attrs
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -90,9 +89,9 @@ def inventory_data(ds: xr.Dataset) -> dict[str, Any]:
     Returns
     -------
     dict
-        ``groups`` (list of ``{title, variables}`` grouped by dimension signature), ``sensors``,
-        ``global_attrs`` (``(key, value)`` pairs in OG1 canonical order), and the counts
-        ``n_vars``/``n_sensors``/``n_qc``/``n_coords``/``n_attrs`` for the caption.
+        ``groups`` (list of ``{title, variables}`` grouped by dimension signature), ``sensors``, and
+        the counts ``n_vars``/``n_sensors``/``n_qc``/``n_coords``/``n_with_qc`` for the caption and
+        the QC-coverage line (``n_with_qc`` of ``n_vars`` data variables carry a ``_QC`` companion).
     """
     qc_vars = sorted(n for n in ds.data_vars if n.endswith("_QC"))
     sensors = sorted(n for n in ds.data_vars if n.startswith("SENSOR_"))
@@ -121,13 +120,13 @@ def inventory_data(ds: xr.Dataset) -> dict[str, Any]:
     if scalars:
         groups.append({"title": "Scalar variables", "variables": rows(scalars)})
 
+    n_with_qc = sum(1 for n in science if f"{n}_QC" in ds.variables)
     return {
         "groups": groups,
         "sensors": [_sensor_meta(ds, n) for n in sensors],
-        "global_attrs": [(k, str(ds.attrs[k])) for k in og1_attrs.order_globals(ds.attrs)],
         "n_vars": len(science),
         "n_sensors": len(sensors),
         "n_qc": len(qc_vars),
         "n_coords": len(ds.coords),
-        "n_attrs": len(ds.attrs),
+        "n_with_qc": n_with_qc,
     }

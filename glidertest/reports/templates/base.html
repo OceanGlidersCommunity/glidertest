@@ -70,6 +70,16 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
 .nav-component { background: var(--role-component); }
 .nav-map { background: var(--role-map); }
 .nav-current { opacity: 0.5; pointer-events: none; }
+/* Inventory link strip, below the masthead (ctdcast "Data inventory:" shape): the file-contents
+   page lives here rather than among the role pills, since it is about the file, not the mission. */
+.inventory-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem;
+  margin: 0.5rem 0 0.9rem; font-size: var(--fs-nav); }
+.inventory-strip .label { font-size: var(--fs-dt); opacity: 0.75; }
+/* ctdcast shape: rounded monospace file pills; the current page's pill is filled dark, the rest are
+   light links. */
+.file-pill { font-family: var(--font-mono); padding: 0.2em 0.8em; border-radius: 999px;
+  text-decoration: none; color: var(--ink); background: var(--rule); }
+.file-pill-active { background: #07264f; color: #fff; pointer-events: none; }
 </style>
 {% block head_extra %}{% endblock %}
 </head>
@@ -94,6 +104,8 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
   {% block masthead_meta %}{% endblock %}
   <a class="wordmark" href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a>
 </div>
+
+{{ _m.inventory_link(nav, source_name) }}
 
 {% block content %}{% endblock %}
 

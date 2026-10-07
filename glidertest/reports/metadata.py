@@ -1,8 +1,10 @@
-"""Metadata section as data for ``templates/_metadata.html``.
+"""Metadata and OG1-conformance sections as data for their templates.
 
-:func:`metadata_data` returns the OG1 mandatory-attribute presence table, the payload-presence
-table, and the geospatial-extent comparison — plain dicts the template renders. Amber marks a
-missing mandatory attribute only (values are not format-checked; see :mod:`glidertest.og1_attrs`).
+:func:`metadata_data` returns the landing page's Metadata section — the one-line OG1 conformance
+verdict and the payload-presence table. :func:`conformance_data` returns the inventory page's Global
+attributes section — the categorised attribute tables (value *and* conformance status in one table,
+via :func:`glidertest.og1_attrs.group_globals`) and the geospatial-extent comparison. Amber marks a
+missing *mandatory* attribute only (values are not format-checked; see :mod:`glidertest.og1_attrs`).
 """
 
 from __future__ import annotations
@@ -36,8 +38,17 @@ _GEOSPATIAL = (
 )
 
 
+def _summary(ds: xr.Dataset) -> str:
+    """Return the one-line OG1 conformance verdict (mandatory present, highly-desirable missing)."""
+    c = og1_attrs.conformance_summary(ds.attrs)
+    line = f"OG1: {c['mandatory_present']} of {c['mandatory_total']} mandatory global attributes present"
+    if c["highly_desirable_missing"]:
+        line += f" · {c['highly_desirable_missing']} highly-desirable missing"
+    return line
+
+
 def metadata_data(ds: xr.Dataset) -> dict[str, Any]:
-    """Return the Metadata section as data for ``_metadata.html``.
+    """Return the landing page's Metadata section as data for ``_metadata.html``.
 
     Parameters
     ----------
@@ -47,21 +58,10 @@ def metadata_data(ds: xr.Dataset) -> dict[str, Any]:
     Returns
     -------
     dict
-        ``summary`` (the "N of 16 present" line), ``conformance`` (``{attr, value, missing}`` per
-        mandatory attribute), ``payload`` (``{label, var, present, source}``), and ``geospatial``
-        (``{attr, file_val, computed, missing}``).
+        ``summary`` (the one-line OG1 verdict, linking the reader to the inventory for detail) and
+        ``payload`` (``{label, var, present, source}`` per expected sensor). The full conformance
+        table lives on the inventory page (see :func:`conformance_data`).
     """
-    rows = og1_attrs.check_globals(ds)
-    present = sum(1 for _, status, _ in rows if status != "none")
-    missing = len(rows) - present
-    summary = f"{present} of {len(rows)} mandatory global attributes present"
-    if missing:
-        summary += f"; {missing} missing"
-
-    conformance = [
-        {"attr": attr, "value": value, "missing": status != "match"}
-        for attr, status, value in rows
-    ]
     payload = [
         {
             "label": label,
@@ -71,6 +71,26 @@ def metadata_data(ds: xr.Dataset) -> dict[str, Any]:
         }
         for label, var in _PAYLOAD
     ]
+    return {"summary": _summary(ds), "payload": payload}
+
+
+def conformance_data(ds: xr.Dataset) -> dict[str, Any]:
+    """Return the inventory page's Global-attributes section as data for ``_og1_conformance.html``.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        An OG1 glider dataset.
+
+    Returns
+    -------
+    dict
+        ``summary`` (the one-line verdict), ``groups`` (categorised attribute tables from
+        :func:`glidertest.og1_attrs.group_globals` — each row carries ``name``/``value``/``tier``/
+        ``present`` so the table shows value and conformance together), and ``geospatial``
+        (``{attr, file_val, computed, missing}`` comparing the file's suggested geospatial bounds
+        against the extent computed from the data).
+    """
     geospatial = []
     for attr, var, op in _GEOSPATIAL:
         raw = ds.attrs.get(attr)
@@ -85,8 +105,7 @@ def metadata_data(ds: xr.Dataset) -> dict[str, Any]:
             }
         )
     return {
-        "summary": summary,
-        "conformance": conformance,
-        "payload": payload,
+        "summary": _summary(ds),
+        "groups": og1_attrs.group_globals(ds.attrs),
         "geospatial": geospatial,
     }

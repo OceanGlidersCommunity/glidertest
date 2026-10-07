@@ -18,20 +18,25 @@ from glidertest.reports.inventory import _fmt_scalar, inventory_data  # noqa: E4
 def test_report_writes_files(tmp_path):
     ds = fetchers.load_sample_dataset()
     out = report(ds, tmp_path)
-    assert out == Path(tmp_path) / "mission.html"
+    assert out == Path(tmp_path) / "index.html"  # landing page is index.html
     assert out.exists()
     figures = list((Path(tmp_path) / "figures").glob("*.png"))
     assert len(figures) >= 4
     html = out.read_text(encoding="utf-8")
     assert "#07264f" in html  # package accent
-    for section_id in ("metadata", "track", "hydrography", "sampling", "qc", "file_contents"):
+    # The landing page is about the mission; File contents moved to inventory.html.
+    for section_id in ("metadata", "track", "hydrography", "sampling", "qc"):
         assert f'id="{section_id}"' in html
+    assert 'id="file_contents"' not in html
+    inventory = (Path(tmp_path) / "inventory.html").read_text(encoding="utf-8")
+    for section_id in ("og1", "file_contents"):
+        assert f'id="{section_id}"' in inventory
 
 
 def test_sensor_pages_rendered(tmp_path):
     ds = fetchers.load_sample_dataset()
     landing = report(ds, tmp_path)
-    assert landing.name == "mission.html"  # landing is the first applicable page
+    assert landing.name == "index.html"  # landing is the first applicable page
     for page in ("ctd.html", "oxygen.html", "optics.html"):
         p = tmp_path / page
         assert p.exists()  # the sensor's variables are present -> its page is written
@@ -71,32 +76,67 @@ def test_sections_resolve_in_order():
     ds = fetchers.load_sample_dataset()
     resolved = build(ds, PROFILE)
     titles = [s.title for s in resolved.sections]
-    assert titles[:5] == ["Metadata", "Track", "Hydrography", "Sampling", "QC"]
-    assert titles[-1] == "File contents"
+    # The landing profile ends at QC; File contents moved to the inventory page.
+    assert titles == ["Metadata", "Track", "Hydrography", "Sampling", "QC"]
     # the metadata panel is html and always renders (never a stub)
     assert not resolved.sections[0].panels[0].is_stub
 
 
 def test_payload_and_file_contents(tmp_path):
     ds = fetchers.load_sample_dataset()
-    html = report(ds, tmp_path).read_text(encoding="utf-8")
-    # Payload table: sensor labels, and the source SENSOR_* column links to the catalog.
-    assert "Payload" in html
+    report(ds, tmp_path)
+    index = (Path(tmp_path) / "index.html").read_text(encoding="utf-8")
+    inventory = (Path(tmp_path) / "inventory.html").read_text(encoding="utf-8")
+    # Payload table stays on the landing page: sensor labels and the source SENSOR_* column.
+    assert "Payload" in index
     for label in ("Temperature", "Salinity", "Chlorophyll", "Altimeter", "ADCP"):
-        assert label in html
-    assert "SENSOR_CTD_205048" in html  # TEMP's source sensor, shown in the payload Source column
-    # File-contents inventory: dimension-grouped tables, a sensor catalog, and the attr dump.
+        assert label in index
+    assert "SENSOR_CTD_205048" in index  # TEMP's source sensor, shown in the payload Source column
+    # File-contents inventory moved to inventory.html: dimension-grouped tables + sensor catalog.
     for heading in (
         "Coordinates on N_MEASUREMENTS",
         "Variables on N_MEASUREMENTS",
         "Sensor catalog",
-        "Global attributes",
     ):
-        assert f"<h3>{heading}</h3>" in html
-    assert "Standard name" in html
-    assert "TEMP" in html
+        assert f"<h3>{heading}</h3>" in inventory
+    assert "Standard / long name" in inventory  # combined standard+long name column
+    assert "TEMP" in inventory
     # The _QC companions are not listed as inventory rows (shown in the QC section instead).
-    assert "QC-flag variables" in html
+    assert "QC-flag variables" in inventory
+    # The global-attribute conformance is categorised on the inventory page, not the landing page.
+    assert "<h3>Identity &amp; discovery</h3>" in inventory
+
+
+def test_inventory_strip_and_index_verdict(tmp_path):
+    ds = fetchers.load_sample_dataset()
+    report(ds, tmp_path)
+    index = (Path(tmp_path) / "index.html").read_text(encoding="utf-8")
+    inventory = (Path(tmp_path) / "inventory.html").read_text(encoding="utf-8")
+    # The landing page carries the one-line OG1 verdict and links to the inventory, not the full table.
+    assert "mandatory global attributes present" in index
+    assert 'href="inventory.html' in index
+    # The inventory link is a below-masthead strip (not a role pill), labelled with the file name,
+    # active on the inventory page.
+    assert "Data inventory:" in index
+    assert "inventory-strip" in index
+    assert "nav-inventory" not in index  # not rendered as a role pill
+    assert "sea045_20230604T1253_delayed.nc" in index  # the source file name is the pill label
+    assert "file-pill-active" in inventory
+    # QC coverage line on the inventory.
+    assert "data variables carry a" in inventory
+
+
+def test_conformance_marks_missing_mandatory_amber():
+    from glidertest.reports import metadata
+    from glidertest.reports._env import get_template
+
+    # Only `title` present: other mandatory attributes (id, Conventions, ...) are missing.
+    ds = xr.Dataset(attrs={"title": "t"})
+    html = get_template("_og1_conformance.html").render(**metadata.conformance_data(ds))
+    assert "nonconform" in html  # a missing mandatory attribute is marked amber
+    assert "✓ present" in html  # title is present
+    # A missing suggested attribute (geospatial bounds) is not listed at all.
+    assert "geospatial_lat_min</td>" not in html.split("Geospatial extent")[0]
 
 
 def test_qc_section_has_basic_checks_sentences(tmp_path):

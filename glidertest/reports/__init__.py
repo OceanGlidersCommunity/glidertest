@@ -52,10 +52,13 @@ def report(ds: xr.Dataset, outdir: Path | str) -> Path:
     ctx = Ctx(ds=ds)
     pages = [p for p in PAGES if p.applies_to(ctx)]
     template = get_template("mission.html")
+    source = ds.encoding.get("source")
+    source_name = Path(source).name if source else f"{ds.attrs.get('id') or 'mission'}.nc"
     common = {
         "css": SHARED_CSS,
         "header": header_card(ds),
         "mission_id": str(ds.attrs.get("id", "mission")),
+        "source_name": source_name,
         "version": __version__,
         "generated_at": datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
         "masthead_bg": PACKAGE_ACCENT,

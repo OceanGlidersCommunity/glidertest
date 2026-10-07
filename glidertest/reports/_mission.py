@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import html
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -89,8 +90,27 @@ def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
         lo, hi = float(md.min()), float(md.max())
         depth = f"{int(lo)}–{int(hi)} m" if np.isfinite(lo) and np.isfinite(hi) else "UNK"
         fields.append(("Dive depth", depth))
+    if "LATITUDE" in ds and "LONGITUDE" in ds:
+        la = np.asarray(ds["LATITUDE"].values)
+        lo_ = np.asarray(ds["LONGITUDE"].values)
+        la, lo_ = la[np.isfinite(la)], lo_[np.isfinite(lo_)]
+        if la.size and lo_.size:
+            # Signed degrees, no hemisphere letter: a negative longitude labelled "°E" would be wrong.
+            fields.append(("Extent", f"{la.min():.2f}–{la.max():.2f} lat, {lo_.min():.2f}–{lo_.max():.2f} lon"))
     if "N_MEASUREMENTS" in ds.sizes:
         fields.append(("Records", f"{ds.sizes['N_MEASUREMENTS']:,}"))
+    # Source file + size, from the path xarray recorded when the dataset was opened; UNK for an
+    # in-memory dataset (report(ds) takes a Dataset, so a file is not guaranteed).
+    source = ds.encoding.get("source")
+    if source:
+        path = Path(str(source))
+        fields.append(("Source", path.name))
+        try:
+            fields.append(("Size", f"{path.stat().st_size / 1e6:.1f} MB"))
+        except OSError:
+            fields.append(("Size", "UNK"))
+    else:
+        fields.append(("Source", "UNK"))
     return fields
 
 
@@ -182,6 +202,13 @@ PANELS: dict[str, Panel] = {
         id="qc",
         kind="html",
         render=_guarded(lambda c: get_template("_qc.html").render(**qc_section.qc_section_data(c.ds))),
+    ),
+    "og1_conformance": Panel(
+        id="og1_conformance",
+        kind="html",
+        render=_guarded(
+            lambda c: get_template("_og1_conformance.html").render(**metadata.conformance_data(c.ds))
+        ),
     ),
     "file_contents": Panel(
         id="file_contents",
@@ -308,6 +335,15 @@ PROFILE = Profile(
             panels=("qc",),
             applies_to=_qc_applies,
         ),
+    ),
+)
+
+# The inventory page: everything about the *file* rather than the mission — the OG1 global-attribute
+# conformance (merged with the attribute values) and the full variable/sensor inventory. Split off
+# the landing page so the landing stays about the mission (ctdcast's index/inventory division).
+INVENTORY = Profile(
+    entries=(
+        Section(id="og1", title="Global attributes", panels=("og1_conformance",)),
         Section(id="file_contents", title="File contents", panels=("file_contents",)),
     ),
 )
@@ -373,14 +409,17 @@ FLIGHT = Profile(
 )
 
 
-#: The report's pages, in nav order. Sensor pages apply only when their variables are present.
+#: The report's pages. The landing page (``index.html``) and the sensor pages are the nav pills;
+#: the inventory (``role="inventory"``) is linked from a strip below the masthead, not a pill, and is
+#: listed last so the landing page stays first (the returned path and the nav's leading pill).
 PAGES: tuple[Page, ...] = (
-    Page("mission.html", "Mission", "landing", PROFILE, lambda _c: True),
+    Page("index.html", "Mission", "landing", PROFILE, lambda _c: True),
     Page("ctd.html", "CTD", "component", CTD, lambda c: "TEMP" in c.ds or "PSAL" in c.ds),
     Page("oxygen.html", "Oxygen", "component", OXYGEN, _has("DOXY")),
     Page("optics.html", "Optics", "component", OPTICS,
          lambda c: any(v in c.ds for v in ("CHLA", "BBP700"))),
     Page("flight.html", "Flight", "component", FLIGHT, _has("GLIDER_VERT_VELO_MODEL")),
+    Page("inventory.html", "File contents", "inventory", INVENTORY, lambda _c: True),
 )
 
 
