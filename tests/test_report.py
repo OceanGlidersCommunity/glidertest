@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import matplotlib
 
 matplotlib.use("agg")  # no display; the CLI forces this too
@@ -17,10 +15,12 @@ from glidertest.reports.inventory import _fmt_scalar, inventory_data  # noqa: E4
 
 def test_report_writes_files(tmp_path):
     ds = fetchers.load_sample_dataset()
-    out = report(ds, tmp_path)
-    assert out == Path(tmp_path) / "index.html"  # landing page is index.html
+    out = report(ds, tmp_path, navigator=False)
+    mdir = out.parent  # report writes into <root>/<mission_id>/
+    assert mdir.name == "sea045_20230604T1253_delayed"
+    assert out == mdir / "index.html"  # landing page is index.html
     assert out.exists()
-    figures = list((Path(tmp_path) / "figures").glob("*.png"))
+    figures = list((mdir / "figures").glob("*.png"))
     assert len(figures) >= 4
     html = out.read_text(encoding="utf-8")
     assert "#07264f" in html  # package accent
@@ -28,22 +28,23 @@ def test_report_writes_files(tmp_path):
     for section_id in ("metadata", "track", "hydrography", "sampling", "qc"):
         assert f'id="{section_id}"' in html
     assert 'id="file_contents"' not in html
-    inventory = (Path(tmp_path) / "inventory.html").read_text(encoding="utf-8")
+    inventory = (mdir / "inventory.html").read_text(encoding="utf-8")
     for section_id in ("og1", "file_contents"):
         assert f'id="{section_id}"' in inventory
 
 
 def test_sensor_pages_rendered(tmp_path):
     ds = fetchers.load_sample_dataset()
-    landing = report(ds, tmp_path)
+    landing = report(ds, tmp_path, navigator=False)
+    mdir = landing.parent
     assert landing.name == "index.html"  # landing is the first applicable page
     for page in ("ctd.html", "oxygen.html", "optics.html"):
-        p = tmp_path / page
+        p = mdir / page
         assert p.exists()  # the sensor's variables are present -> its page is written
         html = p.read_text(encoding="utf-8")
         assert "page-nav" in html  # cross-page nav appears with >1 page
         slug = page[:-5]
-        figs = list((tmp_path / "figures").glob(f"{slug}_*.png"))
+        figs = list((mdir / "figures").glob(f"{slug}_*.png"))
         assert len(figs) >= 3  # page-prefixed figures, sharing figures/
 
 
@@ -63,13 +64,13 @@ def test_sensor_page_panels_in_canonical_order():
 
 def test_flight_absent_and_cr_on_ctd(tmp_path):
     ds = fetchers.load_sample_dataset()
-    report(ds, tmp_path)
+    mdir = report(ds, tmp_path, navigator=False).parent
     # The flight page needs the glider flight-model velocity, which the sample lacks -> no flight page.
-    assert not (tmp_path / "flight.html").exists()
+    assert not (mdir / "flight.html").exists()
     # Convective resistance is a mixed-layer diagnostic and lives on the CTD page (needs TEMP+PSAL).
-    ctd = (tmp_path / "ctd.html").read_text(encoding="utf-8")
+    ctd = (mdir / "ctd.html").read_text(encoding="utf-8")
     assert "Convective resistance" in ctd and "Mixed layer" in ctd
-    assert list((tmp_path / "figures").glob("ctd_ctd_cr.png"))
+    assert list((mdir / "figures").glob("ctd_ctd_cr.png"))
 
 
 def test_sections_resolve_in_order():
@@ -84,9 +85,9 @@ def test_sections_resolve_in_order():
 
 def test_payload_and_file_contents(tmp_path):
     ds = fetchers.load_sample_dataset()
-    report(ds, tmp_path)
-    index = (Path(tmp_path) / "index.html").read_text(encoding="utf-8")
-    inventory = (Path(tmp_path) / "inventory.html").read_text(encoding="utf-8")
+    mdir = report(ds, tmp_path, navigator=False).parent
+    index = (mdir / "index.html").read_text(encoding="utf-8")
+    inventory = (mdir / "inventory.html").read_text(encoding="utf-8")
     # Payload table stays on the landing page: sensor labels and the source SENSOR_* column.
     assert "Payload" in index
     for label in ("Temperature", "Salinity", "Chlorophyll", "Altimeter", "ADCP"):
@@ -109,9 +110,9 @@ def test_payload_and_file_contents(tmp_path):
 
 def test_inventory_strip_and_index_verdict(tmp_path):
     ds = fetchers.load_sample_dataset()
-    report(ds, tmp_path)
-    index = (Path(tmp_path) / "index.html").read_text(encoding="utf-8")
-    inventory = (Path(tmp_path) / "inventory.html").read_text(encoding="utf-8")
+    mdir = report(ds, tmp_path, navigator=False).parent
+    index = (mdir / "index.html").read_text(encoding="utf-8")
+    inventory = (mdir / "inventory.html").read_text(encoding="utf-8")
     # The landing page carries the one-line OG1 verdict and links to the inventory, not the full table.
     assert "mandatory global attributes present" in index
     assert 'href="inventory.html' in index
@@ -141,14 +142,14 @@ def test_conformance_marks_missing_mandatory_amber():
 
 def test_qc_section_has_basic_checks_sentences(tmp_path):
     ds = fetchers.load_sample_dataset()
-    html = report(ds, tmp_path).read_text(encoding="utf-8")
+    html = report(ds, tmp_path, navigator=False).read_text(encoding="utf-8")
     assert "Profile number:" in html
     assert "Profile duration:" in html
 
 
 def test_qc_delivered_covers_all_qc_variables(tmp_path):
     ds = fetchers.load_sample_dataset()
-    html = report(ds, tmp_path).read_text(encoding="utf-8")
+    html = report(ds, tmp_path, navigator=False).read_text(encoding="utf-8")
     # Every *_QC variable in the file must appear, not just the four with diagnostics thresholds.
     for parent in ("TEMP", "PSAL", "DOXY", "CHLA", "CNDC", "DENSITY", "POTDENS0", "THETA"):
         assert f"<td>{parent}</td>" in html
@@ -276,14 +277,102 @@ def test_png_width(tmp_path):
     from glidertest.reports._mission import PANELS
 
     ds = fetchers.load_sample_dataset()
-    report(ds, tmp_path)
+    mdir = report(ds, tmp_path, navigator=False).parent
     # Each figure PNG is rendered at exactly its panel's declared slot width (round(slot_in * dpi)),
     # not merely at some valid width: a half-slot panel mis-declared as full (or vice versa) must
     # fail here. The filename is "<page>_<panel.id>.png" and page slugs are single tokens, so the
     # panel id is everything after the first underscore.
-    pngs = list((Path(tmp_path) / "figures").glob("*.png"))
+    pngs = list((mdir / "figures").glob("*.png"))
     assert pngs
     for png in pngs:
         _page, pid = png.stem.split("_", 1)
         expected = round(SLOTS[PANELS[pid].slot][1] * FIG_DPI)
         assert Image.open(png).size[0] == expected, f"{pid} rendered at the wrong slot width"
+
+
+def test_root_convention_and_manifest(tmp_path):
+    import json
+
+    ds = fetchers.load_sample_dataset()
+    out = report(ds, tmp_path, navigator=False)
+    mdir = out.parent
+    # The report writes into <root>/<mission_id>/, named from the data, not the caller's choice.
+    assert mdir.name == "sea045_20230604T1253_delayed"
+    assert out == mdir / "index.html"
+    manifest = json.loads((mdir / "report.json").read_text(encoding="utf-8"))
+    assert manifest["manifest_version"] == 1
+    assert manifest["id"] == "sea045_20230604T1253_delayed"
+    assert manifest["sensors"] == {"ctd": True, "oxygen": True, "optics": True, "flight": False}
+    assert manifest["og1"]["mandatory_present"] == 16
+    assert 0 < len(manifest["track"]) <= 200
+    assert manifest["source_file"] == "sea045_20230604T1253_delayed.nc"
+
+
+def test_mission_id_requires_id_or_source():
+    import pytest
+
+    from glidertest.reports._mission import mission_id
+
+    # No id and no source file -> raise rather than fall back to a colliding default directory.
+    with pytest.raises(ValueError, match="mission id"):
+        mission_id(xr.Dataset(attrs={}))
+    assert mission_id(xr.Dataset(attrs={"id": "foo_R"})) == "foo_R"
+    ds = xr.Dataset()
+    ds.encoding["source"] = "/data/bar_20230101_delayed.nc"
+    assert mission_id(ds) == "bar_20230101_delayed"  # file stem when no id
+
+
+def _fake_manifest(mid: str, serial: str, *, oxygen: bool) -> dict:
+    """Return a minimal report.json dict for navigator tests (no NetCDF, no rendering)."""
+    return {
+        "manifest_version": 1, "id": mid, "platform_serial": serial,
+        "start": "2023-01-01T00:00", "end": "2023-01-10T00:00", "duration_s": 777600,
+        "n_profiles": 10, "n_dive": 5, "n_climb": 5,
+        "lat_min": 58.0, "lat_max": 59.0, "lon_min": 10.0, "lon_max": 11.0,
+        "max_depth_m": 500.0, "n_records": 1000,
+        "source_file": f"{mid}.nc", "source_size_bytes": 1,
+        "sensors": {"ctd": True, "oxygen": oxygen, "optics": False, "flight": False},
+        "og1": {"mandatory_present": 16, "mandatory_total": 16, "missing": []},
+        "qc": {"delivered": True, "worst_var": "TEMP", "worst_bad_pct": 0.0},
+        "pages": [{"file": "index.html", "label": "Mission"}],
+        "track": [[10.0, 58.0], [10.5, 58.5], [11.0, 59.0]],
+        "glidertest_version": "0.0", "generated_at": "2026-10-07 00:00 UTC",
+    }
+
+
+def test_navigator_indexes_manifests(tmp_path):
+    import json
+
+    from glidertest.reports import navigator
+
+    for mid, serial, oxygen in [("m_a", "sea001", True), ("m_b", "sg002", False)]:
+        d = tmp_path / mid
+        d.mkdir()
+        (d / "report.json").write_text(json.dumps(_fake_manifest(mid, serial, oxygen=oxygen)))
+    (tmp_path / "no_manifest").mkdir()  # a directory without a manifest
+
+    out = navigator(tmp_path)
+    assert out == tmp_path / "index.html"
+    html = out.read_text(encoding="utf-8")
+    assert "Mission navigator" in html
+    assert "m_a" in html and "m_b" in html  # both missions listed
+    assert "sea001" in html  # platform shown
+    assert 'id="completeness"' in html  # the sensor matrix
+    assert "data:image/png;base64" in html  # the tracks map rendered
+    assert 'href="m_a/index.html"' in html  # page buttons link into the mission subdir
+    assert "no_manifest" in html  # a manifest-less directory is surfaced, not hidden
+
+
+def test_report_warns_when_id_reused_for_different_file(tmp_path):
+    import json
+
+    import pytest
+
+    ds = fetchers.load_sample_dataset()
+    mdir = report(ds, tmp_path, navigator=False).parent
+    # Tamper the manifest to look as if a *different* file had claimed this id.
+    manifest = json.loads((mdir / "report.json").read_text(encoding="utf-8"))
+    manifest["source_file"] = "a_different_file.nc"
+    (mdir / "report.json").write_text(json.dumps(manifest))
+    with pytest.warns(UserWarning, match="metadata problem"):
+        report(ds, tmp_path, navigator=False)

@@ -114,6 +114,33 @@ def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
     return fields
 
 
+def mission_id(ds: xr.Dataset) -> str:
+    """Return the mission identifier used as the report's subdirectory name.
+
+    The OG1 ``id`` global attribute when present and non-empty, else the source file stem (from
+    ``ds.encoding["source"]``). Deterministic from the data, so the report always writes into a
+    predictably named ``<root>/<mission_id>/`` rather than a directory the caller picks.
+
+    Raises
+    ------
+    ValueError
+        When neither an ``id`` attribute nor a source file is available. There is no generic
+        fallback on purpose: two id-less, source-less datasets would otherwise write into the same
+        directory and the second would silently overwrite the first.
+    """
+    mid = ds.attrs.get("id")
+    if mid is not None and str(mid).strip():
+        return str(mid)
+    source = ds.encoding.get("source")
+    if source:
+        return Path(str(source)).stem
+    msg = (
+        "cannot determine a mission id: the dataset has no 'id' global attribute and no source file "
+        "(ds.encoding['source']). Set an 'id' before writing a report so missions do not collide."
+    )
+    raise ValueError(msg)
+
+
 _QC_VARS = ("TEMP", "PSAL", "DOXY", "CHLA")
 
 

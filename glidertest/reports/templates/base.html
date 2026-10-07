@@ -80,6 +80,13 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
 .file-pill { font-family: var(--font-mono); padding: 0.2em 0.8em; border-radius: 999px;
   text-decoration: none; color: var(--ink); background: var(--rule); }
 .file-pill-active { background: #07264f; color: #fff; pointer-events: none; }
+/* "All missions" back-link to the fleet navigator, top of a mission masthead. */
+.all-missions { display: inline-block; color: #fff; opacity: 0.85; text-decoration: none;
+  font-size: var(--fs-nav); margin-bottom: 0.3rem; }
+.all-missions:hover { opacity: 1; text-decoration: underline; }
+/* Navigator missions table: page-button cells keep their pills on one line. */
+td.nav-cell { white-space: nowrap; }
+td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-right: 0.15rem; }
 </style>
 {% block head_extra %}{% endblock %}
 </head>
@@ -89,6 +96,7 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
 {% block topbar %}{% endblock %}
 
 <div class="masthead" style="background:{{ masthead_bg }};">
+  {% if has_navigator %}<a class="all-missions" href="../index.html">← All missions</a>{% endif %}
   <div class="masthead-header">
     <h1>{% block masthead_title %}{{ mission_id }}{% endblock %}</h1>
     <span class="masthead-type">{% block masthead_type %}{% endblock %}</span>
