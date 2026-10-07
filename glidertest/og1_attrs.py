@@ -96,8 +96,8 @@ ATTR_GROUPS: tuple[tuple[str, tuple[tuple[str, Tier], ...]], ...] = (
     ),
 )
 
-#: Title for file attributes not named in :data:`ATTR_GROUPS` (never dropped).
-OTHER_GROUP = "Other"
+#: Title for file attributes not named in :data:`ATTR_GROUPS` (never dropped); shown last.
+OTHER_GROUP = "Other (not in OG1)"
 
 #: Tier of each registered attribute, keyed by name. Derived from :data:`ATTR_GROUPS`.
 _TIER_OF: dict[str, Tier] = {

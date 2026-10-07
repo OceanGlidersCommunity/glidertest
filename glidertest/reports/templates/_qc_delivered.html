@@ -1,0 +1,15 @@
+{% import "_macros.html" as m %}
+{% if delivered.no_flags %}
+<p class="caption">No QC flags delivered in the file (rtqc_method: {{ delivered.rtqc }}) — itself a finding.</p>
+{% else %}
+<p class="caption">{{ delivered.caption }}</p>
+{% if delivered.mismatch %}<p class="none-note">Inconsistent flag scale — {{ delivered.mismatch }}. Default category names used for these.</p>
+{% endif %}
+<table>
+<thead><tr><th>Variable</th><th class="num">N</th>{% for c in delivered.cats %}<th class="num">{{ c.label }} %</th>{% endfor %}{% if delivered.show_other %}<th class="num">Other %</th>{% endif %}<th>Distribution</th></tr></thead>
+<tbody>
+{% for row in delivered.rows %}<tr><td>{{ row.var }}</td><td class="num">{{ row.n }}</td>{% for cell in row.cells %}<td class="num{% if cell.cls %} {{ cell.cls }}{% endif %}">{{ cell.pct }}</td>{% endfor %}{% if delivered.show_other %}<td class="num">{{ row.other }}</td>{% endif %}<td>{{ m.dist_bar(row.bar) }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}

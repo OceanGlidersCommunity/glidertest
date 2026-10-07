@@ -24,8 +24,9 @@ def test_report_writes_files(tmp_path):
     assert len(figures) >= 4
     html = out.read_text(encoding="utf-8")
     assert "#07264f" in html  # package accent
-    # The landing page is about the mission; File contents moved to inventory.html.
-    for section_id in ("metadata", "track", "hydrography", "sampling", "qc"):
+    # The landing page is about the mission; File contents moved to inventory.html. QC is split into
+    # two jumpable sections (as delivered / glidertest diagnostics).
+    for section_id in ("metadata", "track", "hydrography", "sampling", "qc_delivered", "qc_glidertest"):
         assert f'id="{section_id}"' in html
     assert 'id="file_contents"' not in html
     inventory = (mdir / "inventory.html").read_text(encoding="utf-8")
@@ -77,8 +78,11 @@ def test_sections_resolve_in_order():
     ds = fetchers.load_sample_dataset()
     resolved = build(ds, PROFILE)
     titles = [s.title for s in resolved.sections]
-    # The landing profile ends at QC; File contents moved to the inventory page.
-    assert titles == ["Metadata", "Track", "Hydrography", "Sampling", "QC"]
+    # The landing profile ends with the two QC sections; File contents moved to the inventory page.
+    assert titles == [
+        "Metadata", "Track", "Hydrography", "Sampling",
+        "QC — as delivered", "QC — glidertest diagnostics",
+    ]
     # the metadata panel is html and always renders (never a stub)
     assert not resolved.sections[0].panels[0].is_stub
 
@@ -371,6 +375,14 @@ def test_titles_and_top_links(tmp_path):
     assert "↑ top" in index and "top-link" in index
     # Payload surfaces the sensor model (from the SENSOR_* catalog) as its own column.
     assert "<th>Model</th>" in index
+    # Masthead type label (top-right) is per page.
+    assert '<span class="masthead-type">Mission report</span>' in index
+    assert '<span class="masthead-type">CTD</span>' in ctd
+    # Masthead extent is split into Lat and Lon cells with hemisphere-formatted degrees.
+    assert "<dt>Lat</dt>" in index and "<dt>Lon</dt>" in index
+    assert "°N" in index or "°S" in index
+    # Sampling-period moved out of QC into its own "Sample rate" section on the CTD page.
+    assert 'id="sample_rate"' in ctd and "Sample rate" in ctd
 
 
 def test_payload_model_from_sensor_catalog():

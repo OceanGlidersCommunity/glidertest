@@ -1,9 +1,10 @@
-"""QC section as data for ``templates/_qc.html``.
+"""QC section data for the two QC templates.
 
-:func:`qc_section_data` returns the basic-checks sentences, the "as delivered" per-variable flag
-census, and the glidertest on-the-fly diagnostics (thresholds plus a test x variable matrix) — plain
-dicts and numbers the template renders. The two QC parts are never merged: delivered flags are what
-the provider's pipeline wrote; the diagnostics are glidertest's own second opinion.
+The two QC parts render as separate, jumpable sections and are never merged: :func:`delivered_data`
+(``templates/_qc_delivered.html``) is the "as delivered" per-variable flag census the provider's
+pipeline wrote; :func:`diagnostics_data` (``templates/_qc_glidertest.html``) is glidertest's own
+second opinion — the basic-checks sentences plus the on-the-fly diagnostics (thresholds and a
+test x variable matrix). :func:`qc_section_data` returns both combined. All plain dicts and numbers.
 """
 
 from __future__ import annotations
@@ -217,10 +218,20 @@ def _diagnostics(ds: xr.Dataset) -> dict[str, Any] | None:
     return {"present": present, "thresholds": thr_rows, "matrix": matrix_rows}
 
 
+def delivered_data(ds: xr.Dataset) -> dict[str, Any]:
+    """Return the file's own QC census ("as delivered") as data for ``_qc_delivered.html``."""
+    return {"delivered": _delivered(ds)}
+
+
+def diagnostics_data(ds: xr.Dataset) -> dict[str, Any]:
+    """Return glidertest's on-the-fly QC diagnostics as data for ``_qc_glidertest.html``.
+
+    Includes the basic profile-number/duration checks, which glidertest computes on the fly (they are
+    not file flags), so they sit with the glidertest diagnostics rather than the delivered census.
+    """
+    return {"basic_checks": _basic_checks(ds), "diagnostics": _diagnostics(ds)}
+
+
 def qc_section_data(ds: xr.Dataset) -> dict[str, Any]:
-    """Return the QC section as data for ``_qc.html``: basic checks, delivered census, diagnostics."""
-    return {
-        "basic_checks": _basic_checks(ds),
-        "delivered": _delivered(ds),
-        "diagnostics": _diagnostics(ds),
-    }
+    """Return the combined QC section data (delivered census + glidertest diagnostics)."""
+    return {**delivered_data(ds), **diagnostics_data(ds)}

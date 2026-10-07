@@ -42,6 +42,19 @@ def _duration(t0: np.datetime64, t1: np.datetime64) -> str:
     return f"{days}d {rem}h"
 
 
+def _deg_range(lo: float, hi: float, pos: str, neg: str) -> str:
+    """Format a degree range with per-bound hemisphere letters, e.g. ``58.12°N–59.03°N``.
+
+    *pos*/*neg* are the hemisphere letters for non-negative/negative values (``"N"``/``"S"`` for
+    latitude, ``"E"``/``"W"`` for longitude), so a negative value is never mislabelled.
+    """
+
+    def one(v: float) -> str:
+        return f"{abs(v):.2f}°{pos if v >= 0 else neg}"
+
+    return f"{one(lo)}–{one(hi)}"
+
+
 def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
     """Return (label, value) pairs for the masthead meta-grid: platform serial plus a mission summary.
 
@@ -95,8 +108,8 @@ def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
         lo_ = np.asarray(ds["LONGITUDE"].values)
         la, lo_ = la[np.isfinite(la)], lo_[np.isfinite(lo_)]
         if la.size and lo_.size:
-            # Signed degrees, no hemisphere letter: a negative longitude labelled "°E" would be wrong.
-            fields.append(("Extent", f"{la.min():.2f}–{la.max():.2f} lat, {lo_.min():.2f}–{lo_.max():.2f} lon"))
+            fields.append(("Lat", _deg_range(float(la.min()), float(la.max()), "N", "S")))
+            fields.append(("Lon", _deg_range(float(lo_.min()), float(lo_.max()), "E", "W")))
     if "N_MEASUREMENTS" in ds.sizes:
         fields.append(("Records", f"{ds.sizes['N_MEASUREMENTS']:,}"))
     # Source file + size, from the path xarray recorded when the dataset was opened; UNK for an
@@ -220,10 +233,19 @@ PANELS: dict[str, Panel] = {
         render=lambda c: _plots.prof_monotony(c.ds),
         caption="Profile-number monotonicity",
     ),
-    "qc": Panel(
-        id="qc",
+    "qc_delivered": Panel(
+        id="qc_delivered",
         kind="html",
-        render=_guarded(lambda c: get_template("_qc.html").render(**qc_section.qc_section_data(c.ds))),
+        render=_guarded(
+            lambda c: get_template("_qc_delivered.html").render(**qc_section.delivered_data(c.ds))
+        ),
+    ),
+    "qc_glidertest": Panel(
+        id="qc_glidertest",
+        kind="html",
+        render=_guarded(
+            lambda c: get_template("_qc_glidertest.html").render(**qc_section.diagnostics_data(c.ds))
+        ),
     ),
     "og1_conformance": Panel(
         id="og1_conformance",
@@ -320,8 +342,9 @@ PANELS["flight_vspeed"] = Panel(
 # the CTD page, not the flight page.
 PANELS["ctd_cr"] = Panel(
     id="ctd_cr",
-    render=lambda c: _plots.convective_resistance(c.ds),
+    render=lambda c: _plots.convective_resistance(c.ds, slot="half"),
     caption="Convective resistance for the deepest profile (mixed-layer diagnostic); the plot title names the profile number",
+    slot="half",
     applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
 )
 for _pid, _adapter, _var, _cap, _slot in _VAR_FIGURE_PANELS:
@@ -352,9 +375,15 @@ PROFILE = Profile(
             panels=("grid_spacing", "sampling_period", "max_depth", "prof_monotony"),
         ),
         Section(
-            id="qc",
-            title="QC",
-            panels=("qc",),
+            id="qc_delivered",
+            title="QC — as delivered",
+            panels=("qc_delivered",),
+            applies_to=_qc_applies,
+        ),
+        Section(
+            id="qc_glidertest",
+            title="QC — glidertest diagnostics",
+            panels=("qc_glidertest",),
             applies_to=_qc_applies,
         ),
     ),
@@ -376,11 +405,13 @@ class Page:
     """One output page: filename, nav title + role, the Profile it renders, and when it applies.
 
     ``applies_to`` decides whether the page is written for a given dataset (e.g. an oxygen page only
-    when DOXY is present); ``role`` selects the nav button's CSS class (landing / component / map).
+    when DOXY is present); ``role`` selects the nav button's CSS class (landing / component / map);
+    ``type_label`` is the masthead's top-right page label ("Mission report", "CTD", "netCDF Inventory").
     """
 
     filename: str
     title: str
+    type_label: str
     role: str
     profile: Profile
     applies_to: Callable[[Ctx], bool]
@@ -398,8 +429,9 @@ CTD = Profile(
                 panels=("ctd_updown_temp", "ctd_updown_psal", "ctd_hyst_temp", "ctd_hyst_psal")),
         Section(id="offset", title="Day/night offset", panels=("ctd_daynight_psal",)),
         Section(id="mld", title="Mixed layer", panels=("ctd_cr",)),
-        Section(id="qc", title="QC checks",
-                panels=("ctd_global_temp", "ctd_global_psal", "ctd_sampling_temp", "ctd_sampling_psal")),
+        Section(id="qc", title="QC checks", panels=("ctd_global_temp", "ctd_global_psal")),
+        Section(id="sample_rate", title="Sample rate",
+                panels=("ctd_sampling_temp", "ctd_sampling_psal")),
     ),
 )
 
@@ -409,7 +441,8 @@ OXYGEN = Profile(
         Section(id="sections", title="Sections", panels=("section_doxy",)),
         Section(id="drift", title="Drift", panels=("oxy_drift",)),
         Section(id="bias", title="Dive–climb bias", panels=("oxy_updown", "oxy_hysteresis")),
-        Section(id="qc", title="QC checks", panels=("oxy_global_range", "oxy_sampling")),
+        Section(id="qc", title="QC checks", panels=("oxy_global_range",)),
+        Section(id="sample_rate", title="Sample rate", panels=("oxy_sampling",)),
     ),
 )
 
@@ -435,13 +468,13 @@ FLIGHT = Profile(
 #: the inventory (``role="inventory"``) is linked from a strip below the masthead, not a pill, and is
 #: listed last so the landing page stays first (the returned path and the nav's leading pill).
 PAGES: tuple[Page, ...] = (
-    Page("index.html", "Mission", "landing", PROFILE, lambda _c: True),
-    Page("ctd.html", "CTD", "component", CTD, lambda c: "TEMP" in c.ds or "PSAL" in c.ds),
-    Page("oxygen.html", "Oxygen", "component", OXYGEN, _has("DOXY")),
-    Page("optics.html", "Optics", "component", OPTICS,
+    Page("index.html", "Mission", "Mission report", "landing", PROFILE, lambda _c: True),
+    Page("ctd.html", "CTD", "CTD", "component", CTD, lambda c: "TEMP" in c.ds or "PSAL" in c.ds),
+    Page("oxygen.html", "Oxygen", "Oxygen", "component", OXYGEN, _has("DOXY")),
+    Page("optics.html", "Optics", "Optics", "component", OPTICS,
          lambda c: any(v in c.ds for v in ("CHLA", "BBP700"))),
-    Page("flight.html", "Flight", "component", FLIGHT, _has("GLIDER_VERT_VELO_MODEL")),
-    Page("inventory.html", "File contents", "inventory", INVENTORY, lambda _c: True),
+    Page("flight.html", "Flight", "Flight", "component", FLIGHT, _has("GLIDER_VERT_VELO_MODEL")),
+    Page("inventory.html", "File contents", "netCDF Inventory", "inventory", INVENTORY, lambda _c: True),
 )
 
 

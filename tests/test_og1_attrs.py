@@ -77,8 +77,12 @@ def test_group_globals_includes_absent_rows_but_hides_absent_suggested():
     assert rows["time_coverage_start"]["present"] is False  # highly desirable, absent -> shown
     assert "geospatial_lat_min" not in rows  # suggested, absent -> hidden
     # Spatiotemporal has only highly-desirable rows left, so it is not dropped; but a group with no
-    # surviving rows would be. Non-registry keys land in Other, never dropped.
-    assert by_title["Other"] == [{"name": "zzz_custom", "value": "q", "tier": None, "present": True}]
+    # surviving rows would be. Non-registry keys land in the "Other" group (shown last), never dropped.
+    assert by_title[og1_attrs.OTHER_GROUP] == [
+        {"name": "zzz_custom", "value": "q", "tier": None, "present": True}
+    ]
+    assert og1_attrs.OTHER_GROUP == "Other (not in OG1)"
+    assert [g["title"] for g in groups][-1] == og1_attrs.OTHER_GROUP  # Other is last
 
 
 def test_conformance_summary_counts():

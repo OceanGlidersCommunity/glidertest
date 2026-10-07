@@ -10,12 +10,13 @@
 <h2 id="missions">Missions</h2>
 {% if rows %}
 <table class="nc">
-<thead><tr><th>Platform</th><th>Mission</th><th>Start</th><th>End</th><th>Duration</th><th>Profiles</th><th class="num">Max depth</th><th>CTD</th><th>O₂</th><th>Optics</th><th>Flight</th><th>OG1</th><th>Worst QC</th><th>Pages</th><th>Generated</th></tr></thead>
+<thead><tr><th>Mission</th><th>Start</th><th>End</th><th>Duration</th><th class="num">Profiles</th><th class="num">Max depth</th><th>OG1</th><th>Worst QC</th><th>Pages</th><th>Generated</th></tr></thead>
 <tbody>
-{% for r in rows %}<tr><td class="mono">{{ r.platform }}</td><td class="mono wrapv">{{ r.id }}</td><td>{{ r.start }}</td><td>{{ r.end }}</td><td>{{ r.duration }}</td><td>{{ r.profiles }}</td><td class="num">{{ r.max_depth }}</td>{% for key in ["ctd", "oxygen", "optics", "flight"] %}<td>{% if r.sensors.get(key) %}<span class="qc-good">✓</span>{% else %}–{% endif %}</td>{% endfor %}<td{% if not r.og1_ok %} class="nonconform"{% endif %}>{{ r.og1_text }}</td><td>{{ r.qc }}</td><td class="nav-cell">{% for p in r.pages %}<a class="nav-pill nav-{{ p.role }}" href="{{ p.href }}">{{ p.label }}</a> {% endfor %}</td><td class="mono">{{ r.generated }}</td></tr>
+{% for r in rows %}<tr><td class="mono wrapv">{{ r.id }}</td><td>{{ r.start }}</td><td>{{ r.end }}</td><td>{{ r.duration }}</td><td class="num">{{ r.profiles }}</td><td class="num">{{ r.max_depth }}</td><td{% if not r.og1_ok %} class="nonconform"{% endif %}>{{ r.og1_text }}</td><td>{{ r.qc }}</td><td class="nav-cell">{% for p in r.pages %}<a class="nav-pill nav-{{ p.role }}" href="{{ p.href }}">{{ p.label }}</a> {% endfor %}</td><td class="mono">{{ r.generated }}</td></tr>
 {% endfor %}
 </tbody>
 </table>
+<p class="caption">Per-sensor presence is in the completeness matrix below; the page buttons open each mission's pages.</p>
 {% else %}
 <p class="caption">No mission manifests found in this root. Run <code>report(ds, root)</code> to add one.</p>
 {% endif %}

@@ -113,7 +113,7 @@ def _mission_row(m: dict[str, Any], roles: dict[str, str]) -> dict[str, Any]:
         "start": (m.get("start") or "").replace("T", " ") or "UNK",
         "end": (m.get("end") or "").replace("T", " ") or "UNK",
         "duration": _fmt_duration(m.get("duration_s")),
-        "profiles": f"{m.get('n_profiles', 0)} ({m.get('n_dive', 0)} dive, {m.get('n_climb', 0)} climb)",
+        "profiles": str(m.get("n_profiles", 0)),
         "max_depth": f"{depth:.0f} m" if depth is not None else "—",
         "sensors": m.get("sensors", {}),
         "og1_text": f"{present}/{total}",

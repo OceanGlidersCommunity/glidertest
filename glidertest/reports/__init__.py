@@ -128,6 +128,7 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
                 report=resolved,
                 nav=nav,
                 page_title=page.title,
+                page_type=page.type_label,
                 page_landing=page.role == "landing",
                 **common,
             )
