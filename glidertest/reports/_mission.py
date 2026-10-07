@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from .. import tools
 from . import _plots, inventory, metadata, qc_section, sensors
 from ._env import get_template
 from ._manifest import Panel, Profile, ResolvedReport, Section, resolve
@@ -31,15 +30,6 @@ class Ctx:
     """Render context for the mission page: the dataset every panel reads."""
 
     ds: xr.Dataset
-
-
-def _duration(t0: np.datetime64, t1: np.datetime64) -> str:
-    """Return a ``Nd Nh`` duration string between two datetimes, or ``UNK`` if either is NaT."""
-    hours = float((t1 - t0) / np.timedelta64(1, "h"))
-    if not np.isfinite(hours):
-        return "UNK"
-    days, rem = divmod(round(hours), 24)
-    return f"{days}d {rem}h"
 
 
 def _deg_range(lo: float, hi: float, pos: str, neg: str) -> str:
@@ -58,62 +48,40 @@ def _deg_range(lo: float, hi: float, pos: str, neg: str) -> str:
 def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
     """Return (label, value) pairs for the masthead meta-grid: platform serial plus a mission summary.
 
-    The report title is the OG1 ``id`` (set separately); this grid carries the serial and the
-    overview statistics, derived from the data where possible. A field whose source is absent in the
-    file is skipped; a field that cannot be computed (all-NaN, all-NaT) shows ``UNK``.
+    The overview statistics come from :func:`glidertest.reports.metadata.mission_facts` (the same
+    source the manifest reads, so the two cannot disagree). A field whose source is absent is skipped;
+    one that cannot be computed shows ``UNK`` (or ``—`` for profile counts when PROFILE_NUMBER is
+    all-NaN). The file size is read here; the file name itself is the masthead subtitle.
     """
+    f = metadata.mission_facts(ds)
     fields: list[tuple[str, str]] = []
     if "PLATFORM_SERIAL_NUMBER" in ds:
-        sv = np.atleast_1d(ds["PLATFORM_SERIAL_NUMBER"].values)
-        first = sv.ravel()[0] if sv.size else None
-        serial = "UNK" if first is None else str(first)
-        if isinstance(first, (float, np.floating)) and not np.isfinite(first):
-            serial = "UNK"
-        fields.append(("Platform serial", serial))
+        fields.append(("Platform serial", f["platform_serial"] or "UNK"))
     if "PROFILE_NUMBER" in ds:
-        pn = np.asarray(ds["PROFILE_NUMBER"].values)
-        finite = np.isfinite(pn)
-        n_prof = int(np.unique(pn[finite]).size)
-        label = str(n_prof)
-        if "PROFILE_DIRECTION" in ds:
-            # Each profile is one cast: a dive (downcast, direction -1) or a climb (upcast, +1).
-            pdir = np.asarray(ds["PROFILE_DIRECTION"].values)
-            m = finite & np.isfinite(pdir)
-            _uniq, idx = np.unique(pn[m], return_index=True)
-            prof_dir = pdir[m][idx]
-            n_dive = int((prof_dir == -1).sum())
-            n_climb = int((prof_dir == 1).sum())
-            label = f"{n_prof} ({n_dive} dive, {n_climb} climb)"
-        fields.append(("Profiles", label))
+        if f["n_profiles"] is None:
+            fields.append(("Profiles", "—"))  # all-NaN PROFILE_NUMBER
+        elif f["n_dive"] is not None:
+            fields.append(("Profiles", f"{f['n_profiles']} ({f['n_dive']} dive, {f['n_climb']} climb)"))
+        else:
+            fields.append(("Profiles", str(f["n_profiles"])))
     if "TIME" in ds:
-        t0 = ds["TIME"].min().values
-        t1 = ds["TIME"].max().values
-        if np.isnat(t0) or np.isnat(t1):
+        if f["t0"] is None:
             fields += [("Start", "UNK"), ("End", "UNK"), ("Duration", "UNK")]
         else:
-            fields.append(("Start", str(t0.astype("datetime64[m]")).replace("T", " ")))
-            fields.append(("End", str(t1.astype("datetime64[m]")).replace("T", " ")))
-            fields.append(("Duration", _duration(t0, t1)))
+            fields.append(("Start", metadata.iso_minute(f["t0"]).replace("T", " ")))
+            fields.append(("End", metadata.iso_minute(f["t1"]).replace("T", " ")))
+            fields.append(("Duration", metadata.fmt_duration(f["duration_s"])))
         dt = np.diff(np.asarray(ds["TIME"].values))  # timedelta64; NaT where either end is NaT
         valid = dt[~np.isnat(dt)]
         med = np.median(valid.astype("timedelta64[s]").astype(float)) if valid.size else np.nan
         fields.append(("Sampling", f"{med:.0f} s" if np.isfinite(med) else "UNK"))
-    if "DEPTH" in ds and "PROFILE_NUMBER" in ds:
-        md = tools.max_depth_per_profile(ds)
-        lo, hi = float(md.min()), float(md.max())
-        depth = f"{int(lo)}–{int(hi)} m" if np.isfinite(lo) and np.isfinite(hi) else "UNK"
-        fields.append(("Dive depth", depth))
-    if "LATITUDE" in ds and "LONGITUDE" in ds:
-        la = np.asarray(ds["LATITUDE"].values)
-        lo_ = np.asarray(ds["LONGITUDE"].values)
-        la, lo_ = la[np.isfinite(la)], lo_[np.isfinite(lo_)]
-        if la.size and lo_.size:
-            fields.append(("Lat", _deg_range(float(la.min()), float(la.max()), "N", "S")))
-            fields.append(("Lon", _deg_range(float(lo_.min()), float(lo_.max()), "E", "W")))
+    if f["depth_min"] is not None:
+        fields.append(("Dive depth", f"{int(f['depth_min'])}–{int(f['depth_max'])} m"))
+    if f["lat_min"] is not None:
+        fields.append(("Lat", _deg_range(f["lat_min"], f["lat_max"], "N", "S")))
+        fields.append(("Lon", _deg_range(f["lon_min"], f["lon_max"], "E", "W")))
     if "N_MEASUREMENTS" in ds.sizes:
-        fields.append(("Records", f"{ds.sizes['N_MEASUREMENTS']:,}"))
-    # File size, from the path xarray recorded when the dataset was opened (the file name itself is
-    # the masthead subtitle, not a meta-grid cell). Omitted for an in-memory dataset.
+        fields.append(("Records", f"{f['n_records']:,}"))
     source = ds.encoding.get("source")
     if source:
         try:
@@ -129,19 +97,34 @@ def header_card(ds: xr.Dataset) -> list[tuple[str, str]]:
 MISSING_ID = "mission (id missing)"
 
 
+def _safe_dirname(name: str) -> str:
+    """Neutralise path separators and traversal in *name* so it is safe as a directory component.
+
+    The mission id comes from dataset metadata (the OG1 ``id`` attribute), which is untrusted: an
+    ``id`` like ``../../etc`` or ``/abs`` would otherwise let the report escape its root. Path
+    separators and NULs are replaced with ``_``; a name that is empty or only dots falls back to
+    :data:`MISSING_ID`. Ordinary ids (``sea045_20230604T1253_delayed``) are returned unchanged.
+    """
+    slug = name.replace("/", "_").replace("\\", "_").replace("\x00", "").strip()
+    if slug in ("", ".", "..") or slug.startswith("~"):
+        return MISSING_ID
+    return slug
+
+
 def mission_id(ds: xr.Dataset) -> str:
     """Return the mission identifier used as the report's subdirectory name.
 
     The OG1 ``id`` global attribute when present and non-empty, else the source file stem (from
-    ``ds.encoding["source"]``), else :data:`MISSING_ID`. Deterministic from the data, so the report
-    writes into a predictably named ``<root>/<mission_id>/`` rather than a directory the caller picks.
+    ``ds.encoding["source"]``), else :data:`MISSING_ID`; always passed through :func:`_safe_dirname`
+    so an ``id`` from untrusted metadata cannot escape the report root. Deterministic from the data,
+    so the report writes into a predictably named ``<root>/<mission_id>/``, not a caller-chosen dir.
     """
     mid = ds.attrs.get("id")
     if mid is not None and str(mid).strip():
-        return str(mid)
+        return _safe_dirname(str(mid))
     source = ds.encoding.get("source")
     if source:
-        return Path(str(source)).stem
+        return _safe_dirname(Path(str(source)).stem)
     return MISSING_ID
 
 
@@ -188,16 +171,23 @@ PANELS: dict[str, Panel] = {
         render=lambda c: _plots.basic_vars(c.ds),
         caption="Mission-mean profiles (1 m bins)",
     ),
-    "ts": Panel(id="ts", render=lambda c: _plots.ts(c.ds), caption="Temperature–salinity diagram"),
+    "ts": Panel(
+        id="ts",
+        render=lambda c: _plots.ts(c.ds),
+        caption="Temperature–salinity diagram",
+        applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
+    ),
     "section_temp": Panel(
         id="section_temp",
         render=lambda c: _plots.section(c.ds, "TEMP"),
         caption="Temperature section",
+        applies_to=_has("TEMP"),
     ),
     "section_psal": Panel(
         id="section_psal",
         render=lambda c: _plots.section(c.ds, "PSAL"),
         caption="Salinity section",
+        applies_to=_has("PSAL"),
     ),
     "section_doxy": Panel(
         id="section_doxy",
@@ -421,8 +411,11 @@ class Page:
 CTD = Profile(
     entries=(
         Section(id="sensor", title="Sensor", panels=("ctd_sensor",)),
-        Section(id="sections", title="Sections", panels=("ts", "section_temp", "section_psal", "section_cndc")),
-        Section(id="drift", title="Drift", panels=("ctd_drift_temp", "ctd_drift_psal")),
+        Section(id="sections", title="Sections", panels=("section_temp", "section_psal", "section_cndc")),
+        Section(id="ts", title="T–S", panels=("ts",)),
+        Section(id="drift", title="Drift",
+                intro="Temporal drift — each variable's evolution in time over the mission.",
+                panels=("ctd_drift_temp", "ctd_drift_psal")),
         Section(id="bias", title="Dive–climb bias",
                 panels=("ctd_updown_temp", "ctd_updown_psal", "ctd_hyst_temp", "ctd_hyst_psal")),
         Section(id="offset", title="Day/night offset", panels=("ctd_daynight_psal",)),

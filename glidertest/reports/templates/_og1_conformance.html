@@ -1,11 +1,11 @@
 {% import "_macros.html" as m %}
-<p class="caption">{{ summary }}. One row per OG1 global attribute, grouped by category: the value when present, the conformance status otherwise. A missing <em>mandatory</em> attribute is amber; a missing highly-desirable one shows a dash; absent suggested attributes are not listed. Attributes the file carries that are not OG1 globals are listed under “Other”.</p>
+<p class="caption">{{ summary }}. One row per OG1 global attribute, grouped by category: a value means present; a dash (<strong>amber</strong> for a mandatory attribute) means absent; absent <em>suggested</em> attributes are not listed. Attributes the file carries that are not OG1 globals are under “Other (not in OG1)”.</p>
 {% for g in groups %}
 <h3>{{ g.title }}</h3>
 <table class="nc meta">
-<thead><tr><th>Attribute</th><th class="wrapn">Status</th><th>Value</th></tr></thead>
+<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
 <tbody>
-{% for r in g.rows %}<tr><td class="mono wrapv">{{ r.name }}</td><td class="wrapn">{% if r.present %}<span class="qc-good">✓ present</span>{% elif r.tier == "mandatory" %}<span class="qc-fail">missing</span>{% else %}—{% endif %}</td><td class="wrap{% if not r.present and r.tier == "mandatory" %} nonconform{% endif %}">{% if r.present %}{{ r.value|urlize }}{% else %}—{% endif %}</td></tr>
+{% for r in g.rows %}<tr><td class="mono wrapv">{{ r.name }}</td><td class="wrap{% if not r.present and r.tier == "mandatory" %} nonconform{% endif %}">{% if r.present %}{{ r.value|urlize }}{% else %}—{% endif %}</td></tr>
 {% endfor %}
 </tbody>
 </table>

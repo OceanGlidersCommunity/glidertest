@@ -66,7 +66,9 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
     machine-readable ``report.json`` manifest is written beside the landing page.
 
     With *navigator* ``True`` (the default), ``<outdir>/index.html`` — a fleet navigator over every
-    ``<outdir>/*/report.json`` — is rebuilt after the mission is written (see :func:`navigator`).
+    ``<outdir>/*/report.json`` — is rebuilt after the mission is written (see :func:`navigator`). The
+    rebuild redraws the fleet track map, so for a **batch** pass ``navigator=False`` in the loop and
+    call :func:`navigator` once at the end rather than rebuilding on every mission.
 
     Figures are rendered under the non-interactive ``Agg`` backend for the duration of the build,
     then the caller's backend is restored. glidertest's plotters call ``plt.show()`` when they draw
@@ -192,7 +194,7 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
     return missiondir / PAGES[0].filename
 
 
-def navigator(root: Path | str) -> Path:
+def navigator(root: Path | str, title: str | None = None) -> Path:
     """Rebuild ``<root>/index.html`` — a fleet navigator over every ``<root>/*/report.json``.
 
     Reads only the per-mission manifests (never a NetCDF file, never a mission's HTML), so it is a
@@ -202,6 +204,8 @@ def navigator(root: Path | str) -> Path:
     ----------
     root : pathlib.Path or str
         A root directory holding ``<mission_id>/report.json`` subdirectories.
+    title : str, optional
+        The navigator's masthead title; defaults to the root directory name.
 
     Returns
     -------
@@ -216,14 +220,14 @@ def navigator(root: Path | str) -> Path:
     if switch:
         plt.switch_backend("Agg")
     try:
-        return _build_navigator(Path(root))
+        return _build_navigator(Path(root), title)
     finally:
         if switch:
             plt.switch_backend(orig_backend)
 
 
-def _build_navigator(root: Path) -> Path:
+def _build_navigator(root: Path, title: str | None = None) -> Path:
     """Render ``<root>/index.html`` from the manifests; caller owns the Matplotlib backend."""
     from .navigator import build_navigator
 
-    return build_navigator(root)
+    return build_navigator(root, title)

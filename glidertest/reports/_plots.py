@@ -53,7 +53,7 @@ def section(ds: xr.Dataset, var: str) -> str | None:
 
 def grid_spacing(ds: xr.Dataset) -> str | None:
     """Render the horizontal/vertical grid-spacing panel."""
-    return _slots.render(lambda: plots.plot_grid_spacing(ds)[0], optional=True)
+    return _slots.render(lambda: plots.plot_grid_spacing(ds)[0], source="plot_grid_spacing", optional=True)
 
 
 def sampling_period(ds: xr.Dataset) -> str | None:
@@ -164,7 +164,9 @@ def convective_resistance(ds: xr.Dataset, slot: str = "full") -> str | None:
         pnum, depth = pnum[finite], depth[finite]
         profiles = np.unique(pnum)
         rep = int(profiles[np.argmax([np.nanmax(depth[pnum == p]) for p in profiles])])
-        ds2 = tools.add_sigma_1(ds)
+        # add_sigma_1 assigns SIGMA_1 in place; copy first so the caller's dataset is never modified
+        # (diagnose-only contract). Deeper fix — make tools.add_sigma_1 non-mutating — is for tools.py.
+        ds2 = tools.add_sigma_1(ds.copy())
         profile = ds2.where(ds2["PROFILE_NUMBER"] == rep, drop=True)
         if tools.calculate_CR_for_all_depth(profile).empty:
             return None  # no computable CR on the deepest profile -> drop the panel

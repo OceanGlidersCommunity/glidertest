@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from .. import og1_attrs, qc, tools
+from .. import og1_attrs, qc
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -22,52 +22,6 @@ if TYPE_CHECKING:
 
 #: Track points kept in the manifest (decimated); enough to draw a recognisable track on the map.
 _TRACK_POINTS = 200
-
-
-def _platform_serial(ds: xr.Dataset) -> str | None:
-    """Return the platform serial (first ``PLATFORM_SERIAL_NUMBER`` value), or None."""
-    if "PLATFORM_SERIAL_NUMBER" not in ds:
-        return None
-    sv = np.atleast_1d(ds["PLATFORM_SERIAL_NUMBER"].values).ravel()
-    if not sv.size:
-        return None
-    first = sv[0]
-    if isinstance(first, (float, np.floating)) and not np.isfinite(first):
-        return None
-    return str(first)
-
-
-def _profile_counts(ds: xr.Dataset) -> tuple[int, int, int]:
-    """Return ``(n_profiles, n_dive, n_climb)`` from PROFILE_NUMBER and PROFILE_DIRECTION."""
-    if "PROFILE_NUMBER" not in ds:
-        return (0, 0, 0)
-    pn = np.asarray(ds["PROFILE_NUMBER"].values)
-    finite = np.isfinite(pn)
-    n_prof = int(np.unique(pn[finite]).size)
-    if "PROFILE_DIRECTION" not in ds:
-        return (n_prof, 0, 0)
-    pdir = np.asarray(ds["PROFILE_DIRECTION"].values)
-    m = finite & np.isfinite(pdir)
-    _uniq, idx = np.unique(pn[m], return_index=True)
-    prof_dir = pdir[m][idx]
-    return (n_prof, int((prof_dir == -1).sum()), int((prof_dir == 1).sum()))
-
-
-def _extent(ds: xr.Dataset) -> dict[str, float | None]:
-    """Return the lat/lon bounding box from the data, or Nones when positions are absent."""
-    out: dict[str, float | None] = {k: None for k in ("lat_min", "lat_max", "lon_min", "lon_max")}
-    if "LATITUDE" in ds and "LONGITUDE" in ds:
-        la = np.asarray(ds["LATITUDE"].values)
-        lo = np.asarray(ds["LONGITUDE"].values)
-        la, lo = la[np.isfinite(la)], lo[np.isfinite(lo)]
-        if la.size and lo.size:
-            out = {
-                "lat_min": round(float(la.min()), 4),
-                "lat_max": round(float(la.max()), 4),
-                "lon_min": round(float(lo.min()), 4),
-                "lon_max": round(float(lo.max()), 4),
-            }
-    return out
 
 
 def _track(ds: xr.Dataset) -> list[list[float]]:
@@ -87,31 +41,32 @@ def _track(ds: xr.Dataset) -> list[list[float]]:
 def _worst_qc(ds: xr.Dataset) -> dict[str, Any]:
     """Return ``{delivered, worst_var, worst_bad_pct}`` across the file's ``*_QC`` variables.
 
-    "Bad" is the suspect + fail fraction of a flag array (missing/not-evaluated are not bad). The
-    worst variable is the one with the highest bad fraction; ``delivered`` is whether the file
-    carries any ``*_QC`` variable at all.
+    Three distinct states, so an all-missing / "no QC applied" file never reads as clean:
+
+    - no ``*_QC`` variable at all → ``delivered=False``, ``worst_bad_pct=None``;
+    - ``*_QC`` present but nothing evaluated (all flags missing/not-evaluated/other, e.g. OG1 flag 0)
+      → ``delivered=True``, ``worst_bad_pct=None``;
+    - at least one evaluated flag → ``worst_bad_pct`` is the highest suspect+fail fraction *of the
+      evaluated flags only* (good + suspect + fail), ``worst_var`` the variable carrying it.
     """
     qc_vars = [n for n in ds.data_vars if n.endswith("_QC")]
+    if not qc_vars:
+        return {"delivered": False, "worst_var": None, "worst_bad_pct": None}
     worst_var: str | None = None
     worst_pct = -1.0
     for name in qc_vars:
         counts = qc.flag_counts(ds[name].values)
-        n = sum(counts.values())
-        if not n:
+        evaluated = counts["good"] + counts["suspect"] + counts["fail"]
+        if evaluated == 0:
             continue
-        pct = 100.0 * (counts["suspect"] + counts["fail"]) / n
+        pct = 100.0 * (counts["suspect"] + counts["fail"]) / evaluated
         if pct > worst_pct:
             worst_pct, worst_var = pct, name[: -len("_QC")]
     return {
-        "delivered": bool(qc_vars),
+        "delivered": True,
         "worst_var": worst_var,
         "worst_bad_pct": round(worst_pct, 2) if worst_pct >= 0 else None,
     }
-
-
-def _iso(value: np.datetime64) -> str | None:
-    """Return an ISO minute-resolution string for a datetime64, or None for NaT."""
-    return None if np.isnat(value) else str(value.astype("datetime64[m]"))
 
 
 def mission_manifest(
@@ -148,34 +103,32 @@ def mission_manifest(
     dict
         The manifest, JSON-serialisable.
     """
-    n_prof, n_dive, n_climb = _profile_counts(ds)
-    t0 = ds["TIME"].min().values if "TIME" in ds else np.datetime64("NaT")
-    t1 = ds["TIME"].max().values if "TIME" in ds else np.datetime64("NaT")
-    duration_s = None
-    if "TIME" in ds and not (np.isnat(t0) or np.isnat(t1)):
-        duration_s = int((t1 - t0) / np.timedelta64(1, "s"))
-    max_depth_m = None
-    if "DEPTH" in ds and "PROFILE_NUMBER" in ds:
-        hi = float(tools.max_depth_per_profile(ds).max())
-        max_depth_m = round(hi, 1) if np.isfinite(hi) else None
+    from . import metadata
 
+    f = metadata.mission_facts(ds)  # the same facts the masthead reads, so the two cannot disagree
     missing = [n for n in og1_attrs.MANDATORY_GLOBALS if not str(ds.attrs.get(n) or "").strip()]
     summary = og1_attrs.conformance_summary(ds.attrs)
+
+    def _r(x: float | None, nd: int) -> float | None:
+        return round(x, nd) if x is not None else None
 
     return {
         "manifest_version": 1,
         "id": mission_id,
         "platform": str(ds.attrs.get("platform", "")) or None,
-        "platform_serial": _platform_serial(ds),
-        "start": _iso(t0),
-        "end": _iso(t1),
-        "duration_s": duration_s,
-        "n_profiles": n_prof,
-        "n_dive": n_dive,
-        "n_climb": n_climb,
-        **_extent(ds),
-        "max_depth_m": max_depth_m,
-        "n_records": int(ds.sizes.get("N_MEASUREMENTS", 0)),
+        "platform_serial": f["platform_serial"],
+        "start": metadata.iso_minute(f["t0"]),
+        "end": metadata.iso_minute(f["t1"]),
+        "duration_s": f["duration_s"],
+        "n_profiles": f["n_profiles"],
+        "n_dive": f["n_dive"],
+        "n_climb": f["n_climb"],
+        "lat_min": _r(f["lat_min"], 4),
+        "lat_max": _r(f["lat_max"], 4),
+        "lon_min": _r(f["lon_min"], 4),
+        "lon_max": _r(f["lon_max"], 4),
+        "max_depth_m": _r(f["max_depth_m"], 1),
+        "n_records": f["n_records"],
         "source_file": source_name,
         "source_size_bytes": source_size_bytes,
         "sensors": {

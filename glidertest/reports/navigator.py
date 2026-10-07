@@ -9,25 +9,35 @@ currently holds.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from . import _slots
+from . import _slots, metadata
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
+
+logger = logging.getLogger(__name__)
 
 #: Sensor rows of the completeness matrix: (display label, manifest ``sensors`` key).
 _SENSORS = (("CTD", "ctd"), ("Oxygen", "oxygen"), ("Optics", "optics"), ("Flight", "flight"))
 
 
-def _load_manifests(root: Path) -> tuple[list[dict[str, Any]], list[str]]:
-    """Return ``(manifests, orphan_dirs)`` for *root*: parsed ``report.json``s and dirs lacking one."""
+def _load_manifests(root: Path) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+    """Return ``(manifests, orphan_dirs, unreadable_dirs)`` for *root*.
+
+    A directory with no ``report.json`` is an *orphan* (never a mission); one whose ``report.json``
+    exists but cannot be read or parsed is *unreadable* — a warning is logged and it is surfaced
+    separately, so a corrupt manifest is not silently dropped from the fleet counts as if it were a
+    stray folder.
+    """
     manifests: list[dict[str, Any]] = []
     orphans: list[str] = []
+    unreadable: list[str] = []
     for sub in sorted(p for p in root.iterdir() if p.is_dir()):
         mf = sub / "report.json"
         if not mf.exists():
@@ -35,9 +45,10 @@ def _load_manifests(root: Path) -> tuple[list[dict[str, Any]], list[str]]:
             continue
         try:
             manifests.append(json.loads(mf.read_text(encoding="utf-8")))
-        except (OSError, ValueError):
-            orphans.append(sub.name)
-    return manifests, orphans
+        except (OSError, ValueError) as exc:
+            logger.warning("unreadable report.json in %s: %s", sub.name, exc)
+            unreadable.append(sub.name)
+    return manifests, orphans, unreadable
 
 
 def _track_map(missions: list[dict[str, Any]]) -> str | None:
@@ -70,8 +81,16 @@ def _track_map(missions: list[dict[str, Any]]) -> str | None:
                 ax.plot(lon, lat, color=color, lw=1.3, transform=pc)
                 mp = len(lon) // 2
                 ax.text(lon[mp], lat[mp], mid, fontsize=6, color=color, transform=pc)
+            # Pad 1°, clamped to valid ranges so a high-latitude mission does not push the bound
+            # past ±90° (which PlateCarree rejects).
             ax.set_extent(
-                [all_lon.min() - 1, all_lon.max() + 1, all_lat.min() - 1, all_lat.max() + 1], crs=pc
+                [
+                    max(all_lon.min() - 1, -180.0),
+                    min(all_lon.max() + 1, 180.0),
+                    max(all_lat.min() - 1, -90.0),
+                    min(all_lat.max() + 1, 90.0),
+                ],
+                crs=pc,
             )
             ax.add_feature(cfeature.LAND)
             ax.add_feature(cfeature.OCEAN)
@@ -84,57 +103,50 @@ def _track_map(missions: list[dict[str, Any]]) -> str | None:
     return _slots.render(draw, slot="full")
 
 
-def _fmt_duration(seconds: int | None) -> str:
-    """Return a ``Nd Nh`` duration, or ``UNK`` when the span is unknown."""
-    if seconds is None:
-        return "UNK"
-    days, rem = divmod(int(seconds), 86_400)
-    return f"{days}d {rem // 3600}h"
-
-
 def _qc_cell(qc: dict[str, Any]) -> str:
-    """Return the worst-QC summary for a mission row (e.g. ``DOXY 100% bad``)."""
+    """Return the worst-QC summary for a mission row.
+
+    ``—`` when no ``*_QC`` was delivered or the worst evaluated flag is clean; ``not evaluated`` when
+    flags are present but none were evaluated; else ``<var> N% bad``.
+    """
     if not qc.get("delivered"):
-        return "no flags"
-    var, pct = qc.get("worst_var"), qc.get("worst_bad_pct")
-    if var is None or pct is None:
         return "—"
+    pct = qc.get("worst_bad_pct")
+    if pct is None:
+        return "not evaluated"
     if pct == 0:
-        return "clean"
-    return f"{var} {pct:.0f}% bad"
+        return "—"
+    return f"{qc.get('worst_var')} {pct:.0f}% bad"
 
 
-def _mission_row(m: dict[str, Any], roles: dict[str, str]) -> dict[str, Any]:
-    """Return one missions-table row from a manifest, formatted for display."""
+def _mission_row(m: dict[str, Any]) -> dict[str, Any]:
+    """Return one missions-table row from a manifest, formatted for display.
+
+    The report link is a single pill to the mission's landing page (``<id>/index.html``); the sensor
+    pages are reached from that page's own nav, keeping the fleet table's report column narrow.
+    """
     og1 = m.get("og1", {})
     present, total = og1.get("mandatory_present", 0), og1.get("mandatory_total", 0)
     depth = m.get("max_depth_m")
     return {
         "id": m["id"],
-        "platform": m.get("platform_serial") or m.get("platform") or "—",
         "start": (m.get("start") or "")[:10] or "UNK",  # date only; drop the HH:MM
-        "end": (m.get("end") or "")[:10] or "UNK",
-        "duration": _fmt_duration(m.get("duration_s")),
+        "duration": metadata.fmt_duration(m.get("duration_s")),
         "profiles": str(m.get("n_profiles", 0)),
         "max_depth": f"{depth:.0f} m" if depth is not None else "—",
-        "sensors": m.get("sensors", {}),
         "og1_text": f"{present}/{total}",
         "og1_ok": present >= total > 0,
         "qc": _qc_cell(m.get("qc", {})),
-        "pages": [
-            {"href": f"{m['id']}/{p['file']}", "label": p["label"], "role": roles.get(p["file"], "component")}
-            for p in m.get("pages", [])
-        ],
-        "generated": f"{m.get('glidertest_version', '?')} · {(m.get('generated_at') or '')[:10]}",
+        "report_href": f"{m['id']}/index.html",
+        "generated": (m.get("generated_at") or "")[:10],  # date only; drop version + HH:MM
     }
 
 
 def navigator_data(root: Path) -> dict[str, Any]:
     """Return the navigator page as data: masthead counts, mission rows, completeness matrix, map."""
-    from ._mission import PAGES, _deg_range
+    from ._mission import _deg_range
 
-    roles = {p.filename: p.role for p in PAGES}
-    missions, orphans = _load_manifests(root)
+    missions, orphans, unreadable = _load_manifests(root)
     missions.sort(key=lambda m: m.get("start") or "")
 
     # Unique vehicles by PLATFORM_SERIAL_NUMBER (not the free-text platform attribute).
@@ -164,14 +176,15 @@ def navigator_data(root: Path) -> dict[str, Any]:
     }
     return {
         "counts": counts,
-        "rows": [_mission_row(m, roles) for m in missions],
+        "rows": [_mission_row(m) for m in missions],
         "matrix": matrix,
         "map_png": _track_map(missions),
         "orphans": orphans,
+        "unreadable": unreadable,
     }
 
 
-def build_navigator(root: Path | str) -> Path:
+def build_navigator(root: Path | str, title: str | None = None) -> Path:
     """Render ``<root>/index.html`` from the mission manifests and return its path.
 
     The caller is responsible for the Matplotlib backend (the map is drawn here); use the public
@@ -181,6 +194,9 @@ def build_navigator(root: Path | str) -> Path:
     ----------
     root : pathlib.Path or str
         A root directory holding ``<mission_id>/report.json`` subdirectories.
+    title : str, optional
+        The navigator's masthead title; defaults to the root directory name (e.g. pass
+        ``"VOTO 2023"`` rather than ``_smoke``).
 
     Returns
     -------
@@ -199,7 +215,7 @@ def build_navigator(root: Path | str) -> Path:
         js_top_links=_JS_TOP_LINKS,
         version=__version__,
         generated_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
-        mission_id=root.name or "missions",
+        mission_id=title or root.name or "missions",
         source_name="",
         nav={"rows": [], "back": None, "inventory": []},
         header=data["counts"],
@@ -207,6 +223,7 @@ def build_navigator(root: Path | str) -> Path:
         matrix=data["matrix"],
         map_png=data["map_png"],
         orphans=data["orphans"],
+        unreadable=data["unreadable"],
     )
     out = root / "index.html"
     out.write_text(html, encoding="utf-8")

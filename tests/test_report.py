@@ -137,9 +137,10 @@ def test_conformance_marks_missing_mandatory_amber():
     # Only `title` present: other mandatory attributes (id, Conventions, ...) are missing.
     ds = xr.Dataset(attrs={"title": "t"})
     html = get_template("_og1_conformance.html").render(**metadata.conformance_data(ds))
-    assert "nonconform" in html  # a missing mandatory attribute is marked amber
-    assert "✓ present" in html  # title is present
-    # A missing suggested attribute (geospatial bounds) is not listed at all.
+    assert "<th>Status</th>" not in html  # no status column; presence is shown by the value/dash
+    assert "nonconform" in html  # a missing mandatory attribute's dash cell is amber
+    assert ">t</td>" in html  # title present -> its value is shown
+    # A missing suggested attribute (geospatial bounds) is not listed in the attribute rows.
     assert "geospatial_lat_min</td>" not in html.split("Geospatial extent")[0]
 
 
@@ -378,6 +379,9 @@ def test_titles_and_top_links(tmp_path):
     # Masthead type label (top-right) is per page.
     assert '<span class="masthead-type">Mission report</span>' in index
     assert '<span class="masthead-type">CTD</span>' in ctd
+    # Tab titles: landing is just the id; the inventory tab reads "netCDF Inventory — <id>".
+    inventory = (mdir / "inventory.html").read_text(encoding="utf-8")
+    assert "<title>netCDF Inventory — sea045_20230604T1253_delayed</title>" in inventory
     # Masthead extent is split into Lat and Lon cells with hemisphere-formatted degrees.
     assert "<dt>Lat</dt>" in index and "<dt>Lon</dt>" in index
     assert "°N" in index or "°S" in index
@@ -411,6 +415,38 @@ def test_scalar_table_shows_value_not_minmax():
     assert "Value</th>" in html
     assert "6801673" in html  # the scalar value is shown
     assert "N (valid)" not in html.split("Scalar variables")[1]  # not in the scalar table
+
+
+def test_mission_facts_degrades_on_all_nan_profile_number():
+    from glidertest.reports.metadata import mission_facts
+
+    # DEPTH present but PROFILE_NUMBER all-NaN: the max-depth groupby would raise — mission_facts
+    # must degrade (None, not a substituted 0) rather than abort the report.
+    ds = xr.Dataset(
+        {
+            "DEPTH": ("N_MEASUREMENTS", np.arange(10.0)),
+            "PROFILE_NUMBER": ("N_MEASUREMENTS", np.full(10, np.nan)),
+        },
+        coords={"TIME": ("N_MEASUREMENTS", np.arange(10).astype("datetime64[s]"))},
+    )
+    f = mission_facts(ds)  # must not raise
+    assert f["n_profiles"] is None and f["n_dive"] is None
+    assert f["max_depth_m"] is None
+
+
+def test_manifest_and_header_agree_on_counts():
+    from glidertest.reports._mission import header_card
+    from glidertest.reports.manifest import mission_manifest
+
+    ds = fetchers.load_sample_dataset()
+    header = dict(header_card(ds))
+    manifest = mission_manifest(
+        ds, mission_id="x", source_name="x.nc", source_size_bytes=None,
+        pages=[], version="0", generated_at="t",
+    )
+    # Both read metadata.mission_facts, so the masthead and the manifest cannot disagree.
+    assert str(manifest["n_profiles"]) in header["Profiles"]
+    assert manifest["start"].replace("T", " ") == header["Start"]
 
 
 def test_report_warns_when_id_reused_for_different_file(tmp_path):

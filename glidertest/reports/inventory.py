@@ -25,22 +25,44 @@ def _fmt_scalar(x: float | None) -> str:
     return str(x)[:40]
 
 
-def _scalar_value(v: xr.DataArray) -> str:
-    """Format a 0-d variable's single value, rendering datetime-like scalars as dates.
+def _fmt_dt64(value: object) -> str:
+    """Return ``YYYY-MM-DD HH:MM`` for a datetime64 value, or ``—`` for NaT."""
+    return "—" if np.isnat(value) else str(np.asarray(value).astype("datetime64[m]")).replace("T", " ")
 
-    A ``datetime64`` scalar, or a numeric scalar whose ``standard_name`` is ``"time"`` (epoch
-    seconds, as OG1 writes ``DEPLOYMENT_TIME``), is shown as ``YYYY-MM-DD HH:MM`` rather than a raw
-    ``1.686e+09``; everything else goes through :func:`_fmt_scalar`.
+
+def _decode_cf_time(item: float, units: str, calendar: str = "standard") -> str | None:
+    """Return a date string for a numeric CF time (``"... since ..."`` units), else None.
+
+    Decoded with :func:`xarray.coding.times.decode_cf_datetime` so the stored epoch and calendar are
+    honoured. Without CF units there is nothing to decode, so None is returned rather than guessing a
+    date from the raw number — a guess could be off by orders of magnitude.
     """
-    if v.dtype.kind == "M":  # datetime64
-        t = v.values
-        return "—" if np.isnat(t) else str(t.astype("datetime64[m]")).replace("T", " ")
+    if not (isinstance(units, str) and "since" in units and np.isfinite(item)):
+        return None
+    from xarray.coding.times import decode_cf_datetime
+
+    try:
+        dt = decode_cf_datetime(np.asarray(item), units, calendar)
+    except (ValueError, KeyError):  # malformed units/calendar
+        return None
+    return str(np.asarray(dt).astype("datetime64[m]")).replace("T", " ")
+
+
+def _scalar_value(v: xr.DataArray) -> str:
+    """Format a 0-d variable's single value, decoding CF time through its stored units (never guessed).
+
+    A numeric scalar that merely *looks* like a time (``standard_name == "time"``) but has no units to
+    decode it is shown as the raw number annotated with that attribute, not a date.
+    """
+    if v.dtype.kind == "M":
+        return _fmt_dt64(v.values)
     item = v.values.item()
-    if v.attrs.get("standard_name") == "time" and isinstance(item, (int, float)) and np.isfinite(item):
-        try:
-            return str(np.datetime64(round(item), "s").astype("datetime64[m]")).replace("T", " ")
-        except (ValueError, OverflowError):
-            pass
+    if isinstance(item, (int, float)) and np.isfinite(item):
+        decoded = _decode_cf_time(item, v.attrs.get("units", ""), v.attrs.get("calendar", "standard"))
+        if decoded is not None:
+            return decoded
+        if v.attrs.get("standard_name") == "time":
+            return f"{_fmt_scalar(item)} (standard_name time; no units)"
     return _fmt_scalar(item)
 
 
@@ -54,16 +76,29 @@ def _var_meta(ds: xr.Dataset, name: str) -> dict[str, Any]:
     """
     v = ds[name]
     n = int(np.prod(v.shape)) if v.shape else 1
-    v_min = v_max = None
+    is_time = v.attrs.get("standard_name") == "time" or v.dtype.kind == "M"
+    rng = "—"
     n_valid = n
-    if v.dtype.kind in "fiu" and n:
+    if v.dtype.kind == "M" and n:  # datetime64: show the date range
+        vals = np.asarray(v.values)
+        finite = ~np.isnat(vals)
+        n_valid = int(finite.sum())
+        if n_valid:
+            rng = f"{_fmt_dt64(vals[finite].min())} / {_fmt_dt64(vals[finite].max())}"
+    elif v.dtype.kind in "fiu" and n:
         vals = np.asarray(v.values)
         finite = np.isfinite(vals)
         n_valid = int(finite.sum())
         if n_valid:
-            v_min = vals[finite].min().item()
-            v_max = vals[finite].max().item()
-    rng = "—" if v_min is None and v_max is None else f"{_fmt_scalar(v_min)} / {_fmt_scalar(v_max)}"
+            lo, hi = vals[finite].min().item(), vals[finite].max().item()
+            if is_time:
+                # Numeric time: decode the range with the stored units, or "—" when there are none —
+                # a raw epoch min/max (1.69e+09) is meaningless to show.
+                units, cal = v.attrs.get("units", ""), v.attrs.get("calendar", "standard")
+                dlo, dhi = _decode_cf_time(lo, units, cal), _decode_cf_time(hi, units, cal)
+                rng = f"{dlo} / {dhi}" if dlo and dhi else "—"
+            else:
+                rng = f"{_fmt_scalar(lo)} / {_fmt_scalar(hi)}"
     # A scalar variable (0-d) has one value, not a range: show the value, drop min/max and N.
     value = _scalar_value(v) if v.ndim == 0 else None
     return {
