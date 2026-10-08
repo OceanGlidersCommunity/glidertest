@@ -37,8 +37,9 @@ jobs:
         set -e
         jupyter nbconvert --to notebook --execute notebooks/demo.ipynb --output=demo-output.ipynb
         mv notebooks/*output.ipynb docs/source/
+        python scripts/make_demo.py --clean
         pushd docs
-        make clean html 
+        make clean html
         popd
 
     - name: Deploy

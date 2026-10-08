@@ -26,6 +26,23 @@ Install from PyPI with
 python -m pip install glidertest
 ```
 
+### HTML report
+
+One command turns an OG1 mission file into a self-contained HTML report — a landing page, one page per sensor, a flight page for gliders that report one, and an inventory of the file — and many missions into a fleet page with a map:
+
+```sh
+glidertest report mission.nc --report-dir reports/
+```
+
+or from Python:
+
+```python
+from glidertest import reports
+reports.report(ds, "reports/")
+```
+
+See the [report guide](https://oceangliderscommunity.github.io/glidertest/reports.html) and the [live demo](https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html).
+
 ### Documentation
 
 Documentation is available at [https://oceangliderscommunity.github.io/glidertest/](https://oceangliderscommunity.github.io/glidertest/)
@@ -58,3 +75,9 @@ pytest --cov=glidertest --cov-report term-missing  tests/
 ```
 
 Try to ensure that all the lines of your contribution are covered in the tests.
+
+### Acknowledgements
+
+Initial development of glidertest was supported by the SEACODE project, funded by Voice of the Ocean (VOTO), and by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the PycnMix project (Projektnummer 558671572), which funded Till Moritz's contributions. The HTML report and command-line interface were first developed in preparation for the DFG research infrastructure Swarm of Gliders (Projektnummer 544335393). Sample data are provided by VOTO. glidertest is an OceanGliders community package and welcomes contributions from the community.
+
+Development was assisted by Claude Code (Anthropic) and GitHub Copilot code review.

@@ -32,7 +32,6 @@ one directory get a **fleet page** with a map and a table.
    :maxdepth: 1
    :caption: Demo
 
-   Live demo report <_static/demo/index.html>
    demo-output.ipynb
 
 .. toctree::

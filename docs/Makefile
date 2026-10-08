@@ -12,7 +12,12 @@ BUILDDIR      = build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile
+# Build the live demo report into source/_static/demo/ (downloads the sample data).
+# Run once before "make html"; the CI docs build runs the equivalent step itself.
+demo:
+	python ../scripts/make_demo.py --clean
+
+.PHONY: help Makefile demo
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
