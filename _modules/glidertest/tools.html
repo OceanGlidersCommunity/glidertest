@@ -83,6 +83,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">utilities</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.integrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">cumulative_trapezoid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">glidertest.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">_log</span>
+
 
 <div class="viewcode-block" id="quant_updown_bias">
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_updown_bias">[docs]</a>
@@ -124,7 +126,7 @@
 
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">'dc'</span><span class="p">:</span> <span class="n">dc</span><span class="p">,</span> <span class="s1">'cd'</span><span class="p">:</span> <span class="n">cd</span><span class="p">,</span> <span class="s1">'depth'</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> is not in the dataset'</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> is not in the dataset'</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">df</span></div>
 
@@ -172,7 +174,7 @@
 
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">'mean'</span><span class="p">:</span> <span class="n">mean_var</span><span class="p">,</span> <span class="s1">'depth'</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> is not in the dataset'</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> is not in the dataset'</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">df</span></div>
@@ -280,17 +282,17 @@
 <span class="sd">    -------</span>
 <span class="sd">    bool:</span>
 <span class="sd">        **True** if the variable is monotonically increasing, else **False**. </span>
-<span class="sd">        Additionally, a message is printed indicating the result.  </span>
+<span class="sd">        Additionally, a message is _log.infoed indicating the result.  </span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
 <span class="sd">    Original Author: Chiara Monforte</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">da</span><span class="p">)</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is not always monotonically increasing'</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is not always monotonically increasing'</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is always monotonically increasing'</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">da</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> is always monotonically increasing'</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
 
@@ -623,7 +625,7 @@
 <span class="sd">        Rolling mean of **profile duration** computed using the specified window size.  </span>
 <span class="sd">    overt_prof : numpy.ndarray  </span>
 <span class="sd">        Array of **profile numbers** where the duration exceeds the rolling mean by more than the set **standard deviation threshold**.  </span>
-<span class="sd">        - If outliers are found, a message is printed recommending further investigation. </span>
+<span class="sd">        - If outliers are found, a message is _log.infoed recommending further investigation. </span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    ------</span>
@@ -634,7 +636,7 @@
                 <span class="n">df</span><span class="p">[</span><span class="s1">'profile_duration'</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">rolling_mean</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">rolling_mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span><span class="p">)))</span>
     <span class="n">overt_prof</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'profile_num'</span><span class="p">][</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s1">'There are </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">overtime</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s1"> profiles where the duration differs by </span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s1"> standard deviations of the nearby </span><span class="si">{</span><span class="n">rolling</span><span class="si">}</span><span class="s1"> profiles. Further checks are recommended'</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rolling_mean</span><span class="p">,</span> <span class="n">overt_prof</span></div>
 
@@ -728,7 +730,7 @@
     <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">required_vars</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">var_sigma_1</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Variable '</span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">' already exists in the dataset. Skipping calculation."</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Variable '</span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">' already exists in the dataset. Skipping calculation."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ds</span>
 
     <span class="c1"># Extract required variables</span>
@@ -742,7 +744,7 @@
     <span class="n">valid</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">TEMP</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">PSAL</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">PRES</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">LAT</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">LON</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">valid</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"All values are invalid for </span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">; output will contain only NaNs."</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"All values are invalid for </span><span class="si">{</span><span class="n">var_sigma_1</span><span class="si">}</span><span class="s2">; output will contain only NaNs."</span><span class="p">)</span>
         <span class="n">ds</span><span class="p">[</span><span class="n">var_sigma_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">PRES</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span> 
             <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">'N_MEASUREMENTS'</span><span class="p">,),</span>
@@ -811,11 +813,11 @@
                             <span class="n">ref_depth</span><span class="o">=</span><span class="n">ref_depth</span><span class="p">,</span> <span class="n">use_bins</span><span class="o">=</span><span class="n">use_bins</span><span class="p">,</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">'CR'</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">variable</span> <span class="o">!=</span> <span class="s1">'SIGMA_1'</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: </span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2"> can not be used for convective resistance calulation. Instead use SIGMA_1 for CR calculation."</span><span class="p">)</span>
+            <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: </span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2"> can not be used for convective resistance calulation. Instead use SIGMA_1 for CR calculation."</span><span class="p">)</span>
             <span class="n">variable</span> <span class="o">=</span> <span class="s1">'SIGMA_1'</span>
         <span class="n">groups</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">group_by_profiles</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">variable</span><span class="p">,</span> <span class="s2">"DEPTH"</span><span class="p">,</span><span class="s2">"TIME"</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">"Warning: CR threshold should be negative. Using -2 as default."</span><span class="p">)</span>
+            <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Warning: CR threshold should be negative. Using -2 as default."</span><span class="p">)</span>
             <span class="n">threshold</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
         <span class="n">mld</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">mld_profile_CR</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">use_bins</span><span class="o">=</span><span class="n">use_bins</span><span class="p">,</span> <span class="n">binning</span><span class="o">=</span><span class="n">binning</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -889,7 +891,7 @@
     <span class="c1"># Remove NaNs and check if valid data remains</span>
     <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">valid</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"No valid depth or density data for MLD calculation."</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"No valid depth or density data for MLD calculation."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="n">depth</span><span class="p">,</span> <span class="n">density</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">density</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
@@ -914,11 +916,11 @@
     <span class="n">density_below</span> <span class="o">=</span> <span class="n">density</span><span class="p">[</span><span class="n">mask_below</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">depth_below</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No data below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m"</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No data below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">density_below</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">density_ref</span> <span class="o">+</span> <span class="n">threshold</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No density values below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m exceed the threshold."</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No density values below reference depth </span><span class="si">{</span><span class="n">ref_depth</span><span class="si">}</span><span class="s2"> m exceed the threshold."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="c1"># Find first crossing of the threshold</span>
@@ -1080,7 +1082,7 @@
     <span class="c1"># Select depths up to h</span>
     <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth</span> <span class="o">&lt;=</span> <span class="n">h</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">depth</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Not enough data points for depth </span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s2"> m"</span><span class="p">)</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Not enough data points for depth </span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s2"> m"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="n">depth_masked</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
