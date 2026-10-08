@@ -7,13 +7,15 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import datetime
 
+from glidertest import __version__
+
 year = datetime.datetime.now(tz=datetime.timezone.utc).date().year
 
 # General information about the project.
 project = 'glidertest'
 author = 'Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo'
 copyright = f"{year}, {author}"
-release = 'v0.0.1'
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -23,6 +25,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "nbsphinx",
+    "sphinxarg.ext",
 ]
 
 
@@ -38,6 +41,6 @@ exclude_patterns = []
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
-source_suffix = [".rst", ".md"]
+source_suffix = [".rst"]
 
 html_logo = "_static/glider.png"

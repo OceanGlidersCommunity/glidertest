@@ -58,6 +58,7 @@ optional-dependencies.dev = [
   "pytest-cov",
   "pytest-socket",
   "sphinx<8.2",
+  "sphinx-argparse",
   "sphinx-rtd-theme",
 ]
 urls.documentation = "https://oceangliderscommunity.github.io/glidertest/"

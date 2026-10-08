@@ -351,13 +351,16 @@ def cmd_navigator(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> None:
-    """Parse *argv* (default ``sys.argv``), dispatch to a subcommand, and exit with its code.
+def build_parser() -> argparse.ArgumentParser:
+    """Build the ``glidertest`` argument parser (the ``report`` and ``navigator`` subcommands).
 
-    Parameters
-    ----------
-    argv : list of str, optional
-        Argument vector excluding the program name; defaults to ``sys.argv[1:]``.
+    Separated from :func:`main` so the documentation can render the parser with
+    ``sphinx-argparse`` and the two cannot drift apart.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        The configured top-level parser.
     """
     parser = argparse.ArgumentParser(
         prog="glidertest",
@@ -369,6 +372,18 @@ def main(argv: list[str] | None = None) -> None:
     sub = parser.add_subparsers(dest="command", title="commands", metavar="<command>")
     _add_report_parser(sub)
     _add_navigator_parser(sub)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Parse *argv* (default ``sys.argv``), dispatch to a subcommand, and exit with its code.
+
+    Parameters
+    ----------
+    argv : list of str, optional
+        Argument vector excluding the program name; defaults to ``sys.argv[1:]``.
+    """
+    parser = build_parser()
     args = parser.parse_args(argv)
     if args.command is None:
         # No subcommand: show the full help (which lists report and navigator) rather than a terse
