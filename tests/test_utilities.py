@@ -28,17 +28,17 @@ def test_depth_z():
 
 def test_labels():
     ds = fetchers.load_sample_dataset()
-    var = 'PITCH'
-    label = utilities.plotting_labels(var)
+    vars = 'PITCH'
+    label = utilities.plotting_labels(vars)
     assert label == 'PITCH'
-    colormap = utilities.plotting_colormap(var)
+    colormap = utilities.plotting_colormap(vars)
     assert colormap == cmo.delta
-    var = 'TEMP'
-    label = utilities.plotting_labels(var)
+    vars = 'TEMP'
+    label = utilities.plotting_labels(vars)
     assert label == 'Temperature'
-    unit=utilities.plotting_units(ds, var)
+    unit=utilities.plotting_units(ds, vars)
     assert unit == 'Celsius'
-    colormap = utilities.plotting_colormap(var)
+    colormap = utilities.plotting_colormap(vars)
     assert colormap == cmo.thermal
 
 def test_bin_profile():

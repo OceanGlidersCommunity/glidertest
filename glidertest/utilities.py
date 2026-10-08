@@ -242,13 +242,13 @@ def bin_profile(ds_profile, vars, binning, agg: str = 'mean'):
     profile_number = profile_number[msk]
 
     # Check for short or empty input data and return empty DataFrame
-    if any(len(ds_profile[var]) <= 1 for var in vars) or len(depth) <= 1:
+    if any(len(ds_profile[v]) <= 1 for v in vars) or len(depth) <= 1:
         return pd.DataFrame(columns=vars + ['DEPTH', 'PROFILE_NUMBER'])
 
-    for var in vars:
-        var_grid, prof_num_grid, depth_grid = construct_2dgrid(profile_number, depth, ds_profile[var].values[msk],
+    for v in vars:
+        var_grid, prof_num_grid, depth_grid = construct_2dgrid(profile_number, depth, ds_profile[v].values[msk],
                                                                 xi=1, yi=binning, x_bin_center=False, y_bin_center=True, agg=agg)
-        binned_data[var] = var_grid[0]
+        binned_data[v] = var_grid[0]
     binned_data['DEPTH'] = depth_grid[0]
     binned_data['PROFILE_NUMBER'] = prof_num_grid[0]
 
@@ -518,7 +518,7 @@ label_dict = {
     },
 }
 
-def plotting_labels(var: str):
+def plotting_labels(s: str):
     """
     Retrieves the label associated with a variable from a predefined dictionary.
 
@@ -527,7 +527,7 @@ def plotting_labels(var: str):
 
     Parameters
     ----------
-    var: str
+    vars: str
         The variable (key) whose label is to be retrieved.
 
     Returns
@@ -540,13 +540,13 @@ def plotting_labels(var: str):
     -----
     Original Author: Chiara Monforte
     """
-    if var in label_dict:
-        label = f'{label_dict[var]["label"]}'
+    if vars in label_dict:
+        label = f'{label_dict[vars]["label"]}'
     else:
-        label= f'{var}'
+        label= f'{vars}'
     return label
 
-def plotting_units(ds: xr.Dataset,var: str):
+def plotting_units(ds: xr.Dataset,vars: str):
     """
     Retrieves the units associated with a variable from a dataset or a predefined dictionary.
 
@@ -558,7 +558,7 @@ def plotting_units(ds: xr.Dataset,var: str):
     ----------
     ds: xarray.Dataset
         The dataset containing the variable `var`.
-    var: str 
+    vars: str
         The variable (key) whose units are to be retrieved.
 
     Returns
@@ -572,14 +572,14 @@ def plotting_units(ds: xr.Dataset,var: str):
     Original Author: Chiara Monforte
     """
 
-    if 'units' in ds[var].attrs:
-        return ds[var].attrs['units']
-    elif var in label_dict:
-        return f'{label_dict[var]["units"]}'
+    if 'units' in ds[vars].attrs:
+        return ds[vars].attrs['units']
+    elif vars in label_dict:
+        return f'{label_dict[vars]["units"]}'
     else:
         return ""
     
-def plotting_colormap(var: str):
+def plotting_colormap(vars: str):
     """
     Retrieves the colormap associated with a variable from a predefined dictionary.
 
@@ -588,7 +588,7 @@ def plotting_colormap(var: str):
 
     Parameters
     ----------
-    var: str
+    vars: str
         The variable (key) whose colormap is to be retrieved.
 
     Returns
@@ -601,13 +601,13 @@ def plotting_colormap(var: str):
     -----
     Original Author: Till Moritz
     """
-    if var in label_dict:
-        colormap = label_dict[var]["colormap"]
+    if vars in label_dict:
+        colormap = label_dict[vars]["colormap"]
     else:
         colormap = cmo.delta
     return colormap
 
-def group_by_profiles(ds, variables=None):
+def group_by_profiles(ds, vars=None):
     """
     Group glider dataset by the dive profile number.
 
@@ -619,7 +619,7 @@ def group_by_profiles(ds, variables=None):
     ----------
     ds : xarray.Dataset
         A 1-dimensional glider dataset containing profile information.
-    variables : list of str, optional
+    vars : list of str, optional
         A list of variable names to group by, if only a subset of the dataset should be included in the grouping.
         Grouping by a subset is more memory-efficient and faster.
 
@@ -636,8 +636,8 @@ def group_by_profiles(ds, variables=None):
     [Source Code](https://github.com/GliderToolsCommunity/GliderTools/blob/master/glidertools/utils.py)
     """
     ds = ds.reset_coords().to_pandas().reset_index().set_index("PROFILE_NUMBER")
-    if variables:
-        return ds[variables].groupby("PROFILE_NUMBER")
+    if vars:
+        return ds[vars].groupby("PROFILE_NUMBER")
     else:
         return ds.groupby("PROFILE_NUMBER")
         
