@@ -82,10 +82,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateFormatter</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mdates</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">cmocean.cm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cmo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaxNLocator</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
@@ -741,6 +740,57 @@
         <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"PROFILE_NUMBER"</span><span class="p">)</span></div>
 
         
+<div class="viewcode-block" id="get_color_limits">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.get_color_limits">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_color_limits</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">log_scale</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">finite</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">log_scale</span><span class="p">:</span>
+        <span class="n">finite</span> <span class="o">=</span> <span class="n">finite</span><span class="p">[</span><span class="n">finite</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">finite</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No positive values available for LogNorm."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">finite</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"Warning: Some non-positive values will be ignored in log scale."</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">finite</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">finite</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">),)</span></div>
+
+
+
+<div class="viewcode-block" id="get_contour_levels">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.utilities.get_contour_levels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_contour_levels</span><span class="p">(</span><span class="n">levels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># If the user passed an explicit array/list of levels, use it directly</span>
+    <span class="k">if</span> <span class="n">levels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">levels</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">levels</span>
+
+    <span class="c1"># If levels is an integer or None, use it as the target number of intervals</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">levels</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">levels</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">else</span> <span class="mi">10</span>
+
+    <span class="k">if</span> <span class="n">log_scale</span><span class="p">:</span>
+        <span class="c1"># Find clean decade limits that encompass vmin and vmax</span>
+        <span class="n">dec_min</span><span class="p">,</span> <span class="n">dec_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">vmin</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">vmax</span><span class="p">))</span>
+
+        <span class="c1"># LogLocator naturally picks clean base-10 steps (e.g., 10^-5, 10^-4...)</span>
+        <span class="n">locator</span> <span class="o">=</span> <span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">num</span><span class="p">,</span> <span class="n">subs</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">)</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">locator</span><span class="o">.</span><span class="n">tick_values</span><span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="n">dec_min</span><span class="p">,</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">dec_max</span><span class="p">)</span>
+
+        <span class="c1"># Filter levels to strictly fall within your desired vmin/vmax range</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">levels</span><span class="p">[(</span><span class="n">levels</span> <span class="o">&gt;=</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">levels</span> <span class="o">&lt;=</span> <span class="n">vmax</span><span class="p">)]</span>
+        <span class="c1"># If not enough levels are found, fallback to geometric spacing</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">levels</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">num</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># MaxNLocator finds clean intervals (multiples of 1, 2, 5, 10)</span>
+        <span class="n">locator</span> <span class="o">=</span> <span class="n">MaxNLocator</span><span class="p">(</span><span class="n">nbins</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">num</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">locator</span><span class="o">.</span><span class="n">tick_values</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
+
+        <span class="c1"># Filter and append strict boundary limits</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="n">levels</span><span class="p">[(</span><span class="n">levels</span> <span class="o">&gt;=</span> <span class="n">vmin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">levels</span> <span class="o">&lt;=</span> <span class="n">vmax</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">levels</span></div>
+
 </pre></div>
 
            </div>
