@@ -211,9 +211,7 @@ def cmd_report(args: argparse.Namespace) -> int:
     import xarray as xr
 
     from glidertest import reports
-    from glidertest.reports import paths
-    from glidertest.reports._mission import _safe_dirname
-    from glidertest.reports._mission import mission_id as derive_mid
+    from glidertest.reports import paths, resolve_mission_id
 
     flat = args.output_dir is not None
     root = args.output_dir if flat else args.report_dir
@@ -244,27 +242,27 @@ def cmd_report(args: argparse.Namespace) -> int:
         )
         return 2
 
-    def mission_name(path: Path) -> str:
-        """The mission directory name for *path*: the override, else derived from the dataset."""
+    def resolve_name(path: Path) -> str | None:
+        """The mission directory name for *path*, or None if the file cannot be opened."""
         if args.mission_id:
-            return _safe_dirname(args.mission_id)
-        with xr.open_dataset(path) as ds:
-            return derive_mid(ds)
-
-    def mission_name_or_none(path: Path) -> str | None:
-        """As :func:`mission_name`, but None for a file that cannot be opened (reported later)."""
+            return resolve_mission_id(None, args.mission_id)  # the override needs no dataset
         try:
-            return mission_name(path)
-        except Exception:  # noqa: BLE001  # an unreadable file is reported in the main loop
+            with xr.open_dataset(path) as ds:
+                return resolve_mission_id(ds)
+        except Exception:  # any unreadable file is reported in the main loop, so None here
             return None
 
-    # Refuse a run where two files would overwrite each other under one mission id (root layout
-    # only; flat is single-file). A delayed and a real-time file sharing one OG1 id, or a file and
-    # its _subset, would otherwise silently clobber each other.
+    # Resolve each mission's directory name once, up front (root layout only; flat is single-file
+    # and resolved inside report()). The name is reused by the collision, skip-existing and dry-run
+    # checks and passed to report(), so a file's id is derived once per run, not three times.
+    names: dict[Path, str | None] = {}
     if not flat:
-        by_name: dict[str, list[Path]] = {}
         for path in files:
-            name = mission_name_or_none(path)
+            names[path] = resolve_name(path)
+        # Refuse a run where two files would overwrite each other under one mission id. A delayed
+        # and a real-time file sharing one OG1 id, or a file and its _subset, would otherwise clobber.
+        by_name: dict[str, list[Path]] = {}
+        for path, name in names.items():
             if name is not None:
                 by_name.setdefault(name, []).append(path)
         collisions = {n: ps for n, ps in by_name.items() if len(ps) > 1}
@@ -278,40 +276,53 @@ def cmd_report(args: argparse.Namespace) -> int:
             return 1
 
     failed = 0
+    wrote = 0  # missions written (or, under --dry-run, that would be written)
     for path in files:
         if not path.is_file():
             print(f"{path}: no such file", file=sys.stderr)
             failed += 1
             continue
+        name = names.get(path)  # None in flat layout (resolved inside report()) or if unreadable
         try:
-            # The mission name needs the dataset (opened lazily) unless --mission-id set it; derive
-            # it once per file for the skip-existing and dry-run paths (root layout only).
-            name = None if flat else mission_name(path)
             if args.skip_existing and name is not None and paths.manifest_path(root, name).exists():
                 print(f"{path}: skipped ({name} already reported)")
                 continue
             if args.dry_run:
-                dest = root if flat else paths.mission_dir(root, name)
-                print(f"{path} -> {dest}/")
+                if flat:
+                    print(f"{path} -> {root}/")
+                elif name is not None:
+                    print(f"{path} -> {paths.mission_dir(root, name)}/")
+                else:
+                    print(f"{path}: unreadable (would fail)", file=sys.stderr)
+                    failed += 1
+                    continue
+                wrote += 1
                 continue
             with xr.open_dataset(path) as ds:
                 landing = reports.report(
                     ds,
                     root,
                     navigator=False,
-                    mission_id=args.mission_id,
+                    mission_id=(None if flat else name),
                     layout="flat" if flat else "root",
                 )
             print(landing)
-        except Exception as exc:  # noqa: BLE001  # one line per failing file; the run continues
+            wrote += 1
+        except Exception as exc:  # catch-all at the file boundary: one line per failure, run on
             print(f"{path}: {type(exc).__name__}: {exc}", file=sys.stderr)
             failed += 1
             continue
 
-    if not flat:
+    # Rebuild the fleet page only when a mission was written (or would be, under --dry-run): an
+    # all-skipped re-run leaves the existing fleet page untouched, keeping re-runs cheap, and an
+    # all-failed run never calls navigator() on a root that may not exist.
+    if not flat and not args.no_navigator:
         if args.dry_run:
-            print(f"would rebuild {root / 'index.html'}")
-        elif not args.no_navigator:
+            if wrote:
+                print(f"would rebuild {root / 'index.html'}")
+            else:
+                print(f"nothing to write; {root / 'index.html'} would not be rebuilt")
+        elif wrote:
             print(reports.navigator(root, title=args.title))
 
     return 1 if failed else 0

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from . import _slots, metadata
+from . import _slots, metadata, paths
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
@@ -39,7 +39,7 @@ def _load_manifests(root: Path) -> tuple[list[dict[str, Any]], list[str], list[s
     orphans: list[str] = []
     unreadable: list[str] = []
     for sub in sorted(p for p in root.iterdir() if p.is_dir()):
-        mf = sub / "report.json"
+        mf = paths.manifest_in(sub)
         if not mf.exists():
             orphans.append(sub.name)
             continue

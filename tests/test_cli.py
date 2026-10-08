@@ -1,15 +1,13 @@
-import matplotlib
+import shutil
+import subprocess
+import sys
+import warnings
 
-matplotlib.use("agg")  # no display; the CLI forces this too
+import pytest
 
-import shutil  # noqa: E402
-import subprocess  # noqa: E402
-import sys  # noqa: E402
-
-import pytest  # noqa: E402
-
-from glidertest import fetchers  # noqa: E402
-from glidertest.cli import _expand_inputs, main  # noqa: E402
+from glidertest import fetchers
+from glidertest.cli import _expand_inputs, main
+from glidertest.reports import paths
 
 SG015 = "sg015_20050213T230253_delayed.nc"  # 544 KB; the fast choice for most tests
 SEA045 = "sea045_20230604T1253_delayed.nc"  # a second, distinct mission id
@@ -31,7 +29,7 @@ def _mission_dirs(root):
     """Subdirectories of *root* that hold a report.json (i.e. a written mission)."""
     if not root.is_dir():
         return []
-    return [d for d in sorted(root.iterdir()) if d.is_dir() and (d / "report.json").exists()]
+    return [d for d in sorted(root.iterdir()) if d.is_dir() and paths.manifest_in(d).exists()]
 
 
 # --- parser / help (no data) -------------------------------------------------
@@ -229,3 +227,103 @@ def test_navigator_rebuilds(tmp_path):
 def test_navigator_missing_root(tmp_path, capsys):
     assert _run(["navigator", str(tmp_path / "nope")]) == 1
     assert "no such directory" in capsys.readouterr().err
+
+
+# --- error branches (no data download) ---------------------------------------
+
+
+def test_report_no_files_matched(tmp_path, capsys):
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    assert _run(["report", str(empty), "--report-dir", str(tmp_path / "out")]) == 1
+    assert "no files matched" in capsys.readouterr().err
+
+
+def test_report_unreadable_file_continues(tmp_path, capsys):
+    bad = tmp_path / "bad.nc"
+    bad.write_text("not a netcdf file")  # present but not a dataset: open raises, run continues
+    assert _run(["report", str(bad), "--report-dir", str(tmp_path / "out")]) == 1
+    assert "bad.nc" in capsys.readouterr().err
+
+
+def test_report_rejects_bad_layout(tmp_path):
+    import xarray as xr
+
+    from glidertest.reports import report
+
+    with pytest.raises(ValueError, match="layout"):
+        report(xr.Dataset(), tmp_path, layout="sideways")
+
+
+# --- library guards that back the CLI (report()/navigator()) -----------------
+
+
+def test_report_rejects_mission_id_with_flat(tmp_path):
+    import xarray as xr
+
+    from glidertest.reports import report
+
+    with pytest.raises(ValueError, match="mission_id"):
+        report(xr.Dataset(), tmp_path, layout="flat", mission_id="x")
+
+
+def test_report_flat_refuses_report_root(tmp_path):
+    import xarray as xr
+
+    from glidertest.reports import report
+
+    root = tmp_path / "root"
+    (root / "m1").mkdir(parents=True)
+    (root / "m1" / "report.json").write_text("{}")  # makes `root` a report root
+    with pytest.raises(ValueError, match="report root"):
+        report(xr.Dataset(), root, layout="flat")
+
+
+def test_report_flat_into_report_root_fails_via_cli(tmp_path, capsys):
+    root = tmp_path / "root"
+    (root / "m1").mkdir(parents=True)
+    (root / "m1" / "report.json").write_text("{}")
+    assert _run(["report", _sample_path(), "-o", str(root)]) == 1
+    assert "report root" in capsys.readouterr().err
+
+
+def test_navigator_missing_root_raises(tmp_path):
+    from glidertest.reports import navigator
+
+    with pytest.raises(FileNotFoundError, match="report root not found"):
+        navigator(tmp_path / "nope")
+
+
+def test_report_flat_warns_only_on_different_source(tmp_path):
+    import xarray as xr
+
+    from glidertest.reports import report
+
+    src = _sample_path()
+    a, b = tmp_path / "a.nc", tmp_path / "b.nc"
+    shutil.copy(src, a)
+    shutil.copy(src, b)
+    out = tmp_path / "out"
+    with xr.open_dataset(a) as ds:
+        report(ds, out, layout="flat")  # first write, no prior report: no warning
+    with xr.open_dataset(a) as ds, warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")  # re-run, same source file: no overwrite warning
+        report(ds, out, layout="flat")
+    assert not any("already holds a report" in str(w.message) for w in caught)
+    with xr.open_dataset(b) as ds, pytest.warns(UserWarning, match="already holds a report"):
+        report(ds, out, layout="flat")  # different source file into the same dir: warns
+
+
+def test_report_skip_existing_leaves_fleet_page(tmp_path, capsys):
+    p = _sample_path()
+    assert _run(["report", p, "--report-dir", str(tmp_path)]) == 0
+    index = tmp_path / "index.html"
+    before = index.stat().st_mtime_ns
+    capsys.readouterr()
+    # An all-skipped re-run writes nothing, so the fleet page is left untouched (cheap re-run).
+    assert _run(["report", p, "--report-dir", str(tmp_path), "--skip-existing"]) == 0
+    assert index.stat().st_mtime_ns == before
+    # --dry-run over the same (all skipped) says the real run would not rebuild.
+    capsys.readouterr()
+    assert _run(["report", p, "--report-dir", str(tmp_path), "--skip-existing", "-n"]) == 0
+    assert "would not be rebuilt" in capsys.readouterr().out

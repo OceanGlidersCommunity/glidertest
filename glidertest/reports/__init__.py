@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
     from ._mission import Page
 
-__all__ = ["navigator", "report"]
+__all__ = ["navigator", "report", "resolve_mission_id"]
 
 #: Masthead nav rows, in order: (``Page.nav_group`` key, row label). The inventory group is a
 #: separate strip, not a row. Built in the planned shared-design-system shape
@@ -52,6 +52,33 @@ def _build_nav(pages: list[Page], current: Page, source_name: str, *, back: bool
         else None
     )
     return {"rows": rows, "back": back_pill, "inventory": inventory}
+
+
+def resolve_mission_id(ds: xr.Dataset | None, mission_id: str | None = None) -> str:
+    """Return the sanitised mission directory name: *mission_id* if given, else derived from *ds*.
+
+    The single source for turning a dataset (and an optional caller override) into the subdirectory
+    name used under a report root, shared by :func:`report` and the command-line interface so the
+    two cannot disagree about where a mission is written. With *mission_id* the override is sanitised
+    (path separators neutralised); *ds* is not read. Otherwise the name is the OG1 ``id`` attribute,
+    else the source file stem (see :func:`glidertest.reports._mission.mission_id`).
+
+    Parameters
+    ----------
+    ds : xarray.Dataset or None
+        The dataset to derive the name from; may be None only when *mission_id* is given.
+    mission_id : str, optional
+        An explicit name to use instead of the derived one.
+
+    Returns
+    -------
+    str
+        The sanitised mission directory name.
+    """
+    from ._mission import _safe_dirname
+    from ._mission import mission_id as _derive
+
+    return _safe_dirname(mission_id) if mission_id else _derive(ds)
 
 
 def report(
@@ -98,7 +125,8 @@ def report(
         when ``layout="flat"``.
     mission_id : str, optional
         Subdirectory name for this mission, overriding the name derived from *ds*; run through the
-        same sanitising as the derived name. Ignored when ``layout="flat"`` (no subdirectory).
+        same sanitising as the derived name. Must not be combined with ``layout="flat"`` (there is
+        no subdirectory to name) — doing so raises :class:`ValueError`.
     layout : {"root", "flat"}, default "root"
         ``"root"`` writes the mission into ``<outdir>/<mission_id>/``; ``"flat"`` writes the pages
         directly into *outdir* and builds no navigator.
@@ -113,18 +141,27 @@ def report(
     import matplotlib.pyplot as plt
 
     from .._version import __version__
-    from . import _figdebug, _mission, paths
+    from . import _figdebug, paths
     from ._env import get_template
-    from ._mission import PAGES, Ctx, _safe_dirname, build, header_card
+    from ._mission import PAGES, Ctx, build, header_card
     from ._report_css import _JS_TOP_LINKS, PACKAGE_ACCENT, SHARED_CSS
     from .manifest import mission_manifest
 
     if layout not in ("root", "flat"):
         msg = f"layout must be 'root' or 'flat', got {layout!r}"
         raise ValueError(msg)
+    if mission_id is not None and layout == "flat":
+        msg = "mission_id cannot be combined with layout='flat' (there is no subdirectory to name)"
+        raise ValueError(msg)
     root = Path(outdir)
-    # _mission.mission_id (module attribute) avoids shadowing by the mission_id parameter here.
-    mid = _safe_dirname(mission_id) if mission_id else _mission.mission_id(ds)
+    if layout == "flat" and paths.is_report_root(root):
+        msg = (
+            f"{root} is a report root (it already holds mission subdirectories); writing a flat "
+            f"report here would overwrite its fleet index.html. Use layout='root', or a fresh "
+            f"directory."
+        )
+        raise ValueError(msg)
+    mid = resolve_mission_id(ds, mission_id)
     missiondir = root if layout == "flat" else paths.mission_dir(root, mid)
     do_navigator = navigator and layout == "root"
     (missiondir / "figures").mkdir(parents=True, exist_ok=True)
@@ -140,21 +177,29 @@ def report(
         except OSError:
             source_size = None
 
-    # Overwriting a mission on a re-run is intended; overwriting with a *different* source file under
-    # the same OG1 id is a metadata problem (two files claiming one id) — surface it, do not hide it.
-    existing = missiondir / "report.json"
+    # Overwriting on a re-run (same source file) is intended and silent; overwriting with a
+    # *different* source file is worth a warning, whose cause differs by layout: in root layout two
+    # files share one OG1 id (a metadata problem); in flat layout the output directory was reused.
+    existing = paths.manifest_in(missiondir)
     if existing.exists():
         try:
             prev = json.loads(existing.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             prev = {}
-        if prev.get("source_file") and prev["source_file"] != source_name:
-            warnings.warn(
-                f"mission id {mid!r} already reported from {prev['source_file']!r}; "
-                f"overwriting with {source_name!r}. Two files sharing one OG1 id is a metadata "
-                f"problem — check the 'id' attribute of both files.",
-                stacklevel=2,
-            )
+        prev_source = prev.get("source_file")
+        if prev_source and prev_source != source_name:
+            if layout == "flat":
+                msg = (
+                    f"{root} already holds a report for {prev_source!r}; "
+                    f"overwriting with {source_name!r}."
+                )
+            else:
+                msg = (
+                    f"mission id {mid!r} already reported from {prev_source!r}; overwriting with "
+                    f"{source_name!r}. Two files sharing one OG1 id is a metadata problem — check "
+                    f"the 'id' attribute of both files."
+                )
+            warnings.warn(msg, stacklevel=2)
 
     generated_at = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     common = {
@@ -206,7 +251,7 @@ def report(
             version=__version__,
             generated_at=generated_at,
         )
-        (missiondir / "report.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        existing.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
         if do_navigator:
             _build_navigator(root)  # draws the tracks map under the same Agg backend
@@ -236,7 +281,17 @@ def navigator(root: Path | str, title: str | None = None) -> Path:
     -------
     pathlib.Path
         The path to the written ``<root>/index.html``.
+
+    Raises
+    ------
+    FileNotFoundError
+        If *root* is not an existing directory.
     """
+    root = Path(root)
+    if not root.is_dir():
+        msg = f"report root not found: {root}"
+        raise FileNotFoundError(msg)
+
     import matplotlib
     import matplotlib.pyplot as plt
 
@@ -245,7 +300,7 @@ def navigator(root: Path | str, title: str | None = None) -> Path:
     if switch:
         plt.switch_backend("Agg")
     try:
-        return _build_navigator(Path(root), title)
+        return _build_navigator(root, title)
     finally:
         if switch:
             plt.switch_backend(orig_backend)
