@@ -47,8 +47,11 @@ def test_version(capsys):
     assert capsys.readouterr().out.strip().startswith("glidertest ")
 
 
-def test_no_subcommand_is_usage_error():
+def test_no_subcommand_lists_commands(capsys):
     assert _run([]) == 2
+    err = capsys.readouterr().err  # full help, so the commands are named
+    assert "report" in err
+    assert "navigator" in err
 
 
 def test_report_requires_output(capsys):
@@ -187,6 +190,15 @@ def test_report_pattern_selects(tmp_path):
     assert len(_mission_dirs(out)) == 1
 
 
+def test_report_links_back_to_fleet(tmp_path):
+    # Each mission's pages are written with navigator=False in the batch, yet still link back to the
+    # fleet page that is built once at the end.
+    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path)]) == 0
+    html = (_mission_dirs(tmp_path)[0] / "index.html").read_text(encoding="utf-8")
+    assert "All missions" in html
+    assert 'href="../index.html"' in html
+
+
 # --- report (flat layout, -o) ------------------------------------------------
 
 
@@ -197,6 +209,7 @@ def test_report_flat_output(tmp_path):
     assert (out / "report.json").exists()
     assert (out / "figures").is_dir()
     assert _mission_dirs(out) == []  # no <mission_id>/ nesting
+    assert "All missions" not in (out / "index.html").read_text(encoding="utf-8")  # no fleet page
 
 
 def test_report_flat_rejects_multiple(tmp_path):
@@ -226,7 +239,29 @@ def test_navigator_rebuilds(tmp_path):
 
 def test_navigator_missing_root(tmp_path, capsys):
     assert _run(["navigator", str(tmp_path / "nope")]) == 1
-    assert "no such directory" in capsys.readouterr().err
+    assert "not found" in capsys.readouterr().err
+
+
+def test_navigator_rejects_mission_dir_via_cli(tmp_path, capsys):
+    # A flat -o report folder has a top-level report.json; pointing navigator at it would overwrite
+    # its landing page with an empty fleet page, so it is refused.
+    out = tmp_path / "one"
+    assert _run(["report", _sample_path(), "-o", str(out)]) == 0
+    landing_before = (out / "index.html").read_bytes()
+    assert _run(["navigator", str(out)]) == 1
+    assert "mission report directory" in capsys.readouterr().err
+    assert (out / "index.html").read_bytes() == landing_before  # landing page untouched
+
+
+def test_report_flat_skip_existing(tmp_path, capsys):
+    out = tmp_path / "one"
+    assert _run(["report", _sample_path(), "-o", str(out)]) == 0
+    manifest = out / "report.json"
+    before = manifest.stat().st_mtime_ns
+    capsys.readouterr()
+    assert _run(["report", _sample_path(), "-o", str(out), "--skip-existing"]) == 0
+    assert "skipped" in capsys.readouterr().out
+    assert manifest.stat().st_mtime_ns == before  # not regenerated
 
 
 # --- error branches (no data download) ---------------------------------------
@@ -292,6 +327,14 @@ def test_navigator_missing_root_raises(tmp_path):
 
     with pytest.raises(FileNotFoundError, match="report root not found"):
         navigator(tmp_path / "nope")
+
+
+def test_navigator_rejects_mission_dir(tmp_path):
+    from glidertest.reports import navigator
+
+    (tmp_path / "report.json").write_text("{}")  # a mission dir (top-level manifest), not a root
+    with pytest.raises(ValueError, match="mission report directory"):
+        navigator(tmp_path)
 
 
 def test_report_flat_warns_only_on_different_source(tmp_path):

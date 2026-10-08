@@ -16,20 +16,9 @@
 {% endfor %}
 </tbody>
 </table>
-<p class="caption">Per-sensor presence is in the completeness matrix below; the page buttons open each mission's pages.</p>
+<p class="caption">The page buttons open each mission's pages.</p>
 {% else %}
 <p class="caption">No mission manifests found in this root. Run <code>report(ds, root)</code> to add one.</p>
-{% endif %}
-
-<h2 id="completeness">Sensor completeness</h2>
-{% if matrix.columns %}
-<table class="nc">
-<thead><tr><th>Sensor</th>{% for c in matrix.columns %}<th class="mono">{{ c }}</th>{% endfor %}</tr></thead>
-<tbody>
-{% for row in matrix.rows %}<tr><td>{{ row.label }}</td>{% for cell in row.cells %}<td>{% if cell %}<span class="qc-good">✓</span>{% else %}–{% endif %}</td>{% endfor %}</tr>
-{% endfor %}
-</tbody>
-</table>
 {% endif %}
 
 {% if orphans %}

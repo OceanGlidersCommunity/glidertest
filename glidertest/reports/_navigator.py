@@ -2,7 +2,7 @@
 
 :func:`build_navigator` reads every ``<root>/*/report.json`` manifest (never a NetCDF file, never a
 mission's HTML), draws a map of all tracks, and renders ``<root>/index.html`` — a table with one row
-per mission and a sensor-completeness matrix. Idempotent: it re-indexes whatever missions the root
+per mission. Idempotent: it re-indexes whatever missions the root
 currently holds.
 """
 
@@ -22,9 +22,6 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 logger = logging.getLogger(__name__)
-
-#: Sensor rows of the completeness matrix: (display label, manifest ``sensors`` key).
-_SENSORS = (("CTD", "ctd"), ("Oxygen", "oxygen"), ("Optics", "optics"), ("Flight", "flight"))
 
 
 def _load_manifests(root: Path) -> tuple[list[dict[str, Any]], list[str], list[str]]:
@@ -143,7 +140,7 @@ def _mission_row(m: dict[str, Any]) -> dict[str, Any]:
 
 
 def navigator_data(root: Path) -> dict[str, Any]:
-    """Return the navigator page as data: masthead counts, mission rows, completeness matrix, map."""
+    """Return the navigator page as data: masthead counts, mission rows and the tracks map."""
     from ._mission import _deg_range
 
     missions, orphans, unreadable = _load_manifests(root)
@@ -167,17 +164,9 @@ def navigator_data(root: Path) -> dict[str, Any]:
         ("Lon", _deg_range(min(lons), max(lons), "E", "W") if lons else "UNK"),
     ]
 
-    matrix = {
-        "columns": [m.get("platform_serial") or m["id"][:12] for m in missions],
-        "rows": [
-            {"label": label, "cells": [bool(m.get("sensors", {}).get(key)) for m in missions]}
-            for label, key in _SENSORS
-        ],
-    }
     return {
         "counts": counts,
         "rows": [_mission_row(m) for m in missions],
-        "matrix": matrix,
         "map_png": _track_map(missions),
         "orphans": orphans,
         "unreadable": unreadable,
@@ -220,7 +209,6 @@ def build_navigator(root: Path | str, title: str | None = None) -> Path:
         nav={"rows": [], "back": None, "inventory": []},
         header=data["counts"],
         rows=data["rows"],
-        matrix=data["matrix"],
         map_png=data["map_png"],
         orphans=data["orphans"],
         unreadable=data["unreadable"],

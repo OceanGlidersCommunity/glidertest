@@ -357,8 +357,6 @@ def test_navigator_indexes_manifests(tmp_path):
     html = out.read_text(encoding="utf-8")
     assert "Mission navigator" in html
     assert "m_a" in html and "m_b" in html  # both missions listed
-    assert "sea001" in html  # platform shown
-    assert 'id="completeness"' in html  # the sensor matrix
     assert "data:image/png;base64" in html  # the tracks map rendered
     assert 'href="m_a/index.html"' in html  # page buttons link into the mission subdir
     assert "no_manifest" in html  # a manifest-less directory is surfaced, not hidden

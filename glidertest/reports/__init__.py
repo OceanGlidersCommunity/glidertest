@@ -230,7 +230,9 @@ def report(
                         (missiondir / "figures" / f"{slug}_{panel.id}.png").write_bytes(
                             base64.b64decode(panel.payload)
                         )
-            nav = _build_nav(pages, page, source_name, back=do_navigator)
+            # Root layout always links back to the fleet page at ../index.html (the root convention),
+            # whether this call rebuilds it or a later navigator() does; flat -o has no fleet page.
+            nav = _build_nav(pages, page, source_name, back=(layout == "root"))
             rendered = template.render(
                 report=resolved,
                 nav=nav,
@@ -286,11 +288,23 @@ def navigator(root: Path | str, title: str | None = None) -> Path:
     ------
     FileNotFoundError
         If *root* is not an existing directory.
+    ValueError
+        If *root* is itself a mission report directory (it holds a top-level ``report.json``, as a
+        ``layout="flat"`` report does); indexing it would find no missions and overwrite its landing
+        page. Pass the parent directory instead.
     """
+    from . import paths
+
     root = Path(root)
     if not root.is_dir():
         msg = f"report root not found: {root}"
         raise FileNotFoundError(msg)
+    if paths.manifest_in(root).exists():
+        msg = (
+            f"{root} is a mission report directory (it holds a top-level report.json), not a fleet "
+            f"root; its index.html is the mission landing page — pass the parent directory."
+        )
+        raise ValueError(msg)
 
     import matplotlib
     import matplotlib.pyplot as plt

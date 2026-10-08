@@ -284,8 +284,14 @@ def cmd_report(args: argparse.Namespace) -> int:
             continue
         name = names.get(path)  # None in flat layout (resolved inside report()) or if unreadable
         try:
-            if args.skip_existing and name is not None and paths.manifest_path(root, name).exists():
-                print(f"{path}: skipped ({name} already reported)")
+            if flat:
+                manifest = paths.manifest_in(root)  # flat writes the manifest at the top of DIR
+            elif name is not None:
+                manifest = paths.manifest_path(root, name)
+            else:
+                manifest = None
+            if args.skip_existing and manifest is not None and manifest.exists():
+                print(f"{path}: skipped ({name or root} already reported)")
                 continue
             if args.dry_run:
                 if flat:
@@ -329,17 +335,19 @@ def cmd_report(args: argparse.Namespace) -> int:
 
 
 def cmd_navigator(args: argparse.Namespace) -> int:
-    """Run the ``navigator`` subcommand; return a process exit code (0 ok, 1 no such root)."""
+    """Run the ``navigator`` subcommand; return a process exit code (0 ok, 1 on a bad root)."""
     import matplotlib
 
     matplotlib.use("Agg")  # the fleet map is matplotlib; do not touch the caller's backend
 
     from glidertest import reports
 
-    if not args.root.is_dir():
-        print(f"{args.root}: no such directory", file=sys.stderr)
+    try:
+        print(reports.navigator(args.root, title=args.title))
+    except (FileNotFoundError, ValueError) as exc:
+        # Missing root, or a mission directory mistaken for a fleet root — report() owns the rule.
+        print(exc, file=sys.stderr)
         return 1
-    print(reports.navigator(args.root, title=args.title))
     return 0
 
 
@@ -358,8 +366,13 @@ def main(argv: list[str] | None = None) -> None:
         epilog=_EPILOG,
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-    sub = parser.add_subparsers(dest="command", title="commands", metavar="<command>", required=True)
+    sub = parser.add_subparsers(dest="command", title="commands", metavar="<command>")
     _add_report_parser(sub)
     _add_navigator_parser(sub)
     args = parser.parse_args(argv)
+    if args.command is None:
+        # No subcommand: show the full help (which lists report and navigator) rather than a terse
+        # "the following arguments are required: <command>".
+        parser.print_help(sys.stderr)
+        sys.exit(2)
     sys.exit(args.func(args))
