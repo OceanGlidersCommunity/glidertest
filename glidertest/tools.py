@@ -10,7 +10,7 @@ import warnings
 from glidertest import utilities
 from scipy.integrate import cumulative_trapezoid
 
-def quant_updown_bias(ds, var='PSAL', v_res=1):
+def quant_updown_bias(ds, vars='PSAL', v_res=1):
     """
     This function computes up and downcast averages for a specific variable
 
@@ -19,7 +19,7 @@ def quant_updown_bias(ds, var='PSAL', v_res=1):
     ds: Dataset.xarray 
         Dataset in **OG1 format**, containing at least **TIME, DEPTH, LATITUDE, LONGITUDE,** and the selected variable.  
         Data should **not** be gridded.
-    var: str, optional, default='PSAL'
+    vars: str, optional, default='PSAL'
         Selected variable.
     v_res: float
         Vertical resolution for the gridding in meters.
@@ -33,12 +33,12 @@ def quant_updown_bias(ds, var='PSAL', v_res=1):
     -----
     Original Author: Chiara Monforte
     """
-    utilities._check_necessary_variables(ds, ['PROFILE_NUMBER', 'DEPTH', var])
+    utilities._check_necessary_variables(ds, ['PROFILE_NUMBER', 'DEPTH', vars])
     p = 1  # Horizontal resolution
     z = v_res  # Vertical resolution
 
-    if var in ds.variables:
-        varG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z, x_bin_center = False) ## included x_bin_center = False to take left edge of the bin (profile number i.e. 1,2 ....)
+    if vars in ds.variables:
+        varG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds[vars], p, z, x_bin_center = False) ## included x_bin_center = False to take left edge of the bin (profile number i.e. 1,2 ....)
 
         grad = np.diff(varG, axis=0)  # Horizontal gradients
         with warnings.catch_warnings():
@@ -48,11 +48,11 @@ def quant_updown_bias(ds, var='PSAL', v_res=1):
 
         df = pd.DataFrame(data={'dc': dc, 'cd': cd, 'depth': depthG[0, :]})
     else:
-        print(f'{var} is not in the dataset')
+        print(f'{vars} is not in the dataset')
         df = pd.DataFrame()
     return df
 
-def mean_profile(ds, var='TEMP', v_res=1):
+def mean_profile(ds, vars='TEMP', v_res=1):
     """
     This function computes the mean vertical profile for a specific variable.
 
@@ -61,7 +61,7 @@ def mean_profile(ds, var='TEMP', v_res=1):
     ds: xarray.Dataset 
         Dataset in **OG1 format**, containing at least **PROFILE_NUMBER, DEPTH**, and the selected variable.  
         Data should **not** be gridded.
-    var: str, optional, default='PSAL'
+    vars: str, optional, default='PSAL'
         Selected variable to average.
     v_res: float
         Vertical resolution in meters for binning the profile.
@@ -76,15 +76,15 @@ def mean_profile(ds, var='TEMP', v_res=1):
     Original Author: Till Moritz
     """
     # Ensure required variables are in the dataset
-    utilities._check_necessary_variables(ds, ['PROFILE_NUMBER', 'DEPTH', var])
+    utilities._check_necessary_variables(ds, ['PROFILE_NUMBER', 'DEPTH', vars])
 
     p = 1       # Horizontal resolution (not used here)
     z = v_res   # Vertical resolution
 
-    if var in ds.variables:
+    if vars in ds.variables:
         # 2D gridding by profile and depth
         varG, profG, depthG = utilities.construct_2dgrid(
-            ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z, x_bin_center=False)
+            ds.PROFILE_NUMBER, ds.DEPTH, ds[vars], p, z, x_bin_center=False)
 
         # Compute mean across profiles for each depth level
         with warnings.catch_warnings():
@@ -93,12 +93,12 @@ def mean_profile(ds, var='TEMP', v_res=1):
 
         df = pd.DataFrame(data={'mean': mean_var, 'depth': depthG[0, :]})
     else:
-        print(f'{var} is not in the dataset')
+        print(f'{vars} is not in the dataset')
         df = pd.DataFrame()
 
     return df
 
-def compute_daynight_avg(ds, sel_var='CHLA', start_time=None, end_time=None, start_prof=None, end_prof=None):
+def compute_daynight_avg(ds, vars='CHLA', start_time=None, end_time=None, start_prof=None, end_prof=None):
     """
     Computes day and night averages for a selected variable over a specified time period or range of dives.  
     Day and night are determined based on **sunrise and sunset times** from the `compute_sunset_sunrise` function in GliderTools.  
@@ -109,7 +109,7 @@ def compute_daynight_avg(ds, sel_var='CHLA', start_time=None, end_time=None, sta
     ds : xarray.Dataset  
         Dataset in **OG1 format**, containing at least **TIME, DEPTH, LATITUDE, LONGITUDE,** and the selected variable.  
         Data should **not** be gridded.  
-    sel_var : str, optional, default='CHLA'  
+    vars : str, optional, default='CHLA'
         The variable for which day and night averages will be computed.  
     start_time : str or datetime-like, optional  
         The **start date** for data selection.  
@@ -141,7 +141,7 @@ def compute_daynight_avg(ds, sel_var='CHLA', start_time=None, end_time=None, sta
     ------
     Original Author: Chiara Monforte  
     """
-    utilities._check_necessary_variables(ds, ['TIME', sel_var, 'DEPTH'])
+    utilities._check_necessary_variables(ds, ['TIME', vars, 'DEPTH'])
     if "TIME" not in ds.indexes.keys():
         ds = ds.set_xindex('TIME')
 
@@ -167,7 +167,7 @@ def compute_daynight_avg(ds, sel_var='CHLA', start_time=None, end_time=None, sta
     batch = np.r_[0, daynight_batches // 2]
 
     # Create day and night averages to then have easy to plot
-    df = pd.DataFrame(np.c_[ds_sel[sel_var], day, batch, ds_sel['DEPTH']], columns=['dat', 'day', 'batch', 'depth'])
+    df = pd.DataFrame(np.c_[ds_sel[vars], day, batch, ds_sel['DEPTH']], columns=['dat', 'day', 'batch', 'depth'])
     ave = df.dat.groupby([df.day, df.batch, np.around(df.depth)]).mean()
     day_av = ave[1].to_frame().reset_index()
     night_av = ave[0].to_frame().reset_index()
@@ -229,7 +229,7 @@ def calc_w_meas(ds):
     utilities._check_necessary_variables(ds, ['TIME'])
     # Ensure inputs are numpy arrays
     time = ds.TIME.values
-    if 'DEPTH_Z' not in ds.variables and all(var in ds.variables for var in ['PRES', 'LATITUDE', 'LONGITUDE']):
+    if 'DEPTH_Z' not in ds.variables and all(v in ds.variables for v in ['PRES', 'LATITUDE', 'LONGITUDE']):
         ds = utilities.calc_DEPTH_Z(ds)
     depth = ds.DEPTH_Z.values
 
@@ -287,7 +287,7 @@ def calc_w_sw(ds):
     ds = ds.assign(VERT_CURR_MODEL=(('N_MEASUREMENTS'), vert_sw_speed, {'long_name': 'vertical_current_of_seawater_derived_from_glider_flight_model', 'units': 'm s-1'}))
     return ds
 
-def quant_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
+def quant_binavg(ds, var_w='VERT_CURR', zgrid=None, dz=None):
     """
     Calculate the bin average of vertical velocities within specified depth ranges.
     This function computes the bin average of all vertical velocities within depth ranges,
@@ -313,9 +313,9 @@ def quant_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
     ----
     Original Author: Eleanor Frajka-Williams
     """
-    utilities._check_necessary_variables(ds, [var, 'PRES'])
+    utilities._check_necessary_variables(ds, [var_w, 'PRES'])
     press = ds.PRES.values
-    ww = ds[var].values
+    ww = ds[var_w].values
 
     # Calculate depth from pressure using gsw
     if 'DEPTH_Z' in ds:
@@ -392,7 +392,7 @@ def quant_binavg(ds, var='VERT_CURR', zgrid=None, dz=None):
     return ds_out
 
 
-def quant_hysteresis(ds: xr.Dataset, var='DOXY', v_res=1):
+def quant_hysteresis(ds: xr.Dataset, vars='DOXY', v_res=1):
     """
     This function computes up and downcast averages for a specific variable
 
@@ -401,7 +401,7 @@ def quant_hysteresis(ds: xr.Dataset, var='DOXY', v_res=1):
     ds: xarray.Dataset 
         Dataset in **OG1 format**, containing at least **DEPTH, PROFILE_NUMBER,** and the selected variable.  
         Data should **not** be gridded.
-    var: str, optional, default='DOXY' 
+    vars: str, optional, default='DOXY'
         Selected variable
     v_res: float
         Vertical resolution for the gridding in meters.
@@ -415,12 +415,12 @@ def quant_hysteresis(ds: xr.Dataset, var='DOXY', v_res=1):
     ------
     Original Author: Chiara Monforte
     """
-    utilities._check_necessary_variables(ds, ['PROFILE_NUMBER', 'DEPTH', var])
+    utilities._check_necessary_variables(ds, ['PROFILE_NUMBER', 'DEPTH', vars])
     p = 1  # Horizontal resolution
     z = v_res  # Vertical resolution
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        varG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds[var], p, z, x_bin_center = False) ## included x_bin_center = False to take left edge of the bin (profile number i.e. 1,2 ....)
+        varG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds[vars], p, z, x_bin_center = False) ## included x_bin_center = False to take left edge of the bin (profile number i.e. 1,2 ....)
 
         dive = np.nanmedian(varG[0::2, :], axis=0)  # Dive
         climb = np.nanmedian(varG[1::2, :], axis=0)  # Climb
@@ -428,7 +428,7 @@ def quant_hysteresis(ds: xr.Dataset, var='DOXY', v_res=1):
     return df
 
 
-def compute_hyst_stat(ds: xr.Dataset, var='DOXY', v_res=1):
+def compute_hyst_stat(ds: xr.Dataset, vars='DOXY', v_res=1):
     """
     This function computes some basic statistics for the differences between climb and dive data
 
@@ -437,7 +437,7 @@ def compute_hyst_stat(ds: xr.Dataset, var='DOXY', v_res=1):
     ds: xarray.Dataset 
         Dataset in **OG1 format**, containing at least **DEPTH, PROFILE_NUMBER,** and the selected variable.
         Data should not be gridded.
-    var: str, optional, default='DOXY' 
+    vars: str, optional, default='DOXY'
         Selected variable
     v_res: float
         Vertical resolution for the gridding
@@ -461,7 +461,7 @@ def compute_hyst_stat(ds: xr.Dataset, var='DOXY', v_res=1):
     ------
     Original Author: Chiara  Monforte
     """
-    df = quant_hysteresis(ds, var=var, v_res=v_res)
+    df = quant_hysteresis(ds, vars=vars, v_res=v_res)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
         diff = abs(df.dive - df.climb)
@@ -532,7 +532,7 @@ def find_outlier_duration(df: pd.DataFrame, rolling=20, std=2):
             f'There are {len(overtime[0])} profiles where the duration differs by {std} standard deviations of the nearby {rolling} profiles. Further checks are recommended')
     return rolling_mean, overt_prof
 
-def compute_global_range(ds: xr.Dataset, var='DOXY', min_val=-5, max_val=600):
+def compute_global_range(ds: xr.Dataset, vars='DOXY', min_val=-5, max_val=600):
     """
     Applies a gross filter to the dataset by removing observations outside the specified global range.
 
@@ -544,7 +544,7 @@ def compute_global_range(ds: xr.Dataset, var='DOXY', min_val=-5, max_val=600):
     ----------
     ds : xarray.Dataset 
         Dataset containing the variable to be filtered.
-    var : str, optional, default='DOXY' 
+    vars : str, optional, default='DOXY'
         The name of the variable to apply the range filter on.
     min_val : float, default = -5
         The minimum allowable value for the variable.
@@ -561,8 +561,8 @@ def compute_global_range(ds: xr.Dataset, var='DOXY', min_val=-5, max_val=600):
     ------
     Original Author: Chiara Monforte
     """
-    utilities._check_necessary_variables(ds, [var])
-    out_range = ds[var].where((ds[var]<min_val )| (ds[var]>max_val ))
+    utilities._check_necessary_variables(ds, [vars])
+    out_range = ds[vars].where((ds[var]<min_val )| (ds[vars]>max_val ))
     return out_range.dropna(dim='N_MEASUREMENTS')
 
 def max_depth_per_profile(ds: xr.Dataset):
@@ -650,7 +650,7 @@ def add_sigma_1(ds: xr.Dataset, var_sigma_1: str = "SIGMA_1") -> xr.Dataset:
 
     return ds
 
-def compute_mld(ds: xr.Dataset, variable, method: str = 'threshold', threshold = 0.03, ref_depth = 10,
+def compute_mld(ds: xr.Dataset, vars, method: str = 'threshold', threshold = 0.03, ref_depth = 10,
                  use_bins: bool = True, binning: float = 10):
     """
     Computes the mixed layer depth (MLD) for each profile in the dataset. Two methods are available:
@@ -663,7 +663,7 @@ def compute_mld(ds: xr.Dataset, variable, method: str = 'threshold', threshold =
     ----------
     ds : xr.Dataset
         The dataset containing the profiles.
-    variable : str
+    vars : str
         Variable used for the MLD calculation. For the CR method use density anomaly with reference to 1000 dbar ('SIGMA_1').
     method : str, optional
         The method to use for MLD calculation. Options are 'threshold' or 'CR'. Default is 'threshold'.
@@ -686,16 +686,16 @@ def compute_mld(ds: xr.Dataset, variable, method: str = 'threshold', threshold =
     Original Author: Till Moritz
     Based on the convective resistance caluclation, following the method described in FW2014 (https://doi.org/10.1175/JPO-D-13-069.1))
     """
-    utilities._check_necessary_variables(ds, [variable,"DEPTH", "PROFILE_NUMBER","TIME"])
+    utilities._check_necessary_variables(ds, [vars,"DEPTH", "PROFILE_NUMBER","TIME"])
     if method == 'threshold':
-        groups = utilities.group_by_profiles(ds, [variable, "DEPTH","TIME"])
-        mld = groups.apply(mld_profile_treshhold, variable=variable, threshold=threshold,
+        groups = utilities.group_by_profiles(ds, [vars, "DEPTH","TIME"])
+        mld = groups.apply(mld_profile_treshhold, vars=vars, threshold=threshold,
                             ref_depth=ref_depth, use_bins=use_bins, binning=binning)
     elif method == 'CR':
-        if variable != 'SIGMA_1':
-            print(f"Warning: {variable} can not be used for convective resistance calulation. Instead use SIGMA_1 for CR calculation.")
-            variable = 'SIGMA_1'
-        groups = utilities.group_by_profiles(ds, [variable, "DEPTH","TIME"])
+        if vars != 'SIGMA_1':
+            print(f"Warning: {vars} can not be used for convective resistance calulation. Instead use SIGMA_1 for CR calculation.")
+            vars = 'SIGMA_1'
+        groups = utilities.group_by_profiles(ds, [vars, "DEPTH","TIME"])
         if threshold > 0:
             print("Warning: CR threshold should be negative. Using -2 as default.")
             threshold = -2
@@ -713,7 +713,7 @@ def linear_interpolation(x, y, x_new):
     """Linearly interpolates y over x to estimate y at x_new."""
     return np.interp(x_new, x, y)
 
-def mld_profile_treshhold(profile, variable: str = 'SIGMA_T', threshold: float = 0.03, ref_depth: float = 10,
+def mld_profile_treshhold(profile, vars: str = 'SIGMA_T', threshold: float = 0.03, ref_depth: float = 10,
                           use_bins: bool = False, binning: float = 10) -> float:
     """
     Computes the mixed layer depth (MLD) from a profile dataset based on the density profile, 
@@ -723,7 +723,7 @@ def mld_profile_treshhold(profile, variable: str = 'SIGMA_T', threshold: float =
     ----------
     profile : pd.DataFrame or xr.Dataset
         Dataset or DataFrame containing depth and density columns.
-    variable : str
+    vars : str
         The name of the variable to use for the threshold calculation (default is 'SIGMA_T').
     threshold : float
         Density threshold for MLD estimation (default is 0.03 kg/m³).
@@ -745,16 +745,16 @@ def mld_profile_treshhold(profile, variable: str = 'SIGMA_T', threshold: float =
     """
     
     if use_bins:
-        profile = utilities.bin_profile(profile, [variable], binning=binning)
+        profile = utilities.bin_profile(profile, [vars], binning=binning)
         depth = profile['DEPTH'].to_numpy()
-        density = profile[variable].to_numpy()
+        density = profile[vars].to_numpy()
     else:
         if isinstance(profile, pd.DataFrame):
             depth = profile['DEPTH'].to_numpy()
-            density = profile[variable].to_numpy()
+            density = profile[vars].to_numpy()
         elif isinstance(profile, xr.Dataset):
             depth = profile['DEPTH'].values
-            density = profile[variable].values
+            density = profile[vars].values
         else:
             raise TypeError("Input must be a pandas.DataFrame or xarray.Dataset")
 
