@@ -31,12 +31,14 @@ def _track(ds: xr.Dataset) -> list[list[float]]:
     lon = np.asarray(ds["LONGITUDE"].values)
     lat = np.asarray(ds["LATITUDE"].values)
     m = np.isfinite(lon) & np.isfinite(lat)
-    # Drop positions the file flags bad: keep only good / probably-good (OG1 QC flag 1 or 2), so a
-    # spurious fix does not stretch the track or the fleet-map extent. No QC variable -> keep all.
+    # Drop only positions the file flags bad (OG1 QC flag 3 bad / 4 probably-bad), so a spurious fix
+    # does not stretch the track or the fleet-map extent. Flag 0 ("no QC applied") is the common
+    # delivered state and is kept — dropping it would empty the track of every file whose provider
+    # ran no position QC. Missing positions are already removed by the finite mask. No QC var -> keep.
     for var in ("LONGITUDE", "LATITUDE"):
         qc = f"{var}_QC"
         if qc in ds:
-            m &= np.isin(np.asarray(ds[qc].values), (1, 2))
+            m &= ~np.isin(np.asarray(ds[qc].values), (3, 4))
     lon, lat = lon[m], lat[m]
     if lon.size > _TRACK_POINTS:
         idx = np.linspace(0, lon.size - 1, _TRACK_POINTS).astype(int)

@@ -1,18 +1,21 @@
 """Metadata and OG1-conformance sections as data for their templates.
 
 :func:`metadata_data` returns the landing page's Metadata section — the one-line OG1 conformance
-verdict and the payload-presence table. :func:`conformance_data` returns the inventory page's Global
-attributes section — the categorised attribute tables (value *and* conformance status in one table,
-via :func:`glidertest.og1_attrs.group_globals`) and the geospatial-extent comparison. Amber marks a
-missing *mandatory* attribute only (values are not format-checked; see :mod:`glidertest.og1_attrs`).
+verdict and the payload-presence table. :func:`attr_category_data` returns one inventory-page
+attribute category — its categorised attribute table (value *and* conformance status, via
+:func:`glidertest.og1_attrs.group_globals`), and for the Spatiotemporal category the combined
+file-vs-computed extent table (:func:`spatiotemporal_rows`). Amber marks a missing *mandatory*
+attribute only (values are not format-checked; see :mod:`glidertest.og1_attrs`).
 """
 
 from __future__ import annotations
 
 import logging
+import re
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+import pandas as pd
 
 from .. import og1_attrs, tools
 from . import inventory
@@ -150,7 +153,7 @@ def metadata_data(ds: xr.Dataset) -> dict[str, Any]:
     dict
         ``summary`` (the one-line OG1 verdict, linking the reader to the inventory for detail) and
         ``payload`` (``{label, var, present, source}`` per expected sensor). The full conformance
-        table lives on the inventory page (see :func:`conformance_data`).
+        table lives on the inventory page (see :func:`attr_category_data`).
     """
     payload = []
     for label, var in _PAYLOAD:
@@ -261,14 +264,27 @@ def _fmt_diff(d: float) -> str:
     return ("+" if v > 0 else "-") + np.format_float_positional(np.abs(v), unique=True, trim="-")
 
 
+#: The OG1-prescribed compact spelling of ``time_coverage_start`` / ``_end``: ``YYYYmmddTHHMMSS``.
+#: A readable value not matching this is noted (not amber) — a deviation, not a data problem.
+_OG1_TIME_RE = re.compile(r"\d{8}T\d{6}$")
+
+
 def _parse_time(text: str) -> np.datetime64 | None:
-    """Return *text* as a ``datetime64``, or None when empty / unparseable."""
+    """Return *text* as a ``datetime64``, or None when empty / unparseable.
+
+    Parsed with :func:`pandas.to_datetime`, so the OG1-prescribed compact ``YYYYmmddTHHMMSS`` form
+    (e.g. ``20040924T180910``) parses as well as the extended ISO spellings. A timezone-aware value
+    (trailing ``Z``) is reduced to its naive instant.
+    """
     if not text:
         return None
     try:
-        return np.datetime64(text)
+        ts = pd.to_datetime(text)
     except (ValueError, TypeError):
         return None
+    if ts.tz is not None:
+        ts = ts.tz_localize(None)
+    return np.datetime64(ts)
 
 
 def _iso_seconds(value: object | None) -> str:
@@ -285,8 +301,10 @@ def spatiotemporal_rows(ds: xr.Dataset) -> list[dict[str, Any]]:
     carries the file's attribute value, the value computed from the data at shortest round-trip
     precision (no rounding — glidertest never writes conservative extents), their difference
     ``file − computed`` (always shown when both exist), an ``over`` flag set when ``|diff|`` exceeds
-    the fixed per-axis threshold (:data:`_DIFF_THRESHOLDS`, text in ``threshold`` for the cell's
-    hover), and a ``note``. Vertical honours the file's ``geospatial_vertical_positive`` (compares
+    the fixed per-axis threshold (:data:`_DIFF_THRESHOLDS`), the hover sentence for a flagged cell in
+    ``flag``, and a ``note``. A time value is flagged (``diff="unreadable"``) when it cannot be
+    parsed, and noted (not flagged) when it is readable but not the OG1-prescribed compact
+    ``YYYYmmddTHHMMSS`` form. Vertical honours the file's ``geospatial_vertical_positive`` (compares
     against ``−depth`` when ``"up"``, notes when the convention is undeclared). ``—`` where the file
     attribute or the computed value is absent.
     """
@@ -307,12 +325,22 @@ def spatiotemporal_rows(ds: xr.Dataset) -> list[dict[str, Any]]:
         comp = computed_vals[attr]
         note = ""
         diff, over = "", False
+        flag = f"flagged: |diff| exceeds {_THRESHOLD_TEXT[axis]}"
         if axis == "time":
             computed = _iso_seconds(comp)
             fv = _parse_time(file_val)
-            if fv is not None and comp is not None and not np.isnat(np.asarray(comp)):
-                secs = float((fv - comp) / np.timedelta64(1, "s"))
-                diff, over = f"{secs:+.0f} s", abs(secs) > _DIFF_THRESHOLDS[axis]
+            if file_val and fv is None:
+                # A declared timestamp we cannot read is itself a finding — flag it, not a dash.
+                diff, over = "unreadable", True
+                flag = "flagged: unreadable timestamp (OG1 expects YYYYmmddTHHMMSS)"
+            else:
+                if file_val and not _OG1_TIME_RE.match(file_val):
+                    # Readable but not the OG1-prescribed compact form: note the deviation (not
+                    # amber — we surface it, we do not format-check the value).
+                    note = "(not OG1 YYYYmmddTHHMMSS)"
+                if fv is not None and comp is not None and not np.isnat(np.asarray(comp)):
+                    secs = float((fv - comp) / np.timedelta64(1, "s"))
+                    diff, over = f"{secs:+.0f} s", abs(secs) > _DIFF_THRESHOLDS[axis]
         else:
             cval = comp
             if axis == "vertical" and vert_up and cval is not None:
@@ -330,7 +358,7 @@ def spatiotemporal_rows(ds: xr.Dataset) -> list[dict[str, Any]]:
         rows.append(
             {
                 "attr": attr, "file_val": file_val, "computed": computed, "diff": diff,
-                "over": over, "threshold": _THRESHOLD_TEXT[axis], "note": note,
+                "over": over, "flag": flag, "note": note,
             }
         )
     return rows

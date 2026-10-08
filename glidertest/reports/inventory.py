@@ -2,8 +2,8 @@
 
 :func:`inventory_data` returns the dataset's variables grouped by dimension signature and the
 ``SENSOR_*`` catalog — plain dicts the template renders. No HTML is built here (the template owns
-markup and escaping). The global attributes live on the inventory page's Global-attributes section
-(:func:`glidertest.reports.metadata.conformance_data`), not here.
+markup and escaping). The global attributes live on the inventory page's attribute-category sections
+(:func:`glidertest.reports.metadata.attr_category_data`), not here.
 """
 
 from __future__ import annotations
