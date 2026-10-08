@@ -47,7 +47,7 @@ def section(ds: xr.Dataset, var: str) -> str | None:
     taken from the axes.
     """
     return _slots.render(
-        lambda: plots.plot_section(ds, var, method="pcolormesh")[0].get_figure(), source="plot_section", optional=True
+        lambda: plots.plot_section(ds, vars=[var], method="pcolormesh")[0].get_figure(), source="plot_section", optional=True
     )
 
 
