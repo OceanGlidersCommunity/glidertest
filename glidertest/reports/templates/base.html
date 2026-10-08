@@ -88,6 +88,8 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
 /* Navigator missions table: page-button cells keep their pills on one line. */
 td.nav-cell { white-space: nowrap; }
 td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-right: 0.15rem; }
+/* The mission id gets room for a normal id on one line (~29 chars); a longer "_subset" id wraps. */
+td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wrap: anywhere; max-width: 15rem; }
 </style>
 {% block head_extra %}{% endblock %}
 </head>
