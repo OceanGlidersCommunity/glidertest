@@ -119,19 +119,41 @@ def _var_meta(ds: xr.Dataset, name: str) -> dict[str, Any]:
     }
 
 
+def _sensor_field(attrs: dict[str, Any], og1_name: str, legacy_name: str) -> tuple[str, bool]:
+    """Return ``(value, legacy)`` for a sensor attribute, preferring the OG1 name.
+
+    OG1 names a sensor's serial and calibration ``sensor_serial_number`` /
+    ``sensor_calibration_date``; older files use ``serial_number`` / ``calibration_date``. The value
+    is read from the OG1 name when present, else the legacy name; *legacy* is ``True`` when it came
+    from the old name only, so the report can flag it (amber) as non-OG1 attribute naming.
+    """
+    if str(attrs.get(og1_name, "")):
+        return str(attrs[og1_name]), False
+    if str(attrs.get(legacy_name, "")):
+        return str(attrs[legacy_name]), True
+    return "", False
+
+
 def _sensor_meta(ds: xr.Dataset, name: str) -> dict[str, Any]:
     """Return the sensor-catalog row for one ``SENSOR_*`` variable (model, serial, calibration, attrs)."""
     a = ds[name].attrs
+    serial, serial_legacy = _sensor_field(a, "sensor_serial_number", "serial_number")
+    calibration, calibration_legacy = _sensor_field(a, "sensor_calibration_date", "calibration_date")
+    shown = {
+        "sensor_model",
+        "sensor_serial_number",
+        "serial_number",
+        "sensor_calibration_date",
+        "calibration_date",
+    }
     return {
         "name": name,
         "model": str(a.get("sensor_model", "")),
-        "serial": str(a.get("serial_number", "")),
-        "calibration": str(a.get("calibration_date", "")),
-        "attrs": {
-            str(k): str(val)
-            for k, val in a.items()
-            if k not in ("sensor_model", "serial_number", "calibration_date")
-        },
+        "serial": serial,
+        "serial_legacy": serial_legacy,
+        "calibration": calibration,
+        "calibration_legacy": calibration_legacy,
+        "attrs": {str(k): str(val) for k, val in a.items() if k not in shown},
     }
 
 
@@ -192,3 +214,29 @@ def inventory_data(ds: xr.Dataset) -> dict[str, Any]:
         "n_coords": len(ds.coords),
         "n_with_qc": n_with_qc,
     }
+
+
+def inventory_slice(ds: xr.Dataset, which: str) -> dict[str, Any]:
+    """Return one inventory subsection's data for ``_inventory.html``.
+
+    Filters the groups :func:`inventory_data` already builds, so the grouping rule lives in one
+    place. *which* is one of ``"coords"`` (the coordinate group), ``"measurements"`` (variables on
+    ``N_MEASUREMENTS``), ``"other_dims"`` (variables on any other dimension), ``"scalars"`` (the
+    scalar group), or ``"sensors"`` (the ``SENSOR_*`` catalog). Returns ``{"groups", "sensors"}``.
+    """
+    data = inventory_data(ds)
+    groups = data["groups"]
+    if which == "coords":
+        sel = [g for g in groups if g.get("label") == "Coordinates"]
+    elif which == "measurements":
+        sel = [g for g in groups if g.get("label") == "Variables" and g.get("header") == "On N_MEASUREMENTS"]
+    elif which == "other_dims":
+        sel = [g for g in groups if g.get("label") == "Variables" and g.get("header") != "On N_MEASUREMENTS"]
+    elif which == "scalars":
+        sel = [g for g in groups if g.get("scalar")]
+    elif which == "sensors":
+        return {"groups": [], "sensors": data["sensors"]}
+    else:
+        msg = f"unknown inventory slice {which!r}"
+        raise ValueError(msg)
+    return {"groups": sel, "sensors": []}

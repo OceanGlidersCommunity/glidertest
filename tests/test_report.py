@@ -35,8 +35,10 @@ def test_report_writes_files(subset_report):
         assert f'id="{section_id}"' in html
     assert 'id="file_contents"' not in html
     inventory = (mdir / "inventory.html").read_text(encoding="utf-8")
-    for section_id in ("og1", "file_contents"):
+    # The inventory page is one Section per subsection (each a jump-nav entry), no umbrella headings.
+    for section_id in ("og1_identity", "og1_coverage", "coords", "measurements", "sensors"):
         assert f'id="{section_id}"' in inventory
+    assert 'id="file_contents"' not in inventory and 'id="og1"' not in inventory
 
 
 def test_sensor_pages_rendered(subset_report):
@@ -96,18 +98,16 @@ def test_payload_and_file_contents(subset_report):
     for label in ("Temperature", "Salinity", "Chlorophyll", "Altimeter", "ADCP"):
         assert label in index
     assert "SENSOR_CTD_205048" in index  # TEMP's source sensor, shown in the payload Source column
-    # File-contents inventory moved to inventory.html: dimension-grouped tables + sensor catalog.
-    for heading in ("On N_MEASUREMENTS", "Sensor catalog"):
-        assert f"<h3>{heading}</h3>" in inventory
-    # Coordinates and variables share the "On N_MEASUREMENTS" subheader, with sub-labels.
-    assert "<strong>Coordinates</strong>" in inventory
-    assert "<strong>Variables</strong>" in inventory
+    # Each inventory subsection is its own Section (an <h2 id=…> jump-nav entry), not an <h3>: the
+    # file-content groups and the attribute categories alike.
+    for section_id in ("coords", "measurements", "scalars", "sensors", "og1_identity", "og1_coverage"):
+        assert f'id="{section_id}"' in inventory
+    assert "Variables on N_MEASUREMENTS" in inventory and "Sensor catalog" in inventory
+    assert "Identity &amp; discovery" in inventory  # category heading (& autoescaped)
     assert "Standard / long name" in inventory  # combined standard+long name column
     assert "TEMP" in inventory
     # The _QC companions are not listed as inventory rows (shown in the QC section instead).
     assert "QC-flag variables" in inventory
-    # The global-attribute conformance is categorised on the inventory page, not the landing page.
-    assert "<h3>Identity &amp; discovery</h3>" in inventory
 
 
 def test_inventory_strip_and_index_verdict(subset_report):
@@ -132,14 +132,12 @@ def test_conformance_marks_missing_mandatory_amber():
     from glidertest.reports import metadata
     from glidertest.reports._env import get_template
 
-    # Only `title` present: other mandatory attributes (id, Conventions, ...) are missing.
+    # Only `title` present: other mandatory attributes (id, ...) in Identity & discovery are missing.
     ds = xr.Dataset(attrs={"title": "t"})
-    html = get_template("_og1_conformance.html").render(**metadata.conformance_data(ds))
+    html = get_template("_og1_conformance.html").render(**metadata.attr_category_data(ds, "Identity & discovery"))
     assert "<th>Status</th>" not in html  # no status column; presence is shown by the value/dash
     assert "nonconform" in html  # a missing mandatory attribute's dash cell is amber
     assert ">t</td>" in html  # title present -> its value is shown
-    # A missing suggested attribute (geospatial bounds) is not listed in the attribute rows.
-    assert "geospatial_lat_min</td>" not in html.split("Geospatial extent")[0]
 
 
 def test_sg014_missing_id_marked_amber(sg014_subset_path):
@@ -152,8 +150,97 @@ def test_sg014_missing_id_marked_amber(sg014_subset_path):
     with xr.open_dataset(sg014_subset_path) as ds:
         assert og1_attrs.conformance_summary(ds.attrs)["mandatory_present"] == 15
         assert "id" not in ds.attrs
-        html = get_template("_og1_conformance.html").render(**metadata.conformance_data(ds))
+        html = get_template("_og1_conformance.html").render(**metadata.attr_category_data(ds, "Identity & discovery"))
     assert "nonconform" in html
+
+
+def test_inventory_sections_split_and_applies_to():
+    from glidertest.reports._mission import INVENTORY
+
+    # Minimal file: no SENSOR_*, no scalars, no extra-dimension vars, no non-OG1 attributes.
+    ds = xr.Dataset(
+        {"TEMP": ("N_MEASUREMENTS", np.arange(4.0)), "DEPTH": ("N_MEASUREMENTS", np.arange(4.0))},
+        coords={"TIME": ("N_MEASUREMENTS", np.arange(4))},
+        attrs={"title": "t"},
+    )
+    secs = build(ds, INVENTORY).sections
+    ids = [s.id for s in secs]
+    # The four OG1 categories always render (an empty category in amber is the strongest finding);
+    # Other / other-dimension variables / scalars drop when absent.
+    assert ids[:4] == ["og1_identity", "og1_coverage", "og1_people", "og1_provenance"]
+    assert "og1_other" not in ids and "other_dims" not in ids and "scalars" not in ids
+    assert "coords" in ids and "measurements" in ids
+    # The sensor catalog stays as a stub (absence is a finding, not a non-event).
+    sensors = next(s for s in secs if s.id == "sensors")
+    assert sensors.panels[0].is_stub
+    assert "SENSOR_*" in (sensors.panels[0].stub_reason or "")
+
+
+def test_inventory_slice_selects_one_group():
+    from glidertest.reports.inventory import inventory_slice
+
+    ds = xr.Dataset(
+        {
+            "TEMP": ("N_MEASUREMENTS", np.arange(5.0)),
+            "WMO_IDENTIFIER": ((), "6801673"),
+            "SENSOR_CTD": ((), "x"),
+        },
+        coords={"TIME": ("N_MEASUREMENTS", np.arange(5))},
+    )
+    assert [g["label"] for g in inventory_slice(ds, "coords")["groups"]] == ["Coordinates"]
+    assert inventory_slice(ds, "measurements")["groups"][0]["variables"][0]["name"] == "TEMP"
+    assert inventory_slice(ds, "scalars")["groups"][0]["scalar"] and inventory_slice(ds, "scalars")["sensors"] == []
+    assert inventory_slice(ds, "sensors")["sensors"] and inventory_slice(ds, "sensors")["groups"] == []
+    assert inventory_slice(ds, "other_dims")["groups"] == []
+
+
+def test_spatiotemporal_computed_time_and_vertical(subset_ds):
+    from glidertest.reports.metadata import spatiotemporal_rows
+
+    rows = {r["attr"]: r for r in spatiotemporal_rows(subset_ds)}
+    assert rows["time_coverage_start"]["computed"].startswith("2023-06-04T")  # ISO to the second
+    # Vertical extent is the shallowest/deepest sample (DEPTH min/max) — not the per-profile-max
+    # range that mission_facts carries. min must be near the surface.
+    vmin = float(rows["geospatial_vertical_min"]["computed"])
+    vmax = float(rows["geospatial_vertical_max"]["computed"])
+    assert vmin == float(np.nanmin(subset_ds["DEPTH"].values))
+    assert vmax == float(np.nanmax(subset_ds["DEPTH"].values))
+    assert vmin < 1.0 < vmax
+    # sea045 declares no geospatial_vertical_positive, so the vertical rows note the ambiguity.
+    assert "sign convention not declared" in rows["geospatial_vertical_min"]["note"]
+    # No file attributes present -> every diff is empty ("—" in the table).
+    assert all(r["diff"] == "" for r in rows.values())
+
+
+def test_spatiotemporal_diff_amber_above_threshold(subset_path):
+    from glidertest.reports.metadata import spatiotemporal_rows
+
+    # The diff is always shown when both values exist; the cell turns amber only above the per-axis
+    # threshold (5e-4° for latitude). Real subset, attribute nudged in memory.
+    with xr.open_dataset(subset_path) as ds:
+        computed = float(np.nanmax(ds["LATITUDE"].values))
+        for delta, want_amber in ((0.01, True), (1e-6, False)):
+            ds.attrs["geospatial_lat_max"] = repr(computed + delta)
+            row = next(r for r in spatiotemporal_rows(ds) if r["attr"] == "geospatial_lat_max")
+            assert row["diff"], f"diff always shown (delta={delta})"
+            assert row["over"] is want_amber, f"delta={delta} -> over={row['over']}"
+
+
+def test_track_drops_qc_flagged_positions():
+    from glidertest.reports.manifest import _track
+
+    # The decimated json track keeps only good / probably-good positions (OG1 QC 1 or 2), so a
+    # flagged-bad fix does not stretch the track or the fleet-map extent.
+    ds = xr.Dataset(
+        {
+            "LONGITUDE": ("N_MEASUREMENTS", np.array([10.0, 99.0, 11.0])),
+            "LATITUDE": ("N_MEASUREMENTS", np.array([55.0, 0.0, 56.0])),
+            "LONGITUDE_QC": ("N_MEASUREMENTS", np.array([1, 4, 2])),  # middle fix flagged bad (4)
+            "LATITUDE_QC": ("N_MEASUREMENTS", np.array([1, 4, 2])),
+        }
+    )
+    track = _track(ds)
+    assert [p[0] for p in track] == [10.0, 11.0]  # the flag-4 point is dropped, flag-2 kept
 
 
 def test_qc_section_has_basic_checks_sentences(subset_report):
@@ -255,6 +342,45 @@ def test_inventory_data_groups_each_dimension_signature():
     headers = [g["header"] for g in inventory_data(ds)["groups"]]
     assert "On N_MEASUREMENTS" in headers
     assert "On N_MEASUREMENTS, N_CELLS" in headers
+
+
+def test_sensor_meta_prefers_og1_names_and_flags_legacy():
+    from glidertest.reports.inventory import _sensor_meta
+
+    ds = xr.Dataset({"SENSOR_NEW": ((), "x"), "SENSOR_OLD": ((), "x")})
+    ds["SENSOR_NEW"].attrs = {
+        "sensor_model": "SBE",
+        "sensor_serial_number": "S1",
+        "sensor_calibration_date": "2023-01-01",
+    }
+    ds["SENSOR_OLD"].attrs = {
+        "sensor_model": "SBE",
+        "serial_number": "S2",
+        "calibration_date": "2022-01-01",
+    }
+    new = _sensor_meta(ds, "SENSOR_NEW")
+    old = _sensor_meta(ds, "SENSOR_OLD")
+    # OG1 names: shown, not flagged. Pre-OG1 names: shown, flagged legacy (→ amber).
+    assert (new["serial"], new["serial_legacy"]) == ("S1", False)
+    assert (new["calibration"], new["calibration_legacy"]) == ("2023-01-01", False)
+    assert (old["serial"], old["serial_legacy"]) == ("S2", True)
+    assert (old["calibration"], old["calibration_legacy"]) == ("2022-01-01", True)
+    # both spellings are consumed, so neither shows up again in the attrs dropdown
+    assert "serial_number" not in old["attrs"] and "sensor_serial_number" not in new["attrs"]
+
+
+def test_sensor_catalog_marks_legacy_names_amber():
+    from glidertest.reports._env import get_template
+    from glidertest.reports.inventory import inventory_data
+
+    ds = xr.Dataset(
+        {"TEMP": ("N_MEASUREMENTS", np.arange(3.0)), "SENSOR_CTD": ((), "x")},
+        coords={"TIME": ("N_MEASUREMENTS", np.arange(3))},
+    )
+    ds["SENSOR_CTD"].attrs = {"sensor_model": "SBE", "serial_number": "123", "calibration_date": "2020"}
+    html = get_template("_inventory.html").render(**inventory_data(ds))
+    assert "nonconform" in html  # the legacy serial/calibration cells carry the amber class
+    assert "123" in html and "2020" in html  # the values are still shown, just flagged
 
 
 def test_inventory_data_var_meta_fields(subset_ds):
@@ -415,15 +541,15 @@ def test_scalar_table_shows_value_not_minmax():
         {"TEMP": ("N_MEASUREMENTS", np.arange(5.0)), "WMO_IDENTIFIER": ((), "6801673")},
         coords={"TIME": ("N_MEASUREMENTS", np.arange(5))},
     )
-    data = inventory.inventory_data(ds)
+    data = inventory.inventory_slice(ds, "scalars")
     scalar = next(g for g in data["groups"] if g.get("scalar"))
     assert scalar["variables"][0]["value"] == "6801673"
     html = get_template("_inventory.html").render(**data)
-    # Scalars get their own subheader and a Value column instead of Min/Max + N (valid).
-    assert "<h3>Scalar variables</h3>" in html
+    # The scalar slice uses a Value column instead of Min/Max + N (valid); its heading is the
+    # Section's <h2>, not an <h3> in the panel.
     assert "Value</th>" in html
     assert "6801673" in html  # the scalar value is shown
-    assert "N (valid)" not in html.split("Scalar variables")[1]  # not in the scalar table
+    assert "N (valid)" not in html  # the scalar table has no N (valid) column
 
 
 def test_mission_facts_degrades_on_all_nan_profile_number():

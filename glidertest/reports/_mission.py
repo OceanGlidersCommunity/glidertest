@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from .. import og1_attrs
 from . import _plots, inventory, metadata, qc_section, sensors
 from ._env import get_template
 from ._manifest import Panel, Profile, ResolvedReport, Section, resolve
@@ -233,18 +234,6 @@ PANELS: dict[str, Panel] = {
             lambda c: get_template("_qc_glidertest.html").render(**qc_section.diagnostics_data(c.ds))
         ),
     ),
-    "og1_conformance": Panel(
-        id="og1_conformance",
-        kind="html",
-        render=_guarded(
-            lambda c: get_template("_og1_conformance.html").render(**metadata.conformance_data(c.ds))
-        ),
-    ),
-    "file_contents": Panel(
-        id="file_contents",
-        kind="html",
-        render=_guarded(lambda c: get_template("_inventory.html").render(**inventory.inventory_data(c.ds))),
-    ),
 }
 
 
@@ -375,13 +364,81 @@ PROFILE = Profile(
     ),
 )
 
-# The inventory page: everything about the *file* rather than the mission — the OG1 global-attribute
-# conformance (merged with the attribute values) and the full variable/sensor inventory. Split off
-# the landing page so the landing stays about the mission (ctdcast's index/inventory division).
+# The inventory page: everything about the *file* rather than the mission. One Section per
+# subsection, so each gets its own jump-nav entry (the bar is one-entry-per-Section). Each renders a
+# thin slice of the existing builders (metadata.attr_category_data / inventory.inventory_slice). The
+# four OG1 attribute categories always render — an empty category with its mandatory rows in amber is
+# the strongest finding on the page — so only Other / other-dimension variables / scalars carry
+# applies_to; the sensor catalog stays with a stub reason when a file has no SENSOR_* variables.
+_ATTR_CATEGORY_IDS: dict[str, str] = {
+    "Identity & discovery": "og1_identity",
+    "Spatiotemporal coverage": "og1_coverage",
+    "People & institutions": "og1_people",
+    "Provenance & processing": "og1_provenance",
+    og1_attrs.OTHER_GROUP: "og1_other",
+}
+
+_ATTR_SECTIONS: list[Section] = []
+for _title, _ in og1_attrs.ATTR_GROUPS:
+    _sid = _ATTR_CATEGORY_IDS[_title]
+    PANELS[_sid] = Panel(
+        id=_sid,
+        kind="html",
+        render=_guarded(
+            lambda c, t=_title: get_template("_og1_conformance.html").render(**metadata.attr_category_data(c.ds, t))
+        ),
+    )
+    _ATTR_SECTIONS.append(Section(id=_sid, title=_title, panels=(_sid,)))
+
+PANELS["og1_other"] = Panel(
+    id="og1_other",
+    kind="html",
+    render=_guarded(
+        lambda c: get_template("_og1_conformance.html").render(
+            **metadata.attr_category_data(c.ds, og1_attrs.OTHER_GROUP)
+        )
+    ),
+    applies_to=lambda c: metadata.has_other_attrs(c.ds),
+)
+
+
+def _inv_render(which: str) -> Callable[[Ctx], str | None]:
+    """Return an html-panel render for one inventory slice (coords / measurements / …)."""
+    return _guarded(lambda c: get_template("_inventory.html").render(**inventory.inventory_slice(c.ds, which)))
+
+
+PANELS["coords"] = Panel(id="coords", kind="html", render=_inv_render("coords"))
+PANELS["measurements"] = Panel(id="measurements", kind="html", render=_inv_render("measurements"))
+PANELS["other_dims"] = Panel(
+    id="other_dims",
+    kind="html",
+    render=_inv_render("other_dims"),
+    applies_to=lambda c: bool(inventory.inventory_slice(c.ds, "other_dims")["groups"]),
+)
+PANELS["scalars"] = Panel(
+    id="scalars",
+    kind="html",
+    render=_inv_render("scalars"),
+    applies_to=lambda c: bool(inventory.inventory_slice(c.ds, "scalars")["groups"]),
+)
+PANELS["sensors"] = Panel(
+    id="sensors",
+    kind="html",
+    render=_inv_render("sensors"),
+    unavailable_if=lambda c: (
+        None if inventory.inventory_slice(c.ds, "sensors")["sensors"] else "no SENSOR_* variables in the file"
+    ),
+)
+
 INVENTORY = Profile(
     entries=(
-        Section(id="og1", title="Global attributes", panels=("og1_conformance",)),
-        Section(id="file_contents", title="File contents", panels=("file_contents",)),
+        *_ATTR_SECTIONS,
+        Section(id="og1_other", title=og1_attrs.OTHER_GROUP, panels=("og1_other",)),
+        Section(id="coords", title="Coordinates", panels=("coords",)),
+        Section(id="measurements", title="Variables on N_MEASUREMENTS", panels=("measurements",)),
+        Section(id="other_dims", title="Variables on other dimensions", panels=("other_dims",)),
+        Section(id="scalars", title="Scalar variables", panels=("scalars",)),
+        Section(id="sensors", title="Sensor catalog", panels=("sensors",)),
     ),
 )
 
@@ -403,6 +460,9 @@ class Page:
     nav_group: str
     profile: Profile
     applies_to: Callable[[Ctx], bool]
+    #: Optional page intro rendered above the jump-nav (page-level prose that belongs to no one
+    #: section, e.g. the inventory page's OG1 verdict and variable counts). ``ds -> html``.
+    lead: Callable[[xr.Dataset], str] | None = None
 
 
 # Sensor pages share a typed-subsection shape (each becomes an in-page jump-nav entry): Sensor,
@@ -455,6 +515,13 @@ FLIGHT = Profile(
 )
 
 
+def _inventory_lead(ds: xr.Dataset) -> str:
+    """Inventory page intro (above the jump-nav): the OG1 verdict and the variable/QC counts."""
+    return get_template("_inventory_intro.html").render(
+        verdict=metadata.verdict_line(ds), **inventory.inventory_data(ds)
+    )
+
+
 #: The report's pages. The landing page (``index.html``) and the sensor pages are the nav pills;
 #: the inventory (``role="inventory"``) is linked from a strip below the masthead, not a pill, and is
 #: listed last so the landing page stays first (the returned path and the nav's leading pill).
@@ -470,8 +537,8 @@ PAGES: tuple[Page, ...] = (
          lambda c: any(v in c.ds for v in ("CHLA", "BBP700"))),
     Page("flight.html", "Flight", "Flight", "aggregate-a", "derived", FLIGHT,
          _has("GLIDER_VERT_VELO_MODEL")),
-    Page("inventory.html", "File contents", "netCDF Inventory", "inventory", "inventory", INVENTORY,
-         lambda _c: True),
+    Page("inventory.html", "Inventory", "netCDF Inventory", "inventory", "inventory", INVENTORY,
+         lambda _c: True, lead=_inventory_lead),
 )
 
 

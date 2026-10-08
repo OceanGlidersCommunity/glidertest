@@ -3,7 +3,7 @@
 <table class="nc">
 <thead><tr><th>Sensor</th><th>Model</th><th>Serial</th><th>Calibration</th><th>Attributes</th></tr></thead>
 <tbody>
-{% for s in sensors %}<tr><td class="mono">{{ s.name }}</td><td class="wrap">{{ s.model }}</td><td class="mono">{{ s.serial }}</td><td>{{ s.calibration }}</td><td>{{ m.attrs_details(s.attrs) }}</td></tr>
+{% for s in sensors %}<tr><td class="mono">{{ s.name }}</td><td class="wrap">{{ s.model }}</td><td class="mono{% if s.serial_legacy %} nonconform{% endif %}"{% if s.serial_legacy %} title="from the pre-OG1 attribute serial_number"{% endif %}>{{ s.serial or "—" }}</td><td class="{% if s.calibration_legacy %}nonconform{% endif %}"{% if s.calibration_legacy %} title="from the pre-OG1 attribute calibration_date"{% endif %}>{{ s.calibration or "—" }}</td><td>{{ m.attrs_details(s.attrs) }}</td></tr>
 {% endfor %}
 </tbody>
 </table>

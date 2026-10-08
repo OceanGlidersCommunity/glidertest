@@ -4,6 +4,7 @@
 {% block content %}
 {% import "_macros.html" as m %}
 <main>
+{% if page_intro %}{{ page_intro | safe }}{% endif %}
 {{ m.report_body(report) }}
 </main>
 {% endblock %}

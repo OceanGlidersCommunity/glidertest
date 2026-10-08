@@ -1,0 +1,5 @@
+{# Inventory page intro, rendered above the jump-nav (the verdict spans all four attribute
+   categories and the counts span all variables, so neither belongs to a single section). #}
+<p class="caption">{{ verdict }} — presence, not validity; each category below shows the values and flags a missing mandatory attribute in amber.</p>
+<p class="caption">{{ n_vars }} data variables, {{ n_sensors }} sensors, {{ n_qc }} QC-flag variables (shown in the QC section, not listed here), {{ n_coords }} coordinates.</p>
+<p class="caption">{{ n_with_qc }} of {{ n_vars }} data variables carry a <code>_QC</code> companion.</p>

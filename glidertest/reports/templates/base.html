@@ -16,8 +16,12 @@
 }
 /* Always-on: the glidertest plotter that produced a figure, under it. */
 .fig-source { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); margin-top: 0.1rem; }
-/* Package-local: non-conforming OG1 metadata value cells in amber. */
-.meta td.nonconform { background: var(--warn-bg); }
+/* Package-local: non-conforming OG1 metadata value cells in amber (conformance table and the
+   sensor catalog, where a serial/calibration read from a pre-OG1 attribute name is flagged). */
+.meta td.nonconform, table.nc td.nonconform { background: var(--warn-bg); }
+/* Package-local: a float64 variable stands out (most glider data is float32, so float64 is worth
+   noticing). */
+table.nc td.f64 { font-weight: 700; color: #0b5cad; }
 /* Wide file-contents tables: cells stay on one line by default (take only their content width);
    tagged columns wrap and are capped with max-width so none dominates — the browser auto-distributes
    the remaining width (table-layout: auto). Narrowing N/Min-Max/Variable frees width so the

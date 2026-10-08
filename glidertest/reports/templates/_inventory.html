@@ -1,16 +1,12 @@
 {% import "_macros.html" as m %}
-<p class="caption">{{ n_vars }} data variables, {{ n_sensors }} sensors, {{ n_qc }} QC-flag variables (shown in the QC section, not listed here), {{ n_coords }} coordinates.</p>
-<p class="caption">{{ n_with_qc }} of {{ n_vars }} data variables carry a <code>_QC</code> companion.</p>
-{% set ns = namespace(header=None) %}
+{# One inventory slice: the group table(s) and/or the sensor catalog passed in. The subsection
+   heading and the jump-nav entry come from the Section (the macro's <h2>), so no <h3> here. #}
 {% for g in groups %}
-{% if g.header != ns.header %}<h3>{{ g.header }}</h3>{% set ns.header = g.header %}{% endif %}
-{% if g.label %}<p class="caption"><strong>{{ g.label }}</strong></p>{% endif %}
-{% if g.variables %}
 {% if g.scalar %}
 <table class="nc">
 <thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="wrapr">Value</th><th>Attributes</th></tr></thead>
 <tbody>
-{% for v in g.variables %}<tr><td class="mono wrapv">{{ v.name }}{% if v.has_qc %} <span class="qc-good">(_QC)</span>{% endif %}</td><td class="mono">{{ v.dtype }}</td><td>{{ v.units }}</td><td class="wrap">{% if v.standard_name %}<strong class="mono">{{ v.standard_name }}</strong>{% if v.long_name %}<br>{% endif %}{% endif %}{{ v.long_name }}</td><td class="wrapr">{{ v.value or "—" }}</td><td>{{ m.attrs_details(v.attrs) }}</td></tr>
+{% for v in g.variables %}<tr><td class="mono wrapv">{{ v.name }}{% if v.has_qc %} <span class="qc-good">(_QC)</span>{% endif %}</td><td class="mono{% if v.dtype == 'float64' %} f64{% endif %}">{{ v.dtype }}</td><td>{{ v.units }}</td><td class="wrap">{% if v.standard_name %}<strong class="mono">{{ v.standard_name }}</strong>{% if v.long_name %}<br>{% endif %}{% endif %}{{ v.long_name }}</td><td class="wrap">{{ v.value or "—" }}</td><td>{{ m.attrs_details(v.attrs) }}</td></tr>
 {% endfor %}
 </tbody>
 </table>
@@ -18,19 +14,17 @@
 <table class="nc">
 <thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="num wrapr">Min / Max</th><th class="num wrapn">N (valid)</th><th>Attributes</th></tr></thead>
 <tbody>
-{% for v in g.variables %}<tr><td class="mono wrapv">{{ v.name }}{% if v.has_qc %} <span class="qc-good">(_QC)</span>{% endif %}</td><td class="mono">{{ v.dtype }}</td><td>{{ v.units }}</td><td class="wrap">{% if v.standard_name %}<strong class="mono">{{ v.standard_name }}</strong>{% if v.long_name %}<br>{% endif %}{% endif %}{{ v.long_name }}</td><td class="num wrapr">{{ v.rng }}</td><td class="num wrapn">{{ v.n_cell }}</td><td>{{ m.attrs_details(v.attrs) }}</td></tr>
+{% for v in g.variables %}<tr><td class="mono wrapv">{{ v.name }}{% if v.has_qc %} <span class="qc-good">(_QC)</span>{% endif %}</td><td class="mono{% if v.dtype == 'float64' %} f64{% endif %}">{{ v.dtype }}</td><td>{{ v.units }}</td><td class="wrap">{% if v.standard_name %}<strong class="mono">{{ v.standard_name }}</strong>{% if v.long_name %}<br>{% endif %}{% endif %}{{ v.long_name }}</td><td class="num wrapr">{{ v.rng }}</td><td class="num wrapn">{{ v.n_cell }}</td><td>{{ m.attrs_details(v.attrs) }}</td></tr>
 {% endfor %}
 </tbody>
 </table>
 {% endif %}
-{% endif %}
 {% endfor %}
 {% if sensors %}
-<h3>Sensor catalog</h3>
 <table class="nc">
 <thead><tr><th>Variable</th><th>Model</th><th>Serial</th><th>Calibration</th><th>Attributes</th></tr></thead>
 <tbody>
-{% for s in sensors %}<tr><td class="mono">{{ s.name }}</td><td class="wrap">{{ s.model }}</td><td class="mono">{{ s.serial }}</td><td>{{ s.calibration }}</td><td>{{ m.attrs_details(s.attrs) }}</td></tr>
+{% for s in sensors %}<tr><td class="mono">{{ s.name }}</td><td class="wrap">{{ s.model }}</td><td class="mono{% if s.serial_legacy %} nonconform{% endif %}"{% if s.serial_legacy %} title="from the pre-OG1 attribute serial_number"{% endif %}>{{ s.serial or "—" }}</td><td class="{% if s.calibration_legacy %}nonconform{% endif %}"{% if s.calibration_legacy %} title="from the pre-OG1 attribute calibration_date"{% endif %}>{{ s.calibration or "—" }}</td><td>{{ m.attrs_details(s.attrs) }}</td></tr>
 {% endfor %}
 </tbody>
 </table>

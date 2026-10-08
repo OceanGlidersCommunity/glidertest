@@ -126,13 +126,6 @@ _PAYLOAD = (
     ("ADCP", "PRES_ADCP"),
 )
 
-#: Suggested OG1 geospatial-extent attributes and the (variable, reduction) that computes each.
-_GEOSPATIAL = (
-    ("geospatial_lat_min", "LATITUDE", "min"),
-    ("geospatial_lat_max", "LATITUDE", "max"),
-    ("geospatial_lon_min", "LONGITUDE", "min"),
-    ("geospatial_lon_max", "LONGITUDE", "max"),
-)
 
 
 def _summary(ds: xr.Dataset) -> str:
@@ -179,38 +172,162 @@ def metadata_data(ds: xr.Dataset) -> dict[str, Any]:
     return {"summary": _summary(ds), "payload": payload}
 
 
-def conformance_data(ds: xr.Dataset) -> dict[str, Any]:
-    """Return the inventory page's Global-attributes section as data for ``_og1_conformance.html``.
+def verdict_line(ds: xr.Dataset) -> str:
+    """Return the one-line OG1 conformance verdict (public wrapper over the internal summary)."""
+    return _summary(ds)
 
-    Parameters
-    ----------
-    ds : xarray.Dataset
-        An OG1 glider dataset.
 
-    Returns
-    -------
-    dict
-        ``summary`` (the one-line verdict), ``groups`` (categorised attribute tables from
-        :func:`glidertest.og1_attrs.group_globals` — each row carries ``name``/``value``/``tier``/
-        ``present`` so the table shows value and conformance together), and ``geospatial``
-        (``{attr, file_val, computed, missing}`` comparing the file's suggested geospatial bounds
-        against the extent computed from the data).
+def attr_category_data(ds: xr.Dataset, title: str) -> dict[str, Any]:
+    """Return one OG1 attribute category's data for ``_og1_conformance.html``.
+
+    *title* is an :data:`glidertest.og1_attrs.ATTR_GROUPS` category title (or
+    :data:`glidertest.og1_attrs.OTHER_GROUP`). Returns ``group`` — the category's
+    ``name``/``value``/``tier``/``present`` rows from :func:`glidertest.og1_attrs.group_globals`, so
+    the table shows value and conformance together — or ``None`` when the file has no rows for it
+    (only possible for ``OTHER_GROUP``; the four OG1 categories always carry their mandatory and
+    highly-desirable rows). For the Spatiotemporal category it also returns ``spatiotemporal`` (the
+    combined file-vs-computed table), which the template renders instead of the plain attribute table.
     """
-    geospatial = []
-    for attr, var, op in _GEOSPATIAL:
+    group = next((g for g in og1_attrs.group_globals(ds.attrs) if g["title"] == title), None)
+    data: dict[str, Any] = {"group": group}
+    if title == "Spatiotemporal coverage":
+        data["spatiotemporal"] = spatiotemporal_rows(ds)
+    return data
+
+
+def has_other_attrs(ds: xr.Dataset) -> bool:
+    """Return True when the file carries attributes not in the OG1 registry (the Other category)."""
+    return any(g["title"] == og1_attrs.OTHER_GROUP for g in og1_attrs.group_globals(ds.attrs))
+
+
+#: Amber when ``|file − computed|`` exceeds these in the Spatiotemporal table. Fixed per-axis
+#: thresholds (not derived from the file value's precision): 5e-4° of latitude is ~50 m at
+#: mid-latitude, 1 m of depth, 60 s of time. The diff is **always shown**; only the amber flag is
+#: gated. We may later suppress sub-threshold diffs entirely to hide the tiny numbers — if so, drop
+#: the diff string when ``over`` is False; for now they are shown so a reader sees the magnitude.
+_DIFF_THRESHOLDS: dict[str, float] = {"lat": 5e-4, "lon": 5e-4, "vertical": 1.0, "time": 60.0}
+_THRESHOLD_TEXT: dict[str, str] = {
+    "lat": "5e-4° (~50 m)", "lon": "5e-4° (~50 m)", "vertical": "1 m", "time": "60 s",
+}
+#: One row per OG1 spatiotemporal attribute: (attribute, axis). The axis selects the amber
+#: threshold and the formatting (time vs numeric; vertical honours geospatial_vertical_positive).
+_SPATIOTEMPORAL: tuple[tuple[str, str], ...] = (
+    ("time_coverage_start", "time"),
+    ("time_coverage_end", "time"),
+    ("geospatial_lat_min", "lat"),
+    ("geospatial_lat_max", "lat"),
+    ("geospatial_lon_min", "lon"),
+    ("geospatial_lon_max", "lon"),
+    ("geospatial_vertical_min", "vertical"),
+    ("geospatial_vertical_max", "vertical"),
+)
+
+
+def _vertical_extent(ds: xr.Dataset) -> tuple[float | None, float | None]:
+    """Return the data's (shallowest, deepest) vertical extent from DEPTH (else PRES), or (None, None).
+
+    The min and max over *all* samples — the actual vertical coverage — not ``mission_facts``'s
+    per-profile maximum-depth range (which answers "how deep did each dive go", a different question).
+    """
+    for var in ("DEPTH", "PRES"):
+        if var in ds:
+            a = np.asarray(ds[var].values)
+            a = a[np.isfinite(a)]
+            if a.size:
+                return float(a.min()), float(a.max())
+    return None, None
+
+
+def _coerce_float(text: str) -> float | None:
+    """Return *text* as a float, or None when it is empty or not numeric."""
+    try:
+        return float(text)
+    except (TypeError, ValueError):
+        return None
+
+
+def _fmt_diff(d: float) -> str:
+    """Format a numeric diff at the data's effective (float32) precision, signed.
+
+    Glider position/depth data is float32-valued even when stored in a float64 container, so a
+    float64 ``file − computed`` shows ~1e-7 subtraction noise. The float32 shortest round-trip
+    collapses that while keeping any real difference intact (a 0.01° diff stays ``+0.01``). The amber
+    flag is still gated on the raw (float64) difference, so only the *display* is rounded, not the
+    judgement.
+    """
+    v = np.float32(d)
+    if v == 0:
+        return "0"
+    return ("+" if v > 0 else "-") + np.format_float_positional(np.abs(v), unique=True, trim="-")
+
+
+def _parse_time(text: str) -> np.datetime64 | None:
+    """Return *text* as a ``datetime64``, or None when empty / unparseable."""
+    if not text:
+        return None
+    try:
+        return np.datetime64(text)
+    except (ValueError, TypeError):
+        return None
+
+
+def _iso_seconds(value: object | None) -> str:
+    """Return second-resolution ISO for a ``datetime64``, or '' for NaT/None."""
+    if value is None or np.isnat(np.asarray(value)):
+        return ""
+    return str(np.asarray(value).astype("datetime64[s]"))
+
+
+def spatiotemporal_rows(ds: xr.Dataset) -> list[dict[str, Any]]:
+    """Return the combined spatiotemporal table: file attribute vs value computed from the data.
+
+    One row per OG1 spatiotemporal attribute (time coverage, lat/lon and vertical extent). Each
+    carries the file's attribute value, the value computed from the data at shortest round-trip
+    precision (no rounding — glidertest never writes conservative extents), their difference
+    ``file − computed`` (always shown when both exist), an ``over`` flag set when ``|diff|`` exceeds
+    the fixed per-axis threshold (:data:`_DIFF_THRESHOLDS`, text in ``threshold`` for the cell's
+    hover), and a ``note``. Vertical honours the file's ``geospatial_vertical_positive`` (compares
+    against ``−depth`` when ``"up"``, notes when the convention is undeclared). ``—`` where the file
+    attribute or the computed value is absent.
+    """
+    f = mission_facts(ds)
+    vmin, vmax = _vertical_extent(ds)
+    computed_vals: dict[str, Any] = {
+        "time_coverage_start": f["t0"], "time_coverage_end": f["t1"],
+        "geospatial_lat_min": f["lat_min"], "geospatial_lat_max": f["lat_max"],
+        "geospatial_lon_min": f["lon_min"], "geospatial_lon_max": f["lon_max"],
+        "geospatial_vertical_min": vmin, "geospatial_vertical_max": vmax,
+    }
+    vert_up = str(ds.attrs.get("geospatial_vertical_positive", "")).lower() == "up"
+    vert_declared = "geospatial_vertical_positive" in ds.attrs
+    rows: list[dict[str, Any]] = []
+    for attr, axis in _SPATIOTEMPORAL:
         raw = ds.attrs.get(attr)
         file_val = "" if raw is None else str(raw)
-        val = float(getattr(ds[var], op)()) if var in ds else float("nan")
-        geospatial.append(
+        comp = computed_vals[attr]
+        note = ""
+        diff, over = "", False
+        if axis == "time":
+            computed = _iso_seconds(comp)
+            fv = _parse_time(file_val)
+            if fv is not None and comp is not None and not np.isnat(np.asarray(comp)):
+                secs = float((fv - comp) / np.timedelta64(1, "s"))
+                diff, over = f"{secs:+.0f} s", abs(secs) > _DIFF_THRESHOLDS[axis]
+        else:
+            cval = comp
+            if axis == "vertical" and cval is not None and vert_up:
+                cval = -cval
+            elif axis == "vertical" and not vert_declared:
+                note = "(sign convention not declared)"
+            computed = "" if cval is None or not np.isfinite(cval) else str(float(cval))
+            fv = _coerce_float(file_val)
+            if fv is not None and cval is not None and np.isfinite(cval):
+                d = fv - float(cval)
+                diff, over = _fmt_diff(d), abs(d) > _DIFF_THRESHOLDS[axis]
+        rows.append(
             {
-                "attr": attr,
-                "file_val": file_val,
-                "computed": f"{val:.4f}" if np.isfinite(val) else "—",
-                "missing": not file_val.strip(),
+                "attr": attr, "file_val": file_val, "computed": computed, "diff": diff,
+                "over": over, "threshold": _THRESHOLD_TEXT[axis], "note": note,
             }
         )
-    return {
-        "summary": _summary(ds),
-        "groups": og1_attrs.group_globals(ds.attrs),
-        "geospatial": geospatial,
-    }
+    return rows

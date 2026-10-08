@@ -15,7 +15,7 @@
   <figure class="slot-{{ sl }}">
     {%- if p.caption %}<figcaption>{{ p.caption }}</figcaption>{% endif %}
     <img src="data:image/png;base64,{{ p.payload }}" alt="{{ p.caption or p.id }}">
-    {%- set src = figsource(p.payload) %}{% if src %}<div class="fig-source">source: {{ src }}</div>{% endif %}
+    {%- set src = figsource(p.payload) %}{% if src %}<div class="fig-source">source: glidertest/plots.py:{{ src }}</div>{% endif %}
     {{- dbg(p.payload, sl) }}
   </figure>
 {%- else %}{# html | table #}

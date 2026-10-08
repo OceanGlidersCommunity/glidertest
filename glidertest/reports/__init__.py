@@ -239,6 +239,7 @@ def report(
                 page_title=page.title,
                 page_type=page.type_label,
                 page_landing=page.role == "landing",
+                page_intro=(page.lead(ds) if page.lead else ""),
                 **common,
             )
             # page has ✓/✗/⚠/– glyphs; Windows default is cp1252
