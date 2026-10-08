@@ -3,7 +3,7 @@
 :func:`mission_manifest` serialises the facts the navigator needs — identity, extent, counts, sensor
 presence, OG1 conformance, worst QC, a decimated track, and the page list — into a plain dict. Every
 value is one glidertest already computes for the masthead, metadata and QC sections; the manifest is
-the machine-readable form, read back by :func:`glidertest.reports.navigator.build_navigator` (and by
+the machine-readable form, read back by :func:`glidertest.reports._navigator.build_navigator` (and by
 downstream tools) without reopening the NetCDF file.
 """
 

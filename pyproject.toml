@@ -62,7 +62,7 @@ optional-dependencies.dev = [
 urls.documentation = "https://oceangliderscommunity.github.io/glidertest/"
 urls.homepage = "https://github.com/OceanGlidersCommunity/glidertest"
 urls.repository = "https://github.com/OceanGlidersCommunity/glidertest"
-# scripts.glidertest = "glidertest.cli:main"  # re-enable when glidertest/cli.py lands (B4)
+scripts.glidertest = "glidertest.cli:main"
 
 [tool.setuptools]
 packages = [

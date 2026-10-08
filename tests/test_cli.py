@@ -1,0 +1,231 @@
+import matplotlib
+
+matplotlib.use("agg")  # no display; the CLI forces this too
+
+import shutil  # noqa: E402
+import subprocess  # noqa: E402
+import sys  # noqa: E402
+
+import pytest  # noqa: E402
+
+from glidertest import fetchers  # noqa: E402
+from glidertest.cli import _expand_inputs, main  # noqa: E402
+
+SG015 = "sg015_20050213T230253_delayed.nc"  # 544 KB; the fast choice for most tests
+SEA045 = "sea045_20230604T1253_delayed.nc"  # a second, distinct mission id
+
+
+def _sample_path(name=SG015):
+    """Return the local cached path of a registered sample (downloads on first use)."""
+    return fetchers.data_source_og.fetch(name)
+
+
+def _run(argv):
+    """Call ``main(argv)`` and return the process exit code."""
+    with pytest.raises(SystemExit) as exc:
+        main(argv)
+    return 0 if exc.value.code is None else exc.value.code
+
+
+def _mission_dirs(root):
+    """Subdirectories of *root* that hold a report.json (i.e. a written mission)."""
+    if not root.is_dir():
+        return []
+    return [d for d in sorted(root.iterdir()) if d.is_dir() and (d / "report.json").exists()]
+
+
+# --- parser / help (no data) -------------------------------------------------
+
+
+def test_help_lists_subcommands(capsys):
+    assert _run(["--help"]) == 0
+    out = capsys.readouterr().out
+    assert "report" in out
+    assert "navigator" in out
+
+
+def test_version(capsys):
+    assert _run(["--version"]) == 0
+    assert capsys.readouterr().out.strip().startswith("glidertest ")
+
+
+def test_no_subcommand_is_usage_error():
+    assert _run([]) == 2
+
+
+def test_report_requires_output(capsys):
+    assert _run(["report", "dummy.nc"]) == 2
+    assert "required" in capsys.readouterr().err.lower()
+
+
+def test_cli_import_is_backend_free():
+    # Importing the CLI must not pull in matplotlib or xarray, so --help stays fast and backend-free.
+    code = (
+        "import sys, glidertest.cli; "
+        "assert 'matplotlib' not in sys.modules, 'cli import pulled in matplotlib'; "
+        "assert 'xarray' not in sys.modules, 'cli import pulled in xarray'"
+    )
+    r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)
+    assert r.returncode == 0, r.stderr
+
+
+def test_module_invocation_version():
+    r = subprocess.run(
+        [sys.executable, "-m", "glidertest", "--version"], capture_output=True, text=True, check=False
+    )
+    assert r.returncode == 0
+    assert r.stdout.strip().startswith("glidertest ")
+
+
+# --- _expand_inputs (pure logic, no data) ------------------------------------
+
+
+def test_expand_inputs_dir_and_dedup(tmp_path):
+    (tmp_path / "a.nc").touch()
+    (tmp_path / "b.nc").touch()
+    (tmp_path / "c.txt").touch()
+    got = _expand_inputs([str(tmp_path), str(tmp_path / "a.nc")], "*.nc")
+    assert [p.name for p in got] == ["a.nc", "b.nc"]  # .txt excluded, a.nc not duplicated
+
+
+def test_expand_inputs_literal_glob(tmp_path):
+    (tmp_path / "x1.nc").touch()
+    (tmp_path / "x2.nc").touch()
+    got = _expand_inputs([str(tmp_path / "x*.nc")], "*.nc")
+    assert sorted(p.name for p in got) == ["x1.nc", "x2.nc"]
+
+
+# --- report (root layout) ----------------------------------------------------
+
+
+def test_report_writes_mission_and_navigator(tmp_path):
+    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path)]) == 0
+    assert (tmp_path / "index.html").exists()  # fleet navigator
+    dirs = _mission_dirs(tmp_path)
+    assert len(dirs) == 1
+    assert (dirs[0] / "index.html").exists()
+    assert (dirs[0] / "report.json").exists()
+
+
+def test_report_no_navigator(tmp_path):
+    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path), "--no-navigator"]) == 0
+    assert not (tmp_path / "index.html").exists()
+    assert len(_mission_dirs(tmp_path)) == 1
+
+
+def test_report_mission_id_override(tmp_path):
+    argv = ["report", _sample_path(), "--report-dir", str(tmp_path), "--mission-id", "custom"]
+    assert _run(argv) == 0
+    assert (tmp_path / "custom" / "index.html").exists()
+
+
+def test_report_mission_id_rejects_multiple(tmp_path):
+    src = _sample_path()
+    a, b = tmp_path / "a.nc", tmp_path / "b.nc"
+    shutil.copy(src, a)
+    shutil.copy(src, b)
+    out = tmp_path / "out"
+    assert _run(["report", str(a), str(b), "--report-dir", str(out), "--mission-id", "x"]) == 2
+    assert not out.exists()
+
+
+def test_report_duplicate_id_refused(tmp_path, capsys):
+    src = _sample_path()
+    a, b = tmp_path / "a.nc", tmp_path / "b.nc"
+    shutil.copy(src, a)
+    shutil.copy(src, b)
+    out = tmp_path / "out"
+    assert _run(["report", str(a), str(b), "--report-dir", str(out)]) == 1
+    assert "map to mission" in capsys.readouterr().err
+    assert _mission_dirs(out) == []  # nothing written
+
+
+def test_report_skip_existing(tmp_path, capsys):
+    p = _sample_path()
+    assert _run(["report", p, "--report-dir", str(tmp_path), "--no-navigator"]) == 0
+    manifest = _mission_dirs(tmp_path)[0] / "report.json"
+    before = manifest.stat().st_mtime_ns
+    capsys.readouterr()  # clear
+    argv = ["report", p, "--report-dir", str(tmp_path), "--no-navigator", "--skip-existing"]
+    assert _run(argv) == 0
+    assert "skipped" in capsys.readouterr().out
+    assert manifest.stat().st_mtime_ns == before  # not rewritten
+
+
+def test_report_dry_run(tmp_path, capsys):
+    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path), "-n"]) == 0
+    out = capsys.readouterr().out
+    assert "->" in out
+    assert "would rebuild" in out
+    assert list(tmp_path.iterdir()) == []  # nothing written
+
+
+def test_report_bad_file_continues(tmp_path, capsys):
+    missing = str(tmp_path / "nope.nc")
+    assert _run(["report", missing, _sample_path(), "--report-dir", str(tmp_path)]) == 1
+    assert "nope.nc" in capsys.readouterr().err
+    assert (tmp_path / "index.html").exists()  # navigator still built over the one success
+    assert len(_mission_dirs(tmp_path)) == 1
+
+
+def test_report_directory_input(tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    shutil.copy(_sample_path(SG015), data / "m1.nc")
+    shutil.copy(_sample_path(SEA045), data / "m2.nc")
+    out = tmp_path / "out"
+    assert _run(["report", str(data), "--report-dir", str(out)]) == 0
+    assert len(_mission_dirs(out)) == 2
+    assert (out / "index.html").exists()
+
+
+def test_report_pattern_selects(tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    shutil.copy(_sample_path(SG015), data / "sg_one.nc")
+    shutil.copy(_sample_path(SEA045), data / "sea_one.nc")
+    out = tmp_path / "out"
+    assert _run(["report", str(data), "--report-dir", str(out), "--pattern", "sg_*.nc"]) == 0
+    assert len(_mission_dirs(out)) == 1
+
+
+# --- report (flat layout, -o) ------------------------------------------------
+
+
+def test_report_flat_output(tmp_path):
+    out = tmp_path / "one"
+    assert _run(["report", _sample_path(), "-o", str(out)]) == 0
+    assert (out / "index.html").exists()  # landing written directly into DIR
+    assert (out / "report.json").exists()
+    assert (out / "figures").is_dir()
+    assert _mission_dirs(out) == []  # no <mission_id>/ nesting
+
+
+def test_report_flat_rejects_multiple(tmp_path):
+    src = _sample_path()
+    a, b = tmp_path / "a.nc", tmp_path / "b.nc"
+    shutil.copy(src, a)
+    shutil.copy(src, b)
+    assert _run(["report", str(a), str(b), "-o", str(tmp_path / "out")]) == 2
+
+
+def test_report_flat_rejects_mission_id(tmp_path, capsys):
+    assert _run(["report", "dummy.nc", "-o", str(tmp_path / "out"), "--mission-id", "x"]) == 2
+    assert "no effect with -o" in capsys.readouterr().err
+    assert not (tmp_path / "out").exists()
+
+
+# --- navigator ---------------------------------------------------------------
+
+
+def test_navigator_rebuilds(tmp_path):
+    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path)]) == 0
+    (tmp_path / "index.html").unlink()
+    assert _run(["navigator", str(tmp_path), "--title", "My Fleet"]) == 0
+    assert (tmp_path / "index.html").exists()
+    assert "My Fleet" in (tmp_path / "index.html").read_text(encoding="utf-8")
+
+
+def test_navigator_missing_root(tmp_path, capsys):
+    assert _run(["navigator", str(tmp_path / "nope")]) == 1
+    assert "no such directory" in capsys.readouterr().err

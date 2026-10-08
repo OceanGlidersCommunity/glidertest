@@ -54,21 +54,33 @@ def _build_nav(pages: list[Page], current: Page, source_name: str, *, back: bool
     return {"rows": rows, "back": back_pill, "inventory": inventory}
 
 
-def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Path:
+def report(
+    ds: xr.Dataset,
+    outdir: Path | str,
+    *,
+    navigator: bool = True,
+    mission_id: str | None = None,
+    layout: str = "root",
+) -> Path:
     """Write a self-contained HTML report for *ds* under *outdir* and return the landing page path.
 
-    *outdir* is treated as a **root**: the report is written into ``<outdir>/<mission_id>/`` (created
-    if absent), never directly into *outdir*, so a root can hold many missions side by side. The
-    ``mission_id`` is the OG1 ``id`` attribute when present, else the source file stem (see
-    :func:`glidertest.reports._mission.mission_id`). Each applicable page in
-    :data:`glidertest.reports._mission.PAGES` is written to ``<mission_id>/<page>.html``; the pages
-    share one ``figures/`` with page-prefixed slugs (``<page>_<panel>.png``) and a cross-page nav. A
+    With *layout* ``"root"`` (the default) *outdir* is treated as a **root**: the report is written
+    into ``<outdir>/<mission_id>/`` (created if absent), so a root can hold many missions side by
+    side. With *layout* ``"flat"`` the pages are written directly into *outdir* and no navigator is
+    built (*navigator* is ignored) — one mission, one self-contained folder.
+
+    The ``mission_id`` subdirectory name is the OG1 ``id`` attribute when present, else the source
+    file stem (see :func:`glidertest.reports._mission.mission_id`); pass *mission_id* to override it
+    (run through the same directory-name sanitising). Each applicable page in
+    :data:`glidertest.reports._mission.PAGES` is written to ``<page>.html``; the pages share one
+    ``figures/`` with page-prefixed slugs (``<page>_<panel>.png``) and a cross-page nav. A
     machine-readable ``report.json`` manifest is written beside the landing page.
 
-    With *navigator* ``True`` (the default), ``<outdir>/index.html`` — a fleet navigator over every
-    ``<outdir>/*/report.json`` — is rebuilt after the mission is written (see :func:`navigator`). The
-    rebuild redraws the fleet track map, so for a **batch** pass ``navigator=False`` in the loop and
-    call :func:`navigator` once at the end rather than rebuilding on every mission.
+    With *navigator* ``True`` (the default, root layout only), ``<outdir>/index.html`` — a fleet
+    navigator over every ``<outdir>/*/report.json`` — is rebuilt after the mission is written (see
+    :func:`navigator`). The rebuild redraws the fleet track map, so for a **batch** pass
+    ``navigator=False`` in the loop and call :func:`navigator` once at the end rather than rebuilding
+    on every mission.
 
     Figures are rendered under the non-interactive ``Agg`` backend for the duration of the build,
     then the caller's backend is restored. glidertest's plotters call ``plt.show()`` when they draw
@@ -80,28 +92,41 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
     ds : xarray.Dataset
         An OG1 glider dataset.
     outdir : pathlib.Path or str
-        The root directory; the mission subdirectory is created under it.
+        The root directory (``layout="root"``) or the mission's own directory (``layout="flat"``).
     navigator : bool, default True
-        Rebuild ``<outdir>/index.html`` (the fleet navigator) after writing the mission.
+        Rebuild ``<outdir>/index.html`` (the fleet navigator) after writing the mission. Ignored
+        when ``layout="flat"``.
+    mission_id : str, optional
+        Subdirectory name for this mission, overriding the name derived from *ds*; run through the
+        same sanitising as the derived name. Ignored when ``layout="flat"`` (no subdirectory).
+    layout : {"root", "flat"}, default "root"
+        ``"root"`` writes the mission into ``<outdir>/<mission_id>/``; ``"flat"`` writes the pages
+        directly into *outdir* and builds no navigator.
 
     Returns
     -------
     pathlib.Path
-        The path to the written landing page (``<outdir>/<mission_id>/index.html``).
+        The path to the written landing page (``<outdir>/<mission_id>/index.html`` for root layout,
+        ``<outdir>/index.html`` for flat).
     """
     import matplotlib
     import matplotlib.pyplot as plt
 
     from .._version import __version__
-    from . import _figdebug
+    from . import _figdebug, _mission, paths
     from ._env import get_template
-    from ._mission import PAGES, Ctx, build, header_card, mission_id
+    from ._mission import PAGES, Ctx, _safe_dirname, build, header_card
     from ._report_css import _JS_TOP_LINKS, PACKAGE_ACCENT, SHARED_CSS
     from .manifest import mission_manifest
 
+    if layout not in ("root", "flat"):
+        msg = f"layout must be 'root' or 'flat', got {layout!r}"
+        raise ValueError(msg)
     root = Path(outdir)
-    mid = mission_id(ds)
-    missiondir = root / mid
+    # _mission.mission_id (module attribute) avoids shadowing by the mission_id parameter here.
+    mid = _safe_dirname(mission_id) if mission_id else _mission.mission_id(ds)
+    missiondir = root if layout == "flat" else paths.mission_dir(root, mid)
+    do_navigator = navigator and layout == "root"
     (missiondir / "figures").mkdir(parents=True, exist_ok=True)
 
     ctx = Ctx(ds=ds)
@@ -160,7 +185,7 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
                         (missiondir / "figures" / f"{slug}_{panel.id}.png").write_bytes(
                             base64.b64decode(panel.payload)
                         )
-            nav = _build_nav(pages, page, source_name, back=navigator)
+            nav = _build_nav(pages, page, source_name, back=do_navigator)
             rendered = template.render(
                 report=resolved,
                 nav=nav,
@@ -183,7 +208,7 @@ def report(ds: xr.Dataset, outdir: Path | str, *, navigator: bool = True) -> Pat
         )
         (missiondir / "report.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
-        if navigator:
+        if do_navigator:
             _build_navigator(root)  # draws the tracks map under the same Agg backend
     finally:
         if switch:
@@ -228,6 +253,6 @@ def navigator(root: Path | str, title: str | None = None) -> Path:
 
 def _build_navigator(root: Path, title: str | None = None) -> Path:
     """Render ``<root>/index.html`` from the manifests; caller owns the Matplotlib backend."""
-    from .navigator import build_navigator
+    from ._navigator import build_navigator
 
     return build_navigator(root, title)
