@@ -9,6 +9,8 @@ import gsw
 import warnings
 from glidertest import utilities
 from scipy.integrate import cumulative_trapezoid
+from glidertest.utilities import _log
+
 
 def quant_updown_bias(ds, vars='PSAL', v_res=1):
     """
@@ -48,7 +50,7 @@ def quant_updown_bias(ds, vars='PSAL', v_res=1):
 
         df = pd.DataFrame(data={'dc': dc, 'cd': cd, 'depth': depthG[0, :]})
     else:
-        print(f'{vars} is not in the dataset')
+        _log.info(f'{var} is not in the dataset')
         df = pd.DataFrame()
     return df
 
@@ -93,7 +95,7 @@ def mean_profile(ds, vars='TEMP', v_res=1):
 
         df = pd.DataFrame(data={'mean': mean_var, 'depth': depthG[0, :]})
     else:
-        print(f'{vars} is not in the dataset')
+        _log.info(f'{var} is not in the dataset')
         df = pd.DataFrame()
 
     return df
@@ -195,17 +197,17 @@ def check_monotony(da):
     -------
     bool:
         **True** if the variable is monotonically increasing, else **False**. 
-        Additionally, a message is printed indicating the result.  
+        Additionally, a message is _log.infoed indicating the result.
 
     Notes
     ------
     Original Author: Chiara Monforte
     """
     if not pd.Series(da).is_monotonic_increasing:
-        print(f'{da.name} is not always monotonically increasing')
+        _log.info(f'{da.name} is not always monotonically increasing')
         return False
     else:
-        print(f'{da.name} is always monotonically increasing')
+        _log.info(f'{da.name} is always monotonically increasing')
         return True
 
 def calc_w_meas(ds):
@@ -229,7 +231,7 @@ def calc_w_meas(ds):
     utilities._check_necessary_variables(ds, ['TIME'])
     # Ensure inputs are numpy arrays
     time = ds.TIME.values
-    if 'DEPTH_Z' not in ds.variables and all(v in ds.variables for v in ['PRES', 'LATITUDE', 'LONGITUDE']):
+    if 'DEPTH_Z' not in ds.variables and all(v in ds.variables for vars in ['PRES', 'LATITUDE', 'LONGITUDE']):
         ds = utilities.calc_DEPTH_Z(ds)
     depth = ds.DEPTH_Z.values
 
@@ -517,7 +519,7 @@ def find_outlier_duration(df: pd.DataFrame, rolling=20, std=2):
         Rolling mean of **profile duration** computed using the specified window size.  
     overt_prof : numpy.ndarray  
         Array of **profile numbers** where the duration exceeds the rolling mean by more than the set **standard deviation threshold**.  
-        - If outliers are found, a message is printed recommending further investigation. 
+        - If outliers are found, a message is _log.infoed recommending further investigation.
 
     Notes
     ------
@@ -528,7 +530,7 @@ def find_outlier_duration(df: pd.DataFrame, rolling=20, std=2):
                 df['profile_duration'] < rolling_mean - (np.std(rolling_mean) * std)))
     overt_prof = df['profile_num'][overtime[0]].values
     if len(overtime[0]) > 0:
-        print(
+        _log.info(
             f'There are {len(overtime[0])} profiles where the duration differs by {std} standard deviations of the nearby {rolling} profiles. Further checks are recommended')
     return rolling_mean, overt_prof
 
@@ -562,7 +564,7 @@ def compute_global_range(ds: xr.Dataset, vars='DOXY', min_val=-5, max_val=600):
     Original Author: Chiara Monforte
     """
     utilities._check_necessary_variables(ds, [vars])
-    out_range = ds[vars].where((ds[var]<min_val )| (ds[vars]>max_val ))
+    out_range = ds[vars].where((ds[vars]<min_val )| (ds[vars]>max_val ))
     return out_range.dropna(dim='N_MEASUREMENTS')
 
 def max_depth_per_profile(ds: xr.Dataset):
@@ -585,7 +587,7 @@ def max_depth_per_profile(ds: xr.Dataset):
     """
     max_depths = ds.groupby('PROFILE_NUMBER').apply(lambda x: x['DEPTH'].max())
     ### add the unit to the dataarray
-    max_depths.attrs['units'] = ds['DEPTH'].attrs['units']
+    max_depths.attrs['units'] = ds['DEPTH'].attrs.get('units', 'UNK')
     return max_depths
 
 def add_sigma_1(ds: xr.Dataset, var_sigma_1: str = "SIGMA_1") -> xr.Dataset:
@@ -613,7 +615,7 @@ def add_sigma_1(ds: xr.Dataset, var_sigma_1: str = "SIGMA_1") -> xr.Dataset:
     utilities._check_necessary_variables(ds, required_vars)
 
     if var_sigma_1 in ds:
-        print(f"Variable '{var_sigma_1}' already exists in the dataset. Skipping calculation.")
+        _log.info(f"Variable '{var_sigma_1}' already exists in the dataset. Skipping calculation.")
         return ds
 
     # Extract required variables
@@ -627,7 +629,7 @@ def add_sigma_1(ds: xr.Dataset, var_sigma_1: str = "SIGMA_1") -> xr.Dataset:
     valid = ~np.isnan(TEMP) & ~np.isnan(PSAL) & ~np.isnan(PRES) & ~np.isnan(LAT) & ~np.isnan(LON)
 
     if not np.any(valid):
-        print(f"All values are invalid for {var_sigma_1}; output will contain only NaNs.")
+        _log.info(f"All values are invalid for {var_sigma_1}; output will contain only NaNs.")
         ds[var_sigma_1] = xr.DataArray(
             np.full_like(PRES, np.nan), 
             dims=('N_MEASUREMENTS',),
@@ -692,12 +694,13 @@ def compute_mld(ds: xr.Dataset, vars, method: str = 'threshold', threshold = 0.0
         mld = groups.apply(mld_profile_treshhold, vars=vars, threshold=threshold,
                             ref_depth=ref_depth, use_bins=use_bins, binning=binning)
     elif method == 'CR':
+        groups = utilities.group_by_profiles(ds, [vars, "DEPTH","TIME"])
         if vars != 'SIGMA_1':
-            print(f"Warning: {vars} can not be used for convective resistance calulation. Instead use SIGMA_1 for CR calculation.")
+            _log.info(f"Warning: {vars} can not be used for convective resistance calulation. Instead use SIGMA_1 for CR calculation.")
             vars = 'SIGMA_1'
         groups = utilities.group_by_profiles(ds, [vars, "DEPTH","TIME"])
         if threshold > 0:
-            print("Warning: CR threshold should be negative. Using -2 as default.")
+            _log.info("Warning: CR threshold should be negative. Using -2 as default.")
             threshold = -2
         mld = groups.apply(mld_profile_CR, threshold=threshold, use_bins=use_bins, binning=binning)
     else:
@@ -754,7 +757,7 @@ def mld_profile_treshhold(profile, vars: str = 'SIGMA_T', threshold: float = 0.0
             density = profile[vars].to_numpy()
         elif isinstance(profile, xr.Dataset):
             depth = profile['DEPTH'].values
-            density = profile[vars].values
+            density = profile[variable].values
         else:
             raise TypeError("Input must be a pandas.DataFrame or xarray.Dataset")
 

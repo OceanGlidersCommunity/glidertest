@@ -8,8 +8,9 @@ import gsw
 from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 import cmocean.cm as cmo
-
-
+from matplotlib.ticker import MaxNLocator
+import logging
+_log = logging.getLogger(__name__)
 
 def _check_necessary_variables(ds: xr.Dataset, vars: list):
     """
@@ -518,7 +519,7 @@ label_dict = {
     },
 }
 
-def plotting_labels(s: str):
+def plotting_labels(vars: str):
     """
     Retrieves the label associated with a variable from a predefined dictionary.
 
@@ -550,22 +551,22 @@ def plotting_units(ds: xr.Dataset,vars: str):
     """
     Retrieves the units associated with a variable from a dataset or a predefined dictionary.
 
-    This function checks if the given variable has units in the attributes. If `var` exists as a key in the `label_dict`
+    This function checks if the given variable has units in the attributes. If `vars` exists as a key in the `label_dict`
     dictionary, it returns the units of the variable from the dataset `ds` using the `var` key. If not, it
     returns the associated units from `label_dict`. In case none of the two exist, the field is left empty.
 
     Parameters
     ----------
     ds: xarray.Dataset
-        The dataset containing the variable `var`.
+        The dataset containing the variable `vars`.
     vars: str
         The variable (key) whose units are to be retrieved.
 
     Returns
     -------
     str: 
-        The units corresponding to the variable `var`. If the units exist in the attributes, the function returns
-        the units from `ds[var]`. If not, and the variable is found in `label_dict`, the associated units will be returned.
+        The units corresponding to the variable `vars`. If the units exist in the attributes, the function returns
+        the units from `ds[vars]`. If not, and the variable is found in `label_dict`, the associated units will be returned.
 
     Notes
     -----
@@ -641,3 +642,48 @@ def group_by_profiles(ds, vars=None):
     else:
         return ds.groupby("PROFILE_NUMBER")
         
+def get_color_limits(values, log_scale=False):
+    finite = values[np.isfinite(values)]
+
+    if log_scale:
+        finite = finite[finite > 0]
+
+        if finite.size == 0:
+            raise ValueError("No positive values available for LogNorm.")
+
+        if finite.size < values.size:
+            print("Warning: Some non-positive values will be ignored in log scale.")
+
+    return (np.nanpercentile(finite, 0.5), np.nanpercentile(finite, 99.5),)
+
+
+def get_contour_levels(levels=None, log_scale=False, vmin=None, vmax=None):
+    # If the user passed an explicit array/list of levels, use it directly
+    if levels is not None and not isinstance(levels, (int, float)):
+        return levels
+
+    # If levels is an integer or None, use it as the target number of intervals
+    num = levels if isinstance(levels, (int, float)) else 10
+
+    if log_scale:
+        # Find clean decade limits that encompass vmin and vmax
+        dec_min, dec_max = np.floor(np.log10(vmin)), np.ceil(np.log10(vmax))
+
+        # LogLocator naturally picks clean base-10 steps (e.g., 10^-5, 10^-4...)
+        locator = LogLocator(base=10, numticks=2 * num, subs='auto')
+        levels = locator.tick_values(10 ** dec_min, 10 ** dec_max)
+
+        # Filter levels to strictly fall within your desired vmin/vmax range
+        levels = levels[(levels >= vmin) & (levels <= vmax)]
+        # If not enough levels are found, fallback to geometric spacing
+        if len(levels) < num // 2:
+            levels = np.geomspace(vmin, vmax, num)
+    else:
+        # MaxNLocator finds clean intervals (multiples of 1, 2, 5, 10)
+        locator = MaxNLocator(nbins=2 * num, steps=[1, 2, 5, 10])
+        levels = locator.tick_values(vmin, vmax)
+
+        # Filter and append strict boundary limits
+        levels = levels[(levels >= vmin) & (levels <= vmax)]
+
+    return levels
