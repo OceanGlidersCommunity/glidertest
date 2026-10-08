@@ -1,25 +1,30 @@
-import matplotlib
+import json
+import warnings
 
-matplotlib.use("agg")  # no display; the CLI forces this too
+import numpy as np
+import pytest
+import xarray as xr
+from PIL import Image
 
-import numpy as np  # noqa: E402
-import xarray as xr  # noqa: E402
-from PIL import Image  # noqa: E402
+from glidertest import fetchers, plots
+from glidertest.config.report_tokens import FIG_DPI, W_FULL
+from glidertest.reports import _slots, report
+from glidertest.reports._mission import PROFILE, build
+from glidertest.reports.inventory import _fmt_scalar, inventory_data
 
-from glidertest import fetchers, plots  # noqa: E402
-from glidertest.config.report_tokens import FIG_DPI, W_FULL  # noqa: E402
-from glidertest.reports import _slots, report  # noqa: E402
-from glidertest.reports._mission import PROFILE, build  # noqa: E402
-from glidertest.reports.inventory import _fmt_scalar, inventory_data  # noqa: E402
+# Most render-then-inspect tests read the one session render of the committed sea045 subset
+# (`subset_report`, read-only); dataset-only tests open it once (`subset_ds`). The subset keeps its
+# OG1 id, so the mission directory is still "sea045_20230604T1253_delayed", but its *source file* is
+# "sea045_subset.nc" (what a few assertions check). See tests/data/README.md. The subset renders
+# every diagnostic panel except the day/night offset pair (no night in 12 Baltic-June profiles),
+# which keeps its own `slow` full-sample test below.
 
 
-def test_report_writes_files(tmp_path):
-    ds = fetchers.load_sample_dataset()
-    out = report(ds, tmp_path, navigator=False)
-    mdir = out.parent  # report writes into <root>/<mission_id>/
+def test_report_writes_files(subset_report):
+    mdir = subset_report  # report writes into <root>/<mission_id>/
+    out = mdir / "index.html"
     assert mdir.name == "sea045_20230604T1253_delayed"
-    assert out == mdir / "index.html"  # landing page is index.html
-    assert out.exists()
+    assert out.exists()  # landing page is index.html
     figures = list((mdir / "figures").glob("*.png"))
     assert len(figures) >= 4
     html = out.read_text(encoding="utf-8")
@@ -34,11 +39,8 @@ def test_report_writes_files(tmp_path):
         assert f'id="{section_id}"' in inventory
 
 
-def test_sensor_pages_rendered(tmp_path):
-    ds = fetchers.load_sample_dataset()
-    landing = report(ds, tmp_path, navigator=False)
-    mdir = landing.parent
-    assert landing.name == "index.html"  # landing is the first applicable page
+def test_sensor_pages_rendered(subset_report):
+    mdir = subset_report
     for page in ("ctd.html", "oxygen.html", "optics.html"):
         p = mdir / page
         assert p.exists()  # the sensor's variables are present -> its page is written
@@ -63,9 +65,8 @@ def test_sensor_page_panels_in_canonical_order():
             assert ranked == sorted(ranked), f"{section.id} panels are out of canonical order"
 
 
-def test_flight_absent_and_cr_on_ctd(tmp_path):
-    ds = fetchers.load_sample_dataset()
-    mdir = report(ds, tmp_path, navigator=False).parent
+def test_flight_absent_and_cr_on_ctd(subset_report):
+    mdir = subset_report
     # The flight page needs the glider flight-model velocity, which the sample lacks -> no flight page.
     assert not (mdir / "flight.html").exists()
     # Convective resistance is a mixed-layer diagnostic and lives on the CTD page (needs TEMP+PSAL).
@@ -74,9 +75,8 @@ def test_flight_absent_and_cr_on_ctd(tmp_path):
     assert list((mdir / "figures").glob("ctd_ctd_cr.png"))
 
 
-def test_sections_resolve_in_order():
-    ds = fetchers.load_sample_dataset()
-    resolved = build(ds, PROFILE)
+def test_sections_resolve_in_order(subset_ds):
+    resolved = build(subset_ds, PROFILE)
     titles = [s.title for s in resolved.sections]
     # Track leads, then Payload (the sensor list); the landing ends with the two QC sections.
     assert titles == [
@@ -87,9 +87,8 @@ def test_sections_resolve_in_order():
     assert not resolved.sections[1].panels[0].is_stub
 
 
-def test_payload_and_file_contents(tmp_path):
-    ds = fetchers.load_sample_dataset()
-    mdir = report(ds, tmp_path, navigator=False).parent
+def test_payload_and_file_contents(subset_report):
+    mdir = subset_report
     index = (mdir / "index.html").read_text(encoding="utf-8")
     inventory = (mdir / "inventory.html").read_text(encoding="utf-8")
     # Payload table stays on the landing page: sensor labels and the source SENSOR_* column.
@@ -111,9 +110,8 @@ def test_payload_and_file_contents(tmp_path):
     assert "<h3>Identity &amp; discovery</h3>" in inventory
 
 
-def test_inventory_strip_and_index_verdict(tmp_path):
-    ds = fetchers.load_sample_dataset()
-    mdir = report(ds, tmp_path, navigator=False).parent
+def test_inventory_strip_and_index_verdict(subset_report):
+    mdir = subset_report
     index = (mdir / "index.html").read_text(encoding="utf-8")
     inventory = (mdir / "inventory.html").read_text(encoding="utf-8")
     # The landing page carries the one-line OG1 verdict and links to the inventory, not the full table.
@@ -124,7 +122,7 @@ def test_inventory_strip_and_index_verdict(tmp_path):
     assert "Data inventory:" in index
     assert "inventory-strip" in index
     assert "nav-inventory" not in index  # not rendered as a role pill
-    assert "sea045_20230604T1253_delayed.nc" in index  # the source file name is the pill label
+    assert "sea045_subset.nc" in index  # the source file name is the pill label
     assert "file-pill-active" in inventory
     # QC coverage line on the inventory.
     assert "data variables carry a" in inventory
@@ -144,29 +142,42 @@ def test_conformance_marks_missing_mandatory_amber():
     assert "geospatial_lat_min</td>" not in html.split("Geospatial extent")[0]
 
 
-def test_qc_section_has_basic_checks_sentences(tmp_path):
-    ds = fetchers.load_sample_dataset()
-    html = report(ds, tmp_path, navigator=False).read_text(encoding="utf-8")
+def test_sg014_missing_id_marked_amber(sg014_subset_path):
+    # The sg014 subset is a realistic imperfect OG1 file: 15/16 mandatory globals, missing `id`.
+    # The missing mandatory attribute must render an amber (nonconform) dash cell.
+    from glidertest import og1_attrs
+    from glidertest.reports import metadata
+    from glidertest.reports._env import get_template
+
+    with xr.open_dataset(sg014_subset_path) as ds:
+        assert og1_attrs.conformance_summary(ds.attrs)["mandatory_present"] == 15
+        assert "id" not in ds.attrs
+        html = get_template("_og1_conformance.html").render(**metadata.conformance_data(ds))
+    assert "nonconform" in html
+
+
+def test_qc_section_has_basic_checks_sentences(subset_report):
+    html = (subset_report / "index.html").read_text(encoding="utf-8")
     assert "Profile number:" in html
     assert "Profile duration:" in html
 
 
-def test_qc_delivered_covers_all_qc_variables(tmp_path):
-    ds = fetchers.load_sample_dataset()
-    html = report(ds, tmp_path, navigator=False).read_text(encoding="utf-8")
-    # Every *_QC variable in the file must appear, not just the four with diagnostics thresholds.
-    for parent in ("TEMP", "PSAL", "DOXY", "CHLA", "CNDC", "DENSITY", "POTDENS0", "THETA"):
+def test_qc_delivered_covers_all_qc_variables(subset_report):
+    html = (subset_report / "index.html").read_text(encoding="utf-8")
+    # Every *_QC variable in the file must appear, not just those with diagnostic thresholds. The
+    # subset keeps CNDC_QC (no diagnostic threshold) alongside the four thresholded vars to hold
+    # that distinction; the full sample's derived-variable QC (DENSITY/POTDENS0/THETA) is dropped.
+    for parent in ("TEMP", "PSAL", "DOXY", "CHLA", "CNDC"):
         assert f"<td>{parent}</td>" in html
     # Column labels come from the file's flag_meanings: flag 2 is "Unknown" here, not QARTOD wording.
     assert "Unknown %" in html
     assert "Not eval %" not in html
 
 
-def test_flag_labels_read_from_file():
+def test_flag_labels_read_from_file(subset_ds):
     from glidertest import qc
 
-    ds = fetchers.load_sample_dataset()
-    labels = qc.flag_labels(ds["TEMP_QC"])
+    labels = qc.flag_labels(subset_ds["TEMP_QC"])
     # flag_values [1,2,3,4,9] / flag_meanings "GOOD UNKNOWN SUSPECT FAIL MISSING".
     assert labels[1] == "Good"
     assert labels[2] == "Unknown"
@@ -235,9 +246,8 @@ def test_inventory_data_groups_each_dimension_signature():
     assert "On N_MEASUREMENTS, N_CELLS" in headers
 
 
-def test_inventory_data_var_meta_fields():
-    ds = fetchers.load_sample_dataset()
-    data = inventory_data(ds)
+def test_inventory_data_var_meta_fields(subset_ds):
+    data = inventory_data(subset_ds)
     # TEMP is on N_MEASUREMENTS, has a TEMP_QC companion, and its attrs dropdown excludes the columns.
     temp = next(v for g in data["groups"] for v in g["variables"] if v["name"] == "TEMP")
     assert temp["has_qc"] is True
@@ -263,25 +273,23 @@ def test_header_card_degrades_on_nat_and_nan():
     assert fields["Sampling"] == "UNK"
 
 
-def test_report_style_reaches_figure():
+def test_report_style_reaches_figure(subset_ds):
     # Setting _ACTIVE_STYLE must drive the figure width through the plotter's own inner
     # style context, independent of _force_width.
-    ds = fetchers.load_sample_dataset()
     original = plots._ACTIVE_STYLE
     plots._ACTIVE_STYLE = _slots._report_spec(W_FULL)
     try:
-        fig, _ = plots.plot_glider_track(ds)
+        fig, _ = plots.plot_glider_track(subset_ds)
         assert abs(fig.get_size_inches()[0] - W_FULL) < 1e-6
     finally:
         plots._ACTIVE_STYLE = original
 
 
-def test_png_width(tmp_path):
+def test_png_width(subset_report):
     from glidertest.config.report_tokens import SLOTS
     from glidertest.reports._mission import PANELS
 
-    ds = fetchers.load_sample_dataset()
-    mdir = report(ds, tmp_path, navigator=False).parent
+    mdir = subset_report
     # Each figure PNG is rendered at exactly its panel's declared slot width (round(slot_in * dpi)),
     # not merely at some valid width: a half-slot panel mis-declared as full (or vice versa) must
     # fail here. The filename is "<page>_<panel.id>.png" and page slugs are single tokens, so the
@@ -294,22 +302,18 @@ def test_png_width(tmp_path):
         assert Image.open(png).size[0] == expected, f"{pid} rendered at the wrong slot width"
 
 
-def test_root_convention_and_manifest(tmp_path):
-    import json
-
-    ds = fetchers.load_sample_dataset()
-    out = report(ds, tmp_path, navigator=False)
-    mdir = out.parent
+def test_root_convention_and_manifest(subset_report):
+    mdir = subset_report
     # The report writes into <root>/<mission_id>/, named from the data, not the caller's choice.
     assert mdir.name == "sea045_20230604T1253_delayed"
-    assert out == mdir / "index.html"
+    assert (mdir / "index.html").exists()
     manifest = json.loads((mdir / "report.json").read_text(encoding="utf-8"))
     assert manifest["manifest_version"] == 1
     assert manifest["id"] == "sea045_20230604T1253_delayed"
     assert manifest["sensors"] == {"ctd": True, "oxygen": True, "optics": True, "flight": False}
     assert manifest["og1"]["mandatory_present"] == 16
     assert 0 < len(manifest["track"]) <= 200
-    assert manifest["source_file"] == "sea045_20230604T1253_delayed.nc"
+    assert manifest["source_file"] == "sea045_subset.nc"
 
 
 def test_mission_id_falls_back_to_labeled_placeholder():
@@ -342,8 +346,6 @@ def _fake_manifest(mid: str, serial: str, *, oxygen: bool) -> dict:
 
 
 def test_navigator_indexes_manifests(tmp_path):
-    import json
-
     from glidertest.reports import navigator
 
     for mid, serial, oxygen in [("m_a", "sea001", True), ("m_b", "sg002", False)]:
@@ -362,9 +364,8 @@ def test_navigator_indexes_manifests(tmp_path):
     assert "no_manifest" in html  # a manifest-less directory is surfaced, not hidden
 
 
-def test_titles_and_top_links(tmp_path):
-    ds = fetchers.load_sample_dataset()
-    mdir = report(ds, tmp_path, navigator=False).parent
+def test_titles_and_top_links(subset_report):
+    mdir = subset_report
     index = (mdir / "index.html").read_text(encoding="utf-8")
     ctd = (mdir / "ctd.html").read_text(encoding="utf-8")
     # Title: page name first so tabs are distinguishable; the landing page is just the id.
@@ -387,11 +388,10 @@ def test_titles_and_top_links(tmp_path):
     assert 'id="sample_rate"' in ctd and "Sample rate" in ctd
 
 
-def test_payload_model_from_sensor_catalog():
+def test_payload_model_from_sensor_catalog(subset_ds):
     from glidertest.reports.metadata import metadata_data
 
-    ds = fetchers.load_sample_dataset()
-    temp = next(p for p in metadata_data(ds)["payload"] if p["var"] == "TEMP")
+    temp = next(p for p in metadata_data(subset_ds)["payload"] if p["var"] == "TEMP")
     assert temp["model"]  # model read from the source SENSOR_* catalog entry
     assert isinstance(temp["attrs"], dict)
 
@@ -432,14 +432,13 @@ def test_mission_facts_degrades_on_all_nan_profile_number():
     assert f["max_depth_m"] is None
 
 
-def test_manifest_and_header_agree_on_counts():
+def test_manifest_and_header_agree_on_counts(subset_ds):
     from glidertest.reports._mission import header_card
     from glidertest.reports.manifest import mission_manifest
 
-    ds = fetchers.load_sample_dataset()
-    header = dict(header_card(ds))
+    header = dict(header_card(subset_ds))
     manifest = mission_manifest(
-        ds, mission_id="x", source_name="x.nc", source_size_bytes=None,
+        subset_ds, mission_id="x", source_name="x.nc", source_size_bytes=None,
         pages=[], version="0", generated_at="t",
     )
     # Both read metadata.mission_facts, so the masthead and the manifest cannot disagree.
@@ -447,16 +446,78 @@ def test_manifest_and_header_agree_on_counts():
     assert manifest["start"].replace("T", " ") == header["Start"]
 
 
-def test_report_warns_when_id_reused_for_different_file(tmp_path):
-    import json
+# --- subset representativeness and the panels it cannot cover ----------------
 
-    import pytest
+
+def test_subset_renders_every_panel_except_daynight(subset_ds):
+    # Guard that the committed subset stays representative: every figure panel resolves to a real
+    # figure except the day/night offset pair (needs night profiles the 12-profile subset lacks).
+    # A regression here means make_subset's keep-list or profile count drifted.
+    from glidertest.reports._mission import PAGES, Ctx
+
+    ctx = Ctx(ds=subset_ds)
+    stubbed, rendered = [], []
+    for page in PAGES:
+        if not page.applies_to(ctx):
+            continue
+        for section in build(subset_ds, page.profile).sections:
+            for panel in section.panels:
+                if panel.kind == "figure":
+                    (stubbed if panel.is_stub else rendered).append(panel.id)
+    assert rendered  # the subset exercises the diagnostic panels
+    assert stubbed and all("daynight" in pid for pid in stubbed)  # only day/night is missing
+
+
+@pytest.mark.slow
+def test_daynight_panels_render_on_full_sample():
+    # The day/night panels the subset cannot cover do render on the multi-day full sample.
+    from glidertest.reports._mission import PAGES, Ctx
 
     ds = fetchers.load_sample_dataset()
-    mdir = report(ds, tmp_path, navigator=False).parent
+    daynight = []
+    ctx = Ctx(ds=ds)
+    for page in PAGES:
+        if not page.applies_to(ctx):
+            continue
+        for section in build(ds, page.profile).sections:
+            daynight += [p for p in section.panels if p.kind == "figure" and "daynight" in p.id]
+    assert daynight
+    assert all(not p.is_stub for p in daynight)
+
+
+@pytest.mark.slow
+def test_flight_page_renders_on_sg014(tmp_path, sg014_subset_path):
+    # The flight page is only reachable with glider flight-model velocity; the sg014 subset has it.
+    with xr.open_dataset(sg014_subset_path) as ds:
+        mdir = report(ds, tmp_path, navigator=False).parent
+    assert (mdir / "flight.html").exists()
+    assert list((mdir / "figures").glob("flight_*.png"))
+
+
+@pytest.mark.slow
+def test_report_flat_warns_only_on_different_source(tmp_path, subset_path):
+    import shutil
+
+    a, b = tmp_path / "a.nc", tmp_path / "b.nc"
+    shutil.copy(subset_path, a)
+    shutil.copy(subset_path, b)
+    out = tmp_path / "out"
+    with xr.open_dataset(a) as ds:
+        report(ds, out, layout="flat")  # first write, no prior report: no warning
+    with xr.open_dataset(a) as ds, warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")  # re-run, same source file: no overwrite warning
+        report(ds, out, layout="flat")
+    assert not any("already holds a report" in str(w.message) for w in caught)
+    with xr.open_dataset(b) as ds, pytest.warns(UserWarning, match="already holds a report"):
+        report(ds, out, layout="flat")  # different source file into the same dir: warns
+
+
+@pytest.mark.slow
+def test_report_warns_when_id_reused_for_different_file(tmp_path, subset_ds):
+    mdir = report(subset_ds, tmp_path, navigator=False).parent
     # Tamper the manifest to look as if a *different* file had claimed this id.
     manifest = json.loads((mdir / "report.json").read_text(encoding="utf-8"))
     manifest["source_file"] = "a_different_file.nc"
     (mdir / "report.json").write_text(json.dumps(manifest))
     with pytest.warns(UserWarning, match="metadata problem"):
-        report(ds, tmp_path, navigator=False)
+        report(subset_ds, tmp_path, navigator=False)

@@ -26,7 +26,7 @@ FLOAT64_KEEP = {"TIME_GPS", "LATITUDE", "LONGITUDE", "LATITUDE_GPS", "LONGITUDE_
 # scalars (SENSOR_*, PLATFORM_*, …) are always kept.
 KEEP_SEA045 = {
     "TEMP", "PSAL", "DOXY", "CHLA", "CNDC", "PRES", "DEPTH",
-    "TIME", "LATITUDE", "LONGITUDE", "PROFILE_NUMBER", "PROFILE_DIRECTION",
+    "TIME", "LATITUDE", "LONGITUDE", "PROFILE_NUMBER", "PROFILE_DIRECTION", "DIVE_NUM",
     "LATITUDE_GPS", "LONGITUDE_GPS", "TIME_GPS",
     "TEMP_QC", "PSAL_QC", "DOXY_QC", "CHLA_QC", "CNDC_QC",
     "DENSITY", "BBP700", "VOLTAGE",  # not plotted — kept so the inventory lists some extra variables

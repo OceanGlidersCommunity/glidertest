@@ -38,8 +38,27 @@ def sg014_subset_path():
 
 @pytest.fixture(scope="session")
 def subset_ds():
-    """The sea045 subset opened once per session (read-only)."""
+    """The sea045 subset opened once per session (read-only).
+
+    For tests that add derived variables to the dataset (TEOS-10, sigma, DEPTH_Z) use the
+    function-scoped ``fresh_subset`` / ``fresh_sg014`` fixtures instead, so one test's mutation
+    cannot leak into another.
+    """
     with xr.open_dataset(SEA045_SUBSET) as ds:
+        yield ds
+
+
+@pytest.fixture
+def fresh_subset():
+    """A fresh, writable sea045 subset, one per test (for code that mutates the dataset)."""
+    with xr.open_dataset(SEA045_SUBSET) as ds:
+        yield ds
+
+
+@pytest.fixture
+def fresh_sg014():
+    """A fresh, writable sg014 subset, one per test (flight / vertical-velocity tools)."""
+    with xr.open_dataset(SG014_SUBSET) as ds:
         yield ds
 
 

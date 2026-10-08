@@ -1,21 +1,16 @@
 import shutil
 import subprocess
 import sys
-import warnings
 
 import pytest
 
-from glidertest import fetchers
 from glidertest.cli import _expand_inputs, main
 from glidertest.reports import paths
 
-SG015 = "sg015_20050213T230253_delayed.nc"  # 544 KB; the fast choice for most tests
-SEA045 = "sea045_20230604T1253_delayed.nc"  # a second, distinct mission id
-
-
-def _sample_path(name=SG015):
-    """Return the local cached path of a registered sample (downloads on first use)."""
-    return fetchers.data_source_og.fetch(name)
+# The committed subsets stand in for a downloaded sample: sea045 carries an OG1 `id`, sg014 does not
+# (so it falls back to its file stem) — two distinct mission ids for the multi-file tests. See
+# tests/data/README.md. Most CLI tests stub the figure render (the `fake_report` fixture), so the
+# only cost is opening the small subset; the few that assert real HTML/figures are marked `slow`.
 
 
 def _run(argv):
@@ -99,8 +94,10 @@ def test_expand_inputs_literal_glob(tmp_path):
 # --- report (root layout) ----------------------------------------------------
 
 
-def test_report_writes_mission_and_navigator(tmp_path):
-    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path)]) == 0
+@pytest.mark.slow
+@pytest.mark.e2e
+def test_report_writes_mission_and_navigator(tmp_path, subset_path):
+    assert _run(["report", str(subset_path), "--report-dir", str(tmp_path)]) == 0
     assert (tmp_path / "index.html").exists()  # fleet navigator
     dirs = _mission_dirs(tmp_path)
     assert len(dirs) == 1
@@ -108,41 +105,40 @@ def test_report_writes_mission_and_navigator(tmp_path):
     assert (dirs[0] / "report.json").exists()
 
 
-def test_report_no_navigator(tmp_path):
-    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path), "--no-navigator"]) == 0
+def test_report_no_navigator(tmp_path, subset_path, fake_report):
+    assert _run(["report", str(subset_path), "--report-dir", str(tmp_path), "--no-navigator"]) == 0
     assert not (tmp_path / "index.html").exists()
     assert len(_mission_dirs(tmp_path)) == 1
 
 
-def test_report_mission_id_override(tmp_path):
-    argv = ["report", _sample_path(), "--report-dir", str(tmp_path), "--mission-id", "custom"]
+def test_report_mission_id_override(tmp_path, subset_path, fake_report):
+    argv = ["report", str(subset_path), "--report-dir", str(tmp_path), "--mission-id", "custom"]
     assert _run(argv) == 0
     assert (tmp_path / "custom" / "index.html").exists()
 
 
-def test_report_mission_id_rejects_multiple(tmp_path):
-    src = _sample_path()
+def test_report_mission_id_rejects_multiple(tmp_path, subset_path):
     a, b = tmp_path / "a.nc", tmp_path / "b.nc"
-    shutil.copy(src, a)
-    shutil.copy(src, b)
+    shutil.copy(subset_path, a)
+    shutil.copy(subset_path, b)
     out = tmp_path / "out"
     assert _run(["report", str(a), str(b), "--report-dir", str(out), "--mission-id", "x"]) == 2
     assert not out.exists()
 
 
-def test_report_duplicate_id_refused(tmp_path, capsys):
-    src = _sample_path()
+def test_report_duplicate_id_refused(tmp_path, subset_path, capsys):
+    # Refused in the pre-pass (both copies resolve to one OG1 id), before any report is rendered.
     a, b = tmp_path / "a.nc", tmp_path / "b.nc"
-    shutil.copy(src, a)
-    shutil.copy(src, b)
+    shutil.copy(subset_path, a)
+    shutil.copy(subset_path, b)
     out = tmp_path / "out"
     assert _run(["report", str(a), str(b), "--report-dir", str(out)]) == 1
     assert "map to mission" in capsys.readouterr().err
     assert _mission_dirs(out) == []  # nothing written
 
 
-def test_report_skip_existing(tmp_path, capsys):
-    p = _sample_path()
+def test_report_skip_existing(tmp_path, subset_path, fake_report, capsys):
+    p = str(subset_path)
     assert _run(["report", p, "--report-dir", str(tmp_path), "--no-navigator"]) == 0
     manifest = _mission_dirs(tmp_path)[0] / "report.json"
     before = manifest.stat().st_mtime_ns
@@ -153,47 +149,48 @@ def test_report_skip_existing(tmp_path, capsys):
     assert manifest.stat().st_mtime_ns == before  # not rewritten
 
 
-def test_report_dry_run(tmp_path, capsys):
-    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path), "-n"]) == 0
+def test_report_dry_run(tmp_path, subset_path, capsys):
+    assert _run(["report", str(subset_path), "--report-dir", str(tmp_path), "-n"]) == 0
     out = capsys.readouterr().out
     assert "->" in out
     assert "would rebuild" in out
     assert list(tmp_path.iterdir()) == []  # nothing written
 
 
-def test_report_bad_file_continues(tmp_path, capsys):
+def test_report_bad_file_continues(tmp_path, subset_path, fake_report, capsys):
     missing = str(tmp_path / "nope.nc")
-    assert _run(["report", missing, _sample_path(), "--report-dir", str(tmp_path)]) == 1
+    assert _run(["report", missing, str(subset_path), "--report-dir", str(tmp_path)]) == 1
     assert "nope.nc" in capsys.readouterr().err
     assert (tmp_path / "index.html").exists()  # navigator still built over the one success
     assert len(_mission_dirs(tmp_path)) == 1
 
 
-def test_report_directory_input(tmp_path):
+def test_report_directory_input(tmp_path, subset_path, sg014_subset_path, fake_report):
     data = tmp_path / "data"
     data.mkdir()
-    shutil.copy(_sample_path(SG015), data / "m1.nc")
-    shutil.copy(_sample_path(SEA045), data / "m2.nc")
+    shutil.copy(subset_path, data / "m1.nc")
+    shutil.copy(sg014_subset_path, data / "m2.nc")
     out = tmp_path / "out"
     assert _run(["report", str(data), "--report-dir", str(out)]) == 0
     assert len(_mission_dirs(out)) == 2
     assert (out / "index.html").exists()
 
 
-def test_report_pattern_selects(tmp_path):
+def test_report_pattern_selects(tmp_path, subset_path, sg014_subset_path, fake_report):
     data = tmp_path / "data"
     data.mkdir()
-    shutil.copy(_sample_path(SG015), data / "sg_one.nc")
-    shutil.copy(_sample_path(SEA045), data / "sea_one.nc")
+    shutil.copy(sg014_subset_path, data / "sg_one.nc")
+    shutil.copy(subset_path, data / "sea_one.nc")
     out = tmp_path / "out"
     assert _run(["report", str(data), "--report-dir", str(out), "--pattern", "sg_*.nc"]) == 0
     assert len(_mission_dirs(out)) == 1
 
 
-def test_report_links_back_to_fleet(tmp_path):
+@pytest.mark.slow
+def test_report_links_back_to_fleet(tmp_path, subset_path):
     # Each mission's pages are written with navigator=False in the batch, yet still link back to the
-    # fleet page that is built once at the end.
-    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path)]) == 0
+    # fleet page that is built once at the end. Needs the real HTML, so it renders.
+    assert _run(["report", str(subset_path), "--report-dir", str(tmp_path)]) == 0
     html = (_mission_dirs(tmp_path)[0] / "index.html").read_text(encoding="utf-8")
     assert "All missions" in html
     assert 'href="../index.html"' in html
@@ -202,9 +199,11 @@ def test_report_links_back_to_fleet(tmp_path):
 # --- report (flat layout, -o) ------------------------------------------------
 
 
-def test_report_flat_output(tmp_path):
+@pytest.mark.slow
+@pytest.mark.e2e
+def test_report_flat_output(tmp_path, subset_path):
     out = tmp_path / "one"
-    assert _run(["report", _sample_path(), "-o", str(out)]) == 0
+    assert _run(["report", str(subset_path), "-o", str(out)]) == 0
     assert (out / "index.html").exists()  # landing written directly into DIR
     assert (out / "report.json").exists()
     assert (out / "figures").is_dir()
@@ -212,11 +211,10 @@ def test_report_flat_output(tmp_path):
     assert "All missions" not in (out / "index.html").read_text(encoding="utf-8")  # no fleet page
 
 
-def test_report_flat_rejects_multiple(tmp_path):
-    src = _sample_path()
+def test_report_flat_rejects_multiple(tmp_path, subset_path):
     a, b = tmp_path / "a.nc", tmp_path / "b.nc"
-    shutil.copy(src, a)
-    shutil.copy(src, b)
+    shutil.copy(subset_path, a)
+    shutil.copy(subset_path, b)
     assert _run(["report", str(a), str(b), "-o", str(tmp_path / "out")]) == 2
 
 
@@ -226,11 +224,25 @@ def test_report_flat_rejects_mission_id(tmp_path, capsys):
     assert not (tmp_path / "out").exists()
 
 
+def test_report_flat_skip_existing(tmp_path, subset_path, fake_report, capsys):
+    out = tmp_path / "one"
+    p = str(subset_path)
+    assert _run(["report", p, "-o", str(out)]) == 0
+    manifest = out / "report.json"
+    before = manifest.stat().st_mtime_ns
+    capsys.readouterr()
+    assert _run(["report", p, "-o", str(out), "--skip-existing"]) == 0
+    assert "skipped" in capsys.readouterr().out
+    assert manifest.stat().st_mtime_ns == before  # not regenerated
+
+
 # --- navigator ---------------------------------------------------------------
 
 
-def test_navigator_rebuilds(tmp_path):
-    assert _run(["report", _sample_path(), "--report-dir", str(tmp_path)]) == 0
+@pytest.mark.slow
+@pytest.mark.e2e
+def test_navigator_rebuilds(tmp_path, subset_path):
+    assert _run(["report", str(subset_path), "--report-dir", str(tmp_path)]) == 0
     (tmp_path / "index.html").unlink()
     assert _run(["navigator", str(tmp_path), "--title", "My Fleet"]) == 0
     assert (tmp_path / "index.html").exists()
@@ -242,26 +254,15 @@ def test_navigator_missing_root(tmp_path, capsys):
     assert "not found" in capsys.readouterr().err
 
 
-def test_navigator_rejects_mission_dir_via_cli(tmp_path, capsys):
+def test_navigator_rejects_mission_dir_via_cli(tmp_path, subset_path, fake_report, capsys):
     # A flat -o report folder has a top-level report.json; pointing navigator at it would overwrite
     # its landing page with an empty fleet page, so it is refused.
     out = tmp_path / "one"
-    assert _run(["report", _sample_path(), "-o", str(out)]) == 0
+    assert _run(["report", str(subset_path), "-o", str(out)]) == 0
     landing_before = (out / "index.html").read_bytes()
     assert _run(["navigator", str(out)]) == 1
     assert "mission report directory" in capsys.readouterr().err
     assert (out / "index.html").read_bytes() == landing_before  # landing page untouched
-
-
-def test_report_flat_skip_existing(tmp_path, capsys):
-    out = tmp_path / "one"
-    assert _run(["report", _sample_path(), "-o", str(out)]) == 0
-    manifest = out / "report.json"
-    before = manifest.stat().st_mtime_ns
-    capsys.readouterr()
-    assert _run(["report", _sample_path(), "-o", str(out), "--skip-existing"]) == 0
-    assert "skipped" in capsys.readouterr().out
-    assert manifest.stat().st_mtime_ns == before  # not regenerated
 
 
 # --- error branches (no data download) ---------------------------------------
@@ -314,11 +315,11 @@ def test_report_flat_refuses_report_root(tmp_path):
         report(xr.Dataset(), root, layout="flat")
 
 
-def test_report_flat_into_report_root_fails_via_cli(tmp_path, capsys):
+def test_report_flat_into_report_root_fails_via_cli(tmp_path, subset_path, capsys):
     root = tmp_path / "root"
     (root / "m1").mkdir(parents=True)
     (root / "m1" / "report.json").write_text("{}")
-    assert _run(["report", _sample_path(), "-o", str(root)]) == 1
+    assert _run(["report", str(subset_path), "-o", str(root)]) == 1
     assert "report root" in capsys.readouterr().err
 
 
@@ -337,28 +338,8 @@ def test_navigator_rejects_mission_dir(tmp_path):
         navigator(tmp_path)
 
 
-def test_report_flat_warns_only_on_different_source(tmp_path):
-    import xarray as xr
-
-    from glidertest.reports import report
-
-    src = _sample_path()
-    a, b = tmp_path / "a.nc", tmp_path / "b.nc"
-    shutil.copy(src, a)
-    shutil.copy(src, b)
-    out = tmp_path / "out"
-    with xr.open_dataset(a) as ds:
-        report(ds, out, layout="flat")  # first write, no prior report: no warning
-    with xr.open_dataset(a) as ds, warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")  # re-run, same source file: no overwrite warning
-        report(ds, out, layout="flat")
-    assert not any("already holds a report" in str(w.message) for w in caught)
-    with xr.open_dataset(b) as ds, pytest.warns(UserWarning, match="already holds a report"):
-        report(ds, out, layout="flat")  # different source file into the same dir: warns
-
-
-def test_report_skip_existing_leaves_fleet_page(tmp_path, capsys):
-    p = _sample_path()
+def test_report_skip_existing_leaves_fleet_page(tmp_path, subset_path, fake_report, capsys):
+    p = str(subset_path)
     assert _run(["report", p, "--report-dir", str(tmp_path)]) == 0
     index = tmp_path / "index.html"
     before = index.stat().st_mtime_ns

@@ -56,6 +56,7 @@ optional-dependencies.dev = [
   "nbsphinx",
   "pytest",
   "pytest-cov",
+  "pytest-socket",
   "sphinx<8.2",
   "sphinx-rtd-theme",
 ]
@@ -96,4 +97,13 @@ ignore = [
   "notebooks/*",
   "tests",
   "tests/*",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "tests",
+]
+markers = [
+  "slow: full-sample or multi-render tests; excluded from the fast suite with -m 'not slow'",
+  "e2e: end-to-end CLI render smoke tests, run on every OS",
 ]

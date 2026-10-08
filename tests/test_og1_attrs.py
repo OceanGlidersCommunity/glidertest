@@ -1,6 +1,6 @@
 import xarray as xr
 
-from glidertest import fetchers, og1_attrs
+from glidertest import og1_attrs
 
 
 def _ds_with(attrs):
@@ -46,10 +46,9 @@ def test_present_value_is_match_regardless_of_format():
     assert status["featureType"] == "match"
 
 
-def test_sample_dataset_conformance():
-    ds = fetchers.load_sample_dataset()
-    rows = og1_attrs.check_globals(ds)
-    # the VOTO sample has all 16 mandatory attributes present
+def test_sample_dataset_conformance(subset_ds):
+    rows = og1_attrs.check_globals(subset_ds)
+    # the sea045 subset keeps all 16 mandatory attributes present
     assert sum(1 for _, s, _ in rows if s != "none") == 16
     assert all(s in ("match", "none") for _, s, _ in rows)
 

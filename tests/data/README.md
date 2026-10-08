@@ -9,10 +9,11 @@ registry. Built by `make_subset.py` (reproducible: `python tests/data/make_subse
 | `sg014_subset.nc` | `sg014_20040924T182454_delayed_subset.nc` (Seaglider) | first 6 | ~280 KB | 15/16 (no `id`) | Flight page |
 
 Each is the first N `PROFILE_NUMBER`s of the full mission, reduced to a **keep-list** of variables
-(the ones the report uses, plus a few it does not plot — `DENSITY`, `BBP700`, `VOLTAGE` — so the
-inventory page has extras to list), with geophysical data downcast to **float32** and only time and
-position (`TIME`, `TIME_GPS`, `LATITUDE`/`LONGITUDE` and their `_GPS`) kept **float64**. Written with
-h5netcdf gzip. The keep-list and profile count are tuned against a panel-parity check.
+(the ones the report and interactive layers use — including `DIVE_NUM` for `interactive.mission_map`
+— plus a few the report does not plot — `DENSITY`, `BBP700`, `VOLTAGE` — so the inventory page has
+extras to list), with geophysical data downcast to **float32** and only time and position (`TIME`,
+`TIME_GPS`, `LATITUDE`/`LONGITUDE` and their `_GPS`) kept **float64**. Written with h5netcdf gzip.
+The keep-list and profile count are tuned against a panel-parity check.
 
 ## Why these two
 
