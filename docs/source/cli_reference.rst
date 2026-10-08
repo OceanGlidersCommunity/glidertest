@@ -58,9 +58,8 @@ Notes:
   recursively. A wildcard the shell did not expand (Windows) is expanded by glidertest.
 - Two files with the same OG1 ``id`` would write to the same ``ROOT/<id>/``; the run refuses
   before writing anything and names both files. Use ``--mission-id`` on one of them.
-- ``--report-dir`` and ``-o`` carry the same meanings as in oceanarray: the first is a
-  portable tree of ``ROOT/<id>/`` with its own ``index.html``; the second puts one mission's
-  pages directly into a directory.
+- ``--report-dir`` writes a portable tree of ``ROOT/<id>/`` with its own ``index.html``; ``-o``
+  puts one mission's pages directly into a single directory.
 
 ----
 
@@ -77,47 +76,3 @@ renaming mission directories.
    :prog: glidertest
    :path: navigator
    :nodescription:
-
-----
-
-The same commands in the sibling packages
------------------------------------------
-
-Skip this unless you also use ctdcast or oceanarray.
-
-glidertest, `ctdcast <https://github.com/ocean-uhh/ctdcast>`_ (shipboard CTD) and
-`oceanarray <https://github.com/ocean-uhh/oceanarray>`_ (moorings) share one report design and
-one command-line vocabulary:
-
-.. list-table::
-   :widths: 30 23 23 24
-   :header-rows: 1
-
-   * -
-     - glidertest
-     - ctdcast
-     - oceanarray
-   * - Build the report
-     - ``report FILE…``
-     - ``report config.yaml``
-     - ``report MOORING``
-   * - Rebuild the index over existing output
-     - ``navigator ROOT``
-     - ``report --index``
-     - ``report --array``
-   * - One unit's pages into a directory
-     - ``-o DIR``
-     - (``output.dir`` in the config)
-     - ``-o DIR``
-   * - A portable tree of many units
-     - ``--report-dir ROOT``
-     - —
-     - ``--report-dir ROOT``
-   * - See what would be written
-     - ``-n`` / ``--dry-run``
-     - ``--dry-run``
-     - ``-n`` / ``--dry-run``
-   * - Skip units already built
-     - ``--skip-existing``
-     - ``--skip-existing``
-     - ``--skip-existing``

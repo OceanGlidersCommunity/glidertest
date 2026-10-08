@@ -53,7 +53,12 @@ This section guides you through submitting an enhancement suggestion for glidert
 
 - Make sure that you are using the latest version.
 - Read the [documentation](https://oceangliderscommunity.github.io/glidertest/) carefully and find out if the functionality is already covered, maybe by an individual configuration.
-- Find out whether your idea fits with the scope and aims of the project. It's up to you to make a strong case to convince the project's developers of the merits of this feature. Keep in mind that we want features that will be useful to the majority of our users and not just a small subset.
+- Find out whether your idea fits with the scope and aims of the project (see **Scope** below). It's up to you to make a strong case to convince the project's developers of the merits of this feature. Keep in mind that we want features that will be useful to the majority of our users and not just a small subset.
+
+<!-- omit in toc -->
+#### Scope
+
+glidertest **diagnoses and visualizes** OceanGliders-format (OG1) glider data: it reads a mission, surfaces likely sensor and processing problems, and shows them. In scope are new diagnostics, visualizations, QC summaries, and the HTML report. Out of scope, by design, is anything that **modifies, fixes, corrects or grids** the data — that belongs in downstream tools such as [GliderTools](https://glidertools.readthedocs.io/), and glidertest deliberately leaves the input file untouched. If you are unsure whether an idea is in scope, that is itself worth discussing: open an issue describing it rather than deciding alone.
 
 <!-- omit in toc -->
 #### How Do I Submit a Good Enhancement Suggestion?
@@ -94,6 +99,14 @@ To build the documentation locally you need to install a few extra requirements:
 2. Install the additional python requirements. Activate the environment you use for working with glidertest, navigate to the top directory of this repo, then run `pip install -e ".[dev]"`
 
 Once you have the extras installed, you can build the docs locally by navigating to the **docs** directory and running `make clean html`. This command will create a directory called **build** which contains the html files of the documentation. Open the file **docs/builld/html/index.html** in your browser, and you will see the docs with your changes applied. After making more changes, just run `make clean html` again to rebuild the docs. 
+
+Two pages are generated, not committed, and the CI docs build makes them before `make html`. If you build locally and want them too, generate them first (otherwise Sphinx warns `nonexisting document: demo-output` and the live-demo links will not resolve — harmless, but expected):
+
+```sh
+jupyter nbconvert --to notebook --execute notebooks/demo.ipynb --output=demo-output.ipynb
+mv notebooks/*output.ipynb docs/source/
+make -C docs demo        # builds the live demo report into docs/source/_static/demo/
+```
 
 ## Attribution
 This guide is based on the **contributing-gen**. [Make your own](https://github.com/bttger/contributing-gen)!

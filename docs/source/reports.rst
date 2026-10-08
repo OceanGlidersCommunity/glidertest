@@ -38,7 +38,7 @@ Output layout
        optics.html                 present when CHLA or BBP700 is in the file
        flight.html                 present when GLIDER_VERT_VELO_MODEL is in the file
        inventory.html              about the file: attributes, variables, QC coverage
-       figures/<page>_<panel>.png  every figure as a file, 1350 px wide
+       figures/<page>_<panel>.png  every figure as a file (1350 px wide; half-width panels 675)
        report.json                 machine-readable summary of the mission
 
 ``<mission_id>`` is the file's OG1 ``id`` attribute, or the file stem when the attribute is
