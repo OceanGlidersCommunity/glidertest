@@ -5,7 +5,7 @@
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>File value</th><th>Computed</th><th>Diff (file − computed)</th></tr></thead>
 <tbody>
-{% for r in spatiotemporal %}<tr><td class="mono wrapv">{{ r.attr }}{% if r.note %} {{ r.note }}{% endif %}</td><td class="wrap">{{ r.file_val or "—" }}</td><td class="wrap">{{ r.computed or "—" }}</td><td{% if r.over %} class="nonconform" title="flagged: |diff| exceeds {{ r.threshold }}"{% endif %}>{{ r.diff or "—" }}</td></tr>
+{% for r in spatiotemporal %}<tr><td class="mono wrapv">{{ r.attr }}{% if r.note %} {{ r.note }}{% endif %}</td><td class="wrap">{{ r.file_val or "—" }}</td><td class="wrap">{{ r.computed or "—" }}</td><td{% if r.over %} class="nonconform" title="{{ r.flag }}"{% endif %}>{{ r.diff or "—" }}</td></tr>
 {% endfor %}
 </tbody>
 </table>

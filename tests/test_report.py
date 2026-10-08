@@ -226,6 +226,46 @@ def test_spatiotemporal_diff_amber_above_threshold(subset_path):
             assert row["over"] is want_amber, f"delta={delta} -> over={row['over']}"
 
 
+def test_spatiotemporal_compact_time_parses(subset_path):
+    from glidertest.reports.metadata import spatiotemporal_rows
+
+    # OG1 prescribes the compact YYYYmmddTHHMMSS form for time_coverage_*; it must parse and produce
+    # a seconds diff, not a dash. Build the compact spelling of the computed start; the diff is a
+    # small sub-threshold value (the computed display is truncated to the second, so it is within 1 s
+    # of the raw start, not exactly zero).
+    with xr.open_dataset(subset_path) as ds:
+        iso = {r["attr"]: r for r in spatiotemporal_rows(ds)}["time_coverage_start"]["computed"]
+        ds.attrs["time_coverage_start"] = iso.replace("-", "").replace(":", "")  # e.g. 20230604T...
+        row = next(r for r in spatiotemporal_rows(ds) if r["attr"] == "time_coverage_start")
+        assert row["diff"].endswith(" s") and row["diff"] != "unreadable"  # compact form parsed
+        assert row["over"] is False  # within the 60 s threshold
+        assert row["note"] == ""  # the OG1-compact form carries no deviation note
+
+
+def test_spatiotemporal_non_og1_time_format_noted(subset_path):
+    from glidertest.reports.metadata import spatiotemporal_rows
+
+    # Readable but non-OG1 spelling (extended ISO) parses and diffs, but carries a format note and
+    # is not amber — we surface the deviation, we do not format-check the value.
+    with xr.open_dataset(subset_path) as ds:
+        iso = {r["attr"]: r for r in spatiotemporal_rows(ds)}["time_coverage_start"]["computed"]
+        ds.attrs["time_coverage_start"] = iso  # extended ISO, e.g. 2023-06-04T12:53:04
+        row = next(r for r in spatiotemporal_rows(ds) if r["attr"] == "time_coverage_start")
+        assert "not OG1" in row["note"]
+        assert row["diff"].endswith(" s") and row["over"] is False  # parsed, not flagged amber
+
+
+def test_spatiotemporal_unreadable_time_flagged(subset_path):
+    from glidertest.reports.metadata import spatiotemporal_rows
+
+    # A declared-but-unreadable timestamp is a finding: amber, not a quiet dash.
+    with xr.open_dataset(subset_path) as ds:
+        ds.attrs["time_coverage_start"] = "not-a-date"
+        row = next(r for r in spatiotemporal_rows(ds) if r["attr"] == "time_coverage_start")
+        assert row["over"] is True
+        assert "unreadable" in row["diff"]
+
+
 def test_spatiotemporal_vertical_positive_up(subset_path):
     from glidertest.reports.metadata import spatiotemporal_rows
 
@@ -262,8 +302,8 @@ def test_spatiotemporal_nonfinite_file_value_not_diffed(subset_path):
 def test_track_drops_qc_flagged_positions():
     from glidertest.reports.manifest import _track
 
-    # The decimated json track keeps only good / probably-good positions (OG1 QC 1 or 2), so a
-    # flagged-bad fix does not stretch the track or the fleet-map extent.
+    # The decimated json track drops only positions the file flags bad (OG1 QC 3/4); good and
+    # probably-good (1/2) are kept, so a spurious flagged fix does not stretch the track.
     ds = xr.Dataset(
         {
             "LONGITUDE": ("N_MEASUREMENTS", np.array([10.0, 99.0, 11.0])),
@@ -274,6 +314,22 @@ def test_track_drops_qc_flagged_positions():
     )
     track = _track(ds)
     assert [p[0] for p in track] == [10.0, 11.0]  # the flag-4 point is dropped, flag-2 kept
+
+
+def test_track_keeps_unevaluated_qc_zero():
+    from glidertest.reports.manifest import _track
+
+    # OG1 flag 0 = "no QC applied" is the common delivered state and must be kept — dropping it
+    # would empty the track of every file whose provider ran no position QC.
+    ds = xr.Dataset(
+        {
+            "LONGITUDE": ("N_MEASUREMENTS", np.array([10.0, 11.0, 12.0])),
+            "LATITUDE": ("N_MEASUREMENTS", np.array([55.0, 56.0, 57.0])),
+            "LONGITUDE_QC": ("N_MEASUREMENTS", np.array([0, 0, 0])),
+            "LATITUDE_QC": ("N_MEASUREMENTS", np.array([0, 0, 0])),
+        }
+    )
+    assert [p[0] for p in _track(ds)] == [10.0, 11.0, 12.0]  # all kept, none dropped
 
 
 def test_qc_section_has_basic_checks_sentences(subset_report):
