@@ -1,19 +1,22 @@
 # glidertest
 
-Glidertest is a python package for diagnosing potential issues in Ocean Gliders format glider data. Glidertest does not modify, fix or grid glider data. Functionality currently includes:
+glidertest reads an OceanGliders (OG1) mission file, runs a set of diagnostics on it, and shows you what is in the file. It never modifies, fixes or grids the data: the output is figures and an HTML report, the input file is left untouched. It works one mission at a time; a fleet page links the reports of many missions on one map.
 
-- Checking time and depth spacing
-- Making histograms and TS diagrams
-- Checking for suspect time duration of profiles
-- Quantifying the bias between dives and climbs (profiles when the glider is going down/up)
-- Checking for sensor drift
-- Detecting quenching in chlorophyll data
-- Plotting vertical velocities
+There are two ways to use it: call the diagnostic functions from a notebook (`glidertest.plots`, `glidertest.tools`), or run `glidertest report` on a file and read the HTML.
 
-This is a work in progress, all contributions welcome!
+Diagnostics include:
 
+- Time and depth spacing
+- Histograms and T–S diagrams
+- Suspect profile durations
+- Dive–climb bias (the difference between down and up profiles)
+- Sensor drift
+- Non-photochemical quenching in chlorophyll
+- Vertical velocities from the flight model
+- Inventory of the file: variables, sensors, attributes, and QC flags as delivered
+- Fleet page: one map and table linking many mission reports
 
-### Install
+## Install
 
 Install from conda with
 ```sh
@@ -26,34 +29,35 @@ Install from PyPI with
 python -m pip install glidertest
 ```
 
-### HTML report
+## HTML report
 
-One command turns an OG1 mission file into a self-contained HTML report — a landing page, one page per sensor, a flight page for gliders that report one, and an inventory of the file — and many missions into a fleet page with a map:
-
-```sh
-glidertest report mission.nc --report-dir reports/
-```
-
-or from Python:
+glidertest turns an OG1 mission file into a self-contained HTML report — a landing page, one page per sensor, a flight page for gliders that report one, and an inventory of the file. From Python, with a dataset open:
 
 ```python
 from glidertest import reports
 reports.report(ds, "reports/")
 ```
 
+or from the command line:
+
+```sh
+glidertest report mission.nc --report-dir reports/
+glidertest navigator reports/      # rebuilds the fleet page from the reports already in reports/
+```
+
 See the [report guide](https://oceangliderscommunity.github.io/glidertest/reports.html) and the [live demo](https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html).
 
-### Documentation
+## Documentation
 
 Documentation is available at [https://oceangliderscommunity.github.io/glidertest/](https://oceangliderscommunity.github.io/glidertest/)
 
-Check out the demo notebook `notebooks/demo.ipynb` for example functionality. 
+Check out the demo notebook `notebooks/demo.ipynb` for example functionality.
 
 The demo notebook `notebooks/demo_data_issues.ipynb` uses example datasets to check how glidertest can help identify and visualize problems with data.
 
-As input, glidertest takes [OceanGliders format files](https://github.com/OceanGlidersCommunity/OG-format-user-manual)
+glidertest reads [OceanGliders (OG1) format files](https://github.com/OceanGlidersCommunity/OG-format-user-manual), one file per mission. Seaglider basestation files can be converted to OG1 with the `seagliderOG1` package; the sample data (`fetchers.load_sample_dataset()`) is already OG1.
 
-### Contributing
+## Contributing
 
 All contributions are welcome! See [contributing](CONTRIBUTING.md) for more details
 
@@ -76,8 +80,10 @@ pytest --cov=glidertest --cov-report term-missing  tests/
 
 Try to ensure that all the lines of your contribution are covered in the tests.
 
-### Acknowledgements
+## Acknowledgements
 
-Initial development of glidertest was supported by the SEACODE project, funded by Voice of the Ocean (VOTO), and by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the PycnMix project (Projektnummer 558671572), which funded Till Moritz's contributions. The HTML report and command-line interface were first developed in preparation for the DFG research infrastructure Swarm of Gliders (Projektnummer 544335393). Sample data are provided by VOTO. glidertest is an OceanGliders community package and welcomes contributions from the community.
+glidertest is developed under the SEA-CODE project (SeaExplorer–Seaglider Cross-platform Open Diagnostics & Evaluation), funded by Voice of the Ocean (VOTO). SEA-CODE builds platform-independent, open-source diagnostics for glider data, with glidertest and seagliderOG1 as its core packages, and supports exchanges between the University of Hamburg and VOTO. VOTO also provides the sample data.
 
-Development was assisted by Claude Code (Anthropic) and GitHub Copilot code review.
+Till Moritz's contributions were funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the PycnMix project (Projektnummer 558671572). The HTML report and command-line interface were first developed in preparation for the DFG research infrastructure Swarm of Ocean Gliders (Projektnummer 544335393).
+
+glidertest is an OceanGliders community package and welcomes contributions from the community. Development was assisted by Claude Code (Anthropic) and GitHub Copilot code review.

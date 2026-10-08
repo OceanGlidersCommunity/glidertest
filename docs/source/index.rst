@@ -10,11 +10,20 @@ flight-model performance, sampling gaps, and the QC flags the file already carri
 It is a diagnostic tool only — it never modifies your data and never fills in a value it
 could not determine.
 
-One command turns a mission into a **self-contained HTML report**: a landing page about the
+**As a library.** Every diagnostic is a function: ``plots.plot_quench_assess(ds, 'CHLA')``
+draws the chlorophyll quenching check, ``tools.compute_daynight_avg(ds)`` returns the numbers
+behind it. Call the ones you want from a notebook, on your own ``xarray.Dataset``, and look at
+the figure — see :doc:`glidertest` and the example notebook.
+
+**As a report.** ``glidertest report mission.nc --report-dir reports/`` runs every diagnostic
+that applies to the file and writes a **self-contained HTML report**: a landing page about the
 mission, one page per sensor present (CTD, oxygen, optics), a flight page for gliders that
 report a flight-model velocity, and an inventory page about the file itself. Every figure is
 embedded, so the pages work offline and can be mailed or dropped on a share. Many missions in
-one directory get a **fleet page** with a map and a table.
+one directory get a **fleet page** with a map and a table. The same from Python is
+``reports.report(ds, "reports/")``.
+
+The report is the library run in a fixed order; nothing in it is unavailable as a function.
 
 .. admonition:: Live demo
 
@@ -30,9 +39,10 @@ one directory get a **fleet page** with a map and a table.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Demo
+   :caption: Examples
 
    demo-output.ipynb
+   Example HTML report <https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html>
 
 .. toctree::
    :maxdepth: 2

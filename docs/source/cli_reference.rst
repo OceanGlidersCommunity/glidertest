@@ -83,6 +83,8 @@ renaming mission directories.
 The same commands in the sibling packages
 -----------------------------------------
 
+Skip this unless you also use ctdcast or oceanarray.
+
 glidertest, `ctdcast <https://github.com/ocean-uhh/ctdcast>`_ (shipboard CTD) and
 `oceanarray <https://github.com/ocean-uhh/oceanarray>`_ (moorings) share one report design and
 one command-line vocabulary:

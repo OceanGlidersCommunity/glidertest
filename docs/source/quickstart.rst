@@ -6,6 +6,16 @@ Quickstart
 
 From an OG1 file to an open report in three commands.
 
+Input: an OG1 mission file
+--------------------------
+
+glidertest reads one glider mission as an `OceanGliders (OG1)
+<https://github.com/OceanGlidersCommunity/OG-format-user-manual>`_ netCDF file — one file per
+deployment, with the measurements along an ``N_MEASUREMENTS`` dimension. If you have Seaglider
+basestation files, the ``seagliderOG1`` package converts them to OG1; SeaExplorer and Slocum
+data reach OG1 through your processing pipeline. No file yet? ``fetchers.load_sample_dataset()``
+returns a ready OG1 sample.
+
 Install
 -------
 
@@ -13,12 +23,14 @@ Install
 
    pip install glidertest
 
-If the install fails on ``cartopy`` (it needs compiled libraries), install that first from
-conda-forge and then run the ``pip`` line again::
-
-   conda install -c conda-forge cartopy
-
 For a development install see the `README <https://github.com/OceanGlidersCommunity/glidertest#install>`_.
+
+.. note::
+
+   The glider-track and fleet maps download Natural Earth coastlines through cartopy the first
+   time they are drawn, so the first map needs internet. On an offline machine, draw one map
+   while online once (cartopy caches the data) or point ``CARTOPY_DATA_DIR`` at a pre-filled
+   directory.
 
 Run it
 ------
@@ -85,6 +97,15 @@ No file to hand? The sample missions download on first use:
    ds = fetchers.load_sample_dataset()          # a SeaExplorer mission in the Baltic
    reports.report(ds, "reports/")
 
+Or run a single diagnostic, with no report at all — every figure in the report is one of these
+functions:
+
+.. code-block:: python
+
+   from glidertest import plots
+
+   fig, ax = plots.plot_hysteresis(ds, var="DOXY")   # just the dive–climb check for oxygen
+
 For many missions, write each with ``navigator=False`` and rebuild the fleet page once:
 
 .. code-block:: python
@@ -101,8 +122,9 @@ The masthead of the landing page gives the mission at a glance — profiles, tim
 extent, platform — and a one-line OG1 conformance verdict. The two **QC** sections below it
 separate what the file *says* (its own ``*_QC`` flags) from what glidertest *finds*. The
 **inventory** page (linked under the masthead) lists every attribute and variable in the
-file, with anything mandatory that is missing marked in amber. :doc:`reports` walks through
-every page.
+file, with anything mandatory that is missing marked in amber. The verdict — e.g. "OG1: 15 of
+16 mandatory attributes" — is about *presence*, not validity: it does not check that the
+values are correct (see the inventory page). :doc:`reports` walks through every page.
 
 Where next
 ----------

@@ -78,10 +78,61 @@ tools can read without opening the netCDF:
    * - ``glidertest_version``, ``generated_at``
      - Provenance.
 
+What the diagnostics tell you
+-----------------------------
+
+Each figure in the report is one diagnostic; each is also one function in
+:mod:`glidertest.plots` you can call yourself in a notebook. A *section* is a time–depth field
+coloured by the variable; the rest are summarised here.
+
+.. list-table::
+   :widths: 24 40 36
+   :header-rows: 1
+
+   * - Diagnostic
+     - The question
+     - A problem looks like
+   * - Dive–climb hysteresis
+     - Does the sensor lag going down versus up? (slow sensors — optode, CTD in a thermocline)
+     - A systematic offset between dive and climb profiles, growing with depth.
+   * - Up/down bias by depth
+     - The same, binned by depth.
+     - A non-zero mean difference below the surface layer.
+   * - Temporal drift
+     - Does the sensor's value creep over the mission?
+     - A trend in the deep (stable) values.
+   * - Day/night offset and quenching
+     - Is daytime chlorophyll suppressed by non-photochemical quenching?
+     - Daytime surface chlorophyll lower than night for the same water.
+   * - Deep-drift / negatives (optics)
+     - Is the dark count right?
+     - Negative or non-zero deep values.
+   * - Global range
+     - Are the values physically plausible?
+     - Points outside the suspect / fail spans.
+   * - Sampling period, grid spacing
+     - How often and how densely was each variable sampled?
+     - Gaps, or a sampling interval that changed mid-mission.
+   * - Max depth per profile, profile monotony
+     - Did the glider fly as planned?
+     - Profiles that stop short, or depth that is not monotonic within a profile.
+   * - Convective resistance
+     - How much buoyancy loss would mix the column to a given depth? (a property, used with
+       the mixed layer, not a pass/fail check)
+     - —
+   * - Vertical velocity (flight)
+     - Does the flight model match the measured vertical speed?
+     - A systematic difference, or spread, between modelled and measured *w*.
+
+The oxygen and optics diagnostics follow the OceanGliders best-practice guides (the
+`Oxygen SOP <https://oceangliderscommunity.github.io/Oxygen_SOP/README.html>`_); the flight
+diagnostic follows Frajka-Williams et al. (2011).
+
 Report pages
 ------------
 
-Every page shares the masthead: the mission id, a page-type label, generation time, the
+Every page shares the **masthead** (the coloured header): the mission id, a page-type label,
+generation time, the
 mission facts (profiles with the dive/climb split, time span and duration, sample rate,
 extent, platform, source file), the page navigation — **Summary / Reports: CTD · Oxygen ·
 Optics / Derived: Flight** — and a **Data inventory** strip linking the inventory page. When
@@ -93,8 +144,9 @@ Landing page — ``index.html``
 About the mission.
 
 - **Track** — the glider's path on a map (``plots.plot_glider_track``).
-- **Payload** — a one-line OG1 conformance verdict linking to the inventory page, and which
-  variables are present with the ``SENSOR_*`` entry each comes from.
+- **Payload** — the variables the glider carried: a one-line OG1 conformance verdict linking
+  to the inventory page, and which variables are present with the ``SENSOR_*`` entry each
+  comes from.
 - **Hydrography** — the core variables against depth (``plots.plot_basic_vars``), the T–S
   diagram (``plots.plot_ts``), and a time–depth section for each of temperature, salinity,
   oxygen and chlorophyll that the file carries (``plots.plot_section``).
@@ -159,7 +211,8 @@ Built from the ``report.json`` of every mission under the root: one row per miss
 platform, dates, profiles, maximum depth, which sensor pages exist, OG1 conformance, worst
 QC — with buttons to its pages, and a map of all tracks. Rebuilt whenever a mission is
 reported into the root, or on demand with ``glidertest navigator ROOT`` after missions are
-added, removed or renamed by hand.
+added, removed or renamed by hand. You want a fleet page for a season of deployments, a glider
+pool, or a cruise with several gliders at once.
 
 .. _qc-section:
 
@@ -172,7 +225,8 @@ Two sections, deliberately kept apart.
 per variable, the distribution of flag values as a bar (good / suspect / fail / not evaluated
 / missing), with the labels taken from the file's own ``flag_meanings``. This is what the
 data provider says about the data. A file with no ``*_QC`` variables shows this section as
-absent, not as clean.
+absent, not as clean — and a file whose flags are all "not evaluated" (the provider applied no
+QC) reads the same way, not as a clean bill of health.
 
 **QC — glidertest diagnostics** runs glidertest's own checks on the data — gross range, spike
 and flat-line tests per variable, the dive–climb hysteresis verdict — and shows the result
@@ -187,8 +241,7 @@ Colour and status conventions
 -----------------------------
 
 - Masthead navigation buttons are coloured by the *kind* of page — the summary, the sensor
-  reports, the derived flight page — and the current page's button is muted. The same colours
-  mean the same kinds of page in the sibling packages ctdcast and oceanarray.
+  reports, the derived flight page — and the current page's button is muted.
 - **Amber** marks a missing mandatory OG1 attribute, on the inventory page and in the
   landing-page verdict. A dash marks a missing highly-desirable attribute.
 - Under every figure, ``source: plot_…`` names the ``glidertest.plots`` function that drew
