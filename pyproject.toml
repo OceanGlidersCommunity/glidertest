@@ -14,7 +14,7 @@ license = { file = "LICENSE" }
 maintainers = [
   { name = "Callum Rollo", email = "c.rollo@outlook.com" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.11",
@@ -35,9 +35,11 @@ dependencies = [
   "ioos-qc",
   "ipython",
   "ipywidgets",
+  "jinja2",
   "matplotlib",
   "numpy",
   "pandas",
+  "pillow",
   "pooch",
   "pypandoc",
   "rstcloth",
@@ -60,12 +62,23 @@ optional-dependencies.dev = [
 urls.documentation = "https://oceangliderscommunity.github.io/glidertest/"
 urls.homepage = "https://github.com/OceanGlidersCommunity/glidertest"
 urls.repository = "https://github.com/OceanGlidersCommunity/glidertest"
+# scripts.glidertest = "glidertest.cli:main"  # re-enable when glidertest/cli.py lands (B4)
 
 [tool.setuptools]
 packages = [
   "glidertest",
+  "glidertest.config",
+  "glidertest.reports",
 ]
 include-package-data = true
+
+[tool.setuptools.package-data]
+"glidertest.config" = [
+  "*.mplstyle",
+]
+"glidertest.reports" = [
+  "templates/*.html",
+]
 
 [tool.setuptools.dynamic]
 readme = { file = "README.md", content-type = "text/markdown" }

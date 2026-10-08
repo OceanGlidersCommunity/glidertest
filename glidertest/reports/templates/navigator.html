@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Mission navigator — {{ mission_id }}{% endblock %}
+{% block masthead_type %}Mission navigator{% endblock %}
+{% block content %}
+<main>
+{% if map_png %}
+<figure class="slot-full"><figcaption>Mission tracks</figcaption><img src="data:image/png;base64,{{ map_png }}" alt="Mission tracks"></figure>
+{% endif %}
+
+<h2 id="missions">Missions</h2>
+{% if rows %}
+<table class="nc">
+<thead><tr><th>Mission</th><th>Start</th><th>Duration</th><th class="num">Profiles</th><th class="num">Max depth</th><th>OG1</th><th>Worst QC</th><th>Report</th><th>Generated</th></tr></thead>
+<tbody>
+{% for r in rows %}<tr><td class="mono wrapv">{{ r.id }}</td><td>{{ r.start }}</td><td>{{ r.duration }}</td><td class="num">{{ r.profiles }}</td><td class="num">{{ r.max_depth }}</td><td{% if not r.og1_ok %} class="nonconform"{% endif %}>{{ r.og1_text }}</td><td>{{ r.qc }}</td><td class="nav-cell"><a class="nav-pill nav-landing" href="{{ r.report_href }}">Mission</a></td><td class="mono">{{ r.generated }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+<p class="caption">Per-sensor presence is in the completeness matrix below; the page buttons open each mission's pages.</p>
+{% else %}
+<p class="caption">No mission manifests found in this root. Run <code>report(ds, root)</code> to add one.</p>
+{% endif %}
+
+<h2 id="completeness">Sensor completeness</h2>
+{% if matrix.columns %}
+<table class="nc">
+<thead><tr><th>Sensor</th>{% for c in matrix.columns %}<th class="mono">{{ c }}</th>{% endfor %}</tr></thead>
+<tbody>
+{% for row in matrix.rows %}<tr><td>{{ row.label }}</td>{% for cell in row.cells %}<td>{% if cell %}<span class="qc-good">✓</span>{% else %}–{% endif %}</td>{% endfor %}</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+
+{% if orphans %}
+<p class="caption">Directories without a manifest (re-run report to index): {{ orphans | join(", ") }}.</p>
+{% endif %}
+{% if unreadable %}
+<p class="none-note">{{ unreadable | length }} mission director{{ "y" if unreadable|length == 1 else "ies" }} with an unreadable report.json: {{ unreadable | join(", ") }}. Re-run the report for {{ "it" if unreadable|length == 1 else "them" }}.</p>
+{% endif %}
+</main>
+{% endblock %}

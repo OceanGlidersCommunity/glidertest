@@ -1,0 +1,23 @@
+{% import "_macros.html" as m %}
+{% if basic_checks %}<p class="caption">Profile number: {{ basic_checks.profnum }}. Profile duration: {{ basic_checks.dur }}.</p>
+{% endif %}
+{% if diagnostics %}
+<p class="caption">glidertest diagnostics — run on the fly, not written to the file. Thresholds are glidertest's own (hardcoded for the Baltic), shown so the verdict can be reproduced.</p>
+<table>
+<thead><tr><th>Variable</th><th>Test</th><th>Suspect range / threshold</th><th>Fail range / threshold</th></tr></thead>
+<tbody>
+{% for t in diagnostics.thresholds %}<tr><td>{{ t.var }}</td><td>{{ t.test }}</td><td class="mono qc-susp">{{ t.suspect }}</td><td class="mono qc-fail">{{ t.fail }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+<p class="caption">Test × variable: flagged-sample counts (per-sample tests show a small dashed bar). Gross range applies the suspect span only — the fail span above is not yet evaluated. Hysteresis counts depth bins with &gt;5% dive–climb error; a variable is flagged when more than 5 bins exceed it.</p>
+<table>
+<thead><tr><th>Test</th>{% for v in diagnostics.present %}<th>{{ v }}</th>{% endfor %}</tr></thead>
+<tbody>
+{% for row in diagnostics.matrix %}<tr><td>{{ row.label }}</td>{% for cell in row.cells %}{% if cell.spans is defined %}<td>{% for s in cell.spans %}<span class="{{ s.cls }}">{{ s.text }}</span>{% if not loop.last %} {% endif %}{% endfor %}<br>{{ m.dist_bar(cell.bar, small=True) }}</td>{% else %}<td{% if cell.cls %} class="{{ cell.cls }}"{% endif %}>{{ cell.text }}</td>{% endif %}{% endfor %}</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p class="caption">No glidertest QC diagnostics apply to this dataset's variables.</p>
+{% endif %}

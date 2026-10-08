@@ -1,0 +1,10 @@
+<p class="caption">{{ summary }} — see the <a href="inventory.html#og1">File contents</a> page for the full attribute listing.</p>
+{% import "_macros.html" as m %}
+<p class="caption">Payload — a sensor counts as present when its OG1 variable exists in the file; the source is the <code>SENSOR_*</code> catalog entry named by the variable's <code>sensor</code> attribute, and the model and attributes are read from that entry (as in the File-contents sensor catalog).</p>
+<table class="nc">
+<thead><tr><th>Sensor</th><th>Variable</th><th>Source</th><th>Model</th><th>Attributes</th></tr></thead>
+<tbody>
+{% for p in payload %}<tr><td>{{ p.label }}</td>{% if p.present %}<td class="mono">{{ p.var }}</td><td class="mono">{{ p.source or "—" }}</td><td class="wrap">{{ p.model or "—" }}</td><td>{{ m.attrs_details(p.attrs) }}</td>{% else %}<td class="mono">—</td><td class="mono">—</td><td class="wrap">—</td><td>—</td>{% endif %}</tr>
+{% endfor %}
+</tbody>
+</table>

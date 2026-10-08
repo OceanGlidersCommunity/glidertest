@@ -21,6 +21,7 @@ from scipy.interpolate import interp1d
 from matplotlib.ticker import MaxNLocator
 
 from glidertest import utilities, tools
+from glidertest.utilities import _log
 
 dir = os.path.dirname(os.path.realpath(__file__))
 glidertest_style_file = f"{dir}/glidertest.mplstyle"
@@ -281,16 +282,16 @@ def process_optics_assess(ds, var='CHLA'):
     # Check how much negative data there is
     neg_chl = np.round((len(np.where(ds[var] < 0)[0]) * 100) / len(ds[var]), 1)
     if neg_chl > 0:
-        print(f'{neg_chl}% of scaled {var} data is negative, consider recalibrating data')
+        _log.info(f'{neg_chl}% of scaled {var} data is negative, consider recalibrating data')
         # Check where the negative values occur and if we just see them at specific time of the mission or not
         start = ds.TIME[np.where(ds[var] < 0)][0]
         end = ds.TIME[np.where(ds[var] < 0)][-1]
         min_z = ds.DEPTH[np.where(ds[var] < 0)].min().values
         max_z = ds.DEPTH[np.where(ds[var] < 0)].max().values
-        print(f'Negative data in present from {str(start.values)[:16]} to {str(end.values)[:16]}')
-        print(f'Negative data is present between {"%.1f" % np.round(min_z, 1)} and {"%.1f" % np.round(max_z, 1)} ')
+        _log.info(f'Negative data in present from {str(start.values)[:16]} to {str(end.values)[:16]}')
+        _log.info(f'Negative data is present between {"%.1f" % np.round(min_z, 1)} and {"%.1f" % np.round(max_z, 1)} ')
     else:
-        print(f'There is no negative scaled {var} data, recalibration and further checks are still recommended.')
+        _log.info(f'There is no negative scaled {var} data, recalibration and further checks are still recommended.')
     # Check if there is any missing data throughout the mission
     try:
         var_time = ds[var].dropna(dim="N_MEASUREMENTS").TIME
@@ -299,9 +300,9 @@ def process_optics_assess(ds, var='CHLA'):
         var_time = ds["TIME"].where(ds[var].notnull(), drop=True)
 
     if len(ds.TIME) != len(var_time):
-        print(f"{var} data is missing for part of the mission")
+        _log.info(f"{var} data is missing for part of the mission")
     else:
-        print(f"{var} data is present for the entire mission duration")
+        _log.info(f"{var} data is present for the entire mission duration")
 
     # Check bottom dark count and any drift there
     bottom_opt_data = ds[var].where(ds[var].DEPTH > ds.DEPTH.max() - (ds.DEPTH.max() * 0.1)).dropna(
@@ -332,12 +333,12 @@ def process_optics_assess(ds, var='CHLA'):
     percentage_change = (((slope * len(bottom_opt_data) + intercept) - intercept) / abs(intercept)) * 100
 
     if abs(percentage_change) >= 1:
-        print(
+        _log.info(
             'Data from the deepest 10% of data has been analysed and data does not seem perfectly stable. An alternative solution for dark counts has to be considered. \nMoreover, it is recommended to check the sensor has this may suggest issues with the sensor (i.e water inside the sensor, temporal drift etc)')
-        print(
+        _log.info(
             f'Data changed (increased or decreased) by {"%.1f" % np.round(percentage_change, 1)}% from the beginning to the end of the mission')
     else:
-        print(
+        _log.info(
             f'Data from the deepest 10% of data has been analysed and data seems stable. These deep values can be used to re-assess the dark count if the no {var} at depth assumption is valid in this site and this depth')
     return fig, ax
 
@@ -794,8 +795,8 @@ def plot_grid_spacing(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
             (depth_diff >= np.nanpercentile(depth_diff, 0.5)) & (depth_diff <= np.nanpercentile(depth_diff, 99.5))]
         time_diff = time_diff[
             (time_diff >= np.nanpercentile(time_diff, 0.5)) & (time_diff <= np.nanpercentile(time_diff, 99.5))]
-        print('Depth and time differences have been filtered to the middle 99% of values.')
-        print('Numeric median/mean/max/min values are based on the original data.')
+        _log.info('Depth and time differences have been filtered to the middle 99% of values.')
+        _log.info('Numeric median/mean/max/min values are based on the original data.')
 
         # Histogram of depth spacing
         ax[0].hist(depth_diff, bins=50, **kw)
@@ -932,8 +933,8 @@ def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, variable='TEMP', a
     time_diff = time_diff[
         (time_diff >= np.nanpercentile(time_diff, 0.5)) & (time_diff <= np.nanpercentile(time_diff, 99.5))]
     if variable == 'TEMP':
-        print('Depth and time differences have been filtered to the middle 99% of values.')
-        print('Numeric median/mean/max/min values are based on the original data.')
+        _log.info('Depth and time differences have been filtered to the middle 99% of values.')
+        _log.info('Numeric median/mean/max/min values are based on the original data.')
     with plt.style.context(glidertest_style_file):
         if ax is None:
             fig, ax = plt.subplots()
@@ -1024,7 +1025,7 @@ def plot_ts(ds: xr.Dataset, percentile: list = [0.5, 99.5], ax: plt.Axes = None,
         # Filter within percentile range
         p_low, p_high = np.nanpercentile(CT, percentile), np.nanpercentile(SA, percentile)
         CT_filtered, SA_filtered = CT[(p_low[0] <= CT) & (CT <= p_low[1])], SA[(p_high[0] <= SA) & (SA <= p_high[1])]
-        print(f"Filtered values between {percentile[0]}% and {percentile[1]}% percentiles.")
+        _log.info(f"Filtered values between {percentile[0]}% and {percentile[1]}% percentiles.")
 
         # Generate density contours efficiently
         xi, yi = np.meshgrid(np.linspace(SA_filtered.min() - 0.2, SA_filtered.max() + 0.2, 100),
@@ -1844,9 +1845,7 @@ def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: f
         _show()
     return fig, ax
 
-
-def plot_section(ds: xr.Dataset, vars: list = ['TEMP', 'PSAL', 'DENSITY'], v_res=2, start=None, end=None, show_time_axis=True, method="pcolormesh", log_scale=False,
-                 ax=None, **kw, ):
+def plot_section(ds: xr.Dataset, vars: list = ['TEMP', 'PSAL', 'DENSITY'], v_res=2, start=None, end=None, show_time_axis=True, method="pcolormesh", log_scale=False, ax=None, **kw, ):
     """
     Plots a section of the specified variable from the dataset `ds` against depth and profile number.
 

@@ -1,0 +1,22 @@
+{% import "_macros.html" as m %}
+<p class="caption">{{ summary }}. One row per OG1 global attribute, grouped by category: a value means present; a dash (<strong>amber</strong> for a mandatory attribute) means absent; absent <em>suggested</em> attributes are not listed. Attributes the file carries that are not OG1 globals are under “Other (not in OG1)”.</p>
+{% for g in groups %}
+<h3>{{ g.title }}</h3>
+<table class="nc meta">
+<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+<tbody>
+{% for r in g.rows %}<tr><td class="mono wrapv">{{ r.name }}</td><td class="wrap{% if not r.present and r.tier == "mandatory" %} nonconform{% endif %}">{% if r.present %}{{ r.value|urlize }}{% else %}—{% endif %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% if g.title == "Spatiotemporal coverage" %}
+<p class="caption">Geospatial extent — the file's suggested <code>geospatial_*</code> attributes versus the extent computed from the data.</p>
+<table class="nc meta">
+<thead><tr><th>Attribute</th><th>File value</th><th>Computed</th></tr></thead>
+<tbody>
+{% for gg in geospatial %}<tr><td class="mono">{{ gg.attr }}</td><td>{{ gg.file_val or "—" }}</td><td>{{ gg.computed }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% endfor %}

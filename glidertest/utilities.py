@@ -9,8 +9,8 @@ from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 import cmocean.cm as cmo
 from matplotlib.ticker import MaxNLocator
-
-
+import logging
+_log = logging.getLogger(__name__)
 
 def _check_necessary_variables(ds: xr.Dataset, vars: list):
     """

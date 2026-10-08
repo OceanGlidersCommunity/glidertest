@@ -1,0 +1,100 @@
+{# Shared template macros. #}
+{# Per-figure debug line: renders only when GLIDERTEST_REPORT_DEBUG is set (figdbg() then
+   returns a non-empty string). Guarding on figdbg() rather than a debug flag means the
+   macro needs no `with context` and is a true no-op when off. #}
+{% macro dbg(b64, slot) %}{% set d = figdbg(b64) %}{% if d %}<div class="debug">slot: {{ slot }}  |  {{ d }}</div>{% endif %}{% endmacro %}
+
+{# Render one resolved manifest panel. `|safe` appears once, gated by kind, so figure
+   payloads (base64) are always escaped into an image src and only html/table markup is
+   emitted raw — the autoescape boundary is this one branch. #}
+{% macro panel(p, slot=None) %}
+{%- set sl = slot or p.slot %}
+{%- if p.is_stub %}
+  <figure class="slot-{{ sl }}"><p class="warn">{{ p.caption or p.id }} — {{ p.stub_reason }}</p></figure>
+{%- elif p.kind == "figure" %}
+  <figure class="slot-{{ sl }}">
+    {%- if p.caption %}<figcaption>{{ p.caption }}</figcaption>{% endif %}
+    <img src="data:image/png;base64,{{ p.payload }}" alt="{{ p.caption or p.id }}">
+    {%- set src = figsource(p.payload) %}{% if src %}<div class="fig-source">source: {{ src }}</div>{% endif %}
+    {{- dbg(p.payload, sl) }}
+  </figure>
+{%- else %}{# html | table #}
+  {# One full-width flex item so the panel's caption, headings and tables flow as normal blocks
+     instead of becoming side-by-side flex items of the .fig-row. #}
+  <div class="html-panel">{{ p.payload | safe }}</div>
+{%- endif %}
+{% endmacro %}
+
+{# Cross-page nav, rendered inside the masthead as role-coloured pills with a "Pages:" label
+   (the ctdcast/oceanarray shape). Each entry is {label, href, role, current}; role picks the CSS
+   class (nav-landing / nav-component / nav-map); the current page is a muted non-link pill.
+   Rendered only when there is more than one page, so a single-page report shows no nav. #}
+{# Masthead nav: an optional back pill, then one row per group (label + role-coloured pills).
+   `nav` is the shape built by reports._build_nav (shared-design-system §2): {rows, back, inventory}.
+   A pill is {label, href, role, state}; state "current" renders a muted non-link. This macro stays
+   in glidertest's layer for now and is replaced by the vendored _nav.html macro at re-vendor. #}
+{% macro _pill(p) %}{% if p.state == "current" %}<span class="nav-pill nav-{{ p.role }} nav-current">{{ p.label }}</span>{% else %}<a class="nav-pill nav-{{ p.role }}" href="{{ p.href }}">{{ p.label }}</a>{% endif %}{% endmacro %}
+{% macro page_nav(nav) %}{% if nav.back or nav.rows %}<nav class="page-nav">{% if nav.back %}<a class="nav-pill nav-back" href="{{ nav.back.href }}">{{ nav.back.label }}</a>{% endif %}{% for row in nav.rows %}<span class="nav-row"><span class="page-nav-label">{{ row.label }}:</span>{% for p in row.pills %}{{ _pill(p) }}{% endfor %}</span>{% endfor %}</nav>{% endif %}{% endmacro %}
+
+{# The "Data inventory:" strip (role-neutral file pills). Folded into the masthead, not below it. #}
+{% macro inventory_strip(nav) %}{% if nav.inventory %}<nav class="inventory-strip"><span class="label">Data inventory:</span>{% for p in nav.inventory %}{% if p.state == "current" %}<span class="file-pill file-pill-active">{{ p.label }}</span>{% else %}<a class="file-pill" href="{{ p.href }}">{{ p.label }}</a>{% endif %}{% endfor %}</nav>{% endif %}{% endmacro %}
+
+{# Stacked QC distribution bar: segments are {key, width, title}; colour comes from the qc-seg-*
+   class. The width % is the one allowed inline style. small=True selects the dashed diagnostics bar. #}
+{% macro dist_bar(segments, small=False) %}{% if segments %}<div class="qc-bar{% if small %} qc-bar-sm{% endif %}">{% for s in segments %}<div class="qc-seg-{{ s.key }}" style="width:{{ s.width }}%" title="{{ s.title }}"></div>{% endfor %}</div>{% endif %}{% endmacro %}
+
+{# Expandable per-row attribute dropdown: the attrs dict minus those already shown as columns
+   (the caller excludes them). Autoescape handles values; urlize linkifies URLs. Em dash when empty. #}
+{% macro attrs_details(attrs) %}{% if attrs %}<details class="attrs"><summary>{{ attrs|length }} attrs</summary><table>{% for k, val in attrs.items() %}<tr><td class="mono">{{ k }}</td><td>{{ val|urlize }}</td></tr>{% endfor %}</table></details>{% else %}—{% endif %}{% endmacro %}
+
+{# The one place a section number + title is formatted: "(1) Overview", or just
+   "Overview" when there is no number. Every page — the manifest-driven bodies AND
+   the hand-authored casts/sections/timeseries listing pages — renders headings and
+   jump-nav links through this, so the numbering style is chosen once. #}
+{% macro heading_text(number, title) %}{% if number %}({{ number }}) {% endif %}{{ title }}{% endmacro %}
+
+{# Render a resolved report body: the jump-nav plus every numbered section and its
+   panels. Shared by every manifest-driven page (cast, section, and later timeseries
+   / index) so section numbering, anchors and layout live in one place. Section
+   numbers show as "(1) Title"; a section in `section_columns` stacks its trailing
+   panels (from that index) into a right-hand fig-col. #}
+{% macro report_body(report, section_columns={}, center_sections=[]) %}
+<div class="jump-nav">
+  {% for s in report.sections %}<a href="#{{ s.id }}">{{ heading_text(s.number, s.title) }}</a>
+  {% endfor %}
+</div>
+
+{% for s in report.sections %}
+<h2 id="{{ s.id }}">{{ heading_text(s.number, s.title) }}</h2>
+{% if s.intro %}<p class="caption">{{ s.intro }}</p>{% endif %}
+{% set split = section_columns.get(s.id) %}
+<div class="fig-row{% if s.id in center_sections %} center{% endif %}">
+  {# split only takes the fig-col path when the section actually has a panel at
+     that index; a section whose panels dropped below it falls back to a flat row. #}
+  {% if split is not none and s.panels|length > split %}
+  {% for p in s.panels %}{% if loop.index0 < split %}{{ panel(p) }}{% endif %}{% endfor %}
+  <div class="fig-col slot-{{ s.panels[split].slot }}">
+    {% for p in s.panels %}{% if loop.index0 >= split %}{{ panel(p, "full") }}{% endif %}{% endfor %}
+  </div>
+  {% else %}
+  {% for p in s.panels %}{{ panel(p) }}{% endfor %}
+  {% endif %}
+</div>
+{% endfor %}
+{% if not report.sections %}<p class="caption">No plottable data for this selection.</p>{% endif %}
+{% if report.not_applicable %}<p class="caption">Not applicable to this {% if report.sections %}selection{% else %}deployment{% endif %}: {{ report.not_applicable | join(", ") }}.</p>{% endif %}
+{% endmacro %}
+
+
+{# Cross-navigation pill bar linking the compiled-file inventory pages
+   (profiles.nc / ladcp_profiles.nc / SBE sensors).  The page matching
+   current_href is rendered as a non-link active pill.  Requires the
+   .inventory-strip / .file-pill CSS (in each page's head_extra). #}
+{% macro inventory_pills(pills, current_href="") %}
+{% if pills %}
+<nav class="inventory-strip">
+  <span class="label">Data inventory:</span>
+  {% for d in pills %}{% if d.href == current_href %}<span class="file-pill file-pill-active">{{ d.label }}</span>{% else %}<a class="file-pill" href="{{ d.href }}">{{ d.label }}</a>{% endif %}{% endfor %}
+</nav>
+{% endif %}
+{% endmacro %}

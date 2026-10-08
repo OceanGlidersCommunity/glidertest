@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{% if page_landing %}{{ mission_id }}{% else %}{{ page_type }} — {{ mission_id }}{% endif %}{% endblock %}
+{% block masthead_type %}{{ page_type }}{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+<main>
+{{ m.report_body(report) }}
+</main>
+{% endblock %}

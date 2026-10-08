@@ -31,7 +31,7 @@ def load_sample_dataset(dataset_name="sea045_20230604T1253_delayed.nc"):
     Parameters
     ----------
     dataset_name: str, optional
-        Default is "sea045_20230530T0832_delayed.nc".
+        Default is "sea045_20230604T1253_delayed.nc".
 
     Raises
     ------

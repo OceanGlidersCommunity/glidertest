@@ -1,0 +1,122 @@
+{% import "_macros.html" as _m %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}glidertest report{% endblock %}</title>
+<style>
+{{ css | safe }}
+/* Package-local (NOT in vendored emit_css): opt-in figure-debug overlay, shown only when
+   GLIDERTEST_REPORT_DEBUG is set. */
+.debug {
+  font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted);
+  border-left: 3px solid var(--rule); padding: 0.15rem 0.5rem;
+  margin: -0.4rem 0 0.6rem;
+}
+/* Always-on: the glidertest plotter that produced a figure, under it. */
+.fig-source { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); margin-top: 0.1rem; }
+/* Package-local: non-conforming OG1 metadata value cells in amber. */
+.meta td.nonconform { background: var(--warn-bg); }
+/* Wide file-contents tables: cells stay on one line by default (take only their content width);
+   tagged columns wrap and are capped with max-width so none dominates — the browser auto-distributes
+   the remaining width (table-layout: auto). Narrowing N/Min-Max/Variable frees width so the
+   attribute dropdown expands the table less when opened. */
+table.nc td, table.nc th { white-space: nowrap; }
+table.nc .wrap  { white-space: normal; overflow-wrap: anywhere; max-width: 20rem; } /* long name, std name, attr value */
+table.nc .wrapv { white-space: normal; overflow-wrap: anywhere; max-width: 12rem; } /* variable name */
+table.nc .wrapn { white-space: normal; max-width: 4.5rem; } /* N (valid): wraps at the space */
+table.nc .wrapr { white-space: normal; max-width: 7rem; }   /* Min / Max: wraps at the slash */
+/* Attribute dropdown: a readable minimum when open; values wrap, keys do not. */
+table.nc details.attrs table { min-width: 16rem; }
+table.nc details.attrs td { white-space: normal; overflow-wrap: anywhere; }
+table.nc details.attrs td.mono { white-space: nowrap; }
+/* An html/table panel is one full-width item of the flex .fig-row, so its caption, headings and
+   tables stack as normal block flow instead of sitting side by side. */
+.html-panel { flex: 1 1 100%; min-width: 0; }
+/* Subtle in-table links: underline only, keep the text colour. */
+.meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+/* Expandable per-variable attribute list in a table cell (ported from ctdcast). */
+details.attrs > summary { cursor: pointer; color: var(--ocean); font-size: var(--fs-xs); user-select: none; }
+details.attrs table { margin: 0.3rem 0 0.2rem; width: auto; }
+details.attrs td { font-size: var(--fs-xs); border: none; }
+/* QC palette — one source for text colours and bar-segment backgrounds. */
+:root { --qc-good: #27ae60; --qc-suspect: #f39c12; --qc-fail: #e74c3c; --qc-not_eval: #bdc3c7; --qc-missing: #7f8c8d; --qc-other: #4a4a4a; }
+.qc-good { color: var(--qc-good); }
+.qc-susp { color: var(--qc-suspect); }
+.qc-fail { color: var(--qc-fail); }
+.qc-seg-good { background: var(--qc-good); }
+.qc-seg-suspect { background: var(--qc-suspect); }
+.qc-seg-fail { background: var(--qc-fail); }
+.qc-seg-not_eval { background: var(--qc-not_eval); }
+.qc-seg-missing { background: var(--qc-missing); }
+.qc-seg-other { background: var(--qc-other); }
+/* QC distribution bar: a flex row of percent-width segments with tooltips. */
+.qc-bar {
+  display: flex; width: 14rem; height: 1.1rem; vertical-align: middle;
+  border: 1px solid var(--rule); border-radius: 3px; overflow: hidden;
+}
+.qc-bar div { height: 100%; }
+/* glidertest-diagnostics bars: smaller + dashed outline, so they read as computed, not delivered. */
+.qc-bar-sm { width: 6rem; height: 0.6rem; border-style: dashed; }
+/* Visible failure block for an html panel that raised — the failure shows on the page. */
+.none-note { background: #fdecea; border-left: 3px solid var(--qc-fail); padding: 0.3rem 0.6rem; color: #333; }
+/* Masthead nav, grouped rows (shared-design-system §2 shape, kept in glidertest's layer for now —
+   replaced by vendored _css rules at re-vendor): an optional back pill, then one row per group of
+   role-coloured pills, the current page muted. Row labels share a min-width so the rows line up. */
+.page-nav { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; margin: 0.65rem 0 0.2rem; }
+.nav-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
+.page-nav-label { font-size: var(--fs-dt); opacity: 0.75; margin-right: 0.2rem; min-width: 5rem; }
+.nav-pill { padding: 0.2em 0.65em; border-radius: 4px; font-size: var(--fs-nav); font-weight: 700;
+  text-decoration: none; color: #fff; }
+.nav-landing { background: var(--role-landing); }
+.nav-entity { background: var(--role-entity); }
+.nav-collection { background: var(--role-collection); }
+.nav-component { background: var(--role-component); }
+.nav-aggregate-a { background: var(--role-aggregate-a); }
+.nav-aggregate-b { background: var(--role-aggregate-b); }
+.nav-map { background: var(--role-map); }
+.nav-back { background: #5d6d7e; }  /* "up" role; vendored ROLE_ACCENT gains this key at re-vendor */
+.nav-current { opacity: 0.5; pointer-events: none; }
+/* "Data inventory:" strip, folded into the masthead (rounded monospace file pills; current is dark).
+   The label shares the nav row-label width so it lines up under Summary/Reports/Derived. */
+.inventory-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0.2rem; font-size: var(--fs-nav); }
+.inventory-strip .label { font-size: var(--fs-dt); opacity: 0.75; min-width: 5rem; }
+.file-pill { font-family: var(--font-mono); padding: 0.2em 0.65em; border-radius: 4px;
+  text-decoration: none; color: #fff; background: #3a7a8c; }  /* teal, distinct from the role pills */
+.file-pill-active { opacity: 0.5; pointer-events: none; }
+/* Navigator missions table: page-button cells keep their pills on one line. */
+td.nav-cell { white-space: nowrap; }
+td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-right: 0.15rem; }
+</style>
+{% block head_extra %}{% endblock %}
+</head>
+<body>
+<div id="top"></div>
+
+{% block topbar %}{% endblock %}
+
+<div class="masthead" style="background:{{ masthead_bg }};">
+  <div class="masthead-header">
+    <h1>{% block masthead_title %}{{ mission_id }}{% endblock %}</h1>
+    <span class="masthead-type">{% block masthead_type %}{% endblock %}</span>
+  </div>
+  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>{{ source_name }}</span><span>generated {{ generated_at }}</span></p>
+  {{ _m.page_nav(nav) }}
+  {{ _m.inventory_strip(nav) }}
+  {% if header %}
+  <dl class="meta-grid">
+    {% for label, value in header %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
+    {% endfor %}
+  </dl>
+  {% endif %}
+  {% block masthead_meta %}{% endblock %}
+  <a class="wordmark" href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a>
+</div>
+
+{% block content %}{% endblock %}
+
+<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v{{ version.split("+")[0] }} &nbsp;·&nbsp; {{ mission_id }} &nbsp;·&nbsp; {{ generated_at }}</footer>
+{{ js_top_links | safe }}
+</body>
+</html>
