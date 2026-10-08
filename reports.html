@@ -1,0 +1,425 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The HTML report &mdash; glidertest 0.1.1.dev19+g84f72800b documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=608aad27"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API reference" href="glidertest.html" />
+    <link rel="prev" title="CLI reference" href="cli_reference.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            glidertest
+              <img src="_static/glider.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demo-output.html">Glidertest demo</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html">Example HTML report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli_reference.html">CLI reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The HTML report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#live-example">Live example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-layout">Output layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-the-diagnostics-tell-you">What the diagnostics tell you</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#report-pages">Report pages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#landing-page-index-html">Landing page — <code class="docutils literal notranslate"><span class="pre">index.html</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sensor-pages-ctd-html-oxygen-html-optics-html">Sensor pages — <code class="docutils literal notranslate"><span class="pre">ctd.html</span></code>, <code class="docutils literal notranslate"><span class="pre">oxygen.html</span></code>, <code class="docutils literal notranslate"><span class="pre">optics.html</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flight-page-flight-html">Flight page — <code class="docutils literal notranslate"><span class="pre">flight.html</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#inventory-page-inventory-html">Inventory page — <code class="docutils literal notranslate"><span class="pre">inventory.html</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fleet-page-root-index-html">Fleet page — <code class="docutils literal notranslate"><span class="pre">ROOT/index.html</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#the-qc-section">The QC section</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#colour-and-status-conventions">Colour and status conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-the-report-does-not-do">What the report does not do</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#many-missions">Many missions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="glidertest.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest/issues/new">Report a problem</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OG1 format manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">glidertest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">The HTML report</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/reports.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-html-report">
+<span id="reports"></span><h1>The HTML report<a class="headerlink" href="#the-html-report" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">report</span></code> turns one OG1 mission file into a set of linked, self-contained HTML
+pages, and many missions into a fleet page over them. Everything is embedded — figures, styles,
+the lot — so a report folder can be zipped, mailed or put on a share and opened anywhere
+without a server or a network connection.</p>
+<section id="live-example">
+<h2>Live example<a class="headerlink" href="#live-example" title="Link to this heading"></a></h2>
+<p>The pages below are generated from the two sample missions by this site’s own build, with the
+same code you run.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="_static/demo/index.html">Fleet page</a></p></li>
+<li><p><a class="reference external" href="_static/demo/sea045_20230604T1253_delayed/index.html">sea045 — SeaExplorer, Baltic: landing</a> ·
+<a class="reference external" href="_static/demo/sea045_20230604T1253_delayed/ctd.html">CTD</a> ·
+<a class="reference external" href="_static/demo/sea045_20230604T1253_delayed/oxygen.html">Oxygen</a> ·
+<a class="reference external" href="_static/demo/sea045_20230604T1253_delayed/optics.html">Optics</a> ·
+<a class="reference external" href="_static/demo/sea045_20230604T1253_delayed/inventory.html">Inventory</a></p></li>
+<li><p><a class="reference external" href="_static/demo/sg014_20040924T182454_delayed_subset/index.html">sg014 — Seaglider, Labrador Sea: landing</a> ·
+<a class="reference external" href="_static/demo/sg014_20040924T182454_delayed_subset/flight.html">Flight</a></p></li>
+</ul>
+</section>
+<section id="output-layout">
+<h2>Output layout<a class="headerlink" href="#output-layout" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ROOT/
+  index.html                    fleet page: one row per mission, map of all tracks
+  &lt;mission_id&gt;/
+    index.html                  landing page — about the mission
+    ctd.html                    present when TEMP or PSAL is in the file
+    oxygen.html                 present when DOXY is in the file
+    optics.html                 present when CHLA or BBP700 is in the file
+    flight.html                 present when GLIDER_VERT_VELO_MODEL is in the file
+    inventory.html              about the file: attributes, variables, QC coverage
+    figures/&lt;page&gt;_&lt;panel&gt;.png  every figure as a file, 1350 px wide
+    report.json                 machine-readable summary of the mission
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;mission_id&gt;</span></code> is the file’s OG1 <code class="docutils literal notranslate"><span class="pre">id</span></code> attribute, or the file stem when the attribute is
+missing; <code class="docutils literal notranslate"><span class="pre">--mission-id</span></code> overrides it. A page that the data does not support is not written,
+and its button does not appear in the masthead.</p>
+<p><code class="docutils literal notranslate"><span class="pre">report.json</span></code> (<code class="docutils literal notranslate"><span class="pre">manifest_version</span></code> 1) is what the fleet page is built from and what other
+tools can read without opening the netCDF:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 72.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">platform</span></code>, <code class="docutils literal notranslate"><span class="pre">platform_serial</span></code></p></td>
+<td><p>Mission identity; the glider’s platform type and serial from the file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code>, <code class="docutils literal notranslate"><span class="pre">duration_s</span></code></p></td>
+<td><p>Time span (ISO 8601 to the minute) and duration in seconds.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_profiles</span></code>, <code class="docutils literal notranslate"><span class="pre">n_dive</span></code>, <code class="docutils literal notranslate"><span class="pre">n_climb</span></code>, <code class="docutils literal notranslate"><span class="pre">n_records</span></code></p></td>
+<td><p>Profile counts (dive/climb from <code class="docutils literal notranslate"><span class="pre">PROFILE_DIRECTION</span></code>) and the record count.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lat_min</span></code> … <code class="docutils literal notranslate"><span class="pre">lon_max</span></code>, <code class="docutils literal notranslate"><span class="pre">max_depth_m</span></code></p></td>
+<td><p>Geographic extent and the deepest depth reached.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">source_file</span></code>, <code class="docutils literal notranslate"><span class="pre">source_size_bytes</span></code></p></td>
+<td><p>The input file’s name and size.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sensors</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{ctd,</span> <span class="pre">oxygen,</span> <span class="pre">optics,</span> <span class="pre">flight}</span></code> → true when that page was written.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">og1</span></code></p></td>
+<td><p>Mandatory OG1 attributes present / total, and the list of those missing.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qc</span></code></p></td>
+<td><p>Whether the file carries <code class="docutils literal notranslate"><span class="pre">*_QC</span></code> flags, and the variable with the largest
+suspect-plus-fail fraction.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pages</span></code></p></td>
+<td><p>The pages written, with their labels.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">track</span></code></p></td>
+<td><p>The glider track, decimated to at most 200 points, for the fleet map.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">glidertest_version</span></code>, <code class="docutils literal notranslate"><span class="pre">generated_at</span></code></p></td>
+<td><p>Provenance.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="what-the-diagnostics-tell-you">
+<h2>What the diagnostics tell you<a class="headerlink" href="#what-the-diagnostics-tell-you" title="Link to this heading"></a></h2>
+<p>Each figure in the report is one diagnostic; each is also one function in
+<a class="reference internal" href="glidertest.html#module-glidertest.plots" title="glidertest.plots"><code class="xref py py-mod docutils literal notranslate"><span class="pre">glidertest.plots</span></code></a> you can call yourself in a notebook. A <em>section</em> is a time–depth field
+coloured by the variable; the rest are summarised here.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24.0%" />
+<col style="width: 40.0%" />
+<col style="width: 36.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Diagnostic</p></th>
+<th class="head"><p>The question</p></th>
+<th class="head"><p>A problem looks like</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Dive–climb hysteresis</p></td>
+<td><p>Does the sensor lag going down versus up? (slow sensors — optode, CTD in a thermocline)</p></td>
+<td><p>A systematic offset between dive and climb profiles, growing with depth.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Up/down bias by depth</p></td>
+<td><p>The same, binned by depth.</p></td>
+<td><p>A non-zero mean difference below the surface layer.</p></td>
+</tr>
+<tr class="row-even"><td><p>Temporal drift</p></td>
+<td><p>Does the sensor’s value creep over the mission?</p></td>
+<td><p>A trend in the deep (stable) values.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Day/night offset and quenching</p></td>
+<td><p>Is daytime chlorophyll suppressed by non-photochemical quenching?</p></td>
+<td><p>Daytime surface chlorophyll lower than night for the same water.</p></td>
+</tr>
+<tr class="row-even"><td><p>Deep-drift / negatives (optics)</p></td>
+<td><p>Is the dark count right?</p></td>
+<td><p>Negative or non-zero deep values.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Global range</p></td>
+<td><p>Are the values physically plausible?</p></td>
+<td><p>Points outside the suspect / fail spans.</p></td>
+</tr>
+<tr class="row-even"><td><p>Sampling period, grid spacing</p></td>
+<td><p>How often and how densely was each variable sampled?</p></td>
+<td><p>Gaps, or a sampling interval that changed mid-mission.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Max depth per profile, profile monotony</p></td>
+<td><p>Did the glider fly as planned?</p></td>
+<td><p>Profiles that stop short, or depth that is not monotonic within a profile.</p></td>
+</tr>
+<tr class="row-even"><td><p>Convective resistance</p></td>
+<td><p>How much buoyancy loss would mix the column to a given depth? (a property, used with
+the mixed layer, not a pass/fail check)</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>Vertical velocity (flight)</p></td>
+<td><p>Does the flight model match the measured vertical speed?</p></td>
+<td><p>A systematic difference, or spread, between modelled and measured <em>w</em>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The oxygen and optics diagnostics follow the OceanGliders best-practice guides (the
+<a class="reference external" href="https://oceangliderscommunity.github.io/Oxygen_SOP/README.html">Oxygen SOP</a>); the flight
+diagnostic follows Frajka-Williams et al. (2011).</p>
+</section>
+<section id="report-pages">
+<h2>Report pages<a class="headerlink" href="#report-pages" title="Link to this heading"></a></h2>
+<p>Every page shares the <strong>masthead</strong> (the coloured header): the mission id, a page-type label,
+generation time, the
+mission facts (profiles with the dive/climb split, time span and duration, sample rate,
+extent, platform, source file), the page navigation — <strong>Summary / Reports: CTD · Oxygen ·
+Optics / Derived: Flight</strong> — and a <strong>Data inventory</strong> strip linking the inventory page. When
+the report sits in a fleet, “← All missions” leads back. Each section heading carries “↑ top”.</p>
+<section id="landing-page-index-html">
+<h3>Landing page — <code class="docutils literal notranslate"><span class="pre">index.html</span></code><a class="headerlink" href="#landing-page-index-html" title="Link to this heading"></a></h3>
+<p>About the mission.</p>
+<ul class="simple">
+<li><p><strong>Track</strong> — the glider’s path on a map (<code class="docutils literal notranslate"><span class="pre">plots.plot_glider_track</span></code>).</p></li>
+<li><p><strong>Payload</strong> — the variables the glider carried: a one-line OG1 conformance verdict linking
+to the inventory page, and which variables are present with the <code class="docutils literal notranslate"><span class="pre">SENSOR_*</span></code> entry each
+comes from.</p></li>
+<li><p><strong>Hydrography</strong> — the core variables against depth (<code class="docutils literal notranslate"><span class="pre">plots.plot_basic_vars</span></code>), the T–S
+diagram (<code class="docutils literal notranslate"><span class="pre">plots.plot_ts</span></code>), and a time–depth section for each of temperature, salinity,
+oxygen and chlorophyll that the file carries (<code class="docutils literal notranslate"><span class="pre">plots.plot_section</span></code>).</p></li>
+<li><p><strong>Sampling</strong> — grid spacing (<code class="docutils literal notranslate"><span class="pre">plots.plot_grid_spacing</span></code>), sampling period of every variable
+(<code class="docutils literal notranslate"><span class="pre">plots.plot_sampling_period_all</span></code>), maximum depth per profile
+(<code class="docutils literal notranslate"><span class="pre">plots.plot_max_depth_per_profile</span></code>) and profile monotony (<code class="docutils literal notranslate"><span class="pre">plots.plot_prof_monotony</span></code>).</p></li>
+<li><p><strong>QC — as delivered</strong> and <strong>QC — glidertest diagnostics</strong> — see <a class="reference internal" href="#qc-section"><span class="std std-ref">The QC section</span></a>.</p></li>
+</ul>
+</section>
+<section id="sensor-pages-ctd-html-oxygen-html-optics-html">
+<h3>Sensor pages — <code class="docutils literal notranslate"><span class="pre">ctd.html</span></code>, <code class="docutils literal notranslate"><span class="pre">oxygen.html</span></code>, <code class="docutils literal notranslate"><span class="pre">optics.html</span></code><a class="headerlink" href="#sensor-pages-ctd-html-oxygen-html-optics-html" title="Link to this heading"></a></h3>
+<p>One page per sensor present, with the same section order so the eye knows where to look:</p>
+<ul class="simple">
+<li><p><strong>Sensor</strong> — make and model from the file’s <code class="docutils literal notranslate"><span class="pre">SENSOR_*</span></code> variables.</p></li>
+<li><p><strong>Sections</strong> — time–depth sections of the sensor’s variables (<code class="docutils literal notranslate"><span class="pre">plots.plot_section</span></code>); on
+the CTD page temperature, salinity and conductivity, on the oxygen page dissolved oxygen, on
+the optics page chlorophyll and backscatter.</p></li>
+<li><p><strong>T–S</strong> (CTD only) — <code class="docutils literal notranslate"><span class="pre">plots.plot_ts</span></code>.</p></li>
+<li><p><strong>Drift</strong> — temporal drift per variable (<code class="docutils literal notranslate"><span class="pre">plots.check_temporal_drift</span></code>); on the optics page
+also the deep-drift and negative-value assessment (<code class="docutils literal notranslate"><span class="pre">plots.process_optics_assess</span></code>).</p></li>
+<li><p><strong>Dive–climb bias</strong> — hysteresis between dive and climb (<code class="docutils literal notranslate"><span class="pre">plots.plot_hysteresis</span></code>) and the
+up/down-cast bias by depth (<code class="docutils literal notranslate"><span class="pre">plots.plot_updown_bias</span></code>).</p></li>
+<li><p><strong>Day/night offset</strong> — day versus night averages (<code class="docutils literal notranslate"><span class="pre">plots.plot_daynight_avg</span></code>); on the optics
+page the quenching assessment (<code class="docutils literal notranslate"><span class="pre">plots.plot_quench_assess</span></code>).</p></li>
+<li><p><strong>Mixed layer</strong> (CTD only) — convective resistance for the deepest profile
+(<code class="docutils literal notranslate"><span class="pre">plots.plot_CR</span></code>).</p></li>
+<li><p><strong>QC checks</strong> — the global-range check per variable (<code class="docutils literal notranslate"><span class="pre">plots.plot_global_range</span></code>).</p></li>
+<li><p><strong>Sample rate</strong> — sampling period per variable (<code class="docutils literal notranslate"><span class="pre">plots.plot_sampling_period</span></code>).</p></li>
+</ul>
+<p>A section with nothing to show for this file is omitted, and the in-page jump list only
+ever lists sections that are there.</p>
+</section>
+<section id="flight-page-flight-html">
+<h3>Flight page — <code class="docutils literal notranslate"><span class="pre">flight.html</span></code><a class="headerlink" href="#flight-page-flight-html" title="Link to this heading"></a></h3>
+<p>Written when the file carries a flight-model vertical velocity (<code class="docutils literal notranslate"><span class="pre">GLIDER_VERT_VELO_MODEL</span></code>;
+Seagliders do, most SeaExplorer files do not). <strong>Vertical velocity</strong> compares measured and
+modelled vertical speeds with their histograms, for dives and climbs separately
+(<code class="docutils literal notranslate"><span class="pre">plots.plot_vertical_speeds_with_histograms</span></code>) — the basis for the vertical water velocity
+of Frajka-Williams et al. (2011).</p>
+</section>
+<section id="inventory-page-inventory-html">
+<h3>Inventory page — <code class="docutils literal notranslate"><span class="pre">inventory.html</span></code><a class="headerlink" href="#inventory-page-inventory-html" title="Link to this heading"></a></h3>
+<p>About the file rather than the mission.</p>
+<ul class="simple">
+<li><p><strong>Global attributes</strong> — every OG1 global attribute by category, with its value when
+present and its status otherwise: a missing <em>mandatory</em> attribute in amber, a missing
+<em>highly desirable</em> one as a dash, absent <em>suggested</em> ones omitted.</p></li>
+<li><p><strong>File contents</strong> — the variables grouped by dimension signature with an expandable
+attribute list per variable, the scalar variables, the <code class="docutils literal notranslate"><span class="pre">SENSOR_*</span></code> catalogue, and how many
+data variables carry a <code class="docutils literal notranslate"><span class="pre">_QC</span></code> companion.</p></li>
+</ul>
+<p>The inventory reports presence, not validity: it does not check attribute values against
+the OG1 vocabulary. For that, use the IOOS compliance checker with the
+<a class="reference external" href="https://github.com/OceanGlidersCommunity/cc-plugin-og">cc-plugin-og</a> plugin.</p>
+</section>
+<section id="fleet-page-root-index-html">
+<h3>Fleet page — <code class="docutils literal notranslate"><span class="pre">ROOT/index.html</span></code><a class="headerlink" href="#fleet-page-root-index-html" title="Link to this heading"></a></h3>
+<p>Built from the <code class="docutils literal notranslate"><span class="pre">report.json</span></code> of every mission under the root: one row per mission —
+platform, dates, profiles, maximum depth, which sensor pages exist, OG1 conformance, worst
+QC — with buttons to its pages, and a map of all tracks. Rebuilt whenever a mission is
+reported into the root, or on demand with <code class="docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">navigator</span> <span class="pre">ROOT</span></code> after missions are
+added, removed or renamed by hand. You want a fleet page for a season of deployments, a glider
+pool, or a cruise with several gliders at once.</p>
+</section>
+</section>
+<section id="the-qc-section">
+<span id="qc-section"></span><h2>The QC section<a class="headerlink" href="#the-qc-section" title="Link to this heading"></a></h2>
+<p>Two sections, deliberately kept apart.</p>
+<p><strong>QC — as delivered</strong> reads the <code class="docutils literal notranslate"><span class="pre">*_QC</span></code> flag variables the file already carries and shows,
+per variable, the distribution of flag values as a bar (good / suspect / fail / not evaluated
+/ missing), with the labels taken from the file’s own <code class="docutils literal notranslate"><span class="pre">flag_meanings</span></code>. This is what the
+data provider says about the data. A file with no <code class="docutils literal notranslate"><span class="pre">*_QC</span></code> variables shows this section as
+absent, not as clean — and a file whose flags are all “not evaluated” (the provider applied no
+QC) reads the same way, not as a clean bill of health.</p>
+<p><strong>QC — glidertest diagnostics</strong> runs glidertest’s own checks on the data — gross range, spike
+and flat-line tests per variable, the dive–climb hysteresis verdict — and shows the result
+with the thresholds that were applied printed next to it, so a reader can judge whether a
+“suspect” means anything for their region. Today the thresholds are the package defaults;
+a per-mission configuration file is planned.</p>
+<p>The two are never merged: a value the provider flagged good and glidertest finds suspect is
+shown as both.</p>
+</section>
+<section id="colour-and-status-conventions">
+<h2>Colour and status conventions<a class="headerlink" href="#colour-and-status-conventions" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Masthead navigation buttons are coloured by the <em>kind</em> of page — the summary, the sensor
+reports, the derived flight page — and the current page’s button is muted.</p></li>
+<li><p><strong>Amber</strong> marks a missing mandatory OG1 attribute, on the inventory page and in the
+landing-page verdict. A dash marks a missing highly-desirable attribute.</p></li>
+<li><p>Under every figure, <code class="docutils literal notranslate"><span class="pre">source:</span> <span class="pre">plot_…</span></code> names the <code class="docutils literal notranslate"><span class="pre">glidertest.plots</span></code> function that drew
+it, so the figure can be reproduced in a notebook.</p></li>
+<li><p>A diagnostic that could not be computed for this file says so in place, in a visible
+block; it is never silently dropped.</p></li>
+</ul>
+</section>
+<section id="what-the-report-does-not-do">
+<h2>What the report does not do<a class="headerlink" href="#what-the-report-does-not-do" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>It never modifies the input file and never writes a corrected variable.</p></li>
+<li><p>It never substitutes a value: a fact it cannot determine is shown as <code class="docutils literal notranslate"><span class="pre">UNK</span></code> or a dash.</p></li>
+<li><p>It is not an OG1 validator (see the inventory page note above).</p></li>
+<li><p>It does not process the data; see <a class="reference external" href="https://glidertools.readthedocs.io/">GliderTools</a> and
+the OceanGliders SOPs for that.</p></li>
+</ul>
+</section>
+<section id="many-missions">
+<h2>Many missions<a class="headerlink" href="#many-missions" title="Link to this heading"></a></h2>
+<p>Report into one root and the fleet page follows. From the command line a directory of files
+is one command (<code class="docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">report</span> <span class="pre">data/</span> <span class="pre">--report-dir</span> <span class="pre">reports/</span></code>); from Python, write each
+mission with <code class="docutils literal notranslate"><span class="pre">navigator=False</span></code> and rebuild the fleet page once at the end (see
+<a class="reference internal" href="quickstart.html"><span class="doc">Quickstart</span></a>). <code class="docutils literal notranslate"><span class="pre">--skip-existing</span></code> makes a re-run over a growing data folder cheap.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cli_reference.html" class="btn btn-neutral float-left" title="CLI reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="glidertest.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

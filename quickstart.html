@@ -1,0 +1,245 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quickstart &mdash; glidertest 0.1.1.dev19+g84f72800b documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=608aad27"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Glidertest demo" href="demo-output.html" />
+    <link rel="prev" title="glidertest: diagnostics and HTML reports for OG1 glider data" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            glidertest
+              <img src="_static/glider.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#input-an-og1-mission-file">Input: an OG1 mission file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install">Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-it">Run it</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#open-it">Open it</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-python-or-a-notebook">From Python or a notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-to-look-at-first">What to look at first</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#where-next">Where next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demo-output.html">Glidertest demo</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html">Example HTML report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli_reference.html">CLI reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">The HTML report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glidertest.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest/issues/new">Report a problem</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OG1 format manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">glidertest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quickstart</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quickstart">
+<span id="id1"></span><h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
+<p>From an OG1 file to an open report in three commands.</p>
+<section id="input-an-og1-mission-file">
+<h2>Input: an OG1 mission file<a class="headerlink" href="#input-an-og1-mission-file" title="Link to this heading"></a></h2>
+<p>glidertest reads one glider mission as an <a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OceanGliders (OG1)</a> netCDF file — one file per
+deployment, with the measurements along an <code class="docutils literal notranslate"><span class="pre">N_MEASUREMENTS</span></code> dimension. If you have Seaglider
+basestation files, the <code class="docutils literal notranslate"><span class="pre">seagliderOG1</span></code> package converts them to OG1; SeaExplorer and Slocum
+data reach OG1 through your processing pipeline. No file yet? <code class="docutils literal notranslate"><span class="pre">fetchers.load_sample_dataset()</span></code>
+returns a ready OG1 sample.</p>
+</section>
+<section id="install">
+<h2>Install<a class="headerlink" href="#install" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>glidertest
+</pre></div>
+</div>
+<p>For a development install see the <a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest#install">README</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The glider-track and fleet maps download Natural Earth coastlines through cartopy the first
+time they are drawn, so the first map needs internet. On an offline machine, draw one map
+while online once (cartopy caches the data) or point <code class="docutils literal notranslate"><span class="pre">CARTOPY_DATA_DIR</span></code> at a pre-filled
+directory.</p>
+</div>
+</section>
+<section id="run-it">
+<h2>Run it<a class="headerlink" href="#run-it" title="Link to this heading"></a></h2>
+<p>One mission, into a report tree:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>glidertest<span class="w"> </span>report<span class="w"> </span>sea045_20230604T1253_delayed.nc<span class="w"> </span>--report-dir<span class="w"> </span>reports/
+</pre></div>
+</div>
+<p>This writes</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>reports/
+  index.html                               the fleet page (one row per mission)
+  sea045_20230604T1253_delayed/
+    index.html  ctd.html  oxygen.html  optics.html  inventory.html
+    figures/    report.json
+</pre></div>
+</div>
+<p>and prints the path of the landing page. Two variants you will want soon:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># every *.nc in a directory; the fleet page is rebuilt once at the end</span>
+glidertest<span class="w"> </span>report<span class="w"> </span>data/<span class="w"> </span>--report-dir<span class="w"> </span>reports/
+
+<span class="c1"># one mission's pages straight into a folder, no tree and no fleet page</span>
+glidertest<span class="w"> </span>report<span class="w"> </span>sea045_20230604T1253_delayed.nc<span class="w"> </span>-o<span class="w"> </span>sea045_report/
+</pre></div>
+</div>
+<p>Every flag is in the <a class="reference internal" href="cli_reference.html#cli-reference"><span class="std std-ref">CLI reference</span></a>.</p>
+</section>
+<section id="open-it">
+<h2>Open it<a class="headerlink" href="#open-it" title="Link to this heading"></a></h2>
+<p>Find <code class="docutils literal notranslate"><span class="pre">reports/index.html</span></code> in your file manager and double-click it, or from the terminal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">open</span> <span class="n">reports</span><span class="o">/</span><span class="n">index</span><span class="o">.</span><span class="n">html</span>          <span class="c1"># macOS</span>
+<span class="n">xdg</span><span class="o">-</span><span class="nb">open</span> <span class="n">reports</span><span class="o">/</span><span class="n">index</span><span class="o">.</span><span class="n">html</span>      <span class="c1"># Linux</span>
+<span class="n">start</span> <span class="n">reports</span><span class="o">/</span><span class="n">index</span><span class="o">.</span><span class="n">html</span>         <span class="c1"># Windows</span>
+</pre></div>
+</div>
+<p>The fleet page links to each mission; a mission’s masthead links to its sensor pages and
+back to the fleet.</p>
+</section>
+<section id="from-python-or-a-notebook">
+<h2>From Python or a notebook<a class="headerlink" href="#from-python-or-a-notebook" title="Link to this heading"></a></h2>
+<p>The same thing, as a function call:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">reports</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">"sea045_20230604T1253_delayed.nc"</span><span class="p">)</span>
+<span class="n">reports</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">"reports/"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>No file to hand? The sample missions download on first use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetchers</span><span class="p">,</span> <span class="n">reports</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">fetchers</span><span class="o">.</span><span class="n">load_sample_dataset</span><span class="p">()</span>          <span class="c1"># a SeaExplorer mission in the Baltic</span>
+<span class="n">reports</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">"reports/"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or run a single diagnostic, with no report at all — every figure in the report is one of these
+functions:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">plots</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">plot_hysteresis</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s2">"DOXY"</span><span class="p">)</span>   <span class="c1"># just the dive–climb check for oxygen</span>
+</pre></div>
+</div>
+<p>For many missions, write each with <code class="docutils literal notranslate"><span class="pre">navigator=False</span></code> and rebuild the fleet page once:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+        <span class="n">reports</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">"reports/"</span><span class="p">,</span> <span class="n">navigator</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">reports</span><span class="o">.</span><span class="n">navigator</span><span class="p">(</span><span class="s2">"reports/"</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="what-to-look-at-first">
+<h2>What to look at first<a class="headerlink" href="#what-to-look-at-first" title="Link to this heading"></a></h2>
+<p>The masthead of the landing page gives the mission at a glance — profiles, time span,
+extent, platform — and a one-line OG1 conformance verdict. The two <strong>QC</strong> sections below it
+separate what the file <em>says</em> (its own <code class="docutils literal notranslate"><span class="pre">*_QC</span></code> flags) from what glidertest <em>finds</em>. The
+<strong>inventory</strong> page (linked under the masthead) lists every attribute and variable in the
+file, with anything mandatory that is missing marked in amber. The verdict — e.g. “OG1: 15 of
+16 mandatory attributes” — is about <em>presence</em>, not validity: it does not check that the
+values are correct (see the inventory page). <a class="reference internal" href="reports.html"><span class="doc">The HTML report</span></a> walks through every page.</p>
+</section>
+<section id="where-next">
+<h2>Where next<a class="headerlink" href="#where-next" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="reports.html"><span class="doc">The HTML report</span></a> — what each page shows and how to read it.</p></li>
+<li><p><a class="reference internal" href="cli_reference.html#cli-reference"><span class="std std-ref">CLI reference</span></a> — every command and flag.</p></li>
+<li><p><a class="reference internal" href="demo-output.html"><span class="doc">Glidertest demo</span></a> — the diagnostics one function at a time, in a notebook.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="glidertest: diagnostics and HTML reports for OG1 glider data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="demo-output.html" class="btn btn-neutral float-right" title="Glidertest demo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

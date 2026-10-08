@@ -1,0 +1,582 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>netCDF Inventory — sg014_20040924T182454_delayed_subset</title>
+<style>
+:root {
+  --ocean: #1a3a5c;
+  --seafoam: #e8f4f8;
+  --muted: #95a5a6;
+  --text: #2c3e50;
+  --rule: #dfe6e9;
+  --bg: #ffffff;
+  --bg-sunken: #f7f9fa;
+  --warn: #e67e22;
+  --warn-bg: #fdf3e7;
+  --error: #c0392b;
+  --gray-1: #f5f7fa;
+  --gray-2: #e0e0e0;
+  --gray-3: #aaaaaa;
+  --gray-4: #888888;
+  --gray-5: #555555;
+  --gray-6: #333333;
+  --gray-7: #111111;
+  --ok: #2c6e49;
+  --role-landing: #2980b9;
+  --role-entity: #1a3a5c;
+  --role-collection: #1a3a5c;
+  --role-component: #1a3a5c;
+  --role-aggregate-a: #8e44ad;
+  --role-aggregate-b: #27ae60;
+  --role-map: #ee3377;
+  --package-accent: #07264f;
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --fs-root: 14px;
+  --fs-h1: 1.75rem;
+  --fs-type: 1.35rem;
+  --fs-h2: 1rem;
+  --fs-meta: 0.84rem;
+  --fs-note: 0.92rem;
+  --fs-nav: 0.8rem;
+  --fs-cap: 0.86rem;
+  --fs-xs: 0.75rem;
+  --fs-top: 0.72rem;
+  --fs-dt: 0.7rem;
+  --lh-root: 1.5;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --radius-card: 8px;
+  --radius-btn: 4px;
+  --radius-pill: 999px;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-root); color: var(--text);
+  max-width: 1150px; margin: 0 auto;
+  padding: 1.5rem 2rem 4rem; line-height: var(--lh-root);
+}
+p, li { max-width: 78ch; }
+.masthead {
+  background: var(--ocean); color: #fff; position: relative;
+  padding: 1.6rem 2rem; border-radius: var(--radius-card); margin-bottom: 0.9rem;
+}
+.masthead h1 { margin: 0 0 0.3rem; font-size: var(--fs-h1); font-weight: 700; }
+.masthead .sub { font-size: var(--fs-meta); opacity: 0.85; margin: 0 0 0.15rem; max-width: none; }
+.wordmark {
+  position: absolute; right: 2rem; bottom: 1.2rem;
+  font-size: var(--fs-dt); font-weight: 700; letter-spacing: 0.04em;
+  color: var(--package-accent); background: #fff; opacity: 0.85;
+  padding: 0.1rem 0.5rem; border-radius: var(--radius-pill); text-decoration: none;
+}
+.wordmark:hover { opacity: 1; }
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.5rem 2rem; font-size: var(--fs-meta); margin-top: 0.9rem;
+}
+.meta-grid dt {
+  opacity: 0.7; text-transform: uppercase; font-size: var(--fs-dt);
+  letter-spacing: 0.06em; margin-bottom: 0.1rem;
+}
+.meta-grid dd { margin: 0; font-weight: 600; }
+h2 {
+  color: var(--ocean); font-size: var(--fs-h2);
+  border-bottom: 2px solid var(--seafoam);
+  padding-bottom: 0.3rem; margin: 2.5rem 0 1rem;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.top-link {
+  font-size: var(--fs-top); font-weight: 400; color: var(--muted);
+  text-decoration: none; margin-left: auto;
+}
+.top-link:hover { color: var(--ocean); text-decoration: underline; }
+.caption {
+  color: var(--gray-5); font-size: var(--fs-note);
+  margin-top: 0.75rem; margin-bottom: 0.75rem;
+}
+/* A section intro (the caption directly under a heading) is a lede for the whole
+   figure block, so it spans the content width rather than the 78ch prose measure a
+   paragraph would otherwise inherit — which left it stranded under full-width figures. */
+h2 + .caption { margin-top: -0.5rem; max-width: none; }
+.explainer {
+  font-size: var(--fs-note); color: var(--text);
+  background: var(--bg-sunken); border-left: 3px solid var(--muted);
+  padding: var(--sp-3); margin: -0.25rem 0 0.75rem; border-radius: var(--radius-btn);
+}
+.warn {
+  font-size: var(--fs-note); color: var(--text);
+  background: var(--warn-bg); border-left: 3px solid var(--warn);
+  padding: var(--sp-3); margin-bottom: 0.5rem; border-radius: var(--radius-btn);
+}
+.warn::before { content: "⚠ "; }
+.warn.error { border-left-color: var(--error); }
+.jump-nav {
+  background: var(--seafoam); padding: 0.55rem 1rem;
+  border-radius: 6px; margin-bottom: 1.5rem;
+  font-size: var(--fs-nav); line-height: 2.2;
+}
+.jump-nav::before { content: "Jump to: "; opacity: 0.55; font-size: var(--fs-xs); margin-right: 0.25rem; }
+.jump-nav a {
+  color: var(--ocean); text-decoration: none;
+  font-weight: 600; margin: 0 0.5rem 0 0;
+}
+.jump-nav a::before { content: "▸ "; font-size: var(--fs-dt); }
+.fig-row {
+  display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;
+  align-items: flex-start;
+}
+.fig-col { display: flex; flex-direction: column; gap: 0.75rem; }
+.fig-row.center { justify-content: center; }
+/* A multi-table panel (processing provenance) is one full-width flex item so its
+   headings and tables stack instead of tiling across the row. */
+.prov-panel { flex: 1 1 100%; }
+/* Conformance status pips — a green ✓ (matches), a red ✗ (differs) and a neutral
+   ringed dash (no reference), matching the LADCP-present/absent badges. */
+.conf {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.4em; height: 1.4em; border-radius: 50%;
+  font-size: var(--fs-xs); font-weight: 700; line-height: 1;
+}
+.conf-match { background: var(--ok); color: #fff; }
+.conf-differ { background: var(--error); color: #fff; }
+.conf-none { background: #fff; color: #000; border: 1px solid #000; }
+figure { margin: 0; }
+figure img {
+  border: 1px solid var(--rule); border-radius: var(--radius-btn);
+  display: block; width: 100%; height: auto;
+}
+figcaption { font-size: var(--fs-cap); color: var(--gray-5); margin-top: 0.25rem; }
+/* A stub panel's warning fills the figure slot it stands in for, rather than the
+   78ch prose reading measure it would otherwise inherit as a paragraph. */
+figure .warn { max-width: none; }
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: var(--fs-note); margin: 0.6rem 0 1.2rem;
+}
+th {
+  background: var(--package-accent); color: #fff; text-align: left;
+  font-weight: 600; padding: 0.4rem 0.65rem;
+}
+th.num { text-align: right; }
+td {
+  padding: 0.35rem 0.65rem; border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: var(--bg-sunken); }
+td.num, .num { text-align: right; font-variant-numeric: tabular-nums; }
+td.mono { font-family: var(--font-mono); font-size: var(--fs-xs); }
+.slot-full         { width: 100%; }
+.slot-twothirds     { width: calc(66.67% - 0.33rem); }
+.slot-three-fifths  { width: calc(60% - 0.40rem); }
+.slot-half          { width: calc(50% - 0.50rem); }
+.slot-two-fifths    { width: calc(40% - 0.60rem); }
+.slot-third         { width: calc(33.33% - 0.67rem); }
+.slot-quarter       { width: calc(25% - 0.75rem); }
+.masthead-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 0.3rem;
+}
+.masthead-header h1 { margin: 0 0 0.1rem; font-size: var(--fs-h1); font-weight: 700; }
+.masthead-type {
+  font-size: var(--fs-type); font-weight: 700; opacity: 0.88; line-height: 1.35;
+  padding-top: 0.25rem;
+}
+.nav-btns { display: flex; gap: 0.5rem; }
+.btn-nav {
+  background: var(--ocean); color: #fff; padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill); text-decoration: none; font-size: var(--fs-nav);
+}
+.btn-nav:hover { opacity: 0.85; }
+footer {
+  text-align: center; padding: 1rem;
+  border-top: 1px solid var(--package-accent);
+  font-size: var(--fs-xs); color: var(--muted);
+}
+footer a { color: var(--muted); }
+@media print {
+  body { max-width: 100%; }
+  .masthead { -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0.9rem 1.25rem; }
+  .masthead-header h1, .masthead h1 { font-size: 1.35rem; }
+  .meta-grid { grid-template-columns: repeat(4, 1fr); gap: 0.3rem 1rem; font-size: var(--fs-xs); }
+  h2 { page-break-after: avoid; }
+  .fig-row, figure, table { break-inside: avoid; }
+  .jump-nav { display: none; }
+}
+
+/* Package-local (NOT in vendored emit_css): opt-in figure-debug overlay, shown only when
+   GLIDERTEST_REPORT_DEBUG is set. */
+.debug {
+  font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted);
+  border-left: 3px solid var(--rule); padding: 0.15rem 0.5rem;
+  margin: -0.4rem 0 0.6rem;
+}
+/* Always-on: the glidertest plotter that produced a figure, under it. */
+.fig-source { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); margin-top: 0.1rem; }
+/* Package-local: non-conforming OG1 metadata value cells in amber. */
+.meta td.nonconform { background: var(--warn-bg); }
+/* Wide file-contents tables: cells stay on one line by default (take only their content width);
+   tagged columns wrap and are capped with max-width so none dominates — the browser auto-distributes
+   the remaining width (table-layout: auto). Narrowing N/Min-Max/Variable frees width so the
+   attribute dropdown expands the table less when opened. */
+table.nc td, table.nc th { white-space: nowrap; }
+table.nc .wrap  { white-space: normal; overflow-wrap: anywhere; max-width: 20rem; } /* long name, std name, attr value */
+table.nc .wrapv { white-space: normal; overflow-wrap: anywhere; max-width: 12rem; } /* variable name */
+table.nc .wrapn { white-space: normal; max-width: 4.5rem; } /* N (valid): wraps at the space */
+table.nc .wrapr { white-space: normal; max-width: 7rem; }   /* Min / Max: wraps at the slash */
+/* Attribute dropdown: a readable minimum when open; values wrap, keys do not. */
+table.nc details.attrs table { min-width: 16rem; }
+table.nc details.attrs td { white-space: normal; overflow-wrap: anywhere; }
+table.nc details.attrs td.mono { white-space: nowrap; }
+/* An html/table panel is one full-width item of the flex .fig-row, so its caption, headings and
+   tables stack as normal block flow instead of sitting side by side. */
+.html-panel { flex: 1 1 100%; min-width: 0; }
+/* Subtle in-table links: underline only, keep the text colour. */
+.meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+/* Expandable per-variable attribute list in a table cell (ported from ctdcast). */
+details.attrs > summary { cursor: pointer; color: var(--ocean); font-size: var(--fs-xs); user-select: none; }
+details.attrs table { margin: 0.3rem 0 0.2rem; width: auto; }
+details.attrs td { font-size: var(--fs-xs); border: none; }
+/* QC palette — one source for text colours and bar-segment backgrounds. */
+:root { --qc-good: #27ae60; --qc-suspect: #f39c12; --qc-fail: #e74c3c; --qc-not_eval: #bdc3c7; --qc-missing: #7f8c8d; --qc-other: #4a4a4a; }
+.qc-good { color: var(--qc-good); }
+.qc-susp { color: var(--qc-suspect); }
+.qc-fail { color: var(--qc-fail); }
+.qc-seg-good { background: var(--qc-good); }
+.qc-seg-suspect { background: var(--qc-suspect); }
+.qc-seg-fail { background: var(--qc-fail); }
+.qc-seg-not_eval { background: var(--qc-not_eval); }
+.qc-seg-missing { background: var(--qc-missing); }
+.qc-seg-other { background: var(--qc-other); }
+/* QC distribution bar: a flex row of percent-width segments with tooltips. */
+.qc-bar {
+  display: flex; width: 14rem; height: 1.1rem; vertical-align: middle;
+  border: 1px solid var(--rule); border-radius: 3px; overflow: hidden;
+}
+.qc-bar div { height: 100%; }
+/* glidertest-diagnostics bars: smaller + dashed outline, so they read as computed, not delivered. */
+.qc-bar-sm { width: 6rem; height: 0.6rem; border-style: dashed; }
+/* Visible failure block for an html panel that raised — the failure shows on the page. */
+.none-note { background: #fdecea; border-left: 3px solid var(--qc-fail); padding: 0.3rem 0.6rem; color: #333; }
+/* Masthead nav, grouped rows (shared-design-system §2 shape, kept in glidertest's layer for now —
+   replaced by vendored _css rules at re-vendor): an optional back pill, then one row per group of
+   role-coloured pills, the current page muted. Row labels share a min-width so the rows line up. */
+.page-nav { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; margin: 0.65rem 0 0.2rem; }
+.nav-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
+.page-nav-label { font-size: var(--fs-dt); opacity: 0.75; margin-right: 0.2rem; min-width: 5rem; }
+.nav-pill { padding: 0.2em 0.65em; border-radius: 4px; font-size: var(--fs-nav); font-weight: 700;
+  text-decoration: none; color: #fff; }
+.nav-landing { background: var(--role-landing); }
+.nav-entity { background: var(--role-entity); }
+.nav-collection { background: var(--role-collection); }
+.nav-component { background: var(--role-component); }
+.nav-aggregate-a { background: var(--role-aggregate-a); }
+.nav-aggregate-b { background: var(--role-aggregate-b); }
+.nav-map { background: var(--role-map); }
+.nav-back { background: #5d6d7e; }  /* "up" role; vendored ROLE_ACCENT gains this key at re-vendor */
+.nav-current { opacity: 0.5; pointer-events: none; }
+/* "Data inventory:" strip, folded into the masthead (rounded monospace file pills; current is dark).
+   The label shares the nav row-label width so it lines up under Summary/Reports/Derived. */
+.inventory-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0.2rem; font-size: var(--fs-nav); }
+.inventory-strip .label { font-size: var(--fs-dt); opacity: 0.75; min-width: 5rem; }
+.file-pill { font-family: var(--font-mono); padding: 0.2em 0.65em; border-radius: 4px;
+  text-decoration: none; color: #fff; background: #3a7a8c; }  /* teal, distinct from the role pills */
+.file-pill-active { opacity: 0.5; pointer-events: none; }
+/* Navigator missions table: page-button cells keep their pills on one line. */
+td.nav-cell { white-space: nowrap; }
+td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-right: 0.15rem; }
+/* The mission id gets room for a normal id on one line (~29 chars); a longer "_subset" id wraps. */
+td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wrap: anywhere; max-width: 15rem; }
+</style>
+
+</head>
+<body>
+<div id="top"></div>
+
+
+
+<div class="masthead" style="background:#07264f;">
+  <div class="masthead-header">
+    <h1>sg014_20040924T182454_delayed_subset</h1>
+    <span class="masthead-type">netCDF Inventory</span>
+  </div>
+  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sg014_20040924T182454_delayed_subset.nc</span><span>generated 2026-10-08 13:52 UTC</span></p>
+  <nav class="page-nav"><a class="nav-pill nav-back" href="../index.html">← All missions</a><span class="nav-row"><span class="page-nav-label">Summary:</span><a class="nav-pill nav-landing" href="index.html">Mission</a></span><span class="nav-row"><span class="page-nav-label">Reports:</span><a class="nav-pill nav-aggregate-b" href="ctd.html">CTD</a></span><span class="nav-row"><span class="page-nav-label">Derived:</span><a class="nav-pill nav-aggregate-a" href="flight.html">Flight</a></span></nav>
+  <nav class="inventory-strip"><span class="label">Data inventory:</span><span class="file-pill file-pill-active">sg014_20040924T182454_delayed_subset.nc</span></nav>
+  
+  <dl class="meta-grid">
+    <div><dt>Profiles</dt><dd>101</dd></div>
+    <div><dt>Start</dt><dd>2004-11-02 03:58</dd></div>
+    <div><dt>End</dt><dd>2004-11-18 01:52</dd></div>
+    <div><dt>Duration</dt><dd>15d 21h</dd></div>
+    <div><dt>Sampling</dt><dd>10 s</dd></div>
+    <div><dt>Dive depth</dt><dd>657–986 m</dd></div>
+    <div><dt>Lat</dt><dd>63.93°N–65.56°N</dd></div>
+    <div><dt>Lon</dt><dd>56.44°W–54.87°W</dd></div>
+    <div><dt>Records</dt><dd>79,862</dd></div>
+    <div><dt>Size</dt><dd>24.3 MB</dd></div>
+    
+  </dl>
+  
+  
+  <a class="wordmark" href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a>
+</div>
+
+
+
+<main>
+
+<div class="jump-nav">
+  <a href="#og1">(1) Global attributes</a>
+  <a href="#file_contents">(2) File contents</a>
+  
+</div>
+
+
+<h2 id="og1">(1) Global attributes</h2>
+
+
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
+<p class="caption">OG1: 15 of 16 mandatory global attributes present · 7 highly-desirable missing. One row per OG1 global attribute, grouped by category: a value means present; a dash (<strong>amber</strong> for a mandatory attribute) means absent; absent <em>suggested</em> attributes are not listed. Attributes the file carries that are not OG1 globals are under “Other (not in OG1)”.</p>
+
+<h3>Identity &amp; discovery</h3>
+<table class="nc meta">
+<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td class="mono wrapv">title</td><td class="wrap">OceanGliders trajectory file</td></tr>
+<tr><td class="mono wrapv">platform</td><td class="wrap">sub-surface gliders</td></tr>
+<tr><td class="mono wrapv">platform_vocabulary</td><td class="wrap"><a href="https://vocab.nerc.ac.uk/collection/L06/current/27" rel="noopener">https://vocab.nerc.ac.uk/collection/L06/current/27</a></td></tr>
+<tr><td class="mono wrapv">id</td><td class="wrap nonconform">—</td></tr>
+<tr><td class="mono wrapv">naming_authority</td><td class="wrap">edu.washington.apl</td></tr>
+<tr><td class="mono wrapv">institution</td><td class="wrap">School of Oceanography
+University of Washington
+Seattle, WA 98195-5351</td></tr>
+<tr><td class="mono wrapv">internal_mission_identifier</td><td class="wrap">—</td></tr>
+<tr><td class="mono wrapv">site</td><td class="wrap">Multiple transects of Labrador Sea upper-ocean structure from Davis Strait to the WOCE AR7W repeat line.</td></tr>
+<tr><td class="mono wrapv">site_vocabulary</td><td class="wrap">—</td></tr>
+<tr><td class="mono wrapv">program</td><td class="wrap">—</td></tr>
+<tr><td class="mono wrapv">program_vocabulary</td><td class="wrap">—</td></tr>
+<tr><td class="mono wrapv">project</td><td class="wrap">Labrador Sea September 2004</td></tr>
+
+</tbody>
+</table>
+
+
+<h3>Spatiotemporal coverage</h3>
+<table class="nc meta">
+<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td class="mono wrapv">geospatial_lat_min</td><td class="wrap">67.03486199115247</td></tr>
+<tr><td class="mono wrapv">geospatial_lat_max</td><td class="wrap">67.03534771122185</td></tr>
+<tr><td class="mono wrapv">geospatial_lon_min</td><td class="wrap">-57.027537852800464</td></tr>
+<tr><td class="mono wrapv">geospatial_lon_max</td><td class="wrap">-57.021750000000004</td></tr>
+<tr><td class="mono wrapv">geospatial_vertical_min</td><td class="wrap">0.5580548996550069</td></tr>
+<tr><td class="mono wrapv">geospatial_vertical_max</td><td class="wrap">51.015857244825426</td></tr>
+<tr><td class="mono wrapv">time_coverage_start</td><td class="wrap">20040924T180910</td></tr>
+<tr><td class="mono wrapv">time_coverage_end</td><td class="wrap">20040924T180910</td></tr>
+
+</tbody>
+</table>
+
+<p class="caption">Geospatial extent — the file's suggested <code>geospatial_*</code> attributes versus the extent computed from the data.</p>
+<table class="nc meta">
+<thead><tr><th>Attribute</th><th>File value</th><th>Computed</th></tr></thead>
+<tbody>
+<tr><td class="mono">geospatial_lat_min</td><td>67.03486199115247</td><td>63.9342</td></tr>
+<tr><td class="mono">geospatial_lat_max</td><td>67.03534771122185</td><td>65.5550</td></tr>
+<tr><td class="mono">geospatial_lon_min</td><td>-57.027537852800464</td><td>-56.4404</td></tr>
+<tr><td class="mono">geospatial_lon_max</td><td>-57.021750000000004</td><td>-54.8710</td></tr>
+
+</tbody>
+</table>
+
+
+<h3>People &amp; institutions</h3>
+<table class="nc meta">
+<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td class="mono wrapv">contributor_name</td><td class="wrap">Charlie Eriksen, Peter Rhines</td></tr>
+<tr><td class="mono wrapv">contributor_email</td><td class="wrap"><a href="mailto:charlie@ocean.washington.edu">charlie@ocean.washington.edu</a>, </td></tr>
+<tr><td class="mono wrapv">contributor_id</td><td class="wrap">—</td></tr>
+<tr><td class="mono wrapv">contributor_role</td><td class="wrap">PI, Co-principal investigator</td></tr>
+<tr><td class="mono wrapv">contributor_role_vocabulary</td><td class="wrap"><a href="http://vocab.nerc.ac.uk/search_nvs/W08" rel="noopener">http://vocab.nerc.ac.uk/search_nvs/W08</a>, </td></tr>
+<tr><td class="mono wrapv">contributing_institutions</td><td class="wrap">University of Washington - School of Oceanography, </td></tr>
+<tr><td class="mono wrapv">contributing_institutions_vocabulary</td><td class="wrap"><a href="https://edmo.seadatanet.org/report/1434" rel="noopener">https://edmo.seadatanet.org/report/1434</a>, </td></tr>
+<tr><td class="mono wrapv">contributing_institutions_role</td><td class="wrap">PI, </td></tr>
+<tr><td class="mono wrapv">contributing_institutions_role_vocabulary</td><td class="wrap"><a href="http://vocab.nerc.ac.uk/collection/W08/current/" rel="noopener">http://vocab.nerc.ac.uk/collection/W08/current/</a>, </td></tr>
+
+</tbody>
+</table>
+
+
+<h3>Provenance &amp; processing</h3>
+<table class="nc meta">
+<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td class="mono wrapv">uri</td><td class="wrap">b84f4ca8-fa63-11e2-9f37-0026bb609360</td></tr>
+<tr><td class="mono wrapv">data_url</td><td class="wrap">—</td></tr>
+<tr><td class="mono wrapv">doi</td><td class="wrap">—</td></tr>
+<tr><td class="mono wrapv">rtqc_method</td><td class="wrap">No QC applied</td></tr>
+<tr><td class="mono wrapv">rtqc_method_doi</td><td class="wrap">n/a</td></tr>
+<tr><td class="mono wrapv">comment</td><td class="wrap">Processing start:
+04:34:57 01 Aug 2013 UTC: INFO: QC.py(380): Changed (9/156) 2 4:6 11:13 15 65 to QC_PROBABLY_BAD because raw temperature spikes
+04:34:57 01 Aug 2013 UTC: INFO: QC.py(423): Changed (1/156) 66 to QC_PROBABLY_BAD because raw conductivity spikes
+04:34:57 01 Aug 2013 UTC: INFO: QC.py(195): Changed (9/156) 2 4:6 11:13 15 65 to QC_PROBABLY_BAD because changed raw temp implies changed raw salinity
+04:34:57 01 Aug 2013 UTC: INFO: QC.py(195): Changed (1/156) 66 to QC_PROBABLY_BAD because changed raw cond implies changed raw salinity
+04:34:57 01 Aug 2013 UTC: INFO: QC.py(380): Changed (9/156) 2 4:6 11:13 15 65 to QC_INTERPOLATED because temperature spikes
+04:34:57 01 Aug 2013 UTC: INFO: QC.py(423): Changed (1/156) 66 to QC_INTERPOLATED because conductivity spikes
+04:34:57 01 Aug 2013 UTC: INFO: MakeDiveProfiles.py(3156): Changed (26/156) 52:77 to QC_BAD because slow apogee CT flow
+04:34:57 01 Aug 2013 UTC: INFO: MakeDiveProfiles.py(3256): Changed (21/156) 1:21 to QC_BAD because prior to dive start
+04:34:57 01 Aug 2013 UTC: INFO: MakeDiveProfiles.py(3329): Changed (2/156) 155 156 to QC_BAD because end of climb
+04:34:57 01 Aug 2013 UTC: INFO: MakeDiveProfiles.py(3356): Changed (49/156) 1:21 52:77 155 156 to QC_BAD because bad corrected temperature and conductivity suggests bad salinity
+04:34:57 01 Aug 2013 UTC: INFO: QC.py(195): Changed (49/156) 1:21 52:77 155 156 to QC_BAD because changed corrected salin implies changed speed
+04:34:57 01 Aug 2013 UTC: INFO: TempSalinityVelocity.py(984): TSV exiting after 2 iterations
+04:34:57 01 Aug 2013 UTC: INFO: TempSalinityVelocity.py(999): SUGGESTION: 1 interp_salinity data_points in_between 49 50 % suspect thermal-inertia points 50
+04:34:57 01 Aug 2013 UTC: INFO: TempSalinityVelocity.py(999): SUGGESTION: 1 interp_salinity data_points in_between 83 123 % suspect thermal-inertia points 85:92
+04:34:57 01 Aug 2013 UTC: INFO: MakeDiveProfiles.py(3509): Average estimated final speed: 21.90 cm/s
+04:34:57 01 Aug 2013 UTC: INFO: MakeDiveProfiles.py(3512): RMS observed vs. computed w: 4.22 cm/s
+04:34:57 01 Aug 2013 UTC: INFO: MakeDiveProfiles.py(3563): Starting sensor extensions data processing
+04:34:57 01 Aug 2013 UTC: INFO: MakeDiveProfiles.py(3565): Finished sensor extensions data processing
+</td></tr>
+<tr><td class="mono wrapv">start_date</td><td class="wrap">20040924T182454</td></tr>
+<tr><td class="mono wrapv">date_created</td><td class="wrap">2013-08-01T04:08:57Z</td></tr>
+<tr><td class="mono wrapv">featureType</td><td class="wrap">trajectoryProfile</td></tr>
+<tr><td class="mono wrapv">Conventions</td><td class="wrap">CF-1.10,OG-1.0</td></tr>
+
+</tbody>
+</table>
+
+
+<h3>Other (not in OG1)</h3>
+<table class="nc meta">
+<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td class="mono wrapv">date_modified</td><td class="wrap">20241103T104730</td></tr>
+<tr><td class="mono wrapv">license</td><td class="wrap">These data may be redistributed and used without restriction.</td></tr>
+<tr><td class="mono wrapv">keywords</td><td class="wrap">Water Temperature, Conductivity, Salinity, Density, Potential Density, Potential Temperature, Fluorescence</td></tr>
+<tr><td class="mono wrapv">keywords_vocabulary</td><td class="wrap">NASA/GCMD Earth Science Keywords Version 6.0.0.0</td></tr>
+<tr><td class="mono wrapv">file_version</td><td class="wrap">2.71</td></tr>
+<tr><td class="mono wrapv">acknowledgment</td><td class="wrap">NOAA Office of Arctic Research, Grant NA17RJ1232
+US Office of Naval Research Grant N00014-02-1-0791</td></tr>
+<tr><td class="mono wrapv">disclaimer</td><td class="wrap">Data has not been reviewed and is provided AS-IS.</td></tr>
+
+</tbody>
+</table>
+
+</div>
+
+  
+</div>
+
+<h2 id="file_contents">(2) File contents</h2>
+
+
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
+<p class="caption">33 data variables, 0 sensors, 8 QC-flag variables (shown in the QC section, not listed here), 4 coordinates.</p>
+<p class="caption">8 of 33 data variables carry a <code>_QC</code> companion.</p>
+
+
+<h3>On N_MEASUREMENTS</h3>
+<p class="caption"><strong>Coordinates</strong></p>
+
+
+<table class="nc">
+<thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="num wrapr">Min / Max</th><th class="num wrapn">N (valid)</th><th>Attributes</th></tr></thead>
+<tbody>
+<tr><td class="mono wrapv">DEPTH</td><td class="mono">float64</td><td>m</td><td class="wrap"><strong class="mono">depth</strong><br>glider depth</td><td class="num wrapr">0 / 986.5</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>13 attrs</summary><table><tr><td class="mono">comment</td><td>CTD thermistor depth corrected for average latitude</td></tr><tr><td class="mono">positive</td><td>down</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>Z</td></tr><tr><td class="mono">source</td><td>pressure</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">observation_type</td><td>calculated</td></tr><tr><td class="mono">accuracy</td><td>1</td></tr><tr><td class="mono">precision</td><td>2</td></tr><tr><td class="mono">resolution</td><td>0.02</td></tr><tr><td class="mono">valid_min</td><td>0</td></tr><tr><td class="mono">valid_max</td><td>2000</td></tr><tr><td class="mono">reference_datum</td><td>surface</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LATITUDE</td><td class="mono">float64</td><td>degrees_north</td><td class="wrap"><strong class="mono">latitude</strong><br>Latitude north</td><td class="num wrapr">63.93 / 65.56</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>9 attrs</summary><table><tr><td class="mono">comment</td><td>Latitude of the sample based on hdm DAC</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>Y</td></tr><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>90</td></tr><tr><td class="mono">valid_min</td><td>-90</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LAT/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LAT/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LONGITUDE</td><td class="mono">float64</td><td>degrees_east</td><td class="wrap"><strong class="mono">longitude</strong><br>Longitude east</td><td class="num wrapr">-56.44 / -54.87</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>9 attrs</summary><table><tr><td class="mono">comment</td><td>Longitude of the sample based on hdm DAC</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>X</td></tr><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>180</td></tr><tr><td class="mono">valid_min</td><td>-180</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LON/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LON/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">TIME</td><td class="mono">datetime64[ns]</td><td></td><td class="wrap"><strong class="mono">time</strong><br>time of measurement</td><td class="num wrapr">2004-11-02 03:58 / 2004-11-18 01:52</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>5 attrs</summary><table><tr><td class="mono">comment</td><td>Time of CTD sample in GMT epoch format</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>T</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/AYMD/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/AYMD/</a></td></tr></table></details></td></tr>
+
+</tbody>
+</table>
+
+
+
+
+<p class="caption"><strong>Variables</strong></p>
+
+
+<table class="nc">
+<thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="num wrapr">Min / Max</th><th class="num wrapn">N (valid)</th><th>Attributes</th></tr></thead>
+<tbody>
+<tr><td class="mono wrapv">CNDC <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>S m-1</td><td class="wrap"><strong class="mono">sea_water_electrical_conductivity</strong><br>Electrical conductivity of the water body by CTD</td><td class="num wrapr">1.835 / 3.539</td><td class="num wrapn">79,862 (77,856)</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">comment</td><td>Conductivity corrected for anomalies</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">valid_max</td><td>85.0</td></tr><tr><td class="mono">valid_min</td><td>0.0</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/CNDC/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/CNDC/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">CNDC_RAW <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>S/m</td><td class="wrap"></td><td class="num wrapr">0.1892 / 3.539</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected conductivity</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">DENSITY</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">1015 / 1032</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">DEPTH_Z</td><td class="mono">float64</td><td>meters</td><td class="wrap"><strong class="mono">depth</strong></td><td class="num wrapr">-986.8 / -0.6977</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">positive</td><td>up</td></tr><tr><td class="mono">comment</td><td>Depth calculated from pressure using gsw library, positive up.</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">GLIDER_HORZ_VELO_MODEL</td><td class="mono">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">0 / 0.3676</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">GLIDER_VERT_VELO_MODEL</td><td class="mono">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">-0.2715 / 0.178</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">GLIDE_ANGLE</td><td class="mono">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">-0.7623 / 0.3699</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">GLIDE_SPEED <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">0 / 0.3752</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">HEADING</td><td class="mono">float64</td><td>degrees</td><td class="wrap">Orientation (horizontal relative to magnetic north) of measurement platform {heading} by compass</td><td class="num wrapr">0.6 / 359.9</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>Vehicle heading (magnetic)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/HEADING/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/HEADING/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LATITUDE_GPS</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">63.93 / 65.54</td><td class="num wrapn">79,862 (151)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">dtype</td><td>float64</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LONGITUDE_GPS</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-56.44 / -54.87</td><td class="num wrapn">79,862 (151)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">dtype</td><td>float64</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">PHASE <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">1 / 3</td><td class="num wrapn">79,862</td><td>—</td></tr>
+<tr><td class="mono wrapv">PITCH</td><td class="mono">float64</td><td>degrees</td><td class="wrap">Orientation (pitch) of measurement platform by inclinometer</td><td class="num wrapr">-87.2 / 58.3</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>Vehicle pitch</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/PITCH/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/PITCH/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">PRES</td><td class="mono">float64</td><td>dbar</td><td class="wrap"><strong class="mono">sea_water_pressure</strong><br>Pressure (spatial coordinate) exerted by the water body by profiling pressure sensor and correction to read zero at sea level</td><td class="num wrapr">0.7046 / 998.9</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>9 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected sea-water pressure</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">positive</td><td>down</td></tr><tr><td class="mono">reference_datum</td><td>sea-surface</td></tr><tr><td class="mono">valid_max</td><td>2000</td></tr><tr><td class="mono">valid_min</td><td>0</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/PRES" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/PRES</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">PROFILE_NUMBER</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">350 / 450</td><td class="num wrapn">79,862</td><td>—</td></tr>
+<tr><td class="mono wrapv">PSAL <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>1e-3</td><td class="wrap"><strong class="mono">sea_water_salinity</strong><br>water salinity</td><td class="num wrapr">19.31 / 36.03</td><td class="num wrapn">79,862 (77,856)</td><td><details class="attrs"><summary>8 attrs</summary><table><tr><td class="mono">comment</td><td>Salinity corrected for thermal-inertia effects (PSU)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">sources</td><td>CNDC, TEMP, PRES</td></tr><tr><td class="mono">observation_type</td><td>calculated</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">valid_max</td><td>40</td></tr><tr><td class="mono">valid_min</td><td>0</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/PSAL/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/PSAL/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">PSAL_RAW <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>1e-3</td><td class="wrap"></td><td class="num wrapr">1.678 / 36.11</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected salinity derived from temperature_raw and conductivity_raw (PSU)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">ROLL</td><td class="mono">float64</td><td>degrees</td><td class="wrap">Orientation (roll angle) of measurement platform by inclinometer</td><td class="num wrapr">-65.8 / 61.7</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>Vehicle roll</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/ROLL/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/ROLL/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">TEMP <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>degrees_Celsius</td><td class="wrap"><strong class="mono">sea_water_temperature</strong><br>Temperature of the water body by CTD </td><td class="num wrapr">2.371 / 7.118</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">comment</td><td>Termperature (in situ) corrected for thermistor first-order lag</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">valid_max</td><td>42</td></tr><tr><td class="mono">valid_min</td><td>-5</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">TEMP_RAW <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>degrees_Celsius</td><td class="wrap"></td><td class="num wrapr">2.371 / 7.118</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected temperature (in situ)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">buoyancy</td><td class="mono">float64</td><td>g</td><td class="wrap"></td><td class="num wrapr">-222.9 / 435.2</td><td class="num wrapn">79,862 (77,832)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Buoyancy of vehicle, corrected for compression effects</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">divenum</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">175 / 225</td><td class="num wrapn">79,862</td><td>—</td></tr>
+<tr><td class="mono wrapv">east_displacement</td><td class="mono">float64</td><td>meters</td><td class="wrap"></td><td class="num wrapr">-11.58 / 11.63</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Eastward displacement from hdm</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_pitchCtl</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-10.68 / 1.789</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_rollCtl</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-40.91 / 40.65</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_vbdCC</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-129.5 / 512.4</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_VFtemp</td><td class="mono">float64</td><td>degrees_Celsius</td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">comment</td><td>As reported by the instrument</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_blueCount</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_blueRef</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_fluorCount</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_redCount</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_redRef</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">north_displacement</td><td class="mono">float64</td><td>meters</td><td class="wrap"></td><td class="num wrapr">-10.84 / 5.427</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Northward displacement from hdm</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+
+</tbody>
+</table>
+
+
+
+</div>
+
+  
+</div>
+
+
+
+
+</main>
+
+
+<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev19 &nbsp;·&nbsp; sg014_20040924T182454_delayed_subset &nbsp;·&nbsp; 2026-10-08 13:52 UTC</footer>
+<script>
+document.querySelectorAll('h2').forEach(h => {
+  const a = document.createElement('a');
+  a.href = '#top'; a.className = 'top-link'; a.textContent = '↑ top';
+  h.appendChild(a);
+});
+</script>
+
+</body>
+</html>

@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; glidertest v0.0.1 documentation</title>
+  <title>Index &mdash; glidertest 0.1.1.dev19+g84f72800b documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=2fea6348"></script>
+      <script src="_static/documentation_options.js?v=608aad27"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -41,10 +41,26 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="demo-output.html">Glidertest demo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="glidertest.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">API</span></code></a></li>
+<li class="toctree-l1"><a class="reference external" href="https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html">Example HTML report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli_reference.html">CLI reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">The HTML report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glidertest.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest/issues/new">Report a problem</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OG1 format manual</a></li>
 </ul>
 
         </div>
@@ -80,10 +96,14 @@
  | <a href="#D"><strong>D</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  
@@ -94,12 +114,20 @@
       <li><a href="glidertest.html#glidertest.tools.add_sigma_1">add_sigma_1() (in module glidertest.tools)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.og1_attrs.ATTR_GROUPS">ATTR_GROUPS (in module glidertest.og1_attrs)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="glidertest.html#glidertest.utilities.bin_profile">bin_profile() (in module glidertest.utilities)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.cli.build_parser">build_parser() (in module glidertest.cli)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -114,6 +142,8 @@
       <li><a href="glidertest.html#glidertest.tools.calc_w_sw">calc_w_sw() (in module glidertest.tools)</a>
 </li>
       <li><a href="glidertest.html#glidertest.tools.calculate_CR_for_all_depth">calculate_CR_for_all_depth() (in module glidertest.tools)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.og1_attrs.check_globals">check_globals() (in module glidertest.og1_attrs)</a>
 </li>
       <li><a href="glidertest.html#glidertest.tools.check_monotony">check_monotony() (in module glidertest.tools)</a>
 </li>
@@ -135,6 +165,8 @@
 </li>
       <li><a href="glidertest.html#glidertest.utilities.compute_sunset_sunrise">compute_sunset_sunrise() (in module glidertest.utilities)</a>
 </li>
+      <li><a href="glidertest.html#glidertest.og1_attrs.conformance_summary">conformance_summary() (in module glidertest.og1_attrs)</a>
+</li>
       <li><a href="glidertest.html#glidertest.utilities.construct_2dgrid">construct_2dgrid() (in module glidertest.utilities)</a>
 </li>
   </ul></td>
@@ -151,7 +183,17 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.qc.fill_str">fill_str() (in module glidertest.qc)</a>
+</li>
       <li><a href="glidertest.html#glidertest.tools.find_outlier_duration">find_outlier_duration() (in module glidertest.tools)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.qc.flag_counts">flag_counts() (in module glidertest.qc)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.qc.flag_labels">flag_labels() (in module glidertest.qc)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.qc.flag_scale_mismatch">flag_scale_mismatch() (in module glidertest.qc)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -163,6 +205,13 @@
 </li>
       <li><a href="glidertest.html#glidertest.utilities.get_contour_levels">get_contour_levels() (in module glidertest.utilities)</a>
 </li>
+      <li>
+    glidertest.cli
+
+      <ul>
+        <li><a href="glidertest.html#module-glidertest.cli">module</a>
+</li>
+      </ul></li>
       <li>
     glidertest.fetchers
 
@@ -177,6 +226,13 @@
         <li><a href="glidertest.html#module-glidertest.interactive">module</a>
 </li>
       </ul></li>
+      <li>
+    glidertest.og1_attrs
+
+      <ul>
+        <li><a href="glidertest.html#module-glidertest.og1_attrs">module</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
@@ -184,6 +240,13 @@
 
       <ul>
         <li><a href="glidertest.html#module-glidertest.plots">module</a>
+</li>
+      </ul></li>
+      <li>
+    glidertest.qc
+
+      <ul>
+        <li><a href="glidertest.html#module-glidertest.qc">module</a>
 </li>
       </ul></li>
       <li>
@@ -200,7 +263,19 @@
         <li><a href="glidertest.html#module-glidertest.utilities">module</a>
 </li>
       </ul></li>
+      <li><a href="glidertest.html#glidertest.og1_attrs.GLOBAL_ATTR_ORDER">GLOBAL_ATTR_ORDER (in module glidertest.og1_attrs)</a>
+</li>
       <li><a href="glidertest.html#glidertest.utilities.group_by_profiles">group_by_profiles() (in module glidertest.utilities)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.og1_attrs.group_globals">group_globals() (in module glidertest.og1_attrs)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.qc.hysteresis_verdict">hysteresis_verdict() (in module glidertest.qc)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -220,6 +295,10 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.cli.main">main() (in module glidertest.cli)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.og1_attrs.MANDATORY_GLOBALS">MANDATORY_GLOBALS (in module glidertest.og1_attrs)</a>
+</li>
       <li><a href="glidertest.html#glidertest.tools.max_depth_per_profile">max_depth_per_profile() (in module glidertest.tools)</a>
 </li>
       <li><a href="glidertest.html#glidertest.tools.mean_profile">mean_profile() (in module glidertest.tools)</a>
@@ -230,17 +309,21 @@
 </li>
       <li><a href="glidertest.html#glidertest.tools.mld_profile_treshhold">mld_profile_treshhold() (in module glidertest.tools)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     module
 
       <ul>
+        <li><a href="glidertest.html#module-glidertest.cli">glidertest.cli</a>
+</li>
         <li><a href="glidertest.html#module-glidertest.fetchers">glidertest.fetchers</a>
 </li>
         <li><a href="glidertest.html#module-glidertest.interactive">glidertest.interactive</a>
 </li>
+        <li><a href="glidertest.html#module-glidertest.og1_attrs">glidertest.og1_attrs</a>
+</li>
         <li><a href="glidertest.html#module-glidertest.plots">glidertest.plots</a>
+</li>
+        <li><a href="glidertest.html#module-glidertest.qc">glidertest.qc</a>
 </li>
         <li><a href="glidertest.html#module-glidertest.tools">glidertest.tools</a>
 </li>
@@ -250,9 +333,33 @@
   </ul></td>
 </tr></table>
 
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.reports.navigator">navigator() (in module glidertest.reports)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.og1_attrs.order_globals">order_globals() (in module glidertest.og1_attrs)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.og1_attrs.OTHER_GROUP">OTHER_GROUP (in module glidertest.og1_attrs)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.qc.phrase_duration_check">phrase_duration_check() (in module glidertest.qc)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.qc.phrase_numberprof_check">phrase_numberprof_check() (in module glidertest.qc)</a>
+</li>
       <li><a href="glidertest.html#glidertest.plots.plot_basic_vars">plot_basic_vars() (in module glidertest.plots)</a>
 </li>
       <li><a href="glidertest.html#glidertest.plots.plot_combined_velocity_profiles">plot_combined_velocity_profiles() (in module glidertest.plots)</a>
@@ -275,10 +382,10 @@
 </li>
       <li><a href="glidertest.html#glidertest.plots.plot_outlier_duration">plot_outlier_duration() (in module glidertest.plots)</a>
 </li>
-      <li><a href="glidertest.html#glidertest.plots.plot_prof_monotony">plot_prof_monotony() (in module glidertest.plots)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.plots.plot_prof_monotony">plot_prof_monotony() (in module glidertest.plots)</a>
+</li>
       <li><a href="glidertest.html#glidertest.plots.plot_profile">plot_profile() (in module glidertest.plots)</a>
 </li>
       <li><a href="glidertest.html#glidertest.plots.plot_quench_assess">plot_quench_assess() (in module glidertest.plots)</a>
@@ -311,10 +418,14 @@
 <h2 id="Q">Q</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="glidertest.html#glidertest.tools.quant_binavg">quant_binavg() (in module glidertest.tools)</a>
+      <li><a href="glidertest.html#glidertest.qc.qc_checks">qc_checks() (in module glidertest.qc)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.qc.QC_FLAG_CATEGORIES">QC_FLAG_CATEGORIES (in module glidertest.qc)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.tools.quant_binavg">quant_binavg() (in module glidertest.tools)</a>
+</li>
       <li><a href="glidertest.html#glidertest.tools.quant_hysteresis">quant_hysteresis() (in module glidertest.tools)</a>
 </li>
       <li><a href="glidertest.html#glidertest.tools.quant_updown_bias">quant_updown_bias() (in module glidertest.tools)</a>
@@ -322,8 +433,20 @@
   </ul></td>
 </tr></table>
 
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.reports.report">report() (in module glidertest.reports)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.og1_attrs.Tier">Tier (in module glidertest.og1_attrs)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="glidertest.html#glidertest.interactive.ts_plot">ts_plot() (in module glidertest.interactive)</a>
 </li>

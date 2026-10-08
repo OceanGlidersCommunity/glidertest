@@ -1,0 +1,397 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>glidertest.og1_attrs &mdash; glidertest 0.1.1.dev19+g84f72800b documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=608aad27"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            glidertest
+              <img src="../../_static/glider.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html">Glidertest demo</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html">Example HTML report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli_reference.html">CLI reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reports.html">The HTML report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glidertest.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest/issues/new">Report a problem</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OG1 format manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">glidertest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">glidertest.og1_attrs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for glidertest.og1_attrs</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""OG1 global-attribute registry, transcribed from the OceanGliders format user manual.</span>
+
+<span class="sd">Source: ``OG_Format.adoc``, "Global attributes" table, OceanGlidersCommunity/OG-format-user-manual.</span>
+<span class="sd">The registry (:data:`ATTR_GROUPS`) is the single source of truth: it lists all 41 OG1 global</span>
+<span class="sd">attributes, grouped into four categories, each attribute carrying its requirement tier (mandatory /</span>
+<span class="sd">highly desirable / suggested) from the manual. :data:`GLOBAL_ATTR_ORDER` and :data:`MANDATORY_GLOBALS`</span>
+<span class="sd">are derived from it.</span>
+
+<span class="sd">Presence only — attribute *values* are not format-checked. A present value is reported as present</span>
+<span class="sd">whatever its content, so the report's amber marking means one thing: a mandatory attribute is</span>
+<span class="sd">missing. This does not reproduce the full OG1 compliance checker.</span>
+
+<span class="sd">The manual states several contributor/institution rows conditionally ("PI name is mandatory",</span>
+<span class="sd">"Operator role is mandatory"); those are recorded here at the mandatory tier for the PI- and</span>
+<span class="sd">operator-level fields, matching the manual's minimum-conformance set of 16 mandatory attributes.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="c1">#: Requirement tier of an OG1 global attribute (manual "Requirement status" column).</span>
+<span class="n">Tier</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"mandatory"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">]</span>
+
+<span class="c1">#: The OG1 global-attribute registry: the single source of truth for which attributes exist, their</span>
+<span class="c1">#: category, their canonical order within the category, and their requirement tier. Categories and</span>
+<span class="c1">#: the order within each are glidertest's grouping of the manual's flat table; the tier of each</span>
+<span class="c1">#: attribute is transcribed from the manual's "Requirement status" column. :data:`GLOBAL_ATTR_ORDER`</span>
+<span class="c1">#: (flat order) and :data:`MANDATORY_GLOBALS` are derived from this, so they cannot drift from it.</span>
+<span class="n">ATTR_GROUPS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tier</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span>
+        <span class="s2">"Identity &amp; discovery"</span><span class="p">,</span>
+        <span class="p">(</span>
+            <span class="p">(</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"platform"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"platform_vocabulary"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"naming_authority"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"institution"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"internal_mission_identifier"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"site"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"site_vocabulary"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"program"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"program_vocabulary"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"network"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="s2">"Spatiotemporal coverage"</span><span class="p">,</span>
+        <span class="p">(</span>
+            <span class="p">(</span><span class="s2">"geospatial_lat_min"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"geospatial_lat_max"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"geospatial_lon_min"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"geospatial_lon_max"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"geospatial_vertical_min"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"geospatial_vertical_max"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"time_coverage_start"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"time_coverage_end"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="s2">"People &amp; institutions"</span><span class="p">,</span>
+        <span class="p">(</span>
+            <span class="p">(</span><span class="s2">"contributor_name"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"contributor_email"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"contributor_id"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"contributor_role"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"contributor_role_vocabulary"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"contributing_institutions"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"contributing_institutions_vocabulary"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"contributing_institutions_role"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"contributing_institutions_role_vocabulary"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="s2">"Provenance &amp; processing"</span><span class="p">,</span>
+        <span class="p">(</span>
+            <span class="p">(</span><span class="s2">"uri"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"data_url"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"doi"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"rtqc_method"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"rtqc_method_doi"</span><span class="p">,</span> <span class="s2">"highly_desirable"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"web_link"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"comment"</span><span class="p">,</span> <span class="s2">"suggested"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"start_date"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"date_created"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"featureType"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"Conventions"</span><span class="p">,</span> <span class="s2">"mandatory"</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1">#: Title for file attributes not named in :data:`ATTR_GROUPS` (never dropped); shown last.</span>
+<span class="n">OTHER_GROUP</span> <span class="o">=</span> <span class="s2">"Other (not in OG1)"</span>
+
+<span class="c1">#: Tier of each registered attribute, keyed by name. Derived from :data:`ATTR_GROUPS`.</span>
+<span class="n">_TIER_OF</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tier</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">tier</span> <span class="k">for</span> <span class="n">_title</span><span class="p">,</span> <span class="n">names</span> <span class="ow">in</span> <span class="n">ATTR_GROUPS</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">tier</span> <span class="ow">in</span> <span class="n">names</span>
+<span class="p">}</span>
+
+<span class="c1">#: Canonical order of OG1 global attributes: category order, then the canonical order within each</span>
+<span class="c1">#: category. Derived from :data:`ATTR_GROUPS` so it is one list, not a second hand-kept copy.</span>
+<span class="n">GLOBAL_ATTR_ORDER</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_TIER_OF</span><span class="p">)</span>
+
+<span class="c1">#: The mandatory OG1 global attributes (tier ``"mandatory"`` in :data:`ATTR_GROUPS`), in canonical</span>
+<span class="c1">#: order. The manual's minimum-conformance set.</span>
+<span class="n">MANDATORY_GLOBALS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+    <span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">tier</span> <span class="ow">in</span> <span class="n">_TIER_OF</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">tier</span> <span class="o">==</span> <span class="s2">"mandatory"</span>
+<span class="p">)</span>
+
+<span class="n">Status</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"match"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_present</span><span class="p">(</span><span class="n">attrs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return whether *name* is present and non-empty in *attrs*."""</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">raw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">""</span>
+
+
+<div class="viewcode-block" id="check_globals">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.og1_attrs.check_globals">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_globals</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Status</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Check whether *ds* carries each mandatory OG1 global attribute.</span>
+
+<span class="sd">    Presence only — attribute values are not format-checked (see the module docstring).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        The dataset whose ``attrs`` are checked.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of (str, {"match", "none"}, str)</span>
+<span class="sd">        One ``(attribute, status, value)`` tuple per mandatory attribute, in canonical order.</span>
+<span class="sd">        ``"match"`` — present and non-empty; ``"none"`` — absent or present-but-empty.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams.</span>
+<span class="sd">    """</span>
+    <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Status</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">MANDATORY_GLOBALS</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">status</span><span class="p">:</span> <span class="n">Status</span> <span class="o">=</span> <span class="s2">"none"</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">""</span> <span class="k">else</span> <span class="s2">"match"</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">attr</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="order_globals">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.og1_attrs.order_globals">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">order_globals</span><span class="p">(</span><span class="n">attrs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return *attrs*' keys in OG1 canonical order, with non-OG1 keys after, in their given order.</span>
+
+<span class="sd">    Keys present in :data:`GLOBAL_ATTR_ORDER` come first, in that order; any remaining key (not an</span>
+<span class="sd">    OG1 global attribute) follows in *attrs*' own iteration order. No key is added or dropped — only</span>
+<span class="sd">    reordered.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    attrs : collections.abc.Mapping</span>
+<span class="sd">        A dataset's global attributes (``ds.attrs``).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of str</span>
+<span class="sd">        The keys of *attrs*, canonical OG1 attributes first, then the rest in file order.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams.</span>
+<span class="sd">    """</span>
+    <span class="n">canonical</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">GLOBAL_ATTR_ORDER</span><span class="p">)</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">GLOBAL_ATTR_ORDER</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">]</span>
+    <span class="n">ordered</span> <span class="o">+=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">attrs</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">canonical</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ordered</span></div>
+
+
+
+<div class="viewcode-block" id="group_globals">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.og1_attrs.group_globals">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">group_globals</span><span class="p">(</span><span class="n">attrs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Group *attrs* by OG1 category for the inventory's merged conformance-and-value tables.</span>
+
+<span class="sd">    Walks :data:`ATTR_GROUPS` (not *attrs*), so the result includes rows for attributes the file</span>
+<span class="sd">    *lacks* — this is what lets one table carry both the value (when present) and the conformance</span>
+<span class="sd">    status (present / missing). The display rule follows the registry tier of each row:</span>
+
+<span class="sd">    - mandatory — always shown; ``present`` is ``False`` when absent (the caller marks it amber);</span>
+<span class="sd">    - highly desirable — always shown; absent rows carry ``present=False`` and no value;</span>
+<span class="sd">    - suggested — shown only when present; an absent suggested attribute is omitted entirely.</span>
+
+<span class="sd">    File attributes not in the registry are collected into a trailing :data:`OTHER_GROUP`, in file</span>
+<span class="sd">    order, never dropped. Empty groups are omitted.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    attrs : collections.abc.Mapping</span>
+<span class="sd">        A dataset's global attributes (``ds.attrs``).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of dict</span>
+<span class="sd">        ``[{"title": str, "rows": [{"name", "value", "tier", "present"}, ...]}, ...]``. ``value`` is</span>
+<span class="sd">        the stringified attribute value when present, else ``None``; ``tier`` is ``None`` for rows in</span>
+<span class="sd">        :data:`OTHER_GROUP`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams.</span>
+<span class="sd">    """</span>
+    <span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">title</span><span class="p">,</span> <span class="n">names</span> <span class="ow">in</span> <span class="n">ATTR_GROUPS</span><span class="p">:</span>
+        <span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">tier</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">present</span> <span class="o">=</span> <span class="n">_present</span><span class="p">(</span><span class="n">attrs</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">present</span> <span class="ow">and</span> <span class="n">tier</span> <span class="o">==</span> <span class="s2">"suggested"</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                    <span class="s2">"value"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="k">if</span> <span class="n">present</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">"tier"</span><span class="p">:</span> <span class="n">tier</span><span class="p">,</span>
+                    <span class="s2">"present"</span><span class="p">:</span> <span class="n">present</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"title"</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span> <span class="s2">"rows"</span><span class="p">:</span> <span class="n">rows</span><span class="p">})</span>
+
+    <span class="n">other</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="s2">"tier"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"present"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_TIER_OF</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">other</span><span class="p">:</span>
+        <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"title"</span><span class="p">:</span> <span class="n">OTHER_GROUP</span><span class="p">,</span> <span class="s2">"rows"</span><span class="p">:</span> <span class="n">other</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">groups</span></div>
+
+
+
+<div class="viewcode-block" id="conformance_summary">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.og1_attrs.conformance_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">conformance_summary</span><span class="p">(</span><span class="n">attrs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return counts for the index's one-line OG1 conformance verdict.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    attrs : collections.abc.Mapping</span>
+<span class="sd">        A dataset's global attributes (``ds.attrs``).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict of str to int</span>
+<span class="sd">        ``mandatory_present`` / ``mandatory_total`` and ``highly_desirable_missing`` — enough to</span>
+<span class="sd">        render "OG1: N/M mandatory present · K highly-desirable missing".</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams.</span>
+<span class="sd">    """</span>
+    <span class="n">mandatory_present</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">MANDATORY_GLOBALS</span> <span class="k">if</span> <span class="n">_present</span><span class="p">(</span><span class="n">attrs</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">highly_desirable</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">_TIER_OF</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="s2">"highly_desirable"</span><span class="p">]</span>
+    <span class="n">highly_desirable_missing</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">highly_desirable</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">_present</span><span class="p">(</span><span class="n">attrs</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"mandatory_present"</span><span class="p">:</span> <span class="n">mandatory_present</span><span class="p">,</span>
+        <span class="s2">"mandatory_total"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">MANDATORY_GLOBALS</span><span class="p">),</span>
+        <span class="s2">"highly_desirable_missing"</span><span class="p">:</span> <span class="n">highly_desirable_missing</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,453 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>glidertest.reports &mdash; glidertest 0.1.1.dev19+g84f72800b documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=608aad27"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            glidertest
+              <img src="../../_static/glider.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html">Glidertest demo</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html">Example HTML report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli_reference.html">CLI reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reports.html">The HTML report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glidertest.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest/issues/new">Report a problem</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OG1 format manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">glidertest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">glidertest.reports</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for glidertest.reports</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""HTML report generation: slot layer, plot adapters, and the public report entry point."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTC</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._mission</span><span class="w"> </span><span class="kn">import</span> <span class="n">Page</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"navigator"</span><span class="p">,</span> <span class="s2">"report"</span><span class="p">,</span> <span class="s2">"resolve_mission_id"</span><span class="p">]</span>
+
+<span class="c1">#: Masthead nav rows, in order: (``Page.nav_group`` key, row label). The inventory group is a</span>
+<span class="c1">#: separate strip, not a row. Built in the planned shared-design-system shape</span>
+<span class="c1">#: (``notes/2026-10-07-shared-masthead-nav-plan.md`` §2) so the eventual vendored macro is a drop-in.</span>
+<span class="n">_NAV_ROWS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="s2">"summary"</span><span class="p">,</span> <span class="s2">"Summary"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"reports"</span><span class="p">,</span> <span class="s2">"Reports"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"derived"</span><span class="p">,</span> <span class="s2">"Derived"</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_nav</span><span class="p">(</span><span class="n">pages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Page</span><span class="p">],</span> <span class="n">current</span><span class="p">:</span> <span class="n">Page</span><span class="p">,</span> <span class="n">source_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">back</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Build the masthead nav for the *current* page: grouped pill rows, inventory strip, back pill.</span>
+
+<span class="sd">    Shape matches the planned vendored contract (notes/2026-10-07-shared-masthead-nav-plan §2):</span>
+<span class="sd">    ``{"rows": [{"label", "pills": [{"label", "href", "role", "state"}]}], "back": pill|None,</span>
+<span class="sd">    "inventory": [pill]}``; ``state`` is ``"current"`` for *current*, else ``"link"``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">pill</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="n">Page</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"label"</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="s2">"href"</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+            <span class="s2">"role"</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">role</span><span class="p">,</span>
+            <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"current"</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="n">current</span> <span class="k">else</span> <span class="s2">"link"</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">"label"</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span> <span class="s2">"pills"</span><span class="p">:</span> <span class="p">[</span><span class="n">pill</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">group</span><span class="p">]}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">_NAV_ROWS</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">group</span> <span class="o">:=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">nav_group</span> <span class="o">==</span> <span class="n">key</span><span class="p">])</span>
+    <span class="p">]</span>
+    <span class="n">inventory</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="o">**</span><span class="n">pill</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="s2">"label"</span><span class="p">:</span> <span class="n">source_name</span><span class="p">}</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">nav_group</span> <span class="o">==</span> <span class="s2">"inventory"</span>
+    <span class="p">]</span>
+    <span class="n">back_pill</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">{</span><span class="s2">"label"</span><span class="p">:</span> <span class="s2">"← All missions"</span><span class="p">,</span> <span class="s2">"href"</span><span class="p">:</span> <span class="s2">"../index.html"</span><span class="p">,</span> <span class="s2">"role"</span><span class="p">:</span> <span class="s2">"up"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"link"</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">back</span>
+        <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"rows"</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span> <span class="s2">"back"</span><span class="p">:</span> <span class="n">back_pill</span><span class="p">,</span> <span class="s2">"inventory"</span><span class="p">:</span> <span class="n">inventory</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_mission_id</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mission_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the sanitised mission directory name: *mission_id* if given, else derived from *ds*.</span>
+
+<span class="sd">    The single source for turning a dataset (and an optional caller override) into the subdirectory</span>
+<span class="sd">    name used under a report root, shared by :func:`report` and the command-line interface so the</span>
+<span class="sd">    two cannot disagree about where a mission is written. With *mission_id* the override is sanitised</span>
+<span class="sd">    (path separators neutralised); *ds* is not read. Otherwise the name is the OG1 ``id`` attribute,</span>
+<span class="sd">    else the source file stem (see :func:`glidertest.reports._mission.mission_id`).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset or None</span>
+<span class="sd">        The dataset to derive the name from; may be None only when *mission_id* is given.</span>
+<span class="sd">    mission_id : str, optional</span>
+<span class="sd">        An explicit name to use instead of the derived one.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The sanitised mission directory name.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._mission</span><span class="w"> </span><span class="kn">import</span> <span class="n">_safe_dirname</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._mission</span><span class="w"> </span><span class="kn">import</span> <span class="n">mission_id</span> <span class="k">as</span> <span class="n">_derive</span>
+
+    <span class="k">return</span> <span class="n">_safe_dirname</span><span class="p">(</span><span class="n">mission_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">mission_id</span> <span class="k">else</span> <span class="n">_derive</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="report">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.reports.report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span>
+    <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>
+    <span class="n">outdir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">navigator</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">mission_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">layout</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"root"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write a self-contained HTML report for *ds* under *outdir* and return the landing page path.</span>
+
+<span class="sd">    With *layout* ``"root"`` (the default) *outdir* is treated as a **root**: the report is written</span>
+<span class="sd">    into ``&lt;outdir&gt;/&lt;mission_id&gt;/`` (created if absent), so a root can hold many missions side by</span>
+<span class="sd">    side. With *layout* ``"flat"`` the pages are written directly into *outdir* and no navigator is</span>
+<span class="sd">    built (*navigator* is ignored) — one mission, one self-contained folder.</span>
+
+<span class="sd">    The ``mission_id`` subdirectory name is the OG1 ``id`` attribute when present, else the source</span>
+<span class="sd">    file stem (see :func:`glidertest.reports._mission.mission_id`); pass *mission_id* to override it</span>
+<span class="sd">    (run through the same directory-name sanitising). Each applicable page in</span>
+<span class="sd">    :data:`glidertest.reports._mission.PAGES` is written to ``&lt;page&gt;.html``; the pages share one</span>
+<span class="sd">    ``figures/`` with page-prefixed slugs (``&lt;page&gt;_&lt;panel&gt;.png``) and a cross-page nav. A</span>
+<span class="sd">    machine-readable ``report.json`` manifest is written beside the landing page.</span>
+
+<span class="sd">    With *navigator* ``True`` (the default, root layout only), ``&lt;outdir&gt;/index.html`` — a fleet</span>
+<span class="sd">    navigator over every ``&lt;outdir&gt;/*/report.json`` — is rebuilt after the mission is written (see</span>
+<span class="sd">    :func:`navigator`). The rebuild redraws the fleet track map, so for a **batch** pass</span>
+<span class="sd">    ``navigator=False`` in the loop and call :func:`navigator` once at the end rather than rebuilding</span>
+<span class="sd">    on every mission.</span>
+
+<span class="sd">    Figures are rendered under the non-interactive ``Agg`` backend for the duration of the build,</span>
+<span class="sd">    then the caller's backend is restored. glidertest's plotters call ``plt.show()`` when they draw</span>
+<span class="sd">    their own figure, which would pop a window per panel on an interactive backend (e.g. ``macosx``);</span>
+<span class="sd">    ``Agg`` makes that a no-op. Switching the backend closes any figures the caller had open.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        An OG1 glider dataset.</span>
+<span class="sd">    outdir : pathlib.Path or str</span>
+<span class="sd">        The root directory (``layout="root"``) or the mission's own directory (``layout="flat"``).</span>
+<span class="sd">    navigator : bool, default True</span>
+<span class="sd">        Rebuild ``&lt;outdir&gt;/index.html`` (the fleet navigator) after writing the mission. Ignored</span>
+<span class="sd">        when ``layout="flat"``.</span>
+<span class="sd">    mission_id : str, optional</span>
+<span class="sd">        Subdirectory name for this mission, overriding the name derived from *ds*; run through the</span>
+<span class="sd">        same sanitising as the derived name. Must not be combined with ``layout="flat"`` (there is</span>
+<span class="sd">        no subdirectory to name) — doing so raises :class:`ValueError`.</span>
+<span class="sd">    layout : {"root", "flat"}, default "root"</span>
+<span class="sd">        ``"root"`` writes the mission into ``&lt;outdir&gt;/&lt;mission_id&gt;/``; ``"flat"`` writes the pages</span>
+<span class="sd">        directly into *outdir* and builds no navigator.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pathlib.Path</span>
+<span class="sd">        The path to the written landing page (``&lt;outdir&gt;/&lt;mission_id&gt;/index.html`` for root layout,</span>
+<span class="sd">        ``&lt;outdir&gt;/index.html`` for flat).</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.._version</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">_figdebug</span><span class="p">,</span> <span class="n">paths</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._env</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_template</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._mission</span><span class="w"> </span><span class="kn">import</span> <span class="n">PAGES</span><span class="p">,</span> <span class="n">Ctx</span><span class="p">,</span> <span class="n">build</span><span class="p">,</span> <span class="n">header_card</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._report_css</span><span class="w"> </span><span class="kn">import</span> <span class="n">_JS_TOP_LINKS</span><span class="p">,</span> <span class="n">PACKAGE_ACCENT</span><span class="p">,</span> <span class="n">SHARED_CSS</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.manifest</span><span class="w"> </span><span class="kn">import</span> <span class="n">mission_manifest</span>
+
+    <span class="k">if</span> <span class="n">layout</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"root"</span><span class="p">,</span> <span class="s2">"flat"</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"layout must be 'root' or 'flat', got </span><span class="si">{</span><span class="n">layout</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mission_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">layout</span> <span class="o">==</span> <span class="s2">"flat"</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"mission_id cannot be combined with layout='flat' (there is no subdirectory to name)"</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">layout</span> <span class="o">==</span> <span class="s2">"flat"</span> <span class="ow">and</span> <span class="n">paths</span><span class="o">.</span><span class="n">is_report_root</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> is a report root (it already holds mission subdirectories); writing a flat "</span>
+            <span class="sa">f</span><span class="s2">"report here would overwrite its fleet index.html. Use layout='root', or a fresh "</span>
+            <span class="sa">f</span><span class="s2">"directory."</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">mid</span> <span class="o">=</span> <span class="n">resolve_mission_id</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">mission_id</span><span class="p">)</span>
+    <span class="n">missiondir</span> <span class="o">=</span> <span class="n">root</span> <span class="k">if</span> <span class="n">layout</span> <span class="o">==</span> <span class="s2">"flat"</span> <span class="k">else</span> <span class="n">paths</span><span class="o">.</span><span class="n">mission_dir</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">mid</span><span class="p">)</span>
+    <span class="n">do_navigator</span> <span class="o">=</span> <span class="n">navigator</span> <span class="ow">and</span> <span class="n">layout</span> <span class="o">==</span> <span class="s2">"root"</span>
+    <span class="p">(</span><span class="n">missiondir</span> <span class="o">/</span> <span class="s2">"figures"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">Ctx</span><span class="p">(</span><span class="n">ds</span><span class="o">=</span><span class="n">ds</span><span class="p">)</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">PAGES</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">applies_to</span><span class="p">(</span><span class="n">ctx</span><span class="p">)]</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source"</span><span class="p">)</span>
+    <span class="n">source_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">source</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'id'</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">mid</span><span class="si">}</span><span class="s2">.nc"</span>
+    <span class="n">source_size</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">source</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">source_size</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="n">source_size</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Overwriting on a re-run (same source file) is intended and silent; overwriting with a</span>
+    <span class="c1"># *different* source file is worth a warning, whose cause differs by layout: in root layout two</span>
+    <span class="c1"># files share one OG1 id (a metadata problem); in flat layout the output directory was reused.</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">paths</span><span class="o">.</span><span class="n">manifest_in</span><span class="p">(</span><span class="n">missiondir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">prev</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">existing</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">prev</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">prev_source</span> <span class="o">=</span> <span class="n">prev</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source_file"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prev_source</span> <span class="ow">and</span> <span class="n">prev_source</span> <span class="o">!=</span> <span class="n">source_name</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">layout</span> <span class="o">==</span> <span class="s2">"flat"</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> already holds a report for </span><span class="si">{</span><span class="n">prev_source</span><span class="si">!r}</span><span class="s2">; "</span>
+                    <span class="sa">f</span><span class="s2">"overwriting with </span><span class="si">{</span><span class="n">source_name</span><span class="si">!r}</span><span class="s2">."</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"mission id </span><span class="si">{</span><span class="n">mid</span><span class="si">!r}</span><span class="s2"> already reported from </span><span class="si">{</span><span class="n">prev_source</span><span class="si">!r}</span><span class="s2">; overwriting with "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">source_name</span><span class="si">!r}</span><span class="s2">. Two files sharing one OG1 id is a metadata problem — check "</span>
+                    <span class="sa">f</span><span class="s2">"the 'id' attribute of both files."</span>
+                <span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">generated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M UTC"</span><span class="p">)</span>
+    <span class="n">common</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"css"</span><span class="p">:</span> <span class="n">SHARED_CSS</span><span class="p">,</span>
+        <span class="s2">"header"</span><span class="p">:</span> <span class="n">header_card</span><span class="p">(</span><span class="n">ds</span><span class="p">),</span>
+        <span class="s2">"mission_id"</span><span class="p">:</span> <span class="n">mid</span><span class="p">,</span>
+        <span class="s2">"source_name"</span><span class="p">:</span> <span class="n">source_name</span><span class="p">,</span>
+        <span class="s2">"version"</span><span class="p">:</span> <span class="n">__version__</span><span class="p">,</span>
+        <span class="s2">"generated_at"</span><span class="p">:</span> <span class="n">generated_at</span><span class="p">,</span>
+        <span class="s2">"masthead_bg"</span><span class="p">:</span> <span class="n">PACKAGE_ACCENT</span><span class="p">,</span>
+        <span class="s2">"js_top_links"</span><span class="p">:</span> <span class="n">_JS_TOP_LINKS</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">get_template</span><span class="p">(</span><span class="s2">"mission.html"</span><span class="p">)</span>
+
+    <span class="c1"># Render figures headless so the plotters' plt.show() calls never pop a window; restore after.</span>
+    <span class="n">orig_backend</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">get_backend</span><span class="p">()</span>
+    <span class="n">switch</span> <span class="o">=</span> <span class="n">orig_backend</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">"agg"</span>
+    <span class="k">if</span> <span class="n">switch</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">switch_backend</span><span class="p">(</span><span class="s2">"Agg"</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_figdebug</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">pages</span><span class="p">:</span>
+            <span class="n">slug</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">resolved</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">page</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">resolved</span><span class="o">.</span><span class="n">sections</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">panel</span> <span class="ow">in</span> <span class="n">section</span><span class="o">.</span><span class="n">panels</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">panel</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"figure"</span> <span class="ow">and</span> <span class="n">panel</span><span class="o">.</span><span class="n">payload</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="p">(</span><span class="n">missiondir</span> <span class="o">/</span> <span class="s2">"figures"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">slug</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">panel</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.png"</span><span class="p">)</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span>
+                            <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">payload</span><span class="p">)</span>
+                        <span class="p">)</span>
+            <span class="c1"># Root layout always links back to the fleet page at ../index.html (the root convention),</span>
+            <span class="c1"># whether this call rebuilds it or a later navigator() does; flat -o has no fleet page.</span>
+            <span class="n">nav</span> <span class="o">=</span> <span class="n">_build_nav</span><span class="p">(</span><span class="n">pages</span><span class="p">,</span> <span class="n">page</span><span class="p">,</span> <span class="n">source_name</span><span class="p">,</span> <span class="n">back</span><span class="o">=</span><span class="p">(</span><span class="n">layout</span> <span class="o">==</span> <span class="s2">"root"</span><span class="p">))</span>
+            <span class="n">rendered</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+                <span class="n">report</span><span class="o">=</span><span class="n">resolved</span><span class="p">,</span>
+                <span class="n">nav</span><span class="o">=</span><span class="n">nav</span><span class="p">,</span>
+                <span class="n">page_title</span><span class="o">=</span><span class="n">page</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="n">page_type</span><span class="o">=</span><span class="n">page</span><span class="o">.</span><span class="n">type_label</span><span class="p">,</span>
+                <span class="n">page_landing</span><span class="o">=</span><span class="n">page</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s2">"landing"</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">common</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># page has ✓/✗/⚠/– glyphs; Windows default is cp1252</span>
+            <span class="p">(</span><span class="n">missiondir</span> <span class="o">/</span> <span class="n">page</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">rendered</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+        <span class="n">manifest</span> <span class="o">=</span> <span class="n">mission_manifest</span><span class="p">(</span>
+            <span class="n">ds</span><span class="p">,</span>
+            <span class="n">mission_id</span><span class="o">=</span><span class="n">mid</span><span class="p">,</span>
+            <span class="n">source_name</span><span class="o">=</span><span class="n">source_name</span><span class="p">,</span>
+            <span class="n">source_size_bytes</span><span class="o">=</span><span class="n">source_size</span><span class="p">,</span>
+            <span class="n">pages</span><span class="o">=</span><span class="p">[(</span><span class="n">p</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages</span><span class="p">],</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span>
+            <span class="n">generated_at</span><span class="o">=</span><span class="n">generated_at</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">existing</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">do_navigator</span><span class="p">:</span>
+            <span class="n">_build_navigator</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>  <span class="c1"># draws the tracks map under the same Agg backend</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">switch</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">switch_backend</span><span class="p">(</span><span class="n">orig_backend</span><span class="p">)</span>
+
+    <span class="c1"># The landing page is the first entry in PAGES (always applicable); return its path even if the</span>
+    <span class="c1"># filtered `pages` were somehow empty, so the contract never depends on an IndexError-free slice.</span>
+    <span class="k">return</span> <span class="n">missiondir</span> <span class="o">/</span> <span class="n">PAGES</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">filename</span></div>
+
+
+
+<div class="viewcode-block" id="navigator">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.reports.navigator">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">navigator</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Rebuild ``&lt;root&gt;/index.html`` — a fleet navigator over every ``&lt;root&gt;/*/report.json``.</span>
+
+<span class="sd">    Reads only the per-mission manifests (never a NetCDF file, never a mission's HTML), so it is a</span>
+<span class="sd">    fast, idempotent re-index of whatever missions a root currently holds.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root : pathlib.Path or str</span>
+<span class="sd">        A root directory holding ``&lt;mission_id&gt;/report.json`` subdirectories.</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        The navigator's masthead title; defaults to the root directory name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pathlib.Path</span>
+<span class="sd">        The path to the written ``&lt;root&gt;/index.html``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If *root* is not an existing directory.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If *root* is itself a mission report directory (it holds a top-level ``report.json``, as a</span>
+<span class="sd">        ``layout="flat"`` report does); indexing it would find no missions and overwrite its landing</span>
+<span class="sd">        page. Pass the parent directory instead.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">paths</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"report root not found: </span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">paths</span><span class="o">.</span><span class="n">manifest_in</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> is a mission report directory (it holds a top-level report.json), not a fleet "</span>
+            <span class="sa">f</span><span class="s2">"root; its index.html is the mission landing page — pass the parent directory."</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+    <span class="n">orig_backend</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">get_backend</span><span class="p">()</span>
+    <span class="n">switch</span> <span class="o">=</span> <span class="n">orig_backend</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">"agg"</span>
+    <span class="k">if</span> <span class="n">switch</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">switch_backend</span><span class="p">(</span><span class="s2">"Agg"</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_build_navigator</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">switch</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">switch_backend</span><span class="p">(</span><span class="n">orig_backend</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_navigator</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render ``&lt;root&gt;/index.html`` from the manifests; caller owns the Matplotlib backend."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._navigator</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_navigator</span>
+
+    <span class="k">return</span> <span class="n">build_navigator</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

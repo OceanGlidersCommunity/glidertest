@@ -1,0 +1,519 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>glidertest.cli &mdash; glidertest 0.1.1.dev19+g84f72800b documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=608aad27"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            glidertest
+              <img src="../../_static/glider.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html">Glidertest demo</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html">Example HTML report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli_reference.html">CLI reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reports.html">The HTML report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glidertest.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest/issues/new">Report a problem</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OG1 format manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">glidertest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">glidertest.cli</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for glidertest.cli</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Command-line entry point for glidertest: ``glidertest &lt;command&gt;``.</span>
+
+<span class="sd">Two subcommands, each a thin wrapper over the library:</span>
+
+<span class="sd">``report``</span>
+<span class="sd">    Write an HTML report for one or more OG1 netCDF files and rebuild the fleet page.</span>
+<span class="sd">``navigator``</span>
+<span class="sd">    Rebuild the fleet page over a report root from the per-mission manifests, reading no data.</span>
+
+<span class="sd">No report logic lives here; the heavy imports (matplotlib, xarray, the report subsystem) are</span>
+<span class="sd">deferred into the command functions so ``glidertest --help`` stays fast and backend-free.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+
+<span class="n">_EPILOG</span> <span class="o">=</span> <span class="s2">"""</span><span class="se">\</span>
+<span class="s2">Typical workflow:</span>
+<span class="s2">  glidertest report mission.nc --report-dir reports/   one mission into reports/&lt;id&gt;/, fleet page rebuilt</span>
+<span class="s2">  glidertest report data/ --report-dir reports/        every *.nc in data/, fleet page rebuilt once</span>
+<span class="s2">  glidertest report mission.nc -o out/                 one mission's pages directly in out/, no fleet page</span>
+<span class="s2">  glidertest navigator reports/                        re-index after adding or removing missions</span>
+
+<span class="s2">Run 'glidertest &lt;command&gt; --help' for command-specific options.</span>
+<span class="s2">"""</span>
+
+<span class="n">_REPORT_EPILOG</span> <span class="o">=</span> <span class="s2">"""</span><span class="se">\</span>
+<span class="s2">Examples:</span>
+<span class="s2">  # One mission into a report tree; the fleet page is rebuilt afterwards:</span>
+<span class="s2">  glidertest report sea045_20230604T1253_delayed.nc --report-dir reports/</span>
+
+<span class="s2">  # A directory of missions; the fleet page is rebuilt once at the end:</span>
+<span class="s2">  glidertest report data/ --report-dir reports/</span>
+
+<span class="s2">  # Name the subdirectory yourself when the file has no usable OG1 id:</span>
+<span class="s2">  glidertest report odd_file.nc --report-dir reports/ --mission-id sea045_2023_leg2</span>
+
+<span class="s2">  # Re-run over a folder, reporting only missions not yet in the tree:</span>
+<span class="s2">  glidertest report data/ --report-dir reports/ --skip-existing</span>
+
+<span class="s2">  # One mission's pages straight into a folder, no tree and no fleet page:</span>
+<span class="s2">  glidertest report sea045_20230604T1253_delayed.nc -o sea045_report/</span>
+
+<span class="s2">Exit status: 0 all files reported; 1 one or more files failed (the rest were still written,</span>
+<span class="s2">each failure one line on stderr); 2 usage error.</span>
+<span class="s2">"""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_expand_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Expand *inputs* (files, directories, wildcards) into a deduplicated file list.</span>
+
+<span class="sd">    A directory contributes ``sorted(dir.glob(pattern))``; an argument that does not exist but</span>
+<span class="sd">    contains a wildcard (``*``, ``?`` or ``[``) is globbed in Python (Windows shells do not expand</span>
+<span class="sd">    wildcards); anything else is taken verbatim as a path. Duplicates (by resolved path) are</span>
+<span class="sd">    dropped, keeping the first occurrence.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inputs : list of str</span>
+<span class="sd">        The positional FILE arguments.</span>
+<span class="sd">    pattern : str</span>
+<span class="sd">        Filename glob applied inside directory arguments (not recursive).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of pathlib.Path</span>
+<span class="sd">        The expanded files, in argument order, deduplicated.</span>
+<span class="sd">    """</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span> <span class="ow">in</span> <span class="n">item</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="s2">"*?["</span><span class="p">):</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">item</span><span class="p">))]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+            <span class="n">resolved</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">resolved</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">resolved</span><span class="p">)</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_report_parser</span><span class="p">(</span><span class="n">sub</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">_SubParsersAction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add the ``report`` subcommand and its arguments to *sub*."""</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s2">"report"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Write HTML mission report(s) for OG1 netCDF file(s)."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write an HTML mission report for each OG1 netCDF file: a landing page, one page per "</span>
+            <span class="s2">"sensor present, a flight page when the data supports it, an inventory page, and a "</span>
+            <span class="s2">"report.json manifest. The dataset is read, never modified."</span>
+        <span class="p">),</span>
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">,</span>
+        <span class="n">epilog</span><span class="o">=</span><span class="n">_REPORT_EPILOG</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"inputs"</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">"FILE"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"OG1 netCDF file(s), or directories of them (see --pattern)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--mission-id"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"mission_id"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">"NAME"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Subdirectory name for the mission, instead of the file's OG1 id (or its file stem "</span>
+        <span class="s2">"when the id is missing). Single FILE, --report-dir only (not with -o)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--title"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">"TEXT"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Title for the fleet page's masthead (default: the ROOT directory name). "</span>
+        <span class="s2">"Ignored with --no-navigator or -o."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--no-navigator"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"no_navigator"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Do not rebuild ROOT/index.html after writing the mission(s)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--skip-existing"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"skip_existing"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Skip a FILE whose mission already has a ROOT/&lt;mission_id&gt;/report.json."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--pattern"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"*.nc"</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">"GLOB"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Filename glob applied inside each directory given as FILE (default: '*.nc'; "</span>
+        <span class="s2">"not recursive)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"-n"</span><span class="p">,</span>
+        <span class="s2">"--dry-run"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"dry_run"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Print what would be written without writing anything."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">"output location (one is required)"</span><span class="p">)</span>
+    <span class="n">grp</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--report-dir"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"report_dir"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">"ROOT"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Central directory for all mission reports. Each mission's pages are written to "</span>
+        <span class="s2">"ROOT/&lt;mission_id&gt;/ and ROOT/index.html is the fleet page, making the whole report "</span>
+        <span class="s2">"tree portable."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"-o"</span><span class="p">,</span>
+        <span class="s2">"--output-dir"</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">"output_dir"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">"DIR"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Directory for one mission's pages, written directly into DIR (no &lt;mission_id&gt;/ "</span>
+        <span class="s2">"subdirectory, no fleet page). Single FILE only."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">cmd_report</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_navigator_parser</span><span class="p">(</span><span class="n">sub</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">_SubParsersAction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add the ``navigator`` subcommand and its arguments to *sub*."""</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">sub</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s2">"navigator"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Rebuild the fleet page (index.html) over a report root; reads no data."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Rebuild ROOT/index.html, the fleet page, from the ROOT/&lt;mission_id&gt;/report.json "</span>
+            <span class="s2">"manifests. Reads no netCDF and touches no mission pages. Run it after adding, "</span>
+            <span class="s2">"removing or renaming mission directories. (The counterpart of 'oceanarray report "</span>
+            <span class="s2">"--array'.)"</span>
+        <span class="p">),</span>
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"root"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">"ROOT"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Report root holding &lt;mission_id&gt;/report.json subdirectories."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--title"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">"TEXT"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Title for the fleet page's masthead (default: the ROOT directory name)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">cmd_navigator</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cmd_report</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run the ``report`` subcommand; return a process exit code (0 ok, 1 failures, 2 usage)."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">"Agg"</span><span class="p">)</span>  <span class="c1"># a CLI must not depend on the caller's backend; set before xarray/reports</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">reports</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">glidertest.reports</span><span class="w"> </span><span class="kn">import</span> <span class="n">paths</span><span class="p">,</span> <span class="n">resolve_mission_id</span>
+
+    <span class="n">flat</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="k">if</span> <span class="n">flat</span> <span class="k">else</span> <span class="n">args</span><span class="o">.</span><span class="n">report_dir</span>
+
+    <span class="k">if</span> <span class="n">flat</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">mission_id</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">"glidertest report: error: --mission-id has no effect with -o/--output-dir "</span>
+            <span class="s2">"(which writes no &lt;mission_id&gt;/ subdirectory); use --report-dir"</span><span class="p">,</span>
+            <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="mi">2</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="n">_expand_inputs</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"no files matched"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">flat</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">"glidertest report: error: -o/--output-dir takes a single FILE; "</span>
+            <span class="s2">"use --report-dir for several"</span><span class="p">,</span>
+            <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">mission_id</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">"glidertest report: error: --mission-id applies to a single FILE"</span><span class="p">,</span>
+            <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="mi">2</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_name</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The mission directory name for *path*, or None if the file cannot be opened."""</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">mission_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resolve_mission_id</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mission_id</span><span class="p">)</span>  <span class="c1"># the override needs no dataset</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">resolve_mission_id</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># any unreadable file is reported in the main loop, so None here</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Resolve each mission's directory name once, up front (root layout only; flat is single-file</span>
+    <span class="c1"># and resolved inside report()). The name is reused by the collision, skip-existing and dry-run</span>
+    <span class="c1"># checks and passed to report(), so a file's id is derived once per run, not three times.</span>
+    <span class="n">names</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">flat</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">names</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolve_name</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="c1"># Refuse a run where two files would overwrite each other under one mission id. A delayed</span>
+        <span class="c1"># and a real-time file sharing one OG1 id, or a file and its _subset, would otherwise clobber.</span>
+        <span class="n">by_name</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">by_name</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">collisions</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="n">ps</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">ps</span> <span class="ow">in</span> <span class="n">by_name</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">collisions</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">ps</span> <span class="ow">in</span> <span class="n">collisions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">listed</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ps</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"glidertest report: error: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span><span class="si">}</span><span class="s2"> files map to mission </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">listed</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="n">failed</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">wrote</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># missions written (or, under --dry-run, that would be written)</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: no such file"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="n">failed</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>  <span class="c1"># None in flat layout (resolved inside report()) or if unreadable</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">flat</span><span class="p">:</span>
+                <span class="n">manifest</span> <span class="o">=</span> <span class="n">paths</span><span class="o">.</span><span class="n">manifest_in</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>  <span class="c1"># flat writes the manifest at the top of DIR</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">manifest</span> <span class="o">=</span> <span class="n">paths</span><span class="o">.</span><span class="n">manifest_path</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">manifest</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">skip_existing</span> <span class="ow">and</span> <span class="n">manifest</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">manifest</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: skipped (</span><span class="si">{</span><span class="n">name</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">root</span><span class="si">}</span><span class="s2"> already reported)"</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">flat</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">/"</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">paths</span><span class="o">.</span><span class="n">mission_dir</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2">/"</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: unreadable (would fail)"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                    <span class="n">failed</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">continue</span>
+                <span class="n">wrote</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">continue</span>
+            <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+                <span class="n">landing</span> <span class="o">=</span> <span class="n">reports</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                    <span class="n">ds</span><span class="p">,</span>
+                    <span class="n">root</span><span class="p">,</span>
+                    <span class="n">navigator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">mission_id</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">flat</span> <span class="k">else</span> <span class="n">name</span><span class="p">),</span>
+                    <span class="n">layout</span><span class="o">=</span><span class="s2">"flat"</span> <span class="k">if</span> <span class="n">flat</span> <span class="k">else</span> <span class="s2">"root"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">landing</span><span class="p">)</span>
+            <span class="n">wrote</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># catch-all at the file boundary: one line per failure, run on</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="n">failed</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+
+    <span class="c1"># Rebuild the fleet page only when a mission was written (or would be, under --dry-run): an</span>
+    <span class="c1"># all-skipped re-run leaves the existing fleet page untouched, keeping re-runs cheap, and an</span>
+    <span class="c1"># all-failed run never calls navigator() on a root that may not exist.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">flat</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_navigator</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">wrote</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"would rebuild </span><span class="si">{</span><span class="n">root</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s1">'index.html'</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"nothing to write; </span><span class="si">{</span><span class="n">root</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s1">'index.html'</span><span class="si">}</span><span class="s2"> would not be rebuilt"</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wrote</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">reports</span><span class="o">.</span><span class="n">navigator</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">title</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">failed</span> <span class="k">else</span> <span class="mi">0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cmd_navigator</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run the ``navigator`` subcommand; return a process exit code (0 ok, 1 on a bad root)."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">"Agg"</span><span class="p">)</span>  <span class="c1"># the fleet map is matplotlib; do not touch the caller's backend</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">reports</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">reports</span><span class="o">.</span><span class="n">navigator</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">title</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="c1"># Missing root, or a mission directory mistaken for a fleet root — report() owns the rule.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<div class="viewcode-block" id="build_parser">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.cli.build_parser">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_parser</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Build the ``glidertest`` argument parser (the ``report`` and ``navigator`` subcommands).</span>
+
+<span class="sd">    Separated from :func:`main` so the documentation can render the parser with</span>
+<span class="sd">    ``sphinx-argparse`` and the two cannot drift apart.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    argparse.ArgumentParser</span>
+<span class="sd">        The configured top-level parser.</span>
+<span class="sd">    """</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">prog</span><span class="o">=</span><span class="s2">"glidertest"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Diagnose and report on OG1 glider datasets: QC checks and self-contained HTML reports."</span><span class="p">,</span>
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">,</span>
+        <span class="n">epilog</span><span class="o">=</span><span class="n">_EPILOG</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--version"</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">"version"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="sa">f</span><span class="s2">"%(prog)s </span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">sub</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s2">"command"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"commands"</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">"&lt;command&gt;"</span><span class="p">)</span>
+    <span class="n">_add_report_parser</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span>
+    <span class="n">_add_navigator_parser</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span></div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.cli.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Parse *argv* (default ``sys.argv``), dispatch to a subcommand, and exit with its code.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    argv : list of str, optional</span>
+<span class="sd">        Argument vector excluding the program name; defaults to ``sys.argv[1:]``.</span>
+<span class="sd">    """</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">build_parser</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># No subcommand: show the full help (which lists report and navigator) rather than a terse</span>
+        <span class="c1"># "the following arguments are required: &lt;command&gt;".</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">args</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
