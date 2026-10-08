@@ -226,6 +226,39 @@ def test_spatiotemporal_diff_amber_above_threshold(subset_path):
             assert row["over"] is want_amber, f"delta={delta} -> over={row['over']}"
 
 
+def test_spatiotemporal_vertical_positive_up(subset_path):
+    from glidertest.reports.metadata import spatiotemporal_rows
+
+    # positive="up": the file's vertical_min is the most-negative height (deepest sample), its
+    # vertical_max is near the surface. The computed bounds must negate AND swap DEPTH's
+    # (shallow, deep), so computed_min < computed_max and a correct file is not flagged amber.
+    with xr.open_dataset(subset_path) as ds:
+        deep = float(np.nanmax(ds["DEPTH"].values))
+        shallow = float(np.nanmin(ds["DEPTH"].values))
+        ds.attrs["geospatial_vertical_positive"] = "up"
+        ds.attrs["geospatial_vertical_min"] = repr(-deep)
+        ds.attrs["geospatial_vertical_max"] = repr(-shallow)
+        rows = {r["attr"]: r for r in spatiotemporal_rows(ds)}
+        cmin = float(rows["geospatial_vertical_min"]["computed"])
+        cmax = float(rows["geospatial_vertical_max"]["computed"])
+        assert (cmin, cmax) == (-deep, -shallow)  # negated and swapped, not negated in place
+        assert cmin < cmax
+        assert rows["geospatial_vertical_min"]["over"] is False
+        assert rows["geospatial_vertical_max"]["over"] is False
+
+
+def test_spatiotemporal_nonfinite_file_value_not_diffed(subset_path):
+    from glidertest.reports.metadata import spatiotemporal_rows
+
+    # A file attribute of "nan" is not a usable bound: show no diff and never flag amber, rather
+    # than render "-nan" and silently pass the threshold check.
+    with xr.open_dataset(subset_path) as ds:
+        ds.attrs["geospatial_lat_max"] = "nan"
+        row = next(r for r in spatiotemporal_rows(ds) if r["attr"] == "geospatial_lat_max")
+        assert row["diff"] == ""
+        assert row["over"] is False
+
+
 def test_track_drops_qc_flagged_positions():
     from glidertest.reports.manifest import _track
 

@@ -315,13 +315,16 @@ def spatiotemporal_rows(ds: xr.Dataset) -> list[dict[str, Any]]:
                 diff, over = f"{secs:+.0f} s", abs(secs) > _DIFF_THRESHOLDS[axis]
         else:
             cval = comp
-            if axis == "vertical" and cval is not None and vert_up:
-                cval = -cval
+            if axis == "vertical" and vert_up and cval is not None:
+                # positive="up": the file bounds are heights, so negate the depth extent — and the
+                # extremes swap, because the deepest sample (largest depth) is the most-negative
+                # height, i.e. the file's *min*. Negate-and-swap, not negate-in-place.
+                cval = -vmax if attr.endswith("_min") else -vmin
             elif axis == "vertical" and not vert_declared:
                 note = "(sign convention not declared)"
             computed = "" if cval is None or not np.isfinite(cval) else str(float(cval))
             fv = _coerce_float(file_val)
-            if fv is not None and cval is not None and np.isfinite(cval):
+            if fv is not None and np.isfinite(fv) and cval is not None and np.isfinite(cval):
                 d = fv - float(cval)
                 diff, over = _fmt_diff(d), abs(d) > _DIFF_THRESHOLDS[axis]
         rows.append(
