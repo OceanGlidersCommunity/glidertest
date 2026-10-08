@@ -18,6 +18,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.ticker import FormatStrFormatter, MaxNLocator, LogLocator
 from scipy import stats
 from scipy.interpolate import interp1d
+from matplotlib.ticker import MaxNLocator
 
 from glidertest import utilities, tools
 
@@ -478,6 +479,8 @@ def plot_quench_assess(ds: xr.Dataset, sel_var: str, ax: plt.Axes = None, start_
         # Set x-tick labels based on duration of the selection
         # Could pop out as a utility plotting function?
         utilities._time_axis_formatter(ax, ds_sel, format_x_axis=True)
+        # Less x axis ticks
+        ax.xaxis.set_major_locator(mdates.AutoDateLocator(minticks=4, maxticks=6))
 
         plt.colorbar(c, label=f'log₁₀({utilities.plotting_labels(sel_var)}) ({utilities.plotting_units(ds, sel_var)})')
         _show()
@@ -595,8 +598,10 @@ def plot_prof_monotony(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict, ) -> tup
     with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots(2, 1, sharex=True)
+            force_plot = True
         else:
             fig = plt.gcf()
+            force_plot = False
 
         ax[0].plot(ds.TIME, ds.PROFILE_NUMBER)
 
@@ -614,7 +619,9 @@ def plot_prof_monotony(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict, ) -> tup
         ax[1].xaxis.set_major_locator(plt.MaxNLocator(8))
         utilities._time_axis_formatter(ax[1], ds, format_x_axis=True)
         [a.grid() for a in ax]
-        _show()
+
+        if force_plot:
+            _show()
     return fig, ax
 
 
@@ -646,8 +653,10 @@ def plot_glider_track(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
     with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()})
+            force_plot = True
         else:
             fig = plt.gcf()
+            force_plot = False
 
         latitudes = ds.LATITUDE.values
         longitudes = ds.LONGITUDE.values
@@ -718,7 +727,10 @@ def plot_glider_track(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
         gl = ax.gridlines(draw_labels=True, color='black', alpha=0.5, linestyle='--')
         gl.top_labels = False
         gl.right_labels = False
-        _show()
+        gl.xlabel_style = {'rotation': 45}
+        gl.ylabel_style = {'rotation': 45}
+        if force_plot:
+            _show()
 
     return fig, ax
 
@@ -751,8 +763,10 @@ def plot_grid_spacing(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
     with plt.style.context(_style()):
         if ax is None:
             fig, ax = plt.subplots(1, 2)
+            force_plot = True
         else:
             fig = plt.gcf()
+            force_plot = False
 
         # Calculate the depth and time differences
         depth_diff = np.diff(ds.DEPTH)
@@ -828,7 +842,8 @@ def plot_grid_spacing(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple(
             axes.tick_params(axis='both', which='major')
             # More subtle grid lines
             axes.grid(True, which='both', linestyle='--', linewidth=0.5, color='grey')
-        _show()
+        if force_plot:
+            _show()
 
     return fig, ax
 
@@ -864,17 +879,23 @@ def plot_sampling_period_all(ds: xr.Dataset, ax: plt.Axes = None) -> tuple({plt.
         variables.append('CHLA')
     with plt.style.context(glidertest_style_file):
         if ax is None:
-            fig, ax = plt.subplots(1, count_vars)
+            fig, ax = plt.subplots(1, count_vars,sharey=True, constrained_layout=True)
+            force_plot = True
         else:
             fig = plt.gcf()
+            force_plot = False
 
     for i in range(len(variables)):
-        ax[i] = plot_sampling_period(ds, ax[i], variables[i])
-    _show()
+        ax[i] = plot_sampling_period(ds, ax[i], variables[i], annotation_fontsize=10)
+        ax[i].xaxis.set_major_locator(MaxNLocator(nbins=5))
+        ax[i].tick_params(axis='x', rotation=45)
+
+    if force_plot:
+        _show()
     return fig, ax
 
 
-def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, variable='TEMP'):
+def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, variable='TEMP', annotation_fontsize= 20):
     """
     Plots a **histogram of the sampling period** for a selected variable after removing NaN values.
 
@@ -897,12 +918,6 @@ def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, variable='TEMP'):
     Original Author: Louis Clement
     """
 
-    with plt.style.context(glidertest_style_file):
-        if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = plt.gcf()
-
     nonan = ~np.isnan(ds[variable].values)
     time_diff = np.diff(ds.TIME.values[nonan]) / np.timedelta64(1, 's')  # Convert to seconds
 
@@ -919,31 +934,39 @@ def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, variable='TEMP'):
     if variable == 'TEMP':
         print('Depth and time differences have been filtered to the middle 99% of values.')
         print('Numeric median/mean/max/min values are based on the original data.')
+    with plt.style.context(glidertest_style_file):
+        if ax is None:
+            fig, ax = plt.subplots()
+            force_plot = True
+        else:
+            fig = plt.gcf()
+            force_plot = False
+        ax.hist(time_diff, bins=50)
+        ax.set_xlabel('Time Spacing (s)')
+        if variable == 'TEMP': ax.set_ylabel('Frequency')
+        valid_val = round(100 * (np.sum(nonan) / ds.TIME.values.shape[0]),1)
 
-    ax.hist(time_diff, bins=50)
-    ax.set_xlabel('Time Spacing (s)')
-    if variable == 'TEMP': ax.set_ylabel('Frequency')
-    ax.set_title('Histogram of Sampling Period' + '\n' +
-                 'for ' + utilities.plotting_labels(variable) + ', \n' +
-                 'valid values: {:.1f}'.format(100 * (np.sum(nonan) / ds.TIME.values.shape[0])) + '%')
+        annotation_text = (
+            f'Sampling Period for {utilities.plotting_labels(variable)}\n'
+            f'Valid values: {valid_val}% \n'
+            f'Median: {median_time_diff:.2f} s\n'
+            f'Mean: {mean_time_diff:.2f} s\n'
+            f'Max: {max_time_diff:.2f} s ({max_time_diff_hrs:.2f} hr)\n'
+            f'Min: {min_time_diff:.2f} s'
+        )
+        ax.annotate(annotation_text, xy=(0.96, 0.96), xycoords='axes fraction'
+                    , ha='right', va='top', fontsize= annotation_fontsize,
+                    bbox=dict(boxstyle='round,pad=0.3', edgecolor='black', facecolor='white', alpha=.5))
 
-    annotation_text = (
-        f'Median: {median_time_diff:.2f} s\n'
-        f'Mean: {mean_time_diff:.2f} s\n'
-        f'Max: {max_time_diff:.2f} s ({max_time_diff_hrs:.2f} hr)\n'
-        f'Min: {min_time_diff:.2f} s'
-    )
-    ax.annotate(annotation_text, xy=(0.96, 0.96), xycoords='axes fraction'
-                , ha='right', va='top',
-                bbox=dict(boxstyle='round,pad=0.3', edgecolor='black', facecolor='white', alpha=.5))
-
-    ax.tick_params(axis='both', which='major')
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='grey')
+        ax.tick_params(axis='both', which='major')
+        ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='grey')
+        if force_plot:
+            _show()
 
     return ax
 
 
-def plot_ts(ds: xr.Dataset, percentile: list = [0.5, 99.5], axs: plt.Axes = None, **kw: dict) -> tuple(
+def plot_ts(ds: xr.Dataset, percentile: list = [0.5, 99.5], ax: plt.Axes = None, **kw: dict) -> tuple(
     {plt.Figure, plt.Axes}):
     """
     Plots **temperature and salinity distributions** using histograms and a 2D density plot.
@@ -954,7 +977,7 @@ def plot_ts(ds: xr.Dataset, percentile: list = [0.5, 99.5], axs: plt.Axes = None
         Dataset in **OG1 format**, containing at least **DEPTH, LONGITUDE, LATITUDE, TEMP and PSAL**.
     percentile : list, optional
         The percentiles to use for filtering the data. Default is [0.5, 99.5].
-    axs : matplotlib.axes.Axes, optional
+    ax : matplotlib.axes.Axes, optional
         Axes to plot the data. If not provided, a new figure and axes are created.
     kw : dict, optional
         Additional keyword arguments for the histograms.
@@ -963,7 +986,7 @@ def plot_ts(ds: xr.Dataset, percentile: list = [0.5, 99.5], axs: plt.Axes = None
     -------
     fig : matplotlib.figure.Figure
         Figure containing the plots.
-    axs : matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes
         Axes containing the histograms.
         - **Three plots are created:**
             1. **Histogram of Conservative Temperature** (middle 99%)
@@ -976,17 +999,17 @@ def plot_ts(ds: xr.Dataset, percentile: list = [0.5, 99.5], axs: plt.Axes = None
     """
     utilities._check_necessary_variables(ds, ['DEPTH', 'LONGITUDE', 'LATITUDE', 'PSAL', 'TEMP'])
     with plt.style.context(_style()):
-        if axs is None:
+        if ax is None:
             fig, ax = plt.subplots(2, 3)
             plt.subplots_adjust(wspace=0.03, hspace=0.03)
             force_plot = True
-            axs = ax.flatten()
+            ax = ax.flatten()
         else:
             fig = plt.gcf()
             plt.subplots_adjust(wspace=0.03, hspace=0.03)
             force_plot = False
-        axs[3].set_visible(False)
-        axs[5].set_visible(False)
+        ax[3].set_visible(False)
+        ax[5].set_visible(False)
         num_bins = 30
 
         # Create a mask once for valid data points
@@ -1009,53 +1032,53 @@ def plot_ts(ds: xr.Dataset, percentile: list = [0.5, 99.5], axs: plt.Axes = None
         zi = gsw.sigma0(xi.ravel(), yi.ravel()).reshape(xi.shape)
 
         # Temperature Histogram
-        axs[0].hist(CT_filtered, bins=num_bins, orientation="horizontal", **kw)
-        axs[0].set(ylabel='Conservative Temperature (°C)', xlabel='Frequency')
-        axs[0].invert_xaxis()
+        ax[0].hist(CT_filtered, bins=num_bins, orientation="horizontal", **kw)
+        ax[0].set(ylabel='Conservative Temperature (°C)', xlabel='Frequency')
+        ax[0].invert_xaxis()
 
         # Salinity Histogram
-        axs[4].hist(SA_filtered, bins=num_bins, **kw)
-        axs[4].set(xlabel='Absolute Salinity', ylabel='Frequency')
-        axs[4].yaxis.set_label_position("right")
-        axs[4].yaxis.tick_right()
-        axs[4].invert_yaxis()
+        ax[4].hist(SA_filtered, bins=num_bins, **kw)
+        ax[4].set(xlabel='Absolute Salinity', ylabel='Frequency')
+        ax[4].yaxis.set_label_position("right")
+        ax[4].yaxis.tick_right()
+        ax[4].invert_yaxis()
 
-        for tick in axs[1].xaxis.get_major_ticks():
+        for tick in ax[1].xaxis.get_major_ticks():
             tick.tick1line.set_visible(False)
             tick.tick2line.set_visible(False)
             tick.label1.set_visible(False)
             tick.label2.set_visible(False)
-        for tick in axs[1].yaxis.get_major_ticks():
+        for tick in ax[1].yaxis.get_major_ticks():
             tick.tick1line.set_visible(False)
             tick.tick2line.set_visible(False)
             tick.label1.set_visible(False)
             tick.label2.set_visible(False)
 
         # 2-d T-S histogram
-        h = axs[1].hist2d(SA_filtered, CT_filtered, bins=num_bins, cmap='viridis', norm=mcolors.LogNorm(), **kw)
-        axs[1].contour(xi, yi, zi, colors='black', alpha=0.5, linewidths=0.5)
-        axs[1].clabel(axs[1].contour(xi, yi, zi, colors='black', alpha=0.5, linewidths=0.5), inline=True)
-        cbar = fig.colorbar(h[3], orientation='vertical', cax=axs[2])
+        h = ax[1].hist2d(SA_filtered, CT_filtered, bins=num_bins, cmap='viridis', norm=mcolors.LogNorm(), **kw)
+        ax[1].contour(xi, yi, zi, colors='black', alpha=0.5, linewidths=0.5)
+        ax[1].clabel(ax[1].contour(xi, yi, zi, colors='black', alpha=0.5, linewidths=0.5), inline=True)
+        cbar = fig.colorbar(h[3], orientation='vertical', cax=ax[2])
         cbar.set_label('Log Counts')
-        axs[1].set_title('2D Histogram \n (Log Scale)')
-        # Resize axs[2] as colorbar
-        box2 = axs[2].get_position()
-        axs[2].set_position([box2.x0, box2.y0, box2.width / 6, box2.height])
+        ax[1].set_title('2D Histogram \n (Log Scale)')
+        # Resize ax[2] as colorbar
+        box2 = ax[2].get_position()
+        ax[2].set_position([box2.x0, box2.y0, box2.width / 6, box2.height])
         # Set x-limits based on salinity plot and y-limits based on temperature plot
-        axs[1].set_xlim(axs[4].get_xlim())
-        axs[1].set_ylim(axs[0].get_ylim())
+        ax[1].set_xlim(ax[4].get_xlim())
+        ax[1].set_ylim(ax[0].get_ylim())
 
         # Set font sizes for all annotations
-        for axes in [axs[0], axs[1], axs[4]]:
+        for axes in [ax[0], ax[1], ax[4]]:
             axes.tick_params(axis='both', which='major')
             axes.grid(True, which='both', linestyle='--', linewidth=0.5, color='grey')
         if force_plot:
             _show()
-        all_ax = axs
+        all_ax = ax
         return fig, all_ax
 
 
-def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
+def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None, ax: plt.Axes = None):
     """
     Plots vertical glider speeds with histograms for diagnostic purposes.
 
@@ -1079,12 +1102,14 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
         Starting profile number for subsetting. Defaults to the **first profile number**.
     end_prof : int, optional
         Ending profile number for subsetting. Defaults to the **last profile number**.
+    ax : matplotlib.axes.Axes, optional
+        Axes to plot the data. If not provided, a new figure and axes are created.
 
     Returns
     -------
     fig : matplotlib.figure.Figure
         The figure containing the plots.
-    axs : tuple(matplotlib.axes.Axes)
+    ax : tuple(matplotlib.axes.Axes)
         The axes objects for the plots.
 
     Notes
@@ -1114,24 +1139,28 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
             'vert_model': 'w$_{model}$ (flight model)',
             'vert_curr': 'w$_{sw}$ (calculated)'
         }
-
-        fig, axs = plt.subplots(2, 2, gridspec_kw={'width_ratios': [3, 1]})
+        if ax is None:
+            fig, ax = plt.subplots(2, 2, gridspec_kw={'width_ratios': [3, 1]})
+            force_plot = True
+        else:
+            fig = plt.gcf()
+            force_plot = False
 
         # Upper left subplot for vertical velocity and glider speed
-        ax1 = axs[0, 0]
+        ax1 = ax[0, 0]
         ax1.axhline(0, color='gray', linestyle='-', linewidth=0.5)  # Add zero horizontal line
         ax1.plot(ds['TIME'], vert_dzdt, label=labels_dict['vert_dzdt'])
         ax1.plot(ds['TIME'], vert_model, color='r', label=labels_dict['vert_model'])
         ax1.plot(ds['TIME'], vert_curr, color='g', label=labels_dict['vert_curr'])
         # Annotations
         ax1.set_xlabel('Time')
-        ax1.set_ylabel('Vertical Velocity (cm/s)')
+        ax1.set_ylabel('Vertical Velocity \n(cm/s)')
         ax1.legend(loc='lower left')
         ax1.legend(loc='lower right')
         utilities._time_axis_formatter(ax1, ds, format_x_axis=True)
 
         # Upper right subplot for histogram of vertical velocity
-        ax1_hist = axs[0, 1]
+        ax1_hist = ax[0, 1]
         ax1_hist.hist(vert_dzdt, bins=50, orientation='horizontal', alpha=0.5, color='blue',
                       label=labels_dict['vert_dzdt'])
         ax1_hist.hist(vert_model, bins=50, orientation='horizontal', alpha=0.5, color='red',
@@ -1139,6 +1168,7 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
         ax1_hist.hist(vert_curr, bins=50, orientation='horizontal', alpha=0.5, color='green',
                       label=labels_dict['vert_curr'])
         ax1_hist.set_xlabel('Frequency')
+        ax1_hist.xaxis.set_major_locator(matplotlib.ticker.LinearLocator(4))
 
         # Determine the best location for the legend based on the y-axis limits and zero
         y_upper_limit = ax1_hist.get_ylim()[1]
@@ -1148,22 +1178,23 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
         else:
             legend_loc = 'lower right'
         # Lower left subplot for vertical water speed
-        ax2 = axs[1, 0]
+        ax2 = ax[1, 0]
         ax2.axhline(0, color='gray', linestyle='-', linewidth=0.5)  # Add zero horizontal line
         ax2.plot(ds['TIME'], vert_curr, 'g', label=labels_dict['vert_curr'])
         # Annotations
         ax2.set_xlabel('Time')
-        ax2.set_ylabel('Vertical Water Speed (cm/s)')
+        ax2.set_ylabel('Vertical Water Speed \n(cm/s)')
         ax2.legend(loc='upper left')
         utilities._time_axis_formatter(ax2, ds, format_x_axis=True)
 
         # Lower right subplot for histogram of vertical water speed
-        ax2_hist = axs[1, 1]
+        ax2_hist = ax[1, 1]
         ax2_hist.hist(vert_curr, bins=50, orientation='horizontal', alpha=0.5, color='green',
                       label=labels_dict['vert_curr'])
         ax2_hist.axhline(median_vert_sw_speed, color='red', linestyle='dashed', linewidth=1,
                          label=f'Median: {median_vert_sw_speed:.2f} cm/s')
         ax2_hist.set_xlabel('Frequency')
+        ax2_hist.xaxis.set_major_locator(matplotlib.ticker.LinearLocator(4))
 
         # Determine the best location for the legend based on the y-axis limits and median
         y_upper_limit = ax2_hist.get_ylim()[1]
@@ -1214,12 +1245,13 @@ def plot_vertical_speeds_with_histograms(ds, start_prof=None, end_prof=None):
         box2_hist = ax2_hist.get_position()
         ax2_hist.set_position([box2_hist.x0 - shift_dist, box2_hist.y0, box2_hist.width + shift_dist, box2_hist.height])
 
-    _show()
+        if force_plot:
+            _show()
 
-    return fig, axs
+    return fig, ax
 
 
-def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.Dataset):
+def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.Dataset, ax: plt.Axes = None):
     """
     Plots combined vertical velocity profiles for dives and climbs.
 
@@ -1240,6 +1272,9 @@ def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.
 
     ds_out_climbs : xarray.Dataset
         Dataset containing climb profiles with the same variables as `ds_out_dives`.
+
+    ax : matplotlib.axes.Axes, optional
+        Axes to plot the data. If not provided, a new figure and axes are created.
 
     Returns
     -------
@@ -1266,7 +1301,13 @@ def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.
     w_lower_climbs = ds_out_climbs.w_lower.values * conv_factor
     w_upper_climbs = ds_out_climbs.w_upper.values * conv_factor
     with plt.style.context(_style()):
-        fig, ax = plt.subplots(1, 1)
+        if ax is None:
+            fig, ax = plt.subplots(1, 1)
+            force_plot = True
+        else:
+            fig = plt.gcf()
+            force_plot = False
+
         # Plot dives
         ax.fill_betweenx(zgrid_dives, w_lower_dives, w_upper_dives, color='black', alpha=0.3)
         ax.plot(meanw_dives, zgrid_dives, color='black', label='w$_{dive}$')
@@ -1289,7 +1330,8 @@ def plot_combined_velocity_profiles(ds_out_dives: xr.Dataset, ds_out_climbs: xr.
         ax.spines['top'].set_visible(False)
         ax.tick_params(axis='both', which='major')
         ax.legend()
-        _show()
+        if force_plot:
+            _show()
         return fig, ax
 
 
@@ -1327,15 +1369,35 @@ def plot_hysteresis(ds, var='DOXY', v_res=1, threshold=2, ax=None):
     df, diff, err_mean, err_range, rms = tools.compute_hyst_stat(ds, var=var, v_res=v_res)
     with plt.style.context(_style()):
         if ax is None:
-            fig = plt.figure()
+            fig = plt.figure(constrained_layout=True)
+            '''
             ax = [plt.subplot(4, 4, 1), plt.subplot(4, 4, 2), plt.subplot(4, 4, 3), plt.subplot(4, 4, 4),
                   plt.subplot(4, 1, 2)]
+            '''
+            gs = fig.add_gridspec(
+                2, 4,
+                height_ratios=[1, 1],
+                hspace=0.05,
+                wspace=0.02
+            )
+            ax = [
+                fig.add_subplot(gs[0, 0]),
+                fig.add_subplot(gs[0, 1]),
+                fig.add_subplot(gs[0, 2]),
+                fig.add_subplot(gs[0, 3]),
+                fig.add_subplot(gs[1, :]),
+            ]
             force_plot = True
         else:
             if len(ax) == 1:
                 fig = plt.gcf()
-                ax = [plt.subplot(4, 4, 1), plt.subplot(4, 4, 2), plt.subplot(4, 4, 3), plt.subplot(4, 4, 4),
-                      plt.subplot(4, 1, 2)]
+                ax = [
+                    fig.add_subplot(gs[0, 0]),
+                    fig.add_subplot(gs[0, 1]),
+                    fig.add_subplot(gs[0, 2]),
+                    fig.add_subplot(gs[0, 3]),
+                    fig.add_subplot(gs[1, :]),
+                ]
                 force_plot = False
             else:
                 fig = plt.gcf()
@@ -1353,10 +1415,10 @@ def plot_hysteresis(ds, var='DOXY', v_res=1, threshold=2, ax=None):
         [a.grid() for a in ax]
         [a.invert_yaxis() for a in ax]
         ax[0].set_ylabel('Depth (m)')
-        ax[0].set_xlabel(f'{utilities.plotting_labels(var)} $=mean$ \n({utilities.plotting_units(ds, var)})')
-        ax[1].set_xlabel(f'Absolute difference = |Δ| \n({ds[var].units})')
-        ax[2].set_xlabel('Error [|Δ| / mean] (%)')
-        ax[3].set_xlabel('Scaled error [|Δ| / range] (%)')
+        ax[0].set_xlabel(f'{utilities.plotting_labels(var)} \nmean ({utilities.plotting_units(ds, var)})', fontsize= 15)
+        ax[1].set_xlabel(f'Absolute difference \n|Δ| ({ds[var].units})', fontsize= 15)
+        ax[2].set_xlabel('Error [|Δ| / mean] \n(%)', fontsize= 15)
+        ax[3].set_xlabel('Scaled error [|Δ| / range] \n(%)', fontsize= 15)
         for ax1 in ax[:-1]:
             ax1.xaxis.set_label_position('top')
         c = ax[4].pcolor(profG[:-1, :], depthG[:-1, :], np.diff(varG, axis=0),
@@ -1364,7 +1426,7 @@ def plot_hysteresis(ds, var='DOXY', v_res=1, threshold=2, ax=None):
                          vmax=np.nanpercentile(np.diff(varG, axis=0), 99.5), cmap='seismic')
         plt.colorbar(c, ax=ax[4], label=f'Difference dive-climb \n({ds[var].units})', fraction=0.05)
         ax[4].set(ylabel='Depth (m)', xlabel='Profile number')
-        fig.suptitle(utilities.plotting_labels(var), y=.98)
+        fig.suptitle(utilities.plotting_labels(var), y=1.04)
         if force_plot:
             _show()
     return fig, ax
@@ -1429,6 +1491,9 @@ def plot_outlier_duration(ds: xr.Dataset, rolling_mean: pd.Series, overtime, std
         handles, labels = plt.gca().get_legend_handles_labels()
         by_label = dict(zip(labels, handles))
         ax[1].legend(by_label.values(), by_label.keys(), markerscale=8., loc='lower right')
+        locator = mdates.AutoDateLocator(minticks=4, maxticks=7)
+        ax[1].xaxis.set_major_locator(locator)
+        ax[1].xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
         ax[1].set(ylabel='Depth (m)')
         ax[1].grid()
         every_nth = 2
@@ -1664,7 +1729,7 @@ def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP', 
 
     with plt.style.context(_style()):
         if ax is None:
-            fig, ax1 = plt.subplots(figsize=(12, 9))
+            fig, ax1 = plt.subplots()
             force_plot = True
         else:
             fig = plt.gcf()
@@ -1701,12 +1766,14 @@ def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP', 
             ax.plot(profile[var], profile['DEPTH'], color=colors[i], label=label)
             ax.scatter(profile[var], profile['DEPTH'], color=colors[i], marker='o', s=s)
             ax.set_xlabel(f'{label} ({unit})', color=colors[i])
-            ax.tick_params(axis='x', colors=colors[i])
+            ax.tick_params(axis='x',bottom=True, top=False, labelbottom=True, labeltop=False, colors=colors[i])
             ax.spines['top'].set_visible(False)
             if i > 0:
-                ax.xaxis.set_ticks_position('bottom')
-                ax.spines['bottom'].set_position(('axes', -0.09 * i))
-            ax.xaxis.set_label_coords(0.5, -0.05 - 0.105 * i)
+                offset = -0.11 * i
+                label_offset = 0.075
+                ax.spines['bottom'].set_position(('axes', offset))
+                ax.tick_params(axis='x', which='both', bottom=True, top=False, labelbottom=True)
+                ax.xaxis.set_label_coords(0.5, offset - label_offset)
 
         ax1.grid(True)
         ax1.set_ylabel('Depth (m)')
@@ -1716,7 +1783,6 @@ def plot_profile(ds: xr.Dataset, profile_num: int = None, vars: list = ['TEMP', 
             _show()
 
     return fig, ax1
-
 
 def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: float = 2, ax=None):
     """
@@ -1760,7 +1826,7 @@ def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: f
 
     with plt.style.context(_style()):
         if ax is None:
-            fig, ax = plt.subplots(figsize=(12, 9))
+            fig, ax = plt.subplots()
             force_plot = True
         else:
             fig = plt.gcf()
@@ -1779,54 +1845,7 @@ def plot_CR(ds: xr.Dataset, profile_num: int, use_bins: bool = False, binning: f
     return fig, ax
 
 
-def get_color_limits(values, log_scale=False):
-    finite = values[np.isfinite(values)]
-
-    if log_scale:
-        finite = finite[finite > 0]
-
-        if finite.size == 0:
-            raise ValueError("No positive values available for LogNorm.")
-
-        if finite.size < values.size:
-            print("Warning: Some non-positive values will be ignored in log scale.")
-
-    return (np.nanpercentile(finite, 0.5), np.nanpercentile(finite, 99.5),)
-
-
-def get_contour_levels(levels=None, log_scale=False, vmin=None, vmax=None):
-    # If the user passed an explicit array/list of levels, use it directly
-    if levels is not None and not isinstance(levels, (int, float)):
-        return levels
-
-    # If levels is an integer or None, use it as the target number of intervals
-    num = levels if isinstance(levels, (int, float)) else 10
-
-    if log_scale:
-        # Find clean decade limits that encompass vmin and vmax
-        dec_min, dec_max = np.floor(np.log10(vmin)), np.ceil(np.log10(vmax))
-
-        # LogLocator naturally picks clean base-10 steps (e.g., 10^-5, 10^-4...)
-        locator = LogLocator(base=10, numticks=2 * num, subs='auto')
-        levels = locator.tick_values(10 ** dec_min, 10 ** dec_max)
-
-        # Filter levels to strictly fall within your desired vmin/vmax range
-        levels = levels[(levels >= vmin) & (levels <= vmax)]
-        # If not enough levels are found, fallback to geometric spacing
-        if len(levels) < num // 2:
-            levels = np.geomspace(vmin, vmax, num)
-    else:
-        # MaxNLocator finds clean intervals (multiples of 1, 2, 5, 10)
-        locator = MaxNLocator(nbins=2 * num, steps=[1, 2, 5, 10])
-        levels = locator.tick_values(vmin, vmax)
-
-        # Filter and append strict boundary limits
-        levels = levels[(levels >= vmin) & (levels <= vmax)]
-
-    return levels
-
-
-def plot_section(ds, var, v_res=2, start=None, end=None, show_time_axis=True, method="pcolormesh", log_scale=False,
+def plot_section(ds: xr.Dataset, vars: list = ['TEMP', 'PSAL', 'DENSITY'], v_res=2, start=None, end=None, show_time_axis=True, method="pcolormesh", log_scale=False,
                  ax=None, **kw, ):
     """
     Plots a section of the specified variable from the dataset `ds` against depth and profile number.
@@ -1835,8 +1854,8 @@ def plot_section(ds, var, v_res=2, start=None, end=None, show_time_axis=True, me
     ----------
     ds: xarray.Dataset
         The dataset containing the variable to be plotted.
-    var: str
-        The name of the variable to be plotted.
+    vars: str or list of str
+        Variable(s) to plot
     ax: matplotlib.axes.Axes, optional
         The axes on which to plot. If None, a new figure and axes will be created.
     v_res: float, optional
@@ -1868,9 +1887,13 @@ def plot_section(ds, var, v_res=2, start=None, end=None, show_time_axis=True, me
     Original Author: Till Moritz
     """
 
-    # -------------------------
-    # subset profiles
-    # -------------------------
+    vars = [v for v in vars if v]
+    if not vars:
+        fig, ax = plt.subplots(figsize=(12, 5))
+        ax.set_title("No Variables Selected")
+        return fig, [ax], [], None
+
+    # Subset profiles
     if start is not None or end is not None:
         start = ds.PROFILE_NUMBER.min() if start is None else start
         end = ds.PROFILE_NUMBER.max() if end is None else end
@@ -1880,90 +1903,93 @@ def plot_section(ds, var, v_res=2, start=None, end=None, show_time_axis=True, me
         dim = list(ds.dims)[0]
         ds = ds.sel({dim: mask})
 
-    values = ds[var].values
-    depth = ds.DEPTH.values
-    profiles = ds.PROFILE_NUMBER.values
+        # Figure / axes
 
-    if log_scale:
-        values = np.where(values <= 0, np.nan, values)
+    nvars = len(vars)
 
-    # -------------------------
-    # grid
-    # -------------------------
-    Z, X, Y = utilities.construct_2dgrid(
-        profiles,
-        depth,
-        values,
-        1,
-        v_res,
-        x_bin_center=False,
-    )
-
-    if kw.get("vmin") is None or kw.get("vmax") is None:
-        vmin, vmax = get_color_limits(values, log_scale=log_scale)
-        if kw.get("vmin") is None:
-            kw["vmin"] = vmin
-        if kw.get("vmax") is None:
-            kw["vmax"] = vmax
-
-    if log_scale:
-        kw["norm"] = LogNorm(vmin=kw["vmin"], vmax=kw["vmax"])
-
-    # -------------------------
-    # plotting
-    # -------------------------
+    #if figsize is None:
+    #    figsize = (14, max(4 * nvars, 5))
 
     with plt.style.context(_style()):
-        # --- Handle provided axes ---
-        if ax is not None:
-            fig = ax.get_figure()
+        if ax is None:
+            fig, axes = plt.subplots(nvars, 1, sharex=True, squeeze=False)
+            axes = axes[:, 0].tolist()
             force_plot = True
         else:
-            # Create new figure and axes if none provided
-            fig, ax = plt.subplots(figsize=(15, 5))
-            force_plot = True
+            fig = ax[0].get_figure() if isinstance(ax, (list, tuple, np.ndarray)) else ax.get_figure()
+            if isinstance(ax, (list, tuple, np.ndarray)):
+                axes = list(np.ravel(ax))
+            else:
+                axes = [ax]
+            if len(axes) != nvars:
+                raise ValueError(f"Expected {nvars} axes, but got {len(axes)}.")
+            force_plot = False
 
-        if not kw.get("cmap"):
-            kw["cmap"] = utilities.plotting_colormap(var)
+    # grid
 
-        levels = kw.pop("levels", None)
+        depth = ds.DEPTH.values
+        profiles = ds.PROFILE_NUMBER.values
+        cbars = []
+        base_kw = kw.copy()
+        for i, var in enumerate(vars):
+            ax_i = axes[i]
+            values = ds[var].values
+            if log_scale:
+                values = np.where(values <= 0, np.nan, values)
 
-        if method == "contourf":
-            levels = get_contour_levels(levels=levels, log_scale=log_scale, vmin=kw["vmin"], vmax=kw["vmax"])
-            mappable = ax.contourf(X, Y, Z, **kw, levels=levels, extend="both")
+            Z, X, Y = utilities.construct_2dgrid( profiles, depth, values, 1, v_res, x_bin_center=False)
+            plot_kw = base_kw.copy()
+            if plot_kw.get("vmin") is None or plot_kw.get("vmax") is None:
+                vmin, vmax = utilities.get_color_limits(values, log_scale=log_scale)
+                if plot_kw.get("vmin") is None:
+                    plot_kw["vmin"] = vmin
+                if plot_kw.get("vmax") is None:
+                    plot_kw["vmax"] = vmax
 
-        elif method == "pcolormesh":
-            if kw.get("norm"):
-                kw.pop("vmin", None)
-                kw.pop("vmax", None)
-            mappable = ax.pcolormesh(X, Y, Z, **kw)
+            if log_scale:
+                plot_kw["norm"] = LogNorm(vmin=plot_kw["vmin"], vmax=plot_kw["vmax"])
+            if not plot_kw.get("cmap"):
+                plot_kw["cmap"] = utilities.plotting_colormap(var)
 
-        else:
-            raise ValueError(f"Unknown method '{method}'")
+            levels = plot_kw.pop("levels", None)
 
-        # -------------------------
-        # axes formatting
-        # -------------------------
-        label = utilities.plotting_labels(var)
-        unit = utilities.plotting_units(ds, var)
+        # plotting
+            if not plot_kw.get("cmap"):
+                plot_kw["cmap"] = utilities.plotting_colormap(vars)
 
-        ax.invert_yaxis()
-        ax.set_ylabel("Depth (m)")
-        ax.set_xlabel("Profile Number")
-        ax.set_title(f"Section plot of {label}")
-        ax.grid(True)
+            if method == "contourf":
+                levels = utilities.get_contour_levels(levels=levels, log_scale=log_scale, vmin=plot_kw["vmin"], vmax=plot_kw["vmax"])
+                mappable = ax_i.contourf(X, Y, Z, **plot_kw, levels=levels, extend="both")
 
-        # -------------------------
-        # colorbar
-        # -------------------------
-        cbar = plt.colorbar(mappable, ax=ax, spacing="proportional", extend="both")
-        cbar.set_label(f"{label} ({unit})")
-        if log_scale:
-            cbar.ax.set_yscale('log')
+            elif method == "pcolormesh":
+                if plot_kw.get("norm"):
+                    plot_kw.pop("vmin", None)
+                    plot_kw.pop("vmax", None)
+                mappable = ax_i.pcolormesh(X, Y, Z, **plot_kw)
 
-        # -------------------------
+            else:
+                raise ValueError(f"Unknown method '{method}'. Choose 'contourf' or 'pcolormesh'.")
+
+            # axes formatting
+
+            label = utilities.plotting_labels(var)
+            unit = utilities.plotting_units(ds, var)
+
+            ax_i.invert_yaxis()
+            ax_i.set_ylabel("Depth (m)")
+            ax_i.set_title(f"Section plot of {label}")
+            ax_i.grid(True)
+
+            # colorbar
+
+            cbar = fig.colorbar(mappable, ax=ax_i, spacing="proportional", extend="both", pad=0.02)
+            cbar.set_label(f"{label} \n({unit})")
+            if log_scale:
+                cbar.ax.set_yscale('log')
+            cbars.append(cbar)
+
+        axes[-1].set_xlabel("Profile Number")
         # optional time axis
-        # -------------------------
         time_ax = None
         if show_time_axis:
             df = ds[["TIME", "PROFILE_NUMBER"]].to_dataframe().dropna()
@@ -1980,9 +2006,9 @@ def plot_section(ds, var, v_res=2, start=None, end=None, show_time_axis=True, me
 
             to_profile = interp1d(t, p, bounds_error=False, fill_value="extrapolate", )
 
-            time_ax = ax.secondary_xaxis("bottom", functions=(to_time, to_profile), )
+            time_ax = axes[-1].secondary_xaxis("bottom", functions=(to_time, to_profile), )
 
-            time_ax.spines["bottom"].set_position(("outward", 40))
+            time_ax.spines["bottom"].set_position(("outward", 60))
 
             time_ax.xaxis.set_major_locator(mdates.AutoDateLocator())
 
@@ -1991,8 +2017,8 @@ def plot_section(ds, var, v_res=2, start=None, end=None, show_time_axis=True, me
             time_ax.xaxis.set_major_formatter(mdates.DateFormatter(fmt))
 
             time_ax.tick_params(rotation=35)
-    if force_plot:
-        _show()
+        if show_time_axis:
+            fig.subplots_adjust(bottom=0.40)
+        if force_plot:
+            _show()
     return fig, ax, cbar, time_ax
-
-

@@ -142,8 +142,8 @@ def test_plot_CR():
 
 def test_plot_section():
     ds = fetchers.load_sample_dataset()
-    plots.plot_section(ds,var='TEMP', start=475, end=500, method='pcolormesh')
-    plots.plot_section(ds,var='PSAL', start=None, end=475, method='contourf')
+    plots.plot_section(ds,vars=['TEMP'], start=475, end=500, method='pcolormesh')
+    plots.plot_section(ds,vars=['PSAL'], start=None, end=475, method='contourf')
 
 
 def test_style_override():
