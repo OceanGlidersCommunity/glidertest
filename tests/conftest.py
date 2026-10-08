@@ -74,6 +74,8 @@ def subset_report(tmp_path_factory):
     root = tmp_path_factory.mktemp("subset_report")
     with xr.open_dataset(SEA045_SUBSET) as ds:
         landing = report(ds, root, navigator=False)
+    # report()'s return-path contract (root layout): <root>/<mission_id>/index.html.
+    assert landing == root / "sea045_20230604T1253_delayed" / "index.html"
     return landing.parent
 
 

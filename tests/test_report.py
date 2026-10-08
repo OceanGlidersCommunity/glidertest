@@ -166,12 +166,23 @@ def test_qc_delivered_covers_all_qc_variables(subset_report):
     html = (subset_report / "index.html").read_text(encoding="utf-8")
     # Every *_QC variable in the file must appear, not just those with diagnostic thresholds. The
     # subset keeps CNDC_QC (no diagnostic threshold) alongside the four thresholded vars to hold
-    # that distinction; the full sample's derived-variable QC (DENSITY/POTDENS0/THETA) is dropped.
+    # that distinction; the subset drops the derived-variable QC (DENSITY/POTDENS0/THETA), which
+    # test_qc_delivered_covers_derived_qc_on_full_sample checks on the full sample.
     for parent in ("TEMP", "PSAL", "DOXY", "CHLA", "CNDC"):
         assert f"<td>{parent}</td>" in html
     # Column labels come from the file's flag_meanings: flag 2 is "Unknown" here, not QARTOD wording.
     assert "Unknown %" in html
     assert "Not eval %" not in html
+
+
+@pytest.mark.slow
+def test_qc_delivered_covers_derived_qc_on_full_sample(tmp_path):
+    # The subset drops the derived-variable QC companions; the full sample carries them, so the
+    # delivered-QC table must list every _QC parent, derived (DENSITY/POTDENS0/THETA) included.
+    ds = fetchers.load_sample_dataset()
+    html = report(ds, tmp_path, navigator=False).read_text(encoding="utf-8")
+    for parent in ("TEMP", "PSAL", "DOXY", "CHLA", "CNDC", "DENSITY", "POTDENS0", "THETA"):
+        assert f"<td>{parent}</td>" in html
 
 
 def test_flag_labels_read_from_file(subset_ds):
