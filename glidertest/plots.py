@@ -888,7 +888,7 @@ def plot_sampling_period_all(ds: xr.Dataset, ax: plt.Axes = None) -> tuple({plt.
             force_plot = False
 
     for i in range(len(variables)):
-        ax[i] = plot_sampling_period(ds, ax[i], variables[i], annotation_fontsize=10)
+        fig, ax[i] = plot_sampling_period(ds, ax[i], variables[i], annotation_fontsize=10)
         ax[i].xaxis.set_major_locator(MaxNLocator(nbins=5))
         ax[i].tick_params(axis='x', rotation=45)
 
@@ -965,7 +965,7 @@ def plot_sampling_period(ds: xr.Dataset, ax: plt.Axes = None, variable='TEMP', a
         if force_plot:
             _show()
 
-    return ax
+    return fig, ax
 
 
 def plot_ts(ds: xr.Dataset, percentile: list = [0.5, 99.5], ax: plt.Axes = None, **kw: dict) -> tuple(
@@ -1625,7 +1625,6 @@ def plot_ioosqc(data, suspect_threshold=[25], fail_threshold=[50], title='', ax=
         a_2[9] = 'Nan'
 
         ax2.set_yticklabels(a_2)
-
         ax.set_xlabel('Data index')
         ax.grid()
         ax.set_title(title)
@@ -1889,7 +1888,7 @@ def plot_section(ds: xr.Dataset, variables: list = ['TEMP', 'PSAL', 'DENSITY'], 
 
     variables = [v for v in variables if v]
     if not variables:
-        fig, ax = plt.subplots(figsize=(12, 5))
+        fig, ax = plt.subplots(figsize=(12, 10))
         ax.set_title("No Variables Selected")
         return fig, [ax], [], None
 
@@ -1907,12 +1906,9 @@ def plot_section(ds: xr.Dataset, variables: list = ['TEMP', 'PSAL', 'DENSITY'], 
 
     nvars = len(variables)
 
-    #if figsize is None:
-    #    figsize = (14, max(4 * nvars, 5))
-
     with plt.style.context(_style()):
         if ax is None:
-            fig, axes = plt.subplots(nvars, 1, sharex=True, squeeze=False)
+            fig, axes = plt.subplots(nvars, 1, figsize=(14,(10+(nvars*1.5))), sharex=True, squeeze=False)
             axes = axes[:, 0].tolist()
             force_plot = True
         else:
