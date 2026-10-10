@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>glidertest.reports &mdash; glidertest 0.1.1.dev33+g971fb4b53 documentation</title>
+  <title>glidertest.reports &mdash; glidertest 0.1.1.dev34+gd11476ced documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=ac23f95b"></script>
+      <script src="../../_static/documentation_options.js?v=44ecb6f7"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -99,6 +99,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">._manifest</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_nav</span>
+
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
@@ -133,15 +135,25 @@
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">_NAV_ROWS</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">group</span> <span class="o">:=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">nav_group</span> <span class="o">==</span> <span class="n">key</span><span class="p">])</span>
     <span class="p">]</span>
+    <span class="c1"># Inventory pills render as .file-pill, not .nav-&lt;role&gt;, so their role is cosmetic — but</span>
+    <span class="c1"># validate_nav checks every pill's role against ROLE_ACCENT, so use a valid key ("component",</span>
+    <span class="c1"># as ctdcast's _navs.py does) rather than the inventory Page's own "inventory" role.</span>
     <span class="n">inventory</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="p">{</span><span class="o">**</span><span class="n">pill</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="s2">"label"</span><span class="p">:</span> <span class="n">source_name</span><span class="p">}</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">nav_group</span> <span class="o">==</span> <span class="s2">"inventory"</span>
+        <span class="p">{</span><span class="o">**</span><span class="n">pill</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="s2">"label"</span><span class="p">:</span> <span class="n">source_name</span><span class="p">,</span> <span class="s2">"role"</span><span class="p">:</span> <span class="s2">"component"</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">nav_group</span> <span class="o">==</span> <span class="s2">"inventory"</span>
     <span class="p">]</span>
-    <span class="n">back_pill</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">up_pill</span> <span class="o">=</span> <span class="p">(</span>
         <span class="p">{</span><span class="s2">"label"</span><span class="p">:</span> <span class="s2">"← All missions"</span><span class="p">,</span> <span class="s2">"href"</span><span class="p">:</span> <span class="s2">"../index.html"</span><span class="p">,</span> <span class="s2">"role"</span><span class="p">:</span> <span class="s2">"up"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"link"</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">back</span>
         <span class="k">else</span> <span class="kc">None</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">"rows"</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span> <span class="s2">"back"</span><span class="p">:</span> <span class="n">back_pill</span><span class="p">,</span> <span class="s2">"inventory"</span><span class="p">:</span> <span class="n">inventory</span><span class="p">}</span>
+    <span class="c1"># The up-link renders as a breadcrumb above the masthead (base.html topbar), not as an inline</span>
+    <span class="c1"># nav pill, so it goes under "up", not "back" — the vendored page_nav draws "back" in the first</span>
+    <span class="c1"># row, which we don't want. "back" stays None so page_nav omits it.</span>
+    <span class="n">nav</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"rows"</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span> <span class="s2">"back"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"inventory"</span><span class="p">:</span> <span class="n">inventory</span><span class="p">,</span> <span class="s2">"up"</span><span class="p">:</span> <span class="n">up_pill</span><span class="p">}</span>
+    <span class="n">validate_nav</span><span class="p">(</span><span class="n">nav</span><span class="p">)</span>  <span class="c1"># fail loudly at build time on a malformed nav (bad role/state, &gt;1 current)</span>
+    <span class="k">return</span> <span class="n">nav</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">resolve_mission_id</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mission_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>

@@ -32,6 +32,7 @@
   --role-aggregate-a: #8e44ad;
   --role-aggregate-b: #27ae60;
   --role-map: #ee3377;
+  --role-up: #5d6d7e;
   --package-accent: #07264f;
   --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
@@ -42,7 +43,7 @@
   --fs-meta: 0.84rem;
   --fs-note: 0.92rem;
   --fs-nav: 0.8rem;
-  --fs-cap: 0.86rem;
+  --fs-cap: 0.92rem;
   --fs-xs: 0.75rem;
   --fs-top: 0.72rem;
   --fs-dt: 0.7rem;
@@ -197,6 +198,40 @@ td.mono { font-family: var(--font-mono); font-size: var(--fs-xs); }
   border-radius: var(--radius-pill); text-decoration: none; font-size: var(--fs-nav);
 }
 .btn-nav:hover { opacity: 0.85; }
+/* Masthead page-nav (vendored): the row of role pills under the masthead, and the
+   "Data inventory:" file strip.  A pill's colour is its role, never its page; the
+   current page's pill and an already-viewed file pill are muted the same way. */
+.page-nav { margin: 0.65rem 0 0.5rem; }
+.page-nav-label { font-size: var(--fs-top); opacity: 0.75; margin-right: 0.3rem; }
+.nav-pill {
+  display: inline-block; padding: 0.2em 0.65em; border-radius: var(--radius-btn);
+  font-size: var(--fs-nav); font-weight: 700; text-decoration: none; color: #fff;
+  margin: 0 0.2rem 0.25rem 0;
+}
+.nav-landing { background: var(--role-landing); }
+.nav-entity { background: var(--role-entity); }
+.nav-collection { background: var(--role-collection); }
+.nav-component { background: var(--role-component); }
+.nav-aggregate-a { background: var(--role-aggregate-a); }
+.nav-aggregate-b { background: var(--role-aggregate-b); }
+.nav-map { background: var(--role-map); }
+.nav-up { background: var(--role-up); }
+.nav-current { opacity: 0.5; pointer-events: none; }
+.nav-missing { background: var(--gray-3); opacity: 0.5; pointer-events: none; }
+.inventory-strip { margin: 0 0 1rem; }
+.inventory-strip .label { font-size: var(--fs-top); opacity: 0.75; margin-right: 0.3rem; }
+.file-pill {
+  display: inline-block; background: var(--role-component); color: #fff;
+  padding: 0.2rem 0.7rem; border-radius: var(--radius-pill);
+  font-family: var(--font-mono); font-size: 0.78rem;
+  text-decoration: none; margin: 0.1rem 0.05rem;
+}
+.file-pill:hover { opacity: 0.85; }
+.file-pill-active { opacity: 0.5; pointer-events: none; }
+/* Opt-in plain masthead (vendored) for landing / navigator pages: white panel,
+   ink text, rule border, wordmark hidden.  No ctdcast page uses it yet. */
+.masthead-plain { background: #fff; color: var(--text); border: 1px solid var(--rule); }
+.masthead-plain .wordmark { display: none; }
 footer {
   text-align: center; padding: 1rem;
   border-top: 1px solid var(--package-accent);
@@ -222,6 +257,8 @@ footer a { color: var(--muted); }
 }
 /* Always-on: the glidertest plotter that produced a figure, under it. */
 .fig-source { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); margin-top: 0.1rem; }
+/* Topbar above the masthead: holds the fleet up-link pill (nav-up, vendored). */
+.topbar { margin: 0 0 0.5rem; }
 /* Package-local: non-conforming OG1 metadata value cells in amber (conformance table and the
    sensor catalog, where a serial/calibration read from a pre-OG1 attribute name is flagged). */
 .meta td.nonconform, table.nc td.nonconform { background: var(--warn-bg); }
@@ -271,30 +308,6 @@ details.attrs td { font-size: var(--fs-xs); border: none; }
 .qc-bar-sm { width: 6rem; height: 0.6rem; border-style: dashed; }
 /* Visible failure block for an html panel that raised — the failure shows on the page. */
 .none-note { background: #fdecea; border-left: 3px solid var(--qc-fail); padding: 0.3rem 0.6rem; color: #333; }
-/* Masthead nav, grouped rows (shared-design-system §2 shape, kept in glidertest's layer for now —
-   replaced by vendored _css rules at re-vendor): an optional back pill, then one row per group of
-   role-coloured pills, the current page muted. Row labels share a min-width so the rows line up. */
-.page-nav { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; margin: 0.65rem 0 0.2rem; }
-.nav-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
-.page-nav-label { font-size: var(--fs-dt); opacity: 0.75; margin-right: 0.2rem; min-width: 5rem; }
-.nav-pill { padding: 0.2em 0.65em; border-radius: 4px; font-size: var(--fs-nav); font-weight: 700;
-  text-decoration: none; color: #fff; }
-.nav-landing { background: var(--role-landing); }
-.nav-entity { background: var(--role-entity); }
-.nav-collection { background: var(--role-collection); }
-.nav-component { background: var(--role-component); }
-.nav-aggregate-a { background: var(--role-aggregate-a); }
-.nav-aggregate-b { background: var(--role-aggregate-b); }
-.nav-map { background: var(--role-map); }
-.nav-back { background: #5d6d7e; }  /* "up" role; vendored ROLE_ACCENT gains this key at re-vendor */
-.nav-current { opacity: 0.5; pointer-events: none; }
-/* "Data inventory:" strip, folded into the masthead (rounded monospace file pills; current is dark).
-   The label shares the nav row-label width so it lines up under Summary/Reports/Derived. */
-.inventory-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0.2rem; font-size: var(--fs-nav); }
-.inventory-strip .label { font-size: var(--fs-dt); opacity: 0.75; min-width: 5rem; }
-.file-pill { font-family: var(--font-mono); padding: 0.2em 0.65em; border-radius: 4px;
-  text-decoration: none; color: #fff; background: #3a7a8c; }  /* teal, distinct from the role pills */
-.file-pill-active { opacity: 0.5; pointer-events: none; }
 /* Navigator missions table: page-button cells keep their pills on one line. */
 td.nav-cell { white-space: nowrap; }
 td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-right: 0.15rem; }
@@ -306,26 +319,53 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 <body>
 <div id="top"></div>
 
-
+<div class="topbar"><a class="nav-pill nav-up" href="../index.html">← All missions</a></div>
 
 <div class="masthead" style="background:#07264f;">
   <div class="masthead-header">
     <h1>sg014_20040924T182454_delayed_subset</h1>
     <span class="masthead-type">netCDF Inventory</span>
   </div>
-  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sg014_20040924T182454_delayed_subset.nc</span><span>generated 2026-10-10 09:07 UTC</span></p>
-  <nav class="page-nav"><a class="nav-pill nav-back" href="../index.html">← All missions</a><span class="nav-row"><span class="page-nav-label">Summary:</span><a class="nav-pill nav-landing" href="index.html">Mission</a></span><span class="nav-row"><span class="page-nav-label">Reports:</span><a class="nav-pill nav-aggregate-b" href="ctd.html">CTD</a></span><span class="nav-row"><span class="page-nav-label">Derived:</span><a class="nav-pill nav-aggregate-a" href="flight.html">Flight</a></span></nav>
-  <nav class="inventory-strip"><span class="label">Data inventory:</span><span class="file-pill file-pill-active">sg014_20040924T182454_delayed_subset.nc</span></nav>
+  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sg014_20040924T182454_delayed_subset.nc</span><span>generated 2026-10-10 21:11 UTC</span></p>
+  
+
+<nav class="page-nav">
+  <span class="page-nav-label">Summary</span>
+  
+  <a class="nav-pill nav-landing" href="index.html">Mission</a>
+</nav>
+
+<nav class="page-nav">
+  <span class="page-nav-label">Reports</span>
+  
+  <a class="nav-pill nav-aggregate-b" href="ctd.html">CTD</a>
+</nav>
+
+<nav class="page-nav">
+  <span class="page-nav-label">Derived</span>
+  
+  <a class="nav-pill nav-aggregate-a" href="flight.html">Flight</a>
+</nav>
+
+
+  
+
+<nav class="inventory-strip">
+  <span class="label">Data inventory:</span>
+  <span class="file-pill file-pill-active">sg014_20040924T182454_delayed_subset.nc</span>
+</nav>
+
+
   
   <dl class="meta-grid">
     <div><dt>Profiles</dt><dd>101</dd></div>
     <div><dt>Start</dt><dd>2004-11-02 03:58</dd></div>
     <div><dt>End</dt><dd>2004-11-18 01:52</dd></div>
     <div><dt>Duration</dt><dd>15d 21h</dd></div>
-    <div><dt>Sampling</dt><dd>10 s</dd></div>
     <div><dt>Dive depth</dt><dd>657–986 m</dd></div>
     <div><dt>Lat</dt><dd>63.93°N–65.56°N</dd></div>
     <div><dt>Lon</dt><dd>56.44°W–54.87°W</dd></div>
+    <div><dt>Sampling</dt><dd>10 s</dd></div>
     <div><dt>Records</dt><dd>79,862</dd></div>
     <div><dt>Size</dt><dd>24.3 MB</dd></div>
     
@@ -631,7 +671,7 @@ US Office of Naval Research Grant N00014-02-1-0791</td></tr>
 </main>
 
 
-<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev33 &nbsp;·&nbsp; sg014_20040924T182454_delayed_subset &nbsp;·&nbsp; 2026-10-10 09:07 UTC</footer>
+<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev34 &nbsp;·&nbsp; sg014_20040924T182454_delayed_subset &nbsp;·&nbsp; 2026-10-10 21:11 UTC</footer>
 <script>
 document.querySelectorAll('h2').forEach(h => {
   const a = document.createElement('a');
