@@ -53,12 +53,15 @@ def _build_nav(pages: list[Page], current: Page, source_name: str, *, back: bool
         for p in pages
         if p.nav_group == "inventory"
     ]
-    back_pill = (
+    up_pill = (
         {"label": "← All missions", "href": "../index.html", "role": "up", "state": "link"}
         if back
         else None
     )
-    nav = {"rows": rows, "back": back_pill, "inventory": inventory}
+    # The up-link renders as a breadcrumb above the masthead (base.html topbar), not as an inline
+    # nav pill, so it goes under "up", not "back" — the vendored page_nav draws "back" in the first
+    # row, which we don't want. "back" stays None so page_nav omits it.
+    nav = {"rows": rows, "back": None, "inventory": inventory, "up": up_pill}
     validate_nav(nav)  # fail loudly at build time on a malformed nav (bad role/state, >1 current)
     return nav
 

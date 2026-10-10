@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block title %}{% if page_landing %}{{ mission_id }}{% else %}{{ page_type }} — {{ mission_id }}{% endif %}{% endblock %}
 {% block masthead_type %}{{ page_type }}{% endblock %}
+{# Up-link to the fleet page, as a button in the topbar above the masthead (ctdcast's breadcrumb slot). #}
+{% block topbar %}{% if nav.up %}<div class="topbar"><a class="nav-pill nav-{{ nav.up.role }}" href="{{ nav.up.href }}">{{ nav.up.label }}</a></div>{% endif %}{% endblock %}
 {% block content %}
 {% import "_macros.html" as m %}
 <main>

@@ -831,8 +831,8 @@ def test_build_nav_validates_and_has_one_current_pill_per_page():
         nav = _build_nav(pages, current, "src.nc", back=True)  # raises via validate_nav if malformed
         all_pills = [pill for row in nav["rows"] for pill in row["pills"]]
         all_pills += list(nav["inventory"])
-        if nav["back"] is not None:
-            all_pills.append(nav["back"])
+        if nav["up"] is not None:  # the "← All missions" up-link (rendered above the masthead)
+            all_pills.append(nav["up"])
         # Every pill carries an explicit state the vendored _nav.html macro renders correctly: a
         # missing state would pass validate_nav (it defaults to "link") but the macro keys on the
         # actual field and would emit a stateless non-link span. _build_nav must never produce one.

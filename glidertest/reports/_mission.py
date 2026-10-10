@@ -95,12 +95,14 @@ def header_card(ds: xr.Dataset, facts: dict[str, Any] | None = None) -> list[tup
         dt = np.diff(np.asarray(ds["TIME"].values))  # timedelta64; NaT where either end is NaT
         valid = dt[~np.isnat(dt)]
         med = np.median(valid.astype("timedelta64[s]").astype(float)) if valid.size else np.nan
-        fields.append(("Sampling", f"{med:.0f} s" if np.isfinite(med) else "UNK"))
+        sampling = f"{med:.0f} s" if np.isfinite(med) else "UNK"
     if f["depth_min"] is not None:
         fields.append(("Dive depth", f"{int(f['depth_min'])}–{int(f['depth_max'])} m"))
     if f["lat_min"] is not None:
         fields.append(("Lat", _deg_range(f["lat_min"], f["lat_max"], "N", "S")))
         fields.append(("Lon", _deg_range(f["lon_min"], f["lon_max"], "E", "W")))
+    if sampling is not None:  # sampling period sits after lat/lon in the masthead grid
+        fields.append(("Sampling", sampling))
     if "N_MEASUREMENTS" in ds.sizes:
         fields.append(("Records", f"{f['n_records']:,}"))
     source = ds.encoding.get("source")
