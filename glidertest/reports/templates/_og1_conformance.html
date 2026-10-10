@@ -9,6 +9,7 @@
 {% endfor %}
 </tbody>
 </table>
+{% if spatiotemporal_caption %}<p class="caption">{{ spatiotemporal_caption }}</p>{% endif %}
 {% elif group %}
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>

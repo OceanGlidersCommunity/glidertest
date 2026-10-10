@@ -21,6 +21,7 @@
 {% endif %}
 {% endfor %}
 {% if sensors %}
+<p class="caption">A Serial or Calibration cell is amber when the value was read from a pre-OG1 attribute name (<code>serial_number</code> / <code>calibration_date</code>) rather than the OG1 <code>sensor_serial_number</code> / <code>sensor_calibration_date</code>. A blank (—) cell is simply absent — not flagged, since OG1 does not clearly require it and a legacy file may be unable to reconstruct it.</p>
 <table class="nc">
 <thead><tr><th>Variable</th><th>Model</th><th>Serial</th><th>Calibration</th><th>Attributes</th></tr></thead>
 <tbody>

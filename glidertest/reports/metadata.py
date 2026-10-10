@@ -189,12 +189,14 @@ def attr_category_data(ds: xr.Dataset, title: str) -> dict[str, Any]:
     the table shows value and conformance together — or ``None`` when the file has no rows for it
     (only possible for ``OTHER_GROUP``; the four OG1 categories always carry their mandatory and
     highly-desirable rows). For the Spatiotemporal category it also returns ``spatiotemporal`` (the
-    combined file-vs-computed table), which the template renders instead of the plain attribute table.
+    combined file-vs-computed table) and ``spatiotemporal_caption``, which the template renders
+    instead of the plain attribute table.
     """
     group = next((g for g in og1_attrs.group_globals(ds.attrs) if g["title"] == title), None)
     data: dict[str, Any] = {"group": group}
     if title == "Spatiotemporal coverage":
         data["spatiotemporal"] = spatiotemporal_rows(ds)
+        data["spatiotemporal_caption"] = _spatiotemporal_caption(ds)
     return data
 
 
@@ -362,3 +364,22 @@ def spatiotemporal_rows(ds: xr.Dataset) -> list[dict[str, Any]]:
             }
         )
     return rows
+
+
+def _spatiotemporal_caption(ds: xr.Dataset) -> str:
+    """Return the caption under the Spatiotemporal table.
+
+    The Computed column is the min/max over the records *in this file*. When the first profile
+    number is not 1 the file is a subset of a longer mission, so the computed ranges need not match
+    the full dataset — the caption says so and names the first profile.
+    """
+    base = "Computed values are the min/max over the records in this file."
+    if "PROFILE_NUMBER" in ds:
+        pn = np.asarray(ds["PROFILE_NUMBER"].values)
+        pn = pn[np.isfinite(pn)]
+        if pn.size and int(pn.min()) != 1:
+            return (
+                f"{base} The first profile is number {int(pn.min())}, so this file is a subset — "
+                "these ranges need not match the full mission."
+            )
+    return base

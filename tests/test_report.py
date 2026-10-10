@@ -226,6 +226,44 @@ def test_spatiotemporal_diff_amber_above_threshold(subset_path):
             assert row["over"] is want_amber, f"delta={delta} -> over={row['over']}"
 
 
+def test_spatiotemporal_caption_flags_subset(subset_path):
+    from glidertest.reports.metadata import attr_category_data
+
+    # The sea045 subset starts at profile 468, so the caption flags it as a subset and names the
+    # first profile — the computed ranges need not match the full mission.
+    with xr.open_dataset(subset_path) as ds:
+        cap = attr_category_data(ds, "Spatiotemporal coverage")["spatiotemporal_caption"]
+    assert "subset" in cap and "468" in cap
+
+
+def test_spatiotemporal_caption_plain_when_first_profile_is_one():
+    from glidertest.reports.metadata import _spatiotemporal_caption
+
+    ds = xr.Dataset({"PROFILE_NUMBER": ("N_MEASUREMENTS", np.array([1, 1, 2, 2]))})
+    cap = _spatiotemporal_caption(ds)
+    assert "subset" not in cap and cap.startswith("Computed values")
+
+
+def test_sensor_catalog_caption_and_legacy_amber(subset_report):
+    html = (subset_report / "inventory.html").read_text(encoding="utf-8")
+    # The sea045 sensors carry pre-OG1 serial_number / calibration_date, so the cells are amber and
+    # the caption names the OG1 attribute and both amber reasons.
+    assert "sensor_serial_number" in html  # caption names the OG1 attribute
+    assert "from the pre-OG1 attribute serial_number" in html  # legacy hover present
+
+
+def test_sensor_meta_reports_legacy_and_missing():
+    from glidertest.reports.inventory import _sensor_meta
+
+    # A legacy serial name is flagged (amber); an absent calibration reads empty and is left
+    # unflagged (OG1 does not clearly require it), distinct from a legacy read.
+    ds = xr.Dataset({"SENSOR_CTD": ((), 0)})
+    ds["SENSOR_CTD"].attrs["serial_number"] = "abc"  # pre-OG1 name only
+    row = _sensor_meta(ds, "SENSOR_CTD")
+    assert (row["serial"], row["serial_legacy"]) == ("abc", True)
+    assert (row["calibration"], row["calibration_legacy"]) == ("", False)  # absent, not legacy
+
+
 def test_spatiotemporal_compact_time_parses(subset_path):
     from glidertest.reports.metadata import spatiotemporal_rows
 
