@@ -252,16 +252,21 @@ def test_sensor_catalog_caption_and_legacy_amber(subset_report):
     assert "from the pre-OG1 attribute serial_number" in html  # legacy hover present
 
 
-def test_sensor_meta_reports_legacy_and_missing():
+def test_sensor_meta_resolves_og1_legacy_and_missing():
     from glidertest.reports.inventory import _sensor_meta
 
-    # A legacy serial name is flagged (amber); an absent calibration reads empty and is left
-    # unflagged (OG1 does not clearly require it), distinct from a legacy read.
-    ds = xr.Dataset({"SENSOR_CTD": ((), 0)})
-    ds["SENSOR_CTD"].attrs["serial_number"] = "abc"  # pre-OG1 name only
-    row = _sensor_meta(ds, "SENSOR_CTD")
-    assert (row["serial"], row["serial_legacy"]) == ("abc", True)
-    assert (row["calibration"], row["calibration_legacy"]) == ("", False)  # absent, not legacy
+    # Synthetic because no committed fixture carries the OG1 `sensor_*` form or a missing
+    # serial/calibration: sea045's sensors all have both under the pre-OG1 names (that legacy render
+    # + amber is covered on the real file by test_sensor_catalog_caption_and_legacy_amber). Here:
+    # OG1 name -> not legacy; pre-OG1 name -> legacy (amber); absent -> empty, left unflagged.
+    ds = xr.Dataset({"SENSOR_A": ((), 0), "SENSOR_B": ((), 0)})
+    ds["SENSOR_A"].attrs["sensor_serial_number"] = "og1"  # current OG1 name
+    ds["SENSOR_B"].attrs["serial_number"] = "abc"  # pre-OG1 name only
+    a = _sensor_meta(ds, "SENSOR_A")
+    b = _sensor_meta(ds, "SENSOR_B")
+    assert (a["serial"], a["serial_legacy"]) == ("og1", False)  # OG1 name, not flagged
+    assert (b["serial"], b["serial_legacy"]) == ("abc", True)  # pre-OG1 name, flagged
+    assert (b["calibration"], b["calibration_legacy"]) == ("", False)  # absent, left unflagged
 
 
 def test_spatiotemporal_compact_time_parses(subset_path):

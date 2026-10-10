@@ -216,15 +216,20 @@ def inventory_data(ds: xr.Dataset) -> dict[str, Any]:
     }
 
 
-def inventory_slice(ds: xr.Dataset, which: str) -> dict[str, Any]:
+def inventory_slice(ds: xr.Dataset, which: str, *, data: dict[str, Any] | None = None) -> dict[str, Any]:
     """Return one inventory subsection's data for ``_inventory.html``.
 
     Filters the groups :func:`inventory_data` already builds, so the grouping rule lives in one
     place. *which* is one of ``"coords"`` (the coordinate group), ``"measurements"`` (variables on
     ``N_MEASUREMENTS``), ``"other_dims"`` (variables on any other dimension), ``"scalars"`` (the
     scalar group), or ``"sensors"`` (the ``SENSOR_*`` catalog). Returns ``{"groups", "sensors"}``.
+
+    *data* is a prebuilt :func:`inventory_data` result to slice; when None it is built from *ds*.
+    The report passes one build (cached on :class:`glidertest.reports._mission.Ctx`) to every
+    subsection rather than rebuilding it per slice.
     """
-    data = inventory_data(ds)
+    if data is None:
+        data = inventory_data(ds)
     groups = data["groups"]
     if which == "coords":
         sel = [g for g in groups if g.get("label") == "Coordinates"]

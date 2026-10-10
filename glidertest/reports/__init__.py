@@ -204,7 +204,7 @@ def report(
     generated_at = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     common = {
         "css": SHARED_CSS,
-        "header": header_card(ds),
+        "header": header_card(ds, facts=ctx.facts),
         "mission_id": mid,
         "source_name": source_name,
         "version": __version__,
@@ -223,7 +223,7 @@ def report(
         _figdebug.clear()
         for page in pages:
             slug = page.filename.rsplit(".", 1)[0]
-            resolved = build(ds, page.profile)
+            resolved = build(ds, page.profile, ctx=ctx)
             for section in resolved.sections:
                 for panel in section.panels:
                     if panel.kind == "figure" and panel.payload is not None:
@@ -239,7 +239,7 @@ def report(
                 page_title=page.title,
                 page_type=page.type_label,
                 page_landing=page.role == "landing",
-                page_intro=(page.lead(ds) if page.lead else ""),
+                page_intro=(page.lead(ctx) if page.lead else ""),
                 **common,
             )
             # page has ✓/✗/⚠/– glyphs; Windows default is cp1252
@@ -253,6 +253,7 @@ def report(
             pages=[(p.filename, p.title) for p in pages],
             version=__version__,
             generated_at=generated_at,
+            facts=ctx.facts,
         )
         existing.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 

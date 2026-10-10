@@ -86,6 +86,7 @@ def mission_manifest(
     pages: Sequence[tuple[str, str]],
     version: str,
     generated_at: str,
+    facts: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Return the mission manifest dict, serialised to ``report.json`` beside ``index.html``.
 
@@ -105,6 +106,9 @@ def mission_manifest(
         The glidertest version that produced the report.
     generated_at : str
         The generation timestamp (same string shown in the masthead).
+    facts : dict, optional
+        A prebuilt :func:`glidertest.reports.metadata.mission_facts` result; computed from *ds*
+        when None. The report passes one build so the masthead and manifest share it.
 
     Returns
     -------
@@ -113,7 +117,8 @@ def mission_manifest(
     """
     from . import metadata
 
-    f = metadata.mission_facts(ds)  # the same facts the masthead reads, so the two cannot disagree
+    # The same facts the masthead reads, so the two cannot disagree; the report passes one build in.
+    f = metadata.mission_facts(ds) if facts is None else facts
     missing = [n for n in og1_attrs.MANDATORY_GLOBALS if not str(ds.attrs.get(n) or "").strip()]
     summary = og1_attrs.conformance_summary(ds.attrs)
 

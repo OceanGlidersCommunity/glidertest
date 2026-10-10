@@ -2,6 +2,7 @@
 {# Spatiotemporal category: one combined table — the file's attribute, the value computed from the
    data (shortest round-trip, no rounding), and their difference. The diff is always shown; the
    cell turns amber only above the fixed per-axis threshold (named in its hover text). #}
+{% if spatiotemporal_caption %}<p class="caption">{{ spatiotemporal_caption }}</p>{% endif %}
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>File value</th><th>Computed</th><th>Diff (file − computed)</th></tr></thead>
 <tbody>
@@ -9,7 +10,6 @@
 {% endfor %}
 </tbody>
 </table>
-{% if spatiotemporal_caption %}<p class="caption">{{ spatiotemporal_caption }}</p>{% endif %}
 {% elif group %}
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>

@@ -180,7 +180,7 @@ def verdict_line(ds: xr.Dataset) -> str:
     return _summary(ds)
 
 
-def attr_category_data(ds: xr.Dataset, title: str) -> dict[str, Any]:
+def attr_category_data(ds: xr.Dataset, title: str, facts: dict[str, Any] | None = None) -> dict[str, Any]:
     """Return one OG1 attribute category's data for ``_og1_conformance.html``.
 
     *title* is an :data:`glidertest.og1_attrs.ATTR_GROUPS` category title (or
@@ -190,12 +190,13 @@ def attr_category_data(ds: xr.Dataset, title: str) -> dict[str, Any]:
     (only possible for ``OTHER_GROUP``; the four OG1 categories always carry their mandatory and
     highly-desirable rows). For the Spatiotemporal category it also returns ``spatiotemporal`` (the
     combined file-vs-computed table) and ``spatiotemporal_caption``, which the template renders
-    instead of the plain attribute table.
+    instead of the plain attribute table; *facts* (a prebuilt :func:`mission_facts`) is passed
+    through to it, computed from *ds* when None.
     """
     group = next((g for g in og1_attrs.group_globals(ds.attrs) if g["title"] == title), None)
     data: dict[str, Any] = {"group": group}
     if title == "Spatiotemporal coverage":
-        data["spatiotemporal"] = spatiotemporal_rows(ds)
+        data["spatiotemporal"] = spatiotemporal_rows(ds, facts)
         data["spatiotemporal_caption"] = _spatiotemporal_caption(ds)
     return data
 
@@ -296,7 +297,7 @@ def _iso_seconds(value: object | None) -> str:
     return str(np.asarray(value).astype("datetime64[s]"))
 
 
-def spatiotemporal_rows(ds: xr.Dataset) -> list[dict[str, Any]]:
+def spatiotemporal_rows(ds: xr.Dataset, facts: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Return the combined spatiotemporal table: file attribute vs value computed from the data.
 
     One row per OG1 spatiotemporal attribute (time coverage, lat/lon and vertical extent). Each
@@ -309,8 +310,10 @@ def spatiotemporal_rows(ds: xr.Dataset) -> list[dict[str, Any]]:
     ``YYYYmmddTHHMMSS`` form. Vertical honours the file's ``geospatial_vertical_positive`` (compares
     against ``−depth`` when ``"up"``, notes when the convention is undeclared). ``—`` where the file
     attribute or the computed value is absent.
+
+    *facts* is a prebuilt :func:`mission_facts` result; when None it is computed from *ds*.
     """
-    f = mission_facts(ds)
+    f = mission_facts(ds) if facts is None else facts
     vmin, vmax = _vertical_extent(ds)
     computed_vals: dict[str, Any] = {
         "time_coverage_start": f["t0"], "time_coverage_end": f["t1"],
