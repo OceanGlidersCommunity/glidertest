@@ -4,7 +4,7 @@
 Quickstart
 ==========
 
-From an OG1 file to an open report in three commands.
+From an OG1 file to an open report: one command, then open the page.
 
 Input: an OG1 mission file
 --------------------------
@@ -51,7 +51,9 @@ This writes
        index.html  ctd.html  oxygen.html  optics.html  inventory.html
        figures/    report.json
 
-and prints the path of the landing page. Two variants you will want soon:
+and prints the path of the landing page. (A ``flight.html`` page is added when the file carries
+a flight-model velocity, as Seaglider files do; this SeaExplorer mission has none.) Two variants
+you will want soon:
 
 .. code-block:: bash
 
@@ -122,9 +124,10 @@ The masthead of the landing page gives the mission at a glance — profiles, tim
 extent, platform — and a one-line OG1 conformance verdict. The two **QC** sections below it
 separate what the file *says* (its own ``*_QC`` flags) from what glidertest *finds*. The
 **inventory** page (linked under the masthead) lists every attribute and variable in the
-file, with anything mandatory that is missing marked in amber. The verdict — e.g. "OG1: 15 of
-16 mandatory attributes" — is about *presence*, not validity: it does not check that the
-values are correct (see the inventory page). :doc:`reports` walks through every page.
+file, with anything mandatory that is missing marked in amber. The verdict reads, for the
+sample, ``OG1: 16 of 16 mandatory global attributes present · 12 highly-desirable missing`` —
+presence, not validity: it counts which attributes are there, not whether their values are
+correct (see the inventory page). :doc:`reports` walks through every page.
 
 Where next
 ----------

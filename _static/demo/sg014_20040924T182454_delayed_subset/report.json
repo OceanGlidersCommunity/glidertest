@@ -50,7 +50,7 @@
     },
     {
       "file": "inventory.html",
-      "label": "File contents"
+      "label": "Inventory"
     }
   ],
   "track": [
@@ -855,6 +855,6 @@
       63.9343
     ]
   ],
-  "glidertest_version": "0.1.1.dev32+ge3fc6a025",
-  "generated_at": "2026-10-10 08:53 UTC"
+  "glidertest_version": "0.1.1.dev33+g971fb4b53",
+  "generated_at": "2026-10-10 09:07 UTC"
 }

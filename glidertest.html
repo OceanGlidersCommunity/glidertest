@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API reference &mdash; glidertest 0.1.1.dev32+ge3fc6a025 documentation</title>
+  <title>API reference &mdash; glidertest 0.1.1.dev33+g971fb4b53 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=c4d39cfa"></script>
+      <script src="_static/documentation_options.js?v=ac23f95b"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -141,6 +141,19 @@
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.interactive.up_down_bias"><code class="docutils literal notranslate"><span class="pre">up_down_bias()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.cli.build_parser"><code class="docutils literal notranslate"><span class="pre">build_parser()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#legacy">Legacy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.create_docfile"><code class="docutils literal notranslate"><span class="pre">create_docfile()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.create_drift_plots"><code class="docutils literal notranslate"><span class="pre">create_drift_plots()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.create_hyst_plots"><code class="docutils literal notranslate"><span class="pre">create_hyst_plots()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.create_optics_doc"><code class="docutils literal notranslate"><span class="pre">create_optics_doc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.mission_report"><code class="docutils literal notranslate"><span class="pre">mission_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.optics_available_data"><code class="docutils literal notranslate"><span class="pre">optics_available_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.optics_negative_check"><code class="docutils literal notranslate"><span class="pre">optics_negative_check()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.optics_negative_string"><code class="docutils literal notranslate"><span class="pre">optics_negative_string()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.rst_to_md"><code class="docutils literal notranslate"><span class="pre">rst_to_md()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.summary_sheet.template_docfile"><code class="docutils literal notranslate"><span class="pre">template_docfile()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -2130,6 +2143,289 @@ deferred into the command functions so <code class="docutils literal notranslate
 <dd class="field-odd"><p><strong>argv</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – Argument vector excluding the program name; defaults to <code class="docutils literal notranslate"><span class="pre">sys.argv[1:]</span></code>.</p>
 </dd>
 </dl>
+</dd></dl>
+
+</section>
+<section id="legacy">
+<h2>Legacy<a class="headerlink" href="#legacy" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">glidertest.summary_sheet</span></code> builds the older RST/PDF “mission summary” (it is what pulls in
+the <code class="docutils literal notranslate"><span class="pre">pandoc</span></code> and <code class="docutils literal notranslate"><span class="pre">rstcloth</span></code> dependencies). The HTML report —
+<a class="reference internal" href="#glidertest.reports.report" title="glidertest.reports.report"><code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.reports.report()</span></code></a> — supersedes it; it is kept for existing users for now, and
+its removal is planned.</p>
+<dl class="py function" id="module-glidertest.summary_sheet">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.create_docfile">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">create_docfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#create_docfile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.create_docfile" title="Link to this definition"></a></dt>
+<dd><p>Generate a reStructuredText (.rst) mission summary report for a specific glider deployment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing metadata and profile data for the mission.
+Should include variables like <strong>TIME</strong>, <strong>PLATFORM_SERIAL_NUMBER</strong>, and measurement variables
+(e.g., TEMP, PSAL, DOXY, CHLA, etc.).</p></li>
+<li><p><strong>path</strong> (<em>Path</em><em>(</em><em>)</em>) – Output file path for the generated <cite>.rst</cite> document.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>doc</strong> – RstCloth document object with the mission summary content written to disk.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>RstCloth</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The document includes:</dt><dd><ul>
+<li><p>Main mission info (serial, deployment ID, duration, depth range)</p></li>
+<li><p>Instrument payload summary (✓ if data is available)</p></li>
+<li><p>Water column structure image (<cite>bv.png</cite>)</p></li>
+<li><dl class="simple">
+<dt>Basic quality checks:</dt><dd><ul>
+<li><p>Profile number monotonicity</p></li>
+<li><p>Duration anomalies</p></li>
+<li><p>Summary of global range, spike, flat line, hysteresis, and drift checks</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Glider track image (<cite>gt.png</cite>)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>The function assumes supporting images (<cite>gt.png</cite>, <cite>bv.png</cite>) are available in the same directory.</p></li>
+</ul>
+<p>Original Author: Chiara  Monforte.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.create_drift_plots">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">create_drift_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#create_drift_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.create_drift_plots" title="Link to this definition"></a></dt>
+<dd><p>Generate and save drift diagnostic plots for each available optical variable in the dataset.</p>
+<p>For each optical variable detected in the dataset, this function creates a drift assessment plot
+using the <cite>plots.process_optics_assess</cite> function and saves the figure as <cite>&lt;variable&gt;_drift.png</cite>
+in the specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing optical sensor data in OG1 format.</p></li>
+<li><p><strong>path</strong> (<em>str</em><em> or </em><em>Path</em>) – Directory path where the generated drift plot images will be saved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Saves PNG images for drift plots for each optical variable found in the dataset.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.create_hyst_plots">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">create_hyst_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#create_hyst_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.create_hyst_plots" title="Link to this definition"></a></dt>
+<dd><p>Generate and save hysteresis diagnostic plots for each available optical variable in the dataset.</p>
+<p>For each optical variable detected in the dataset, this function computes hysteresis statistics
+using <cite>tools.compute_hyst_stat</cite> and creates a hysteresis plot using <cite>plots.plot_hysteresis</cite>.
+The resulting plot is saved as <cite>&lt;variable&gt;_hyst.png</cite> in the specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing optical sensor data in OG1 format.</p></li>
+<li><p><strong>path</strong> (<em>str</em><em> or </em><em>Path</em>) – Directory path where the generated hysteresis plot images will be saved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Saves PNG images for hysteresis plots for each optical variable found in the dataset.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.create_optics_doc">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">create_optics_doc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#create_optics_doc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.create_optics_doc" title="Link to this definition"></a></dt>
+<dd><p>Generate a reStructuredText (.rst) summary report for bio-optical sensor data.</p>
+<p>The report includes:
+- A list of available optical variables and sensors
+- General quality check notes
+- Diagnostic plots for chlorophyll quenching, hysteresis, and drift (if available)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – The dataset containing optical sensor data in OG1 format.</p></li>
+<li><p><strong>path</strong> (<em>str</em><em> or </em><em>Path</em>) – Directory where the <cite>optics.rst</cite> file and associated plots are saved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The RstCloth document object used to create the report.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>RstCloth</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.mission_report">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">mission_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_folder_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'General'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#mission_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.mission_report" title="Link to this definition"></a></dt>
+<dd><p>Generate a full mission report for a glider deployment, including plots and summary documents
+in both reStructuredText (.rst) and Markdown (.md) formats.</p>
+<p>The output is saved in a new subfolder named <cite>summary_sheet&lt;Type&gt;&lt;YYYYMMDD&gt;</cite> within the specified report folder path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in OG1 format, containing metadata and measured variables for the deployment.</p></li>
+<li><p><strong>report_folder_path</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the parent directory where the report folder will be created.</p></li>
+<li><p><strong>report_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Type of report to generate. Accepts either ‘General’ (default) or ‘Optics’.
+- ‘General’ includes a glider track and basic variables.
+- ‘Optics’ includes additional analyses and plots specific to optical sensors (e.g., CHLA, BBP700).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Creates a report folder containing:
+- Plots (e.g., <cite>gt.png</cite>, <cite>bv.png</cite>, <cite>quench.png</cite>, hysteresis/drift images)
+- A reStructuredText summary file (<cite>summary.rst</cite> or <cite>optics.rst</cite>)
+- A corresponding Markdown version (<cite>summary.md</cite> or <cite>optics.md</cite>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The <cite>report_type=’Optics’</cite> report is only created if relevant optical sensors are found in the dataset.</p></li>
+</ul>
+<p>Original Author: Chiara Monforte</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.optics_available_data">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">optics_available_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#optics_available_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.optics_available_data" title="Link to this definition"></a></dt>
+<dd><p>Identify available bio-optical sensors and their variables in the dataset.</p>
+<p>This function scans the dataset for bio-optical sensor variables and irradiance sensor variables,
+then creates lists of sensor descriptions and recognized optical variable names present in the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing measurement variables and metadata.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>available_sensor<span class="classifier">list of str</span></dt><dd><p>Descriptions of available bio-optical and irradiance sensors found in the dataset.
+If none are found, placeholders indicating missing data are returned.</p>
+</dd>
+<dt>available_optics<span class="classifier">list of str</span></dt><dd><p>Human-readable names of recognized optical variables present in the dataset (e.g., ‘Chlorophyll’).</p>
+</dd>
+<dt>vars_optics<span class="classifier">list of str</span></dt><dd><p>Corresponding variable names (dataset keys) for the available optical variables (e.g., ‘CHLA’).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of three lists</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.optics_negative_check">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">optics_negative_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#optics_negative_check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.optics_negative_check" title="Link to this definition"></a></dt>
+<dd><p>Calculate the percentage of negative values for each available optical variable in the dataset.</p>
+<p>This function identifies all available optical variables in the dataset, computes the proportion of
+negative data points for each variable, and returns a list of these percentages rounded to one decimal place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing optical sensor data in OG1 format.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An array of percentages representing the proportion of negative values for each optical variable,
+rounded to one decimal place. The order corresponds to the list of available optical variables.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.optics_negative_string">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">optics_negative_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#optics_negative_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.optics_negative_string" title="Link to this definition"></a></dt>
+<dd><p>Generate a summary string reporting the percentage of negative values in calibrated optical data variables.</p>
+<p>This function retrieves available optical variables from the dataset, checks the percentage of negative
+values in each variable using <cite>optics_negative_check</cite>, and returns a formatted string summarizing the results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing optical sensor data in OG1 format.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A human-readable string summarizing the percentage of negative values for each optical variable,
+formatted as “&lt;var&gt; has &lt;percentage&gt;% negative data”, joined by commas and ‘and’ before the last item.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.rst_to_md">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">rst_to_md</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#rst_to_md"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.rst_to_md" title="Link to this definition"></a></dt>
+<dd><p>Convert a reStructuredText (.rst) file to Markdown format using Pandoc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>Path</em><em> or </em><em>str</em>) – Directory containing the input <cite>.rst</cite> file and where the output <cite>.md</cite> file will be saved.</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – Base name of the file (without extension). For example, ‘summary’ will convert ‘summary.rst’ to ‘summary.md’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Prints a confirmation message after successful conversion.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Requires <cite>pypandoc</cite> and a working Pandoc installation.</p></li>
+</ul>
+<p>Original Author: Chiara  Monforte.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.summary_sheet.template_docfile">
+<span class="sig-prename descclassname"><span class="pre">glidertest.summary_sheet.</span></span><span class="sig-name descname"><span class="pre">template_docfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/summary_sheet.html#template_docfile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.summary_sheet.template_docfile" title="Link to this definition"></a></dt>
+<dd><p>Create a template reStructuredText (.rst) document with example text, image, and table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, used as a placeholder or reference for generating content.</p></li>
+<li><p><strong>path</strong> (<em>Path</em><em>(</em><em>)</em>) – Path to the output <cite>.rst</cite> file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>doc</strong> – RstCloth document object written to disk with placeholder content.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>RstCloth</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara  Monforte.</p>
 </dd></dl>
 
 </section>

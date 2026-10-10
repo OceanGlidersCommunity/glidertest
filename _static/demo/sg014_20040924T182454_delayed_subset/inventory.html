@@ -222,8 +222,12 @@ footer a { color: var(--muted); }
 }
 /* Always-on: the glidertest plotter that produced a figure, under it. */
 .fig-source { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); margin-top: 0.1rem; }
-/* Package-local: non-conforming OG1 metadata value cells in amber. */
-.meta td.nonconform { background: var(--warn-bg); }
+/* Package-local: non-conforming OG1 metadata value cells in amber (conformance table and the
+   sensor catalog, where a serial/calibration read from a pre-OG1 attribute name is flagged). */
+.meta td.nonconform, table.nc td.nonconform { background: var(--warn-bg); }
+/* Package-local: a float64 variable stands out (most glider data is float32, so float64 is worth
+   noticing). */
+table.nc td.f64 { font-weight: 700; color: #0b5cad; }
 /* Wide file-contents tables: cells stay on one line by default (take only their content width);
    tagged columns wrap and are capped with max-width so none dominates — the browser auto-distributes
    the remaining width (table-layout: auto). Narrowing N/Min-Max/Variable frees width so the
@@ -309,7 +313,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
     <h1>sg014_20040924T182454_delayed_subset</h1>
     <span class="masthead-type">netCDF Inventory</span>
   </div>
-  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sg014_20040924T182454_delayed_subset.nc</span><span>generated 2026-10-10 08:53 UTC</span></p>
+  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sg014_20040924T182454_delayed_subset.nc</span><span>generated 2026-10-10 09:07 UTC</span></p>
   <nav class="page-nav"><a class="nav-pill nav-back" href="../index.html">← All missions</a><span class="nav-row"><span class="page-nav-label">Summary:</span><a class="nav-pill nav-landing" href="index.html">Mission</a></span><span class="nav-row"><span class="page-nav-label">Reports:</span><a class="nav-pill nav-aggregate-b" href="ctd.html">CTD</a></span><span class="nav-row"><span class="page-nav-label">Derived:</span><a class="nav-pill nav-aggregate-a" href="flight.html">Flight</a></span></nav>
   <nav class="inventory-strip"><span class="label">Data inventory:</span><span class="file-pill file-pill-active">sg014_20040924T182454_delayed_subset.nc</span></nav>
   
@@ -335,14 +339,24 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 
 <main>
 
+<p class="caption">OG1: 15 of 16 mandatory global attributes present · 7 highly-desirable missing — presence, not validity; each category below shows the values and flags a missing mandatory attribute in amber.</p>
+<p class="caption">33 data variables, 0 sensors, 8 QC-flag variables (shown in the QC section, not listed here), 4 coordinates.</p>
+<p class="caption">8 of 33 data variables carry a <code>_QC</code> companion.</p>
+
 <div class="jump-nav">
-  <a href="#og1">(1) Global attributes</a>
-  <a href="#file_contents">(2) File contents</a>
+  <a href="#og1_identity">(1) Identity &amp; discovery</a>
+  <a href="#og1_coverage">(2) Spatiotemporal coverage</a>
+  <a href="#og1_people">(3) People &amp; institutions</a>
+  <a href="#og1_provenance">(4) Provenance &amp; processing</a>
+  <a href="#og1_other">(5) Other (not in OG1)</a>
+  <a href="#coords">(6) Coordinates</a>
+  <a href="#measurements">(7) Variables on N_MEASUREMENTS</a>
+  <a href="#sensors">(8) Sensor catalog</a>
   
 </div>
 
 
-<h2 id="og1">(1) Global attributes</h2>
+<h2 id="og1_identity">(1) Identity &amp; discovery</h2>
 
 
 <div class="fig-row">
@@ -351,9 +365,6 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
   
   
   <div class="html-panel">
-<p class="caption">OG1: 15 of 16 mandatory global attributes present · 7 highly-desirable missing. One row per OG1 global attribute, grouped by category: a value means present; a dash (<strong>amber</strong> for a mandatory attribute) means absent; absent <em>suggested</em> attributes are not listed. Attributes the file carries that are not OG1 globals are under “Other (not in OG1)”.</p>
-
-<h3>Identity &amp; discovery</h3>
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
 <tbody>
@@ -374,38 +385,50 @@ Seattle, WA 98195-5351</td></tr>
 
 </tbody>
 </table>
+</div>
+
+  
+</div>
+
+<h2 id="og1_coverage">(2) Spatiotemporal coverage</h2>
 
 
-<h3>Spatiotemporal coverage</h3>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
+
+<p class="caption">Computed values are the min/max over the records in this file. The first profile is number 350, so this file is a subset — these ranges need not match the full mission.</p>
 <table class="nc meta">
-<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+<thead><tr><th>Attribute</th><th>File value</th><th>Computed</th><th>Diff (file − computed)</th></tr></thead>
 <tbody>
-<tr><td class="mono wrapv">geospatial_lat_min</td><td class="wrap">67.03486199115247</td></tr>
-<tr><td class="mono wrapv">geospatial_lat_max</td><td class="wrap">67.03534771122185</td></tr>
-<tr><td class="mono wrapv">geospatial_lon_min</td><td class="wrap">-57.027537852800464</td></tr>
-<tr><td class="mono wrapv">geospatial_lon_max</td><td class="wrap">-57.021750000000004</td></tr>
-<tr><td class="mono wrapv">geospatial_vertical_min</td><td class="wrap">0.5580548996550069</td></tr>
-<tr><td class="mono wrapv">geospatial_vertical_max</td><td class="wrap">51.015857244825426</td></tr>
-<tr><td class="mono wrapv">time_coverage_start</td><td class="wrap">20040924T180910</td></tr>
-<tr><td class="mono wrapv">time_coverage_end</td><td class="wrap">20040924T180910</td></tr>
+<tr><td class="mono wrapv">time_coverage_start</td><td class="wrap">20040924T180910</td><td class="wrap">2004-11-02T03:58:22</td><td class="nonconform" title="flagged: |diff| exceeds 60 s">-3318552 s</td></tr>
+<tr><td class="mono wrapv">time_coverage_end</td><td class="wrap">20040924T180910</td><td class="wrap">2004-11-18T01:52:38</td><td class="nonconform" title="flagged: |diff| exceeds 60 s">-4693408 s</td></tr>
+<tr><td class="mono wrapv">geospatial_lat_min</td><td class="wrap">67.03486199115247</td><td class="wrap">63.93424782430636</td><td class="nonconform" title="flagged: |diff| exceeds 5e-4° (~50 m)">+3.100614</td></tr>
+<tr><td class="mono wrapv">geospatial_lat_max</td><td class="wrap">67.03534771122185</td><td class="wrap">65.55504992111373</td><td class="nonconform" title="flagged: |diff| exceeds 5e-4° (~50 m)">+1.4802978</td></tr>
+<tr><td class="mono wrapv">geospatial_lon_min</td><td class="wrap">-57.027537852800464</td><td class="wrap">-56.440358419256164</td><td class="nonconform" title="flagged: |diff| exceeds 5e-4° (~50 m)">-0.5871794</td></tr>
+<tr><td class="mono wrapv">geospatial_lon_max</td><td class="wrap">-57.021750000000004</td><td class="wrap">-54.87101666666668</td><td class="nonconform" title="flagged: |diff| exceeds 5e-4° (~50 m)">-2.1507332</td></tr>
+<tr><td class="mono wrapv">geospatial_vertical_min (sign convention not declared)</td><td class="wrap">0.5580548996550069</td><td class="wrap">0.0</td><td>+0.5580549</td></tr>
+<tr><td class="mono wrapv">geospatial_vertical_max (sign convention not declared)</td><td class="wrap">51.015857244825426</td><td class="wrap">986.5392224317657</td><td class="nonconform" title="flagged: |diff| exceeds 1 m">-935.5234</td></tr>
 
 </tbody>
 </table>
+</div>
 
-<p class="caption">Geospatial extent — the file's suggested <code>geospatial_*</code> attributes versus the extent computed from the data.</p>
-<table class="nc meta">
-<thead><tr><th>Attribute</th><th>File value</th><th>Computed</th></tr></thead>
-<tbody>
-<tr><td class="mono">geospatial_lat_min</td><td>67.03486199115247</td><td>63.9342</td></tr>
-<tr><td class="mono">geospatial_lat_max</td><td>67.03534771122185</td><td>65.5550</td></tr>
-<tr><td class="mono">geospatial_lon_min</td><td>-57.027537852800464</td><td>-56.4404</td></tr>
-<tr><td class="mono">geospatial_lon_max</td><td>-57.021750000000004</td><td>-54.8710</td></tr>
+  
+</div>
 
-</tbody>
-</table>
+<h2 id="og1_people">(3) People &amp; institutions</h2>
 
 
-<h3>People &amp; institutions</h3>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
 <tbody>
@@ -421,9 +444,20 @@ Seattle, WA 98195-5351</td></tr>
 
 </tbody>
 </table>
+</div>
+
+  
+</div>
+
+<h2 id="og1_provenance">(4) Provenance &amp; processing</h2>
 
 
-<h3>Provenance &amp; processing</h3>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
 <tbody>
@@ -459,9 +493,20 @@ Seattle, WA 98195-5351</td></tr>
 
 </tbody>
 </table>
+</div>
+
+  
+</div>
+
+<h2 id="og1_other">(5) Other (not in OG1)</h2>
 
 
-<h3>Other (not in OG1)</h3>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
 <tbody>
@@ -476,13 +521,12 @@ US Office of Naval Research Grant N00014-02-1-0791</td></tr>
 
 </tbody>
 </table>
-
 </div>
 
   
 </div>
 
-<h2 id="file_contents">(2) File contents</h2>
+<h2 id="coords">(6) Coordinates</h2>
 
 
 <div class="fig-row">
@@ -491,71 +535,19 @@ US Office of Naval Research Grant N00014-02-1-0791</td></tr>
   
   
   <div class="html-panel">
-<p class="caption">33 data variables, 0 sensors, 8 QC-flag variables (shown in the QC section, not listed here), 4 coordinates.</p>
-<p class="caption">8 of 33 data variables carry a <code>_QC</code> companion.</p>
 
-
-<h3>On N_MEASUREMENTS</h3>
-<p class="caption"><strong>Coordinates</strong></p>
 
 
 <table class="nc">
 <thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="num wrapr">Min / Max</th><th class="num wrapn">N (valid)</th><th>Attributes</th></tr></thead>
 <tbody>
-<tr><td class="mono wrapv">DEPTH</td><td class="mono">float64</td><td>m</td><td class="wrap"><strong class="mono">depth</strong><br>glider depth</td><td class="num wrapr">0 / 986.5</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>13 attrs</summary><table><tr><td class="mono">comment</td><td>CTD thermistor depth corrected for average latitude</td></tr><tr><td class="mono">positive</td><td>down</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>Z</td></tr><tr><td class="mono">source</td><td>pressure</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">observation_type</td><td>calculated</td></tr><tr><td class="mono">accuracy</td><td>1</td></tr><tr><td class="mono">precision</td><td>2</td></tr><tr><td class="mono">resolution</td><td>0.02</td></tr><tr><td class="mono">valid_min</td><td>0</td></tr><tr><td class="mono">valid_max</td><td>2000</td></tr><tr><td class="mono">reference_datum</td><td>surface</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">LATITUDE</td><td class="mono">float64</td><td>degrees_north</td><td class="wrap"><strong class="mono">latitude</strong><br>Latitude north</td><td class="num wrapr">63.93 / 65.56</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>9 attrs</summary><table><tr><td class="mono">comment</td><td>Latitude of the sample based on hdm DAC</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>Y</td></tr><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>90</td></tr><tr><td class="mono">valid_min</td><td>-90</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LAT/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LAT/</a></td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">LONGITUDE</td><td class="mono">float64</td><td>degrees_east</td><td class="wrap"><strong class="mono">longitude</strong><br>Longitude east</td><td class="num wrapr">-56.44 / -54.87</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>9 attrs</summary><table><tr><td class="mono">comment</td><td>Longitude of the sample based on hdm DAC</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>X</td></tr><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>180</td></tr><tr><td class="mono">valid_min</td><td>-180</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LON/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LON/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">DEPTH</td><td class="mono f64">float64</td><td>m</td><td class="wrap"><strong class="mono">depth</strong><br>glider depth</td><td class="num wrapr">0 / 986.5</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>13 attrs</summary><table><tr><td class="mono">comment</td><td>CTD thermistor depth corrected for average latitude</td></tr><tr><td class="mono">positive</td><td>down</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>Z</td></tr><tr><td class="mono">source</td><td>pressure</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">observation_type</td><td>calculated</td></tr><tr><td class="mono">accuracy</td><td>1</td></tr><tr><td class="mono">precision</td><td>2</td></tr><tr><td class="mono">resolution</td><td>0.02</td></tr><tr><td class="mono">valid_min</td><td>0</td></tr><tr><td class="mono">valid_max</td><td>2000</td></tr><tr><td class="mono">reference_datum</td><td>surface</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LATITUDE</td><td class="mono f64">float64</td><td>degrees_north</td><td class="wrap"><strong class="mono">latitude</strong><br>Latitude north</td><td class="num wrapr">63.93 / 65.56</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>9 attrs</summary><table><tr><td class="mono">comment</td><td>Latitude of the sample based on hdm DAC</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>Y</td></tr><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>90</td></tr><tr><td class="mono">valid_min</td><td>-90</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LAT/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LAT/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LONGITUDE</td><td class="mono f64">float64</td><td>degrees_east</td><td class="wrap"><strong class="mono">longitude</strong><br>Longitude east</td><td class="num wrapr">-56.44 / -54.87</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>9 attrs</summary><table><tr><td class="mono">comment</td><td>Longitude of the sample based on hdm DAC</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>X</td></tr><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>180</td></tr><tr><td class="mono">valid_min</td><td>-180</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LON/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LON/</a></td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">TIME</td><td class="mono">datetime64[ns]</td><td></td><td class="wrap"><strong class="mono">time</strong><br>time of measurement</td><td class="num wrapr">2004-11-02 03:58 / 2004-11-18 01:52</td><td class="num wrapn">79,862</td><td><details class="attrs"><summary>5 attrs</summary><table><tr><td class="mono">comment</td><td>Time of CTD sample in GMT epoch format</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">axis</td><td>T</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/AYMD/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/AYMD/</a></td></tr></table></details></td></tr>
 
 </tbody>
 </table>
-
-
-
-
-<p class="caption"><strong>Variables</strong></p>
-
-
-<table class="nc">
-<thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="num wrapr">Min / Max</th><th class="num wrapn">N (valid)</th><th>Attributes</th></tr></thead>
-<tbody>
-<tr><td class="mono wrapv">CNDC <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>S m-1</td><td class="wrap"><strong class="mono">sea_water_electrical_conductivity</strong><br>Electrical conductivity of the water body by CTD</td><td class="num wrapr">1.835 / 3.539</td><td class="num wrapn">79,862 (77,856)</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">comment</td><td>Conductivity corrected for anomalies</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">valid_max</td><td>85.0</td></tr><tr><td class="mono">valid_min</td><td>0.0</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/CNDC/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/CNDC/</a></td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">CNDC_RAW <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>S/m</td><td class="wrap"></td><td class="num wrapr">0.1892 / 3.539</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected conductivity</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">DENSITY</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">1015 / 1032</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
-<tr><td class="mono wrapv">DEPTH_Z</td><td class="mono">float64</td><td>meters</td><td class="wrap"><strong class="mono">depth</strong></td><td class="num wrapr">-986.8 / -0.6977</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">positive</td><td>up</td></tr><tr><td class="mono">comment</td><td>Depth calculated from pressure using gsw library, positive up.</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">GLIDER_HORZ_VELO_MODEL</td><td class="mono">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">0 / 0.3676</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
-<tr><td class="mono wrapv">GLIDER_VERT_VELO_MODEL</td><td class="mono">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">-0.2715 / 0.178</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
-<tr><td class="mono wrapv">GLIDE_ANGLE</td><td class="mono">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">-0.7623 / 0.3699</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
-<tr><td class="mono wrapv">GLIDE_SPEED <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">0 / 0.3752</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
-<tr><td class="mono wrapv">HEADING</td><td class="mono">float64</td><td>degrees</td><td class="wrap">Orientation (horizontal relative to magnetic north) of measurement platform {heading} by compass</td><td class="num wrapr">0.6 / 359.9</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>Vehicle heading (magnetic)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/HEADING/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/HEADING/</a></td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">LATITUDE_GPS</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">63.93 / 65.54</td><td class="num wrapn">79,862 (151)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">dtype</td><td>float64</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">LONGITUDE_GPS</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-56.44 / -54.87</td><td class="num wrapn">79,862 (151)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">dtype</td><td>float64</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">PHASE <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">1 / 3</td><td class="num wrapn">79,862</td><td>—</td></tr>
-<tr><td class="mono wrapv">PITCH</td><td class="mono">float64</td><td>degrees</td><td class="wrap">Orientation (pitch) of measurement platform by inclinometer</td><td class="num wrapr">-87.2 / 58.3</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>Vehicle pitch</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/PITCH/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/PITCH/</a></td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">PRES</td><td class="mono">float64</td><td>dbar</td><td class="wrap"><strong class="mono">sea_water_pressure</strong><br>Pressure (spatial coordinate) exerted by the water body by profiling pressure sensor and correction to read zero at sea level</td><td class="num wrapr">0.7046 / 998.9</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>9 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected sea-water pressure</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">positive</td><td>down</td></tr><tr><td class="mono">reference_datum</td><td>sea-surface</td></tr><tr><td class="mono">valid_max</td><td>2000</td></tr><tr><td class="mono">valid_min</td><td>0</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/PRES" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/PRES</a></td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">PROFILE_NUMBER</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">350 / 450</td><td class="num wrapn">79,862</td><td>—</td></tr>
-<tr><td class="mono wrapv">PSAL <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>1e-3</td><td class="wrap"><strong class="mono">sea_water_salinity</strong><br>water salinity</td><td class="num wrapr">19.31 / 36.03</td><td class="num wrapn">79,862 (77,856)</td><td><details class="attrs"><summary>8 attrs</summary><table><tr><td class="mono">comment</td><td>Salinity corrected for thermal-inertia effects (PSU)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">sources</td><td>CNDC, TEMP, PRES</td></tr><tr><td class="mono">observation_type</td><td>calculated</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">valid_max</td><td>40</td></tr><tr><td class="mono">valid_min</td><td>0</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/PSAL/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/PSAL/</a></td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">PSAL_RAW <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>1e-3</td><td class="wrap"></td><td class="num wrapr">1.678 / 36.11</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected salinity derived from temperature_raw and conductivity_raw (PSU)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">ROLL</td><td class="mono">float64</td><td>degrees</td><td class="wrap">Orientation (roll angle) of measurement platform by inclinometer</td><td class="num wrapr">-65.8 / 61.7</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>Vehicle roll</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/ROLL/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/ROLL/</a></td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">TEMP <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>degrees_Celsius</td><td class="wrap"><strong class="mono">sea_water_temperature</strong><br>Temperature of the water body by CTD </td><td class="num wrapr">2.371 / 7.118</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">comment</td><td>Termperature (in situ) corrected for thermistor first-order lag</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">valid_max</td><td>42</td></tr><tr><td class="mono">valid_min</td><td>-5</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/</a></td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">TEMP_RAW <span class="qc-good">(_QC)</span></td><td class="mono">float64</td><td>degrees_Celsius</td><td class="wrap"></td><td class="num wrapr">2.371 / 7.118</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected temperature (in situ)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">buoyancy</td><td class="mono">float64</td><td>g</td><td class="wrap"></td><td class="num wrapr">-222.9 / 435.2</td><td class="num wrapn">79,862 (77,832)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Buoyancy of vehicle, corrected for compression effects</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">divenum</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">175 / 225</td><td class="num wrapn">79,862</td><td>—</td></tr>
-<tr><td class="mono wrapv">east_displacement</td><td class="mono">float64</td><td>meters</td><td class="wrap"></td><td class="num wrapr">-11.58 / 11.63</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Eastward displacement from hdm</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">eng_pitchCtl</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-10.68 / 1.789</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">eng_rollCtl</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-40.91 / 40.65</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">eng_vbdCC</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-129.5 / 512.4</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">eng_wlbb2f_VFtemp</td><td class="mono">float64</td><td>degrees_Celsius</td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">comment</td><td>As reported by the instrument</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">eng_wlbb2f_blueCount</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">eng_wlbb2f_blueRef</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">eng_wlbb2f_fluorCount</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">eng_wlbb2f_redCount</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">eng_wlbb2f_redRef</td><td class="mono">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">north_displacement</td><td class="mono">float64</td><td>meters</td><td class="wrap"></td><td class="num wrapr">-10.84 / 5.427</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Northward displacement from hdm</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
-
-</tbody>
-</table>
-
 
 
 </div>
@@ -563,13 +555,83 @@ US Office of Naval Research Grant N00014-02-1-0791</td></tr>
   
 </div>
 
+<h2 id="measurements">(7) Variables on N_MEASUREMENTS</h2>
 
 
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
+
+
+
+<table class="nc">
+<thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="num wrapr">Min / Max</th><th class="num wrapn">N (valid)</th><th>Attributes</th></tr></thead>
+<tbody>
+<tr><td class="mono wrapv">CNDC <span class="qc-good">(_QC)</span></td><td class="mono f64">float64</td><td>S m-1</td><td class="wrap"><strong class="mono">sea_water_electrical_conductivity</strong><br>Electrical conductivity of the water body by CTD</td><td class="num wrapr">1.835 / 3.539</td><td class="num wrapn">79,862 (77,856)</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">comment</td><td>Conductivity corrected for anomalies</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">valid_max</td><td>85.0</td></tr><tr><td class="mono">valid_min</td><td>0.0</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/CNDC/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/CNDC/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">CNDC_RAW <span class="qc-good">(_QC)</span></td><td class="mono f64">float64</td><td>S/m</td><td class="wrap"></td><td class="num wrapr">0.1892 / 3.539</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected conductivity</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">DENSITY</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">1015 / 1032</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">DEPTH_Z</td><td class="mono f64">float64</td><td>meters</td><td class="wrap"><strong class="mono">depth</strong></td><td class="num wrapr">-986.8 / -0.6977</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">positive</td><td>up</td></tr><tr><td class="mono">comment</td><td>Depth calculated from pressure using gsw library, positive up.</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">GLIDER_HORZ_VELO_MODEL</td><td class="mono f64">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">0 / 0.3676</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">GLIDER_VERT_VELO_MODEL</td><td class="mono f64">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">-0.2715 / 0.178</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">GLIDE_ANGLE</td><td class="mono f64">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">-0.7623 / 0.3699</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">GLIDE_SPEED <span class="qc-good">(_QC)</span></td><td class="mono f64">float64</td><td>m s-1</td><td class="wrap"></td><td class="num wrapr">0 / 0.3752</td><td class="num wrapn">79,862 (77,856)</td><td>—</td></tr>
+<tr><td class="mono wrapv">HEADING</td><td class="mono f64">float64</td><td>degrees</td><td class="wrap">Orientation (horizontal relative to magnetic north) of measurement platform {heading} by compass</td><td class="num wrapr">0.6 / 359.9</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>Vehicle heading (magnetic)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/HEADING/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/HEADING/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LATITUDE_GPS</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">63.93 / 65.54</td><td class="num wrapn">79,862 (151)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">dtype</td><td>float64</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LONGITUDE_GPS</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-56.44 / -54.87</td><td class="num wrapn">79,862 (151)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">dtype</td><td>float64</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">PHASE <span class="qc-good">(_QC)</span></td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">1 / 3</td><td class="num wrapn">79,862</td><td>—</td></tr>
+<tr><td class="mono wrapv">PITCH</td><td class="mono f64">float64</td><td>degrees</td><td class="wrap">Orientation (pitch) of measurement platform by inclinometer</td><td class="num wrapr">-87.2 / 58.3</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>Vehicle pitch</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/PITCH/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/PITCH/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">PRES</td><td class="mono f64">float64</td><td>dbar</td><td class="wrap"><strong class="mono">sea_water_pressure</strong><br>Pressure (spatial coordinate) exerted by the water body by profiling pressure sensor and correction to read zero at sea level</td><td class="num wrapr">0.7046 / 998.9</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>9 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected sea-water pressure</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">positive</td><td>down</td></tr><tr><td class="mono">reference_datum</td><td>sea-surface</td></tr><tr><td class="mono">valid_max</td><td>2000</td></tr><tr><td class="mono">valid_min</td><td>0</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/PRES" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/PRES</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">PROFILE_NUMBER</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">350 / 450</td><td class="num wrapn">79,862</td><td>—</td></tr>
+<tr><td class="mono wrapv">PSAL <span class="qc-good">(_QC)</span></td><td class="mono f64">float64</td><td>1e-3</td><td class="wrap"><strong class="mono">sea_water_salinity</strong><br>water salinity</td><td class="num wrapr">19.31 / 36.03</td><td class="num wrapn">79,862 (77,856)</td><td><details class="attrs"><summary>8 attrs</summary><table><tr><td class="mono">comment</td><td>Salinity corrected for thermal-inertia effects (PSU)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">sources</td><td>CNDC, TEMP, PRES</td></tr><tr><td class="mono">observation_type</td><td>calculated</td></tr><tr><td class="mono">sensor</td><td>sensor_ctd</td></tr><tr><td class="mono">valid_max</td><td>40</td></tr><tr><td class="mono">valid_min</td><td>0</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/PSAL/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/PSAL/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">PSAL_RAW <span class="qc-good">(_QC)</span></td><td class="mono f64">float64</td><td>1e-3</td><td class="wrap"></td><td class="num wrapr">1.678 / 36.11</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected salinity derived from temperature_raw and conductivity_raw (PSU)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">ROLL</td><td class="mono f64">float64</td><td>degrees</td><td class="wrap">Orientation (roll angle) of measurement platform by inclinometer</td><td class="num wrapr">-65.8 / 61.7</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>Vehicle roll</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/ROLL/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/ROLL/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">TEMP <span class="qc-good">(_QC)</span></td><td class="mono f64">float64</td><td>degrees_Celsius</td><td class="wrap"><strong class="mono">sea_water_temperature</strong><br>Temperature of the water body by CTD </td><td class="num wrapr">2.371 / 7.118</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">comment</td><td>Termperature (in situ) corrected for thermistor first-order lag</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">valid_max</td><td>42</td></tr><tr><td class="mono">valid_min</td><td>-5</td></tr><tr><td class="mono">URI</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">TEMP_RAW <span class="qc-good">(_QC)</span></td><td class="mono f64">float64</td><td>degrees_Celsius</td><td class="wrap"></td><td class="num wrapr">2.371 / 7.118</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Uncorrected temperature (in situ)</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">buoyancy</td><td class="mono f64">float64</td><td>g</td><td class="wrap"></td><td class="num wrapr">-222.9 / 435.2</td><td class="num wrapn">79,862 (77,832)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Buoyancy of vehicle, corrected for compression effects</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">divenum</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">175 / 225</td><td class="num wrapn">79,862</td><td>—</td></tr>
+<tr><td class="mono wrapv">east_displacement</td><td class="mono f64">float64</td><td>meters</td><td class="wrap"></td><td class="num wrapr">-11.58 / 11.63</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Eastward displacement from hdm</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_pitchCtl</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-10.68 / 1.789</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_rollCtl</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-40.91 / 40.65</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_vbdCC</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">-129.5 / 512.4</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_VFtemp</td><td class="mono f64">float64</td><td>degrees_Celsius</td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">comment</td><td>As reported by the instrument</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_blueCount</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_blueRef</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_fluorCount</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_redCount</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">eng_wlbb2f_redRef</td><td class="mono f64">float64</td><td></td><td class="wrap"></td><td class="num wrapr">—</td><td class="num wrapn">79,862 (0)</td><td><details class="attrs"><summary>3 attrs</summary><table><tr><td class="mono">comment</td><td>As reported by instrument</td></tr><tr><td class="mono">platform</td><td>glider</td></tr><tr><td class="mono">instrument</td><td>wlbb2f</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">north_displacement</td><td class="mono f64">float64</td><td>meters</td><td class="wrap"></td><td class="num wrapr">-10.84 / 5.427</td><td class="num wrapn">79,862 (79,711)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">comment</td><td>Northward displacement from hdm</td></tr><tr><td class="mono">platform</td><td>glider</td></tr></table></details></td></tr>
+
+</tbody>
+</table>
+
+
+</div>
+
+  
+</div>
+
+<h2 id="sensors">(8) Sensor catalog</h2>
+
+
+<div class="fig-row">
+  
+  
+  
+  <figure class="slot-full"><p class="warn">sensors — no SENSOR_* variables in the file</p></figure>
+
+  
+</div>
+
+
+<p class="caption">Not applicable to this selection: Variables on other dimensions, Scalar variables.</p>
 
 </main>
 
 
-<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev32 &nbsp;·&nbsp; sg014_20040924T182454_delayed_subset &nbsp;·&nbsp; 2026-10-10 08:53 UTC</footer>
+<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev33 &nbsp;·&nbsp; sg014_20040924T182454_delayed_subset &nbsp;·&nbsp; 2026-10-10 09:07 UTC</footer>
 <script>
 document.querySelectorAll('h2').forEach(h => {
   const a = document.createElement('a');

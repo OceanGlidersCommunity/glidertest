@@ -222,8 +222,12 @@ footer a { color: var(--muted); }
 }
 /* Always-on: the glidertest plotter that produced a figure, under it. */
 .fig-source { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); margin-top: 0.1rem; }
-/* Package-local: non-conforming OG1 metadata value cells in amber. */
-.meta td.nonconform { background: var(--warn-bg); }
+/* Package-local: non-conforming OG1 metadata value cells in amber (conformance table and the
+   sensor catalog, where a serial/calibration read from a pre-OG1 attribute name is flagged). */
+.meta td.nonconform, table.nc td.nonconform { background: var(--warn-bg); }
+/* Package-local: a float64 variable stands out (most glider data is float32, so float64 is worth
+   noticing). */
+table.nc td.f64 { font-weight: 700; color: #0b5cad; }
 /* Wide file-contents tables: cells stay on one line by default (take only their content width);
    tagged columns wrap and are capped with max-width so none dominates — the browser auto-distributes
    the remaining width (table-layout: auto). Narrowing N/Min-Max/Variable frees width so the
@@ -309,7 +313,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
     <h1>sea045_20230604T1253_delayed</h1>
     <span class="masthead-type">netCDF Inventory</span>
   </div>
-  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sea045_20230604T1253_delayed.nc</span><span>generated 2026-10-10 08:52 UTC</span></p>
+  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sea045_20230604T1253_delayed.nc</span><span>generated 2026-10-10 09:07 UTC</span></p>
   <nav class="page-nav"><a class="nav-pill nav-back" href="../index.html">← All missions</a><span class="nav-row"><span class="page-nav-label">Summary:</span><a class="nav-pill nav-landing" href="index.html">Mission</a></span><span class="nav-row"><span class="page-nav-label">Reports:</span><a class="nav-pill nav-aggregate-b" href="ctd.html">CTD</a><a class="nav-pill nav-aggregate-b" href="oxygen.html">Oxygen</a><a class="nav-pill nav-aggregate-b" href="optics.html">Optics</a></span></nav>
   <nav class="inventory-strip"><span class="label">Data inventory:</span><span class="file-pill file-pill-active">sea045_20230604T1253_delayed.nc</span></nav>
   
@@ -336,14 +340,25 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 
 <main>
 
+<p class="caption">OG1: 16 of 16 mandatory global attributes present · 12 highly-desirable missing — presence, not validity; each category below shows the values and flags a missing mandatory attribute in amber.</p>
+<p class="caption">50 data variables, 5 sensors, 8 QC-flag variables (shown in the QC section, not listed here), 4 coordinates.</p>
+<p class="caption">8 of 50 data variables carry a <code>_QC</code> companion.</p>
+
 <div class="jump-nav">
-  <a href="#og1">(1) Global attributes</a>
-  <a href="#file_contents">(2) File contents</a>
+  <a href="#og1_identity">(1) Identity &amp; discovery</a>
+  <a href="#og1_coverage">(2) Spatiotemporal coverage</a>
+  <a href="#og1_people">(3) People &amp; institutions</a>
+  <a href="#og1_provenance">(4) Provenance &amp; processing</a>
+  <a href="#og1_other">(5) Other (not in OG1)</a>
+  <a href="#coords">(6) Coordinates</a>
+  <a href="#measurements">(7) Variables on N_MEASUREMENTS</a>
+  <a href="#scalars">(8) Scalar variables</a>
+  <a href="#sensors">(9) Sensor catalog</a>
   
 </div>
 
 
-<h2 id="og1">(1) Global attributes</h2>
+<h2 id="og1_identity">(1) Identity &amp; discovery</h2>
 
 
 <div class="fig-row">
@@ -352,9 +367,6 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
   
   
   <div class="html-panel">
-<p class="caption">OG1: 16 of 16 mandatory global attributes present · 12 highly-desirable missing. One row per OG1 global attribute, grouped by category: a value means present; a dash (<strong>amber</strong> for a mandatory attribute) means absent; absent <em>suggested</em> attributes are not listed. Attributes the file carries that are not OG1 globals are under “Other (not in OG1)”.</p>
-
-<h3>Identity &amp; discovery</h3>
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
 <tbody>
@@ -372,32 +384,50 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 
 </tbody>
 </table>
+</div>
+
+  
+</div>
+
+<h2 id="og1_coverage">(2) Spatiotemporal coverage</h2>
 
 
-<h3>Spatiotemporal coverage</h3>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
+
+<p class="caption">Computed values are the min/max over the records in this file. The first profile is number 468, so this file is a subset — these ranges need not match the full mission.</p>
 <table class="nc meta">
-<thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+<thead><tr><th>Attribute</th><th>File value</th><th>Computed</th><th>Diff (file − computed)</th></tr></thead>
 <tbody>
-<tr><td class="mono wrapv">time_coverage_start</td><td class="wrap">—</td></tr>
-<tr><td class="mono wrapv">time_coverage_end</td><td class="wrap">—</td></tr>
+<tr><td class="mono wrapv">time_coverage_start</td><td class="wrap">—</td><td class="wrap">2023-06-04T12:53:04</td><td>—</td></tr>
+<tr><td class="mono wrapv">time_coverage_end</td><td class="wrap">—</td><td class="wrap">2023-06-04T21:43:27</td><td>—</td></tr>
+<tr><td class="mono wrapv">geospatial_lat_min</td><td class="wrap">—</td><td class="wrap">55.3226318359375</td><td>—</td></tr>
+<tr><td class="mono wrapv">geospatial_lat_max</td><td class="wrap">—</td><td class="wrap">55.3411865234375</td><td>—</td></tr>
+<tr><td class="mono wrapv">geospatial_lon_min</td><td class="wrap">—</td><td class="wrap">16.092966079711914</td><td>—</td></tr>
+<tr><td class="mono wrapv">geospatial_lon_max</td><td class="wrap">—</td><td class="wrap">16.119440054225077</td><td>—</td></tr>
+<tr><td class="mono wrapv">geospatial_vertical_min (sign convention not declared)</td><td class="wrap">—</td><td class="wrap">0.10722178965806961</td><td>—</td></tr>
+<tr><td class="mono wrapv">geospatial_vertical_max (sign convention not declared)</td><td class="wrap">—</td><td class="wrap">80.6577377319336</td><td>—</td></tr>
 
 </tbody>
 </table>
+</div>
 
-<p class="caption">Geospatial extent — the file's suggested <code>geospatial_*</code> attributes versus the extent computed from the data.</p>
-<table class="nc meta">
-<thead><tr><th>Attribute</th><th>File value</th><th>Computed</th></tr></thead>
-<tbody>
-<tr><td class="mono">geospatial_lat_min</td><td>—</td><td>55.3226</td></tr>
-<tr><td class="mono">geospatial_lat_max</td><td>—</td><td>55.3412</td></tr>
-<tr><td class="mono">geospatial_lon_min</td><td>—</td><td>16.0930</td></tr>
-<tr><td class="mono">geospatial_lon_max</td><td>—</td><td>16.1194</td></tr>
+  
+</div>
 
-</tbody>
-</table>
+<h2 id="og1_people">(3) People &amp; institutions</h2>
 
 
-<h3>People &amp; institutions</h3>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
 <tbody>
@@ -413,9 +443,20 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 
 </tbody>
 </table>
+</div>
+
+  
+</div>
+
+<h2 id="og1_provenance">(4) Provenance &amp; processing</h2>
 
 
-<h3>Provenance &amp; processing</h3>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
 <tbody>
@@ -431,9 +472,20 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 
 </tbody>
 </table>
+</div>
+
+  
+</div>
+
+<h2 id="og1_other">(5) Other (not in OG1)</h2>
 
 
-<h3>Other (not in OG1)</h3>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
 <table class="nc meta">
 <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
 <tbody>
@@ -445,13 +497,12 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 
 </tbody>
 </table>
-
 </div>
 
   
 </div>
 
-<h2 id="file_contents">(2) File contents</h2>
+<h2 id="coords">(6) Coordinates</h2>
 
 
 <div class="fig-row">
@@ -460,35 +511,42 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
   
   
   <div class="html-panel">
-<p class="caption">50 data variables, 5 sensors, 8 QC-flag variables (shown in the QC section, not listed here), 4 coordinates.</p>
-<p class="caption">8 of 50 data variables carry a <code>_QC</code> companion.</p>
 
-
-<h3>On N_MEASUREMENTS</h3>
-<p class="caption"><strong>Coordinates</strong></p>
 
 
 <table class="nc">
 <thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="num wrapr">Min / Max</th><th class="num wrapn">N (valid)</th><th>Attributes</th></tr></thead>
 <tbody>
 <tr><td class="mono wrapv">DEPTH</td><td class="mono">float32</td><td>m</td><td class="wrap"><strong class="mono">depth</strong><br>glider depth</td><td class="num wrapr">0.1072 / 80.66</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>13 attrs</summary><table><tr><td class="mono">source</td><td>pressure</td></tr><tr><td class="mono">comment</td><td>from science pressure and interpolated</td></tr><tr><td class="mono">sensor</td><td>SENSOR_CTD_205048</td></tr><tr><td class="mono">observation_type</td><td>calculated</td></tr><tr><td class="mono">accuracy</td><td>1</td></tr><tr><td class="mono">precision</td><td>2</td></tr><tr><td class="mono">resolution</td><td>0.02</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">valid_min</td><td>0.0</td></tr><tr><td class="mono">valid_max</td><td>2000.0</td></tr><tr><td class="mono">reference_datum</td><td>surface</td></tr><tr><td class="mono">positive</td><td>down</td></tr><tr><td class="mono">instrument</td><td>instrument_ctd</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">LATITUDE</td><td class="mono">float64</td><td>degrees_north</td><td class="wrap"><strong class="mono">latitude</strong><br>Latitude north</td><td class="num wrapr">55.32 / 55.34</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>14 attrs</summary><table><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>90.0</td></tr><tr><td class="mono">valid_min</td><td>-90.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LAT/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LAT/</a></td></tr><tr><td class="mono">comment</td><td>Estimated between surface fixes</td></tr><tr><td class="mono">conversion</td><td>nmea2deg</td></tr><tr><td class="mono">source</td><td>NAV_LATITUDE</td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">LONGITUDE</td><td class="mono">float64</td><td>degrees_east</td><td class="wrap"><strong class="mono">longitude</strong><br>Longitude east</td><td class="num wrapr">16.09 / 16.12</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>14 attrs</summary><table><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>180.0</td></tr><tr><td class="mono">valid_min</td><td>-180.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LON/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LON/</a></td></tr><tr><td class="mono">comment</td><td>Estimated between surface fixes</td></tr><tr><td class="mono">conversion</td><td>nmea2deg</td></tr><tr><td class="mono">source</td><td>NAV_LONGITUDE</td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LATITUDE</td><td class="mono f64">float64</td><td>degrees_north</td><td class="wrap"><strong class="mono">latitude</strong><br>Latitude north</td><td class="num wrapr">55.32 / 55.34</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>14 attrs</summary><table><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>90.0</td></tr><tr><td class="mono">valid_min</td><td>-90.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LAT/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LAT/</a></td></tr><tr><td class="mono">comment</td><td>Estimated between surface fixes</td></tr><tr><td class="mono">conversion</td><td>nmea2deg</td></tr><tr><td class="mono">source</td><td>NAV_LATITUDE</td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LONGITUDE</td><td class="mono f64">float64</td><td>degrees_east</td><td class="wrap"><strong class="mono">longitude</strong><br>Longitude east</td><td class="num wrapr">16.09 / 16.12</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>14 attrs</summary><table><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>180.0</td></tr><tr><td class="mono">valid_min</td><td>-180.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LON/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LON/</a></td></tr><tr><td class="mono">comment</td><td>Estimated between surface fixes</td></tr><tr><td class="mono">conversion</td><td>nmea2deg</td></tr><tr><td class="mono">source</td><td>NAV_LONGITUDE</td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">TIME</td><td class="mono">datetime64[ns]</td><td></td><td class="wrap"><strong class="mono">time</strong><br>time of measurement</td><td class="num wrapr">2023-06-04 12:53 / 2023-06-04 21:43</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/AYMD/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/AYMD/</a></td></tr></table></details></td></tr>
 
 </tbody>
 </table>
 
 
+</div>
+
+  
+</div>
+
+<h2 id="measurements">(7) Variables on N_MEASUREMENTS</h2>
 
 
-<p class="caption"><strong>Variables</strong></p>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
+
 
 
 <table class="nc">
 <thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="num wrapr">Min / Max</th><th class="num wrapn">N (valid)</th><th>Attributes</th></tr></thead>
 <tbody>
-<tr><td class="mono wrapv">ALTIMETER</td><td class="mono">float64</td><td></td><td class="wrap"><strong class="mono">glider_altimeter_reading</strong><br>glider altimeter reading</td><td class="num wrapr">-1 / 32.38</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>Altitude</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">ALTIMETER</td><td class="mono f64">float64</td><td></td><td class="wrap"><strong class="mono">glider_altimeter_reading</strong><br>glider altimeter reading</td><td class="num wrapr">-1 / 32.38</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>Altitude</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">ANGULAR_CMD</td><td class="mono">float32</td><td>degrees</td><td class="wrap"><strong class="mono">angular_command</strong><br>glider angular command</td><td class="num wrapr">-70 / 65</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>AngCmd</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">ANGULAR_POS</td><td class="mono">float32</td><td>degrees</td><td class="wrap"><strong class="mono">angular_position</strong><br>glider angular position</td><td class="num wrapr">-70.4 / 64.97</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>AngPos</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">BALLAST_CMD</td><td class="mono">float32</td><td>ml</td><td class="wrap"><strong class="mono">ballast_command</strong><br>glider ballast command</td><td class="num wrapr">-500 / 500</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>BallastCmd</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
@@ -508,10 +566,10 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 <tr><td class="mono wrapv">HEADING</td><td class="mono">float32</td><td>degrees</td><td class="wrap"><strong class="mono">platform_orientation</strong><br>Orientation (horizontal relative to magnetic north) of measurement platform {heading} by compass</td><td class="num wrapr">0.0682 / 359.9</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>8 attrs</summary><table><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/HEADING/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/HEADING/</a></td></tr><tr><td class="mono">source</td><td>Heading</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">INTERNAL_PRESSURE</td><td class="mono">float32</td><td>Pa</td><td class="wrap"><strong class="mono">internal_pressure</strong><br>internal pressure</td><td class="num wrapr">7.153e+04 / 7.383e+04</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>Pa</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">INTERNAL_TEMPERATURE</td><td class="mono">float32</td><td>Celsius</td><td class="wrap"><strong class="mono">internal_temperature</strong><br>internal temperature</td><td class="num wrapr">7.3 / 10.2</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>Temperature</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">LATITUDE_GPS</td><td class="mono">float64</td><td>degrees_north</td><td class="wrap"><strong class="mono">latitude</strong><br>latitude of each GPS location</td><td class="num wrapr">55.32 / 55.34</td><td class="num wrapn">31,232 (239)</td><td><details class="attrs"><summary>14 attrs</summary><table><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>90.0</td></tr><tr><td class="mono">valid_min</td><td>-90.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LAT_GPS/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LAT_GPS/</a></td></tr><tr><td class="mono">comment</td><td>Estimated between surface fixes</td></tr><tr><td class="mono">conversion</td><td>nmea2deg</td></tr><tr><td class="mono">source</td><td>NAV_LATITUDE</td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LATITUDE_GPS</td><td class="mono f64">float64</td><td>degrees_north</td><td class="wrap"><strong class="mono">latitude</strong><br>latitude of each GPS location</td><td class="num wrapr">55.32 / 55.34</td><td class="num wrapn">31,232 (239)</td><td><details class="attrs"><summary>14 attrs</summary><table><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>90.0</td></tr><tr><td class="mono">valid_min</td><td>-90.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LAT_GPS/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LAT_GPS/</a></td></tr><tr><td class="mono">comment</td><td>Estimated between surface fixes</td></tr><tr><td class="mono">conversion</td><td>nmea2deg</td></tr><tr><td class="mono">source</td><td>NAV_LATITUDE</td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">LINEAR_CMD</td><td class="mono">float32</td><td>cm</td><td class="wrap"><strong class="mono">linear_command</strong><br>glider linear command</td><td class="num wrapr">26 / 100</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>LinCmd</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">LINEAR_POS</td><td class="mono">float32</td><td>cm</td><td class="wrap"><strong class="mono">linear_position</strong><br>glider linear position</td><td class="num wrapr">25.03 / 100.7</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>LinPos</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">LONGITUDE_GPS</td><td class="mono">float64</td><td>degrees_east</td><td class="wrap"><strong class="mono">longitude</strong><br>longitude of each GPS location</td><td class="num wrapr">16.09 / 16.11</td><td class="num wrapn">31,232 (239)</td><td><details class="attrs"><summary>14 attrs</summary><table><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>180.0</td></tr><tr><td class="mono">valid_min</td><td>-180.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LON_GPS/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LON_GPS/</a></td></tr><tr><td class="mono">comment</td><td>Estimated between surface fixes</td></tr><tr><td class="mono">conversion</td><td>nmea2deg</td></tr><tr><td class="mono">source</td><td>NAV_LONGITUDE</td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">LONGITUDE_GPS</td><td class="mono f64">float64</td><td>degrees_east</td><td class="wrap"><strong class="mono">longitude</strong><br>longitude of each GPS location</td><td class="num wrapr">16.09 / 16.11</td><td class="num wrapn">31,232 (239)</td><td><details class="attrs"><summary>14 attrs</summary><table><tr><td class="mono">coordinate_reference_frame</td><td>urn:ogc:crs:EPSG::4326</td></tr><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">reference</td><td>WGS84</td></tr><tr><td class="mono">valid_max</td><td>180.0</td></tr><tr><td class="mono">valid_min</td><td>-180.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/LON_GPS/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/LON_GPS/</a></td></tr><tr><td class="mono">comment</td><td>Estimated between surface fixes</td></tr><tr><td class="mono">conversion</td><td>nmea2deg</td></tr><tr><td class="mono">source</td><td>NAV_LONGITUDE</td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">NAV_RESOURCE</td><td class="mono">float32</td><td>None</td><td class="wrap"><strong class="mono">nav_resource</strong><br>nav resource</td><td class="num wrapr">100 / 119</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>NAV_RESOURCE</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">NAV_STATE</td><td class="mono">float32</td><td>None</td><td class="wrap"><strong class="mono">navigation_state</strong><br>seaexplorer navigation state</td><td class="num wrapr">100 / 119</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>NAV_RESOURCE</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">PHASE</td><td class="mono">float32</td><td></td><td class="wrap">behavior of the glider at sea</td><td class="num wrapr">1 / 5</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">phase_vocabulary</td><td><a href="https://github.com/OceanGlidersCommunity/OG-format-user-manual/blob/main/vocabularyCollection/phase.md" rel="noopener">https://github.com/OceanGlidersCommunity/OG-format-user-manual/blob/main/vocabularyCollection/phase.md</a></td></tr></table></details></td></tr>
@@ -528,7 +586,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 <tr><td class="mono wrapv">TEMP <span class="qc-good">(_QC)</span></td><td class="mono">float32</td><td>Celsius</td><td class="wrap"><strong class="mono">sea_water_temperature</strong><br>Temperature of the water body by CTD </td><td class="num wrapr">4.975 / 12.26</td><td class="num wrapn">31,232 (31,229)</td><td><details class="attrs"><summary>13 attrs</summary><table><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">valid_max</td><td>42.0</td></tr><tr><td class="mono">valid_min</td><td>-5.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/</a></td></tr><tr><td class="mono">accuracy</td><td>0.002</td></tr><tr><td class="mono">instrument</td><td>instrument_ctd</td></tr><tr><td class="mono">resolution</td><td>0.00005</td></tr><tr><td class="mono">source</td><td>LEGATO_TEMPERATURE</td></tr><tr><td class="mono">comment</td><td> Corrected following Thermal lag from Thermal Inertia of Conductivity Cells: Observations with a Sea-Bird Cell Rolf G. Lueck and James J. Picklo <a href="https://doi.org/10.1175/1520-0426(1990)007&lt;0756:TIOCCO&gt;2.0.CO;2" rel="noopener">https://doi.org/10.1175/1520-0426(1990)007&lt;0756:TIOCCO&gt;2.0.CO;2</a> as implemented by Dever M., Owens B., Richards C., Wijffels S., Wong A., Shkvorets I., Halverson M., and Jonhson G. (accepted). Static and dynamic performance of the RBRargo3 CTD. Journal of Atmospheric and Oceanic Technology.</td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">ancillary_variables</td><td>TEMP_QC</td></tr><tr><td class="mono">sensor</td><td>SENSOR_CTD_205048</td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">TEMP_OXYGEN</td><td class="mono">float32</td><td>Celsius</td><td class="wrap"><strong class="mono">sea_water_temperature</strong><br>Temperature of the water body by CTD </td><td class="num wrapr">4.982 / 12.22</td><td class="num wrapn">31,232 (31,217)</td><td><details class="attrs"><summary>12 attrs</summary><table><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">comment</td><td>measured by oxygen optode</td></tr><tr><td class="mono">valid_max</td><td>42.0</td></tr><tr><td class="mono">valid_min</td><td>-5.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/</a></td></tr><tr><td class="mono">accuracy</td><td>0.01</td></tr><tr><td class="mono">instrument</td><td>instrument_thermistor</td></tr><tr><td class="mono">resolution</td><td>0.001</td></tr><tr><td class="mono">source</td><td>AROD_FT_TEMP</td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">THETA <span class="qc-good">(_QC)</span></td><td class="mono">float32</td><td>Celsius</td><td class="wrap"><strong class="mono">sea_water_potential_temperature</strong><br>Potential temperature of the water body by computation using UNESCO 1983 algorithm.</td><td class="num wrapr">4.974 / 12.26</td><td class="num wrapn">31,232 (31,229)</td><td><details class="attrs"><summary>13 attrs</summary><table><tr><td class="mono">observation_type</td><td>calculated</td></tr><tr><td class="mono">sources</td><td>salinity temperature pressure</td></tr><tr><td class="mono">valid_max</td><td>42.0</td></tr><tr><td class="mono">valid_min</td><td>-5.0</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/OG1/current/THETA/" rel="noopener">https://vocab.nerc.ac.uk/collection/OG1/current/THETA/</a></td></tr><tr><td class="mono">comment</td><td>raw, uncorrected salinity</td></tr><tr><td class="mono">method</td><td>get_derived_eos_raw</td></tr><tr><td class="mono">instrument</td><td>instrument_ctd</td></tr><tr><td class="mono">accuracy</td><td>0.002</td></tr><tr><td class="mono">precision</td><td>0.001</td></tr><tr><td class="mono">resolution</td><td>0.0001</td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">ancillary_variables</td><td>THETA_QC</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">TIME_GPS</td><td class="mono">float64</td><td></td><td class="wrap"><strong class="mono">time</strong><br>time of each GPS location</td><td class="num wrapr">—</td><td class="num wrapn">31,232 (239)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/AYMD/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/AYMD/</a></td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">TIME_GPS</td><td class="mono f64">float64</td><td></td><td class="wrap"><strong class="mono">time</strong><br>time of each GPS location</td><td class="num wrapr">—</td><td class="num wrapn">31,232 (239)</td><td><details class="attrs"><summary>2 attrs</summary><table><tr><td class="mono">observation_type</td><td>measured</td></tr><tr><td class="mono">vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/P02/current/AYMD/" rel="noopener">https://vocab.nerc.ac.uk/collection/P02/current/AYMD/</a></td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">VERTICAL_DISTANCE_TO_SEAFLOOR</td><td class="mono">float32</td><td>m</td><td class="wrap"><strong class="mono">vertical_distance_to_seafloor</strong><br>vertical distance from glider to seafloor</td><td class="num wrapr">0.003778 / 29.9</td><td class="num wrapn">31,232 (12,098)</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>Altitude</td></tr><tr><td class="mono">comment</td><td>Distance to the seafloor is calculated from the glider altimeter (see altimeter variable), which is oriented at 20 degrees from the vertical such that it is vertical when the glider is pitched downwards at 20 degrees.</td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 <tr><td class="mono wrapv">VOLTAGE</td><td class="mono">float32</td><td>V</td><td class="wrap"><strong class="mono">platform_voltage</strong><br>glider voltage</td><td class="num wrapr">27.62 / 28.2</td><td class="num wrapn">31,232</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">source</td><td>Voltage</td></tr><tr><td class="mono">comment</td><td> </td></tr><tr><td class="mono">accuracy</td><td> </td></tr><tr><td class="mono">precision</td><td> </td></tr><tr><td class="mono">platform</td><td>platform</td></tr><tr><td class="mono">resolution</td><td> </td></tr><tr><td class="mono">ancillary_variables</td><td> </td></tr></table></details></td></tr>
 
@@ -536,37 +594,64 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 </table>
 
 
+</div>
 
-<h3>Scalar variables</h3>
+  
+</div>
+
+<h2 id="scalars">(8) Scalar variables</h2>
+
+
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
 
 
 
 <table class="nc">
 <thead><tr><th>Variable</th><th>Type</th><th>Units</th><th class="wrap">Standard / long name</th><th class="wrapr">Value</th><th>Attributes</th></tr></thead>
 <tbody>
-<tr><td class="mono wrapv">DEPLOYMENT_LATITUDE</td><td class="mono">float64</td><td></td><td class="wrap">latitude of deployment</td><td class="wrapr">55.32</td><td>—</td></tr>
-<tr><td class="mono wrapv">DEPLOYMENT_LONGITUDE</td><td class="mono">float64</td><td></td><td class="wrap">longitude of deployment</td><td class="wrapr">16.1</td><td>—</td></tr>
-<tr><td class="mono wrapv">DEPLOYMENT_TIME</td><td class="mono">float64</td><td></td><td class="wrap"><strong class="mono">time</strong><br>date of deployment</td><td class="wrapr">1.686e+09 (standard_name time; no units)</td><td>—</td></tr>
-<tr><td class="mono wrapv">PLATFORM_MODEL</td><td class="mono">&lt;U11</td><td></td><td class="wrap">model of the glider</td><td class="wrapr">SeaExplorer</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform_model_vocabulary</td><td>None</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">PLATFORM_SERIAL_NUMBER</td><td class="mono">&lt;U6</td><td></td><td class="wrap">glider serial number</td><td class="wrapr">sea045</td><td>—</td></tr>
-<tr><td class="mono wrapv">TRAJECTORY</td><td class="mono">&lt;U22</td><td></td><td class="wrap">trajectory name</td><td class="wrapr">Kvanne45-20230530T0832</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">cf_role</td><td>trajectory_id</td></tr></table></details></td></tr>
-<tr><td class="mono wrapv">WMO_IDENTIFIER</td><td class="mono">&lt;U7</td><td></td><td class="wrap">wmo id</td><td class="wrapr">6801673</td><td>—</td></tr>
+<tr><td class="mono wrapv">DEPLOYMENT_LATITUDE</td><td class="mono f64">float64</td><td></td><td class="wrap">latitude of deployment</td><td class="wrap">55.32</td><td>—</td></tr>
+<tr><td class="mono wrapv">DEPLOYMENT_LONGITUDE</td><td class="mono f64">float64</td><td></td><td class="wrap">longitude of deployment</td><td class="wrap">16.1</td><td>—</td></tr>
+<tr><td class="mono wrapv">DEPLOYMENT_TIME</td><td class="mono f64">float64</td><td></td><td class="wrap"><strong class="mono">time</strong><br>date of deployment</td><td class="wrap">1.686e+09 (standard_name time; no units)</td><td>—</td></tr>
+<tr><td class="mono wrapv">PLATFORM_MODEL</td><td class="mono">&lt;U11</td><td></td><td class="wrap">model of the glider</td><td class="wrap">SeaExplorer</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">platform_model_vocabulary</td><td>None</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">PLATFORM_SERIAL_NUMBER</td><td class="mono">&lt;U6</td><td></td><td class="wrap">glider serial number</td><td class="wrap">sea045</td><td>—</td></tr>
+<tr><td class="mono wrapv">TRAJECTORY</td><td class="mono">&lt;U22</td><td></td><td class="wrap">trajectory name</td><td class="wrap">Kvanne45-20230530T0832</td><td><details class="attrs"><summary>1 attrs</summary><table><tr><td class="mono">cf_role</td><td>trajectory_id</td></tr></table></details></td></tr>
+<tr><td class="mono wrapv">WMO_IDENTIFIER</td><td class="mono">&lt;U7</td><td></td><td class="wrap">wmo id</td><td class="wrap">6801673</td><td>—</td></tr>
 
 </tbody>
 </table>
 
 
+</div>
+
+  
+</div>
+
+<h2 id="sensors">(9) Sensor catalog</h2>
 
 
-<h3>Sensor catalog</h3>
+<div class="fig-row">
+  
+  
+  
+  
+  <div class="html-panel">
+
+
+
+<p class="caption">A Serial or Calibration cell is amber when the value was read from a pre-OG1 attribute name (<code>serial_number</code> / <code>calibration_date</code>) rather than the OG1 <code>sensor_serial_number</code> / <code>sensor_calibration_date</code>. A blank (—) cell is simply absent — not flagged, since OG1 does not clearly require it and a legacy file may be unable to reconstruct it.</p>
 <table class="nc">
 <thead><tr><th>Variable</th><th>Model</th><th>Serial</th><th>Calibration</th><th>Attributes</th></tr></thead>
 <tbody>
-<tr><td class="mono">SENSOR_ADVS_AND_TURBULENCE_PROBES_101136</td><td class="wrap">Nortek Glider1000 AD2CP Acoustic Doppler Current Profiler</td><td class="mono">101136</td><td>2020-01-24</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">sensor_type</td><td>ADVs and turbulence probes</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/384/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/384/</a></td></tr><tr><td class="mono">sensor_maker</td><td>Nortek</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L35/current/MAN0068/" rel="noopener">https://vocab.nerc.ac.uk/collection/L35/current/MAN0068/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1774/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1774/</a></td></tr><tr><td class="mono">long_name</td><td>Nortek AD2CP:101136</td></tr></table></details></td></tr>
-<tr><td class="mono">SENSOR_CTD_205048</td><td class="wrap">RBR Legato3 CTD</td><td class="mono">205048</td><td>2022-10-03</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">sensor_type</td><td>CTD</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/130/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/130/</a></td></tr><tr><td class="mono">sensor_maker</td><td>RBR</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/" rel="noopener">https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/</a></td></tr><tr><td class="mono">long_name</td><td>RBR Legato3 CTD:205048</td></tr></table></details></td></tr>
-<tr><td class="mono">SENSOR_DISSOLVED_GAS_SENSORS_0058</td><td class="wrap">JFE Advantech Rinko FT ARO-FT oxygen sensor</td><td class="mono">0058</td><td>2022-03-26</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">sensor_type</td><td>dissolved gas sensors</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/351/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/351/</a></td></tr><tr><td class="mono">sensor_maker</td><td>JFE Advantech</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L35/current/MAN0053/" rel="noopener">https://vocab.nerc.ac.uk/collection/L35/current/MAN0053/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/</a></td></tr><tr><td class="mono">long_name</td><td>JFE Rinko ARO-FT:0058</td></tr></table></details></td></tr>
-<tr><td class="mono">SENSOR_FLUOROMETERS_6598</td><td class="wrap">WET Labs {Sea-Bird WETLabs} ECO Puck Triplet FLBBPC scattering fluorescence sensor</td><td class="mono">6598</td><td>2020-12-22</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">sensor_type</td><td>fluorometers</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/113/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/113/</a></td></tr><tr><td class="mono">sensor_maker</td><td>WET Labs</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/" rel="noopener">https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1904/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1904/</a></td></tr><tr><td class="mono">long_name</td><td> WET Labs ECO FLBBPC:6598</td></tr><tr><td class="mono">calibration_parameters</td><td>{&#39;Chl_DarkCounts&#39;: 46, &#39;Chl_SF&#39;: 0.0073, &#39;PC_DarkCounts&#39;: 47, &#39;PC_SF&#39;: 0.0388, &#39;SIG_DarkCounts&#39;: 47, &#39;SIG_SF&#39;: 1.815e-06}</td></tr></table></details></td></tr>
-<tr><td class="mono">SENSOR_RADIOMETERS_2984</td><td class="wrap">Biospherical PAR sensor (UnSpec model)</td><td class="mono">2984</td><td>2023-02-21</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">sensor_type</td><td>radiometers</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/122/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/122/</a></td></tr><tr><td class="mono">sensor_maker</td><td>Biospherical Instruments</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="http://vocab.nerc.ac.uk/collection/L35/current/MAN0028/" rel="noopener">http://vocab.nerc.ac.uk/collection/L35/current/MAN0028/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1254/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1254/</a></td></tr><tr><td class="mono">long_name</td><td>Biospherical PAR sensor:2984</td></tr></table></details></td></tr>
+<tr><td class="mono">SENSOR_ADVS_AND_TURBULENCE_PROBES_101136</td><td class="wrap">Nortek Glider1000 AD2CP Acoustic Doppler Current Profiler</td><td class="mono nonconform" title="from the pre-OG1 attribute serial_number">101136</td><td class="nonconform" title="from the pre-OG1 attribute calibration_date">2020-01-24</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">sensor_type</td><td>ADVs and turbulence probes</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/384/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/384/</a></td></tr><tr><td class="mono">sensor_maker</td><td>Nortek</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L35/current/MAN0068/" rel="noopener">https://vocab.nerc.ac.uk/collection/L35/current/MAN0068/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1774/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1774/</a></td></tr><tr><td class="mono">long_name</td><td>Nortek AD2CP:101136</td></tr></table></details></td></tr>
+<tr><td class="mono">SENSOR_CTD_205048</td><td class="wrap">RBR Legato3 CTD</td><td class="mono nonconform" title="from the pre-OG1 attribute serial_number">205048</td><td class="nonconform" title="from the pre-OG1 attribute calibration_date">2022-10-03</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">sensor_type</td><td>CTD</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/130/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/130/</a></td></tr><tr><td class="mono">sensor_maker</td><td>RBR</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/" rel="noopener">https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/</a></td></tr><tr><td class="mono">long_name</td><td>RBR Legato3 CTD:205048</td></tr></table></details></td></tr>
+<tr><td class="mono">SENSOR_DISSOLVED_GAS_SENSORS_0058</td><td class="wrap">JFE Advantech Rinko FT ARO-FT oxygen sensor</td><td class="mono nonconform" title="from the pre-OG1 attribute serial_number">0058</td><td class="nonconform" title="from the pre-OG1 attribute calibration_date">2022-03-26</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">sensor_type</td><td>dissolved gas sensors</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/351/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/351/</a></td></tr><tr><td class="mono">sensor_maker</td><td>JFE Advantech</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L35/current/MAN0053/" rel="noopener">https://vocab.nerc.ac.uk/collection/L35/current/MAN0053/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/</a></td></tr><tr><td class="mono">long_name</td><td>JFE Rinko ARO-FT:0058</td></tr></table></details></td></tr>
+<tr><td class="mono">SENSOR_FLUOROMETERS_6598</td><td class="wrap">WET Labs {Sea-Bird WETLabs} ECO Puck Triplet FLBBPC scattering fluorescence sensor</td><td class="mono nonconform" title="from the pre-OG1 attribute serial_number">6598</td><td class="nonconform" title="from the pre-OG1 attribute calibration_date">2020-12-22</td><td><details class="attrs"><summary>7 attrs</summary><table><tr><td class="mono">sensor_type</td><td>fluorometers</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/113/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/113/</a></td></tr><tr><td class="mono">sensor_maker</td><td>WET Labs</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/" rel="noopener">https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1904/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1904/</a></td></tr><tr><td class="mono">long_name</td><td> WET Labs ECO FLBBPC:6598</td></tr><tr><td class="mono">calibration_parameters</td><td>{&#39;Chl_DarkCounts&#39;: 46, &#39;Chl_SF&#39;: 0.0073, &#39;PC_DarkCounts&#39;: 47, &#39;PC_SF&#39;: 0.0388, &#39;SIG_DarkCounts&#39;: 47, &#39;SIG_SF&#39;: 1.815e-06}</td></tr></table></details></td></tr>
+<tr><td class="mono">SENSOR_RADIOMETERS_2984</td><td class="wrap">Biospherical PAR sensor (UnSpec model)</td><td class="mono nonconform" title="from the pre-OG1 attribute serial_number">2984</td><td class="nonconform" title="from the pre-OG1 attribute calibration_date">2023-02-21</td><td><details class="attrs"><summary>6 attrs</summary><table><tr><td class="mono">sensor_type</td><td>radiometers</td></tr><tr><td class="mono">sensor_type_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L05/current/122/" rel="noopener">https://vocab.nerc.ac.uk/collection/L05/current/122/</a></td></tr><tr><td class="mono">sensor_maker</td><td>Biospherical Instruments</td></tr><tr><td class="mono">sensor_maker_vocabulary</td><td><a href="http://vocab.nerc.ac.uk/collection/L35/current/MAN0028/" rel="noopener">http://vocab.nerc.ac.uk/collection/L35/current/MAN0028/</a></td></tr><tr><td class="mono">sensor_model_vocabulary</td><td><a href="https://vocab.nerc.ac.uk/collection/L22/current/TOOL1254/" rel="noopener">https://vocab.nerc.ac.uk/collection/L22/current/TOOL1254/</a></td></tr><tr><td class="mono">long_name</td><td>Biospherical PAR sensor:2984</td></tr></table></details></td></tr>
 
 </tbody>
 </table>
@@ -576,12 +661,12 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 </div>
 
 
-
+<p class="caption">Not applicable to this selection: Variables on other dimensions.</p>
 
 </main>
 
 
-<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev32 &nbsp;·&nbsp; sea045_20230604T1253_delayed &nbsp;·&nbsp; 2026-10-10 08:52 UTC</footer>
+<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev33 &nbsp;·&nbsp; sea045_20230604T1253_delayed &nbsp;·&nbsp; 2026-10-10 09:07 UTC</footer>
 <script>
 document.querySelectorAll('h2').forEach(h => {
   const a = document.createElement('a');

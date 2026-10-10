@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quickstart &mdash; glidertest 0.1.1.dev32+ge3fc6a025 documentation</title>
+  <title>Quickstart &mdash; glidertest 0.1.1.dev33+g971fb4b53 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=c4d39cfa"></script>
+      <script src="_static/documentation_options.js?v=ac23f95b"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -101,7 +101,7 @@
              
   <section id="quickstart">
 <span id="id1"></span><h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
-<p>From an OG1 file to an open report in three commands.</p>
+<p>From an OG1 file to an open report: one command, then open the page.</p>
 <section id="input-an-og1-mission-file">
 <h2>Input: an OG1 mission file<a class="headerlink" href="#input-an-og1-mission-file" title="Link to this heading"></a></h2>
 <p>glidertest reads one glider mission as an <a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OceanGliders (OG1)</a> netCDF file — one file per
@@ -138,7 +138,9 @@ directory.</p>
     figures/    report.json
 </pre></div>
 </div>
-<p>and prints the path of the landing page. Two variants you will want soon:</p>
+<p>and prints the path of the landing page. (A <code class="docutils literal notranslate"><span class="pre">flight.html</span></code> page is added when the file carries
+a flight-model velocity, as Seaglider files do; this SeaExplorer mission has none.) Two variants
+you will want soon:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># every *.nc in a directory; the fleet page is rebuilt once at the end</span>
 glidertest<span class="w"> </span>report<span class="w"> </span>data/<span class="w"> </span>--report-dir<span class="w"> </span>reports/
 
@@ -197,9 +199,10 @@ functions:</p>
 extent, platform — and a one-line OG1 conformance verdict. The two <strong>QC</strong> sections below it
 separate what the file <em>says</em> (its own <code class="docutils literal notranslate"><span class="pre">*_QC</span></code> flags) from what glidertest <em>finds</em>. The
 <strong>inventory</strong> page (linked under the masthead) lists every attribute and variable in the
-file, with anything mandatory that is missing marked in amber. The verdict — e.g. “OG1: 15 of
-16 mandatory attributes” — is about <em>presence</em>, not validity: it does not check that the
-values are correct (see the inventory page). <a class="reference internal" href="reports.html"><span class="doc">The HTML report</span></a> walks through every page.</p>
+file, with anything mandatory that is missing marked in amber. The verdict reads, for the
+sample, <code class="docutils literal notranslate"><span class="pre">OG1:</span> <span class="pre">16</span> <span class="pre">of</span> <span class="pre">16</span> <span class="pre">mandatory</span> <span class="pre">global</span> <span class="pre">attributes</span> <span class="pre">present</span> <span class="pre">·</span> <span class="pre">12</span> <span class="pre">highly-desirable</span> <span class="pre">missing</span></code> —
+presence, not validity: it counts which attributes are there, not whether their values are
+correct (see the inventory page). <a class="reference internal" href="reports.html"><span class="doc">The HTML report</span></a> walks through every page.</p>
 </section>
 <section id="where-next">
 <h2>Where next<a class="headerlink" href="#where-next" title="Link to this heading"></a></h2>

@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>glidertest.reports &mdash; glidertest 0.1.1.dev32+ge3fc6a025 documentation</title>
+  <title>glidertest.reports &mdash; glidertest 0.1.1.dev33+g971fb4b53 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=c4d39cfa"></script>
+      <script src="../../_static/documentation_options.js?v=ac23f95b"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -296,7 +296,7 @@
     <span class="n">generated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M UTC"</span><span class="p">)</span>
     <span class="n">common</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">"css"</span><span class="p">:</span> <span class="n">SHARED_CSS</span><span class="p">,</span>
-        <span class="s2">"header"</span><span class="p">:</span> <span class="n">header_card</span><span class="p">(</span><span class="n">ds</span><span class="p">),</span>
+        <span class="s2">"header"</span><span class="p">:</span> <span class="n">header_card</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">facts</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">facts</span><span class="p">),</span>
         <span class="s2">"mission_id"</span><span class="p">:</span> <span class="n">mid</span><span class="p">,</span>
         <span class="s2">"source_name"</span><span class="p">:</span> <span class="n">source_name</span><span class="p">,</span>
         <span class="s2">"version"</span><span class="p">:</span> <span class="n">__version__</span><span class="p">,</span>
@@ -315,7 +315,7 @@
         <span class="n">_figdebug</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">pages</span><span class="p">:</span>
             <span class="n">slug</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">resolved</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">page</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
+            <span class="n">resolved</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">page</span><span class="o">.</span><span class="n">profile</span><span class="p">,</span> <span class="n">ctx</span><span class="o">=</span><span class="n">ctx</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">resolved</span><span class="o">.</span><span class="n">sections</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">panel</span> <span class="ow">in</span> <span class="n">section</span><span class="o">.</span><span class="n">panels</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">panel</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"figure"</span> <span class="ow">and</span> <span class="n">panel</span><span class="o">.</span><span class="n">payload</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -331,6 +331,7 @@
                 <span class="n">page_title</span><span class="o">=</span><span class="n">page</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
                 <span class="n">page_type</span><span class="o">=</span><span class="n">page</span><span class="o">.</span><span class="n">type_label</span><span class="p">,</span>
                 <span class="n">page_landing</span><span class="o">=</span><span class="n">page</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s2">"landing"</span><span class="p">,</span>
+                <span class="n">page_intro</span><span class="o">=</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">lead</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="k">if</span> <span class="n">page</span><span class="o">.</span><span class="n">lead</span> <span class="k">else</span> <span class="s2">""</span><span class="p">),</span>
                 <span class="o">**</span><span class="n">common</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="c1"># page has ✓/✗/⚠/– glyphs; Windows default is cp1252</span>
@@ -344,6 +345,7 @@
             <span class="n">pages</span><span class="o">=</span><span class="p">[(</span><span class="n">p</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages</span><span class="p">],</span>
             <span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span>
             <span class="n">generated_at</span><span class="o">=</span><span class="n">generated_at</span><span class="p">,</span>
+            <span class="n">facts</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">facts</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">existing</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
 
