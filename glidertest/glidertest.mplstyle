@@ -13,3 +13,8 @@ lines.markersize : 10
 xtick.labelsize : 20
 xtick.alignment: center
 ytick.labelsize : 20
+# constrained layout options to prevent cropping of labels etc.
+figure.constrained_layout.use : True
+figure.dpi     : 150
+savefig.dpi    : figure
+savefig.bbox   : standard  
