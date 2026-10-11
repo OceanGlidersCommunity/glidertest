@@ -249,6 +249,22 @@ def test_navigator_omits_map_when_no_tracks(tmp_path, monkeypatch):
     assert "m_a" in html and "m_b" in html  # rows still present
 
 
+def test_navigator_single_point_track(tmp_path, monkeypatch):
+    """A one-position track gives a degenerate but finite extent; the navigator still renders a map.
+
+    The JS caps fitBounds with maxZoom so the zero-size extent cannot blank the map.
+    """
+    monkeypatch.setattr(_leaflet, "coastline_geojson", lambda *a, **k: "null")
+    from glidertest.reports import navigator
+
+    _write_fleet(tmp_path, [("m_pt", [[10.0, 58.0]])])  # single [lon, lat]
+    html = navigator(tmp_path).read_text(encoding="utf-8")
+
+    assert 'id="track-map"' in html
+    assert "var BOUNDS = [[58.0, 10.0], [58.0, 10.0]]" in html  # finite, degenerate
+    assert "maxZoom: 12" in html  # the cap that keeps a zero-size extent from blanking the map
+
+
 def test_navigator_table_units_numeric_and_sortable(tmp_path, monkeypatch):
     """Units move to a second header row; duration is fractional days, depth bare; columns sort."""
     monkeypatch.setattr(_leaflet, "coastline_geojson", lambda *a, **k: "null")

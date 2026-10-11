@@ -133,8 +133,8 @@ def _qc_cell(qc: dict[str, Any]) -> str:
 def _mission_row(m: dict[str, Any], color: str) -> dict[str, Any]:
     """Return one missions-table row from a manifest, formatted for display.
 
-    The report link is a single pill to the mission's landing page (``<id>/index.html``); the sensor
-    pages are reached from that page's own nav, keeping the fleet table's report column narrow.
+    The mission id is the link to its landing page (``<id>/index.html``), and the whole row is a
+    click target for the same destination; the sensor pages are reached from that page's own nav.
     *color* is the mission's assigned track colour, drawn as a swatch in the id cell so the table
     ties to the map.
     """

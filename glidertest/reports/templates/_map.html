@@ -74,7 +74,9 @@
     fitTarget = [];
     TRACKS.forEach(function (t) { fitTarget = fitTarget.concat(t.track); });
   }
-  if (fitTarget && fitTarget.length) { map.fitBounds(fitTarget, { padding: [16, 16] }); }
+  // maxZoom caps a zero-size extent (a one-point track, or coincident points) so fitBounds does not
+  // compute an infinite zoom and blank the map.
+  if (fitTarget && fitTarget.length) { map.fitBounds(fitTarget, { padding: [16, 16], maxZoom: 12 }); }
   else { map.setView([0, 0], 1); }
 
   if (COAST) {
@@ -107,7 +109,15 @@
     var row = document.querySelector('tr[data-track-id="' + cssEscape(id) + '"]');
     if (row) { row.classList.toggle('track-hover', on); }
     var t = dataById[id];
-    if (on && t) { show(t.info + '<a href="' + t.href + '">→ Mission report</a>'); } else { clear(); }
+    if (on && t) {
+      show(t.info);  // t.info is pre-escaped HTML (see _info_html)
+      var report = document.createElement('a');
+      report.href = t.href;  // set as a property, never concatenated into innerHTML, so a quoted id cannot inject markup
+      report.textContent = '→ Mission report';
+      info.appendChild(report);
+    } else {
+      clear();
+    }
   }
 
   // This script runs where it is emitted — above the table — so defer row wiring until the table
@@ -126,7 +136,7 @@
   // size is known, so vectors are not clipped.
   setTimeout(function () {
     map.invalidateSize();
-    if (fitTarget && fitTarget.length) { map.fitBounds(fitTarget, { padding: [16, 16] }); }
+    if (fitTarget && fitTarget.length) { map.fitBounds(fitTarget, { padding: [16, 16], maxZoom: 12 }); }
   }, 0);
 })();
 </script>
