@@ -16,12 +16,22 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from . import _slots, metadata, paths
+from ..config.report_tokens import USABLE_PX
+from . import _slots, paths
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 logger = logging.getLogger(__name__)
+
+#: Map container height (px) — one source of truth: the template sets its ``--map-height`` CSS
+#: variable from this and the coastline aspect below is derived from it, so the two cannot desync.
+_MAP_HEIGHT_PX: int = 460
+
+#: Map container aspect (width / height), used to grow the clipped coastline so land fills the map.
+#: Width is the full content column (:data:`~glidertest.config.report_tokens.USABLE_PX`); using the
+#: widest layout over-covers on narrower screens, which is harmless (extra coastline off-view).
+_MAP_ASPECT: float = USABLE_PX / _MAP_HEIGHT_PX
 
 
 def _load_manifests(root: Path) -> tuple[list[dict[str, Any]], list[str], list[str]]:
@@ -48,17 +58,23 @@ def _load_manifests(root: Path) -> tuple[list[dict[str, Any]], list[str], list[s
     return manifests, orphans, unreadable
 
 
-def _track_map(missions: list[dict[str, Any]]) -> str | None:
-    """Render the all-tracks map as a base64 PNG, one colour per mission, or None if no track exists.
+def _track_map(missions: list[dict[str, Any]], colors: list[str]) -> str | None:
+    """Render the all-tracks map as a base64 PNG, or None if no track exists.
 
-    Uses the same cartopy projection and coastline as :func:`glidertest.plots.plot_glider_track`
-    (PlateCarree with LAND/OCEAN/COASTLINE), drawing only the decimated manifest tracks.
+    The print / no-JavaScript fallback for the interactive map: same cartopy projection and coastline
+    as :func:`glidertest.plots.plot_glider_track` (PlateCarree with LAND/OCEAN/COASTLINE), drawing
+    only the decimated manifest tracks. Each mission keeps the colour it was assigned in display
+    order (*colors* is parallel to *missions*), so the PNG, the live map and the row swatch match.
     """
-    tracks = [(m["id"], np.asarray(m["track"], dtype=float)) for m in missions if m.get("track")]
+    tracks = [
+        (m["id"], np.asarray(m["track"], dtype=float), colors[i])
+        for i, m in enumerate(missions)
+        if m.get("track")
+    ]
     if not tracks:
         return None
-    all_lon = np.concatenate([t[:, 0] for _, t in tracks])
-    all_lat = np.concatenate([t[:, 1] for _, t in tracks])
+    all_lon = np.concatenate([t[:, 0] for _, t, _ in tracks])
+    all_lat = np.concatenate([t[:, 1] for _, t, _ in tracks])
 
     def draw() -> Figure:
         """Plot every mission track on one PlateCarree map, coloured and labelled by id."""
@@ -71,10 +87,8 @@ def _track_map(missions: list[dict[str, Any]]) -> str | None:
         pc = ccrs.PlateCarree()
         with plt.style.context(str(MPLSTYLE_PATH)):
             fig, ax = plt.subplots(subplot_kw={"projection": pc})
-            cmap = plt.get_cmap("tab20" if len(tracks) > 10 else "tab10")
-            for i, (mid, pts) in enumerate(tracks):
+            for mid, pts, color in tracks:
                 lon, lat = pts[:, 0], pts[:, 1]
-                color = cmap(i % cmap.N)
                 ax.plot(lon, lat, color=color, lw=1.3, transform=pc)
                 mp = len(lon) // 2
                 ax.text(lon[mp], lat[mp], mid, fontsize=6, color=color, transform=pc)
@@ -116,35 +130,90 @@ def _qc_cell(qc: dict[str, Any]) -> str:
     return f"{qc.get('worst_var')} {pct:.0f}% bad"
 
 
-def _mission_row(m: dict[str, Any]) -> dict[str, Any]:
+def _mission_row(m: dict[str, Any], color: str) -> dict[str, Any]:
     """Return one missions-table row from a manifest, formatted for display.
 
     The report link is a single pill to the mission's landing page (``<id>/index.html``); the sensor
     pages are reached from that page's own nav, keeping the fleet table's report column narrow.
+    *color* is the mission's assigned track colour, drawn as a swatch in the id cell so the table
+    ties to the map.
     """
     og1 = m.get("og1", {})
     present, total = og1.get("mandatory_present", 0), og1.get("mandatory_total", 0)
     depth = m.get("max_depth_m")
+    dur_s = m.get("duration_s")
+    qcd = m.get("qc", {})
+    # Worst-QC sort key: not-delivered (-2) < delivered-but-not-evaluated (-1) < 0% … worst % last, so
+    # ascending runs clean→bad. The *_sort fields feed the table's client-side column sort (data-sort).
+    if not qcd.get("delivered"):
+        qc_sort = -2.0
+    elif qcd.get("worst_bad_pct") is None:
+        qc_sort = -1.0
+    else:
+        qc_sort = float(qcd["worst_bad_pct"])
     return {
         "id": m["id"],
+        "color": color,
+        "has_track": bool(m.get("track")),
         "start": (m.get("start") or "")[:10] or "UNK",  # date only; drop the HH:MM
-        "duration": metadata.fmt_duration(m.get("duration_s")),
+        # Duration and max depth are bare numbers (units in the table's second header row), so the
+        # columns stay narrow and sort numerically. Duration is fractional days; the masthead keeps
+        # the "216d 11h" form via metadata.fmt_duration.
+        "duration": f"{dur_s / 86400:.1f}" if dur_s is not None else "—",
+        "duration_sort": dur_s if dur_s is not None else -1,
         "profiles": str(m.get("n_profiles", 0)),
-        "max_depth": f"{depth:.0f} m" if depth is not None else "—",
+        "profiles_sort": m.get("n_profiles", 0),
+        "max_depth": f"{depth:.0f}" if depth is not None else "—",
+        "depth_sort": depth if depth is not None else -1,
         "og1_text": f"{present}/{total}",
         "og1_ok": present >= total > 0,
-        "qc": _qc_cell(m.get("qc", {})),
+        "og1_sort": (present / total) if total else -1,
+        "qc": _qc_cell(qcd),
+        "qc_sort": qc_sort,
         "report_href": f"{m['id']}/index.html",
         "generated": (m.get("generated_at") or "")[:10],  # date only; drop version + HH:MM
     }
 
 
+def _map_context(
+    missions: list[dict[str, Any]], colors: list[str]
+) -> dict[str, Any] | None:
+    """Return the interactive-map context (payload, bounds, coastline, fallback PNG), or None.
+
+    None when no mission has a track, so the caller omits the map entirely. *colors* is parallel to
+    *missions* so each mission's track keeps its assigned colour. Longitudes are used as stored: a
+    fleet that straddles the antimeridian (tracks near +180 and −180) fits a wide view rather than a
+    tight one — handling that properly without breaking a genuinely globe-spanning fleet is deferred
+    (tracked as a follow-up issue).
+    """
+    from . import _leaflet
+    from ._map_payloads import fleet_payload
+
+    payload = fleet_payload(missions, colors)
+    if not payload:
+        return None
+    all_lat = [pt[0] for t in payload for pt in t["track"]]
+    all_lon = [pt[1] for t in payload for pt in t["track"]]
+    bounds = [[min(all_lat), min(all_lon)], [max(all_lat), max(all_lon)]]
+    coastline = _leaflet.coastline_geojson(
+        (min(all_lon), min(all_lat), max(all_lon), max(all_lat)), aspect=_MAP_ASPECT
+    )
+    return {
+        "payload": payload,
+        "bounds": bounds,
+        "coastline": coastline,
+        "png": _track_map(missions, colors),
+    }
+
+
 def navigator_data(root: Path) -> dict[str, Any]:
     """Return the navigator page as data: masthead counts, mission rows and the tracks map."""
+    from ._map_payloads import track_color
     from ._mission import _deg_range
 
     missions, orphans, unreadable = _load_manifests(root)
     missions.sort(key=lambda m: m.get("start") or "")
+    colors = [track_color(i) for i in range(len(missions))]
 
     # Unique vehicles by PLATFORM_SERIAL_NUMBER (not the free-text platform attribute).
     vehicles = {m.get("platform_serial") for m in missions}
@@ -152,12 +221,16 @@ def navigator_data(root: Path) -> dict[str, Any]:
     starts = sorted(m["start"] for m in missions if m.get("start"))
     ends = sorted(m["end"] for m in missions if m.get("end"))
     total_profiles = sum(m.get("n_profiles", 0) for m in missions)
+    total_records = sum(m.get("n_records", 0) for m in missions)
     lats = [m[k] for m in missions for k in ("lat_min", "lat_max") if m.get(k) is not None]
     lons = [m[k] for m in missions for k in ("lon_min", "lon_max") if m.get(k) is not None]
+    # Order for a 4-column meta grid: the four bulk numbers fill row 1 (most important leftmost), and
+    # Start, End, Lat, Lon fill row 2 so each pair shares a row and cannot split.
     counts = [
         ("Missions", str(len(missions))),
         ("Vehicles", str(len(vehicles))),
         ("Total profiles", f"{total_profiles:,}"),
+        ("Total records", f"{total_records:,}"),
         ("Start", starts[0][:10] if starts else "UNK"),
         ("End", ends[-1][:10] if ends else "UNK"),
         ("Lat", _deg_range(min(lats), max(lats), "N", "S") if lats else "UNK"),
@@ -166,8 +239,8 @@ def navigator_data(root: Path) -> dict[str, Any]:
 
     return {
         "counts": counts,
-        "rows": [_mission_row(m) for m in missions],
-        "map_png": _track_map(missions),
+        "rows": [_mission_row(m, colors[i]) for i, m in enumerate(missions)],
+        "map": _map_context(missions, colors),
         "orphans": orphans,
         "unreadable": unreadable,
     }
@@ -193,11 +266,16 @@ def build_navigator(root: Path | str, title: str | None = None) -> Path:
         The path to the written ``<root>/index.html``.
     """
     from .._version import __version__
+    from . import _leaflet
     from ._env import get_template
     from ._report_css import _JS_TOP_LINKS, PACKAGE_ACCENT, SHARED_CSS
 
     root = Path(root)
     data = navigator_data(root)
+    mapc = data["map"]
+    # Only load the bundled Leaflet assets when there is a map to embed, so a track-less fleet (or an
+    # install missing the assets) still renders its table.
+    leaflet_js, leaflet_css = _leaflet.load_leaflet() if mapc else ("", "")
     html = get_template("navigator.html").render(
         css=SHARED_CSS,
         masthead_bg=PACKAGE_ACCENT,
@@ -209,7 +287,13 @@ def build_navigator(root: Path | str, title: str | None = None) -> Path:
         nav={"rows": [], "back": None, "inventory": []},
         header=data["counts"],
         rows=data["rows"],
-        map_png=data["map_png"],
+        map=mapc,
+        map_height=_MAP_HEIGHT_PX,
+        payload_json=_leaflet.safe_json(mapc["payload"]) if mapc else "[]",
+        bounds_json=_leaflet.safe_json(mapc["bounds"]) if mapc else "null",
+        coastline_json=mapc["coastline"] if mapc else "null",
+        leaflet_js=leaflet_js,
+        leaflet_css=leaflet_css,
         orphans=data["orphans"],
         unreadable=data["unreadable"],
     )

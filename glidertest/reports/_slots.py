@@ -127,9 +127,9 @@ def render_panel(
     (its data is absent) still returns ``None`` and the panel drops silently; a *draw* that *raises*
     — when ``RAISE_ON_PLOT_ERROR`` is unset — becomes ``Stub("<ExcType>: <message>")``, which
     :func:`_resolve_panels` renders as "applicable but unavailable: <reason>" on the page. This is
-    why :func:`render` itself stays ``str | None``: the navigator track map embeds its result behind
-    an ``if map_png`` gate, where a truthy ``Stub`` would emit a broken ``<img>`` — so that path must
-    keep silent-omission and does not use this wrapper.
+    why :func:`render` itself stays ``str | None``: the navigator track map (the interactive map's
+    fallback PNG) embeds its result behind a truthy ``fallback_png`` gate, where a truthy ``Stub``
+    would emit a broken ``<img>`` — so that path must keep silent-omission and does not use this wrapper.
 
     Counterpart to ctdcast's ``_figdebug.as_panel`` — only ``Panel.render`` adapters produce a
     ``Stub``, direct embeds keep ``str | None`` — so the two packages share one stub contract.

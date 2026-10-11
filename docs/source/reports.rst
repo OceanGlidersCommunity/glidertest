@@ -209,10 +209,20 @@ Fleet page — ``ROOT/index.html``
 
 Built from the ``report.json`` of every mission under the root: one row per mission —
 platform, dates, profiles, maximum depth, which sensor pages exist, OG1 conformance, worst
-QC — with buttons to its pages, and a map of all tracks. Rebuilt whenever a mission is
+QC — with a button to its pages, and a map of all tracks. Rebuilt whenever a mission is
 reported into the root, or on demand with ``glidertest navigator ROOT`` after missions are
 added, removed or renamed by hand. You want a fleet page for a season of deployments, a glider
 pool, or a cruise with several gliders at once.
+
+The map is interactive (Leaflet): one coloured line per mission over a coastline, with the
+same colour shown as a swatch in that mission's row. Hovering a track — or its row —
+highlights both and shows a panel with the mission's dates, profile count and maximum depth;
+clicking a track or a row opens that mission's report. Leaflet and its stylesheet are bundled
+in the package and inlined into the page, so the map needs no internet at view time. A static
+image of the same tracks sits behind the live map as the fallback for printing, PDF export and
+browsers with JavaScript disabled. The coastline is drawn from Natural Earth land polygons
+(via cartopy); if those are not available the map simply draws the tracks on a plain
+background.
 
 .. _qc-section:
 

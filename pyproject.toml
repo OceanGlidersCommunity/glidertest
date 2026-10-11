@@ -80,6 +80,9 @@ include-package-data = true
 ]
 "glidertest.reports" = [
   "templates/*.html",
+  "leaflet/leaflet.min.js",
+  "leaflet/leaflet.min.css",
+  "leaflet/LICENSE",
 ]
 
 [tool.setuptools.dynamic]

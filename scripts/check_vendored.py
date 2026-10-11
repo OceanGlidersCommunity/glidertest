@@ -38,6 +38,10 @@ VENDORED: tuple[str, ...] = (
     "glidertest/config/report_tokens.py",
     "glidertest/config/report.mplstyle",
     "glidertest/reports/templates/_nav.html",
+    # Leaflet 1.9.4 assets, shipped byte-identical with ctdcast. The map Python/template that use
+    # them are authored in glidertest first and join this list when ctdcast adopts them.
+    "glidertest/reports/leaflet/leaflet.min.js",
+    "glidertest/reports/leaflet/leaflet.min.css",
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent

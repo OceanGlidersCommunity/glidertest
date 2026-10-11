@@ -1,22 +1,59 @@
 {% extends "base.html" %}
 {% block title %}Mission navigator — {{ mission_id }}{% endblock %}
 {% block masthead_type %}Mission navigator{% endblock %}
+{% block head_extra %}
+{% import "_map.html" as map_m %}
+{% if map %}{{ map_m.map_styles(leaflet_css, map_height) }}{% endif %}
+<style>
+  /* Track-colour swatch in the id cell, tying each row to its line on the map. */
+  .track-swatch { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px;
+    margin-right: 0.4rem; vertical-align: middle; border: 1px solid rgba(0,0,0,0.15); }
+  /* With the Report column dropped (the whole row is clickable), the id itself is the link —
+     it keeps the no-JS and cmd-click-new-tab routes. The freed width goes to the id column so a
+     long id wraps over fewer lines. */
+  td.nav-mission { max-width: 26rem; }
+  td.nav-mission a.id-link { color: inherit; text-decoration: none; }
+  td.nav-mission a.id-link:hover { text-decoration: underline; }
+  /* Whole-row click target; hovering a row — or its track on the map, via the .track-hover class
+     the map script toggles — highlights it. */
+  #missions ~ table.nc tbody tr { cursor: pointer; }
+  #missions ~ table.nc tbody tr:hover td,
+  #missions ~ table.nc tbody tr.track-hover td { background: var(--seafoam); }
+  #missions ~ table.nc tbody tr:focus { outline: 2px solid var(--ocean); outline-offset: -2px; }
+  /* Second header row carries the units (days, m), lighter and tucked under the names, on the same
+     dark header background. */
+  #missions ~ table.nc thead tr.units th { font-weight: 400; font-size: 0.72rem; color: #b8c6d4; padding-top: 0; }
+  /* Click any column name to sort by it; the active column shows the direction. */
+  #missions ~ table.nc thead tr:first-child th { cursor: pointer; user-select: none; }
+  #missions ~ table.nc thead tr:first-child th[data-dir="asc"]::after { content: " ▲"; font-size: 0.7em; }
+  #missions ~ table.nc thead tr:first-child th[data-dir="desc"]::after { content: " ▼"; font-size: 0.7em; }
+  /* Print: repeat the column header on every page and never split a row across a page break. The
+     masthead cannot be reliably repeated per printed page in CSS, so the repeated table header is
+     the per-page anchor. */
+  @media print {
+    #missions ~ table.nc thead { display: table-header-group; }
+    #missions ~ table.nc tbody tr { break-inside: avoid; }
+  }
+</style>
+{% endblock %}
 {% block content %}
+{% import "_map.html" as map_m %}
 <main>
-{% if map_png %}
-<figure class="slot-full"><figcaption>Mission tracks</figcaption><img src="data:image/png;base64,{{ map_png }}" alt="Mission tracks"></figure>
-{% endif %}
+{% if map %}{{ map_m.track_map(payload_json, coastline_json, bounds_json, map.png, leaflet_js) }}{% endif %}
 
 <h2 id="missions">Missions</h2>
+<p class="caption">Click a row or a track to open the mission report.</p>
 {% if rows %}
 <table class="nc">
-<thead><tr><th>Mission</th><th>Start</th><th>Duration</th><th class="num wrapn">Profiles</th><th class="num wrapn">Max depth</th><th>OG1</th><th>Worst QC</th><th>Report</th><th>Generated</th></tr></thead>
+<thead>
+<tr><th>id</th><th>Start</th><th class="num">Duration</th><th class="num">Profiles</th><th class="num">Max depth</th><th>OG1</th><th>Worst QC</th><th>Generated</th></tr>
+<tr class="units"><th></th><th></th><th class="num">days</th><th class="num">n</th><th class="num">m</th><th></th><th></th><th></th></tr>
+</thead>
 <tbody>
-{% for r in rows %}<tr><td class="nav-mission">{{ r.id }}</td><td>{{ r.start }}</td><td>{{ r.duration }}</td><td class="num">{{ r.profiles }}</td><td class="num">{{ r.max_depth }}</td><td{% if not r.og1_ok %} class="nonconform"{% endif %}>{{ r.og1_text }}</td><td>{{ r.qc }}</td><td class="nav-cell"><a class="nav-pill nav-landing" href="{{ r.report_href }}">Mission</a></td><td class="mono">{{ r.generated }}</td></tr>
+{% for r in rows %}<tr data-track-id="{{ r.id }}"><td class="nav-mission">{% if r.has_track %}<span class="track-swatch" style="background:{{ r.color }}"></span>{% endif %}<a class="id-link" href="{{ r.report_href }}" onclick="event.stopPropagation()">{{ r.id }}</a></td><td>{{ r.start }}</td><td class="num" data-sort="{{ r.duration_sort }}">{{ r.duration }}</td><td class="num" data-sort="{{ r.profiles_sort }}">{{ r.profiles }}</td><td class="num" data-sort="{{ r.depth_sort }}">{{ r.max_depth }}</td><td data-sort="{{ r.og1_sort }}"{% if not r.og1_ok %} class="nonconform"{% endif %}>{{ r.og1_text }}</td><td data-sort="{{ r.qc_sort }}">{{ r.qc }}</td><td class="mono">{{ r.generated }}</td></tr>
 {% endfor %}
 </tbody>
 </table>
-<p class="caption">The page buttons open each mission's pages.</p>
 {% else %}
 <p class="caption">No mission manifests found in this root. Run <code>report(ds, root)</code> to add one.</p>
 {% endif %}
@@ -27,5 +64,64 @@
 {% if unreadable %}
 <p class="none-note">{{ unreadable | length }} mission director{{ "y" if unreadable|length == 1 else "ies" }} with an unreadable report.json: {{ unreadable | join(", ") }}. Re-run the report for {{ "it" if unreadable|length == 1 else "them" }}.</p>
 {% endif %}
+
+<script>
+// Click a column name to sort the missions table by it; click again to reverse. Numeric columns
+// carry a data-sort value (duration in seconds, depth in m, OG1 as a fraction, worst-QC as a
+// percent); the rest sort by their visible text (ids and ISO-style dates sort naturally).
+(function () {
+  var table = document.querySelector('#missions ~ table.nc');
+  if (!table || !table.tHead || !table.tBodies.length) { return; }
+  var headRow = table.tHead.rows[0];
+  var tbody = table.tBodies[0];
+  var activeDir = null, activeIdx = null;
+
+  function key(row, idx) {
+    var cell = row.cells[idx];
+    var raw = cell.getAttribute('data-sort');
+    if (raw === null) { raw = cell.textContent.trim(); }
+    if (raw !== '' && /^[-+]?[0-9]*\.?[0-9]+$/.test(raw)) { return parseFloat(raw); }
+    return raw.toLowerCase();
+  }
+
+  Array.prototype.forEach.call(headRow.cells, function (th, idx) {
+    th.setAttribute('tabindex', '0');
+    function sortBy() {
+      var asc = !(activeIdx === idx && activeDir === 'asc');
+      Array.prototype.slice.call(tbody.rows)
+        .sort(function (a, b) {
+          var ka = key(a, idx), kb = key(b, idx);
+          if (ka < kb) { return asc ? -1 : 1; }
+          if (ka > kb) { return asc ? 1 : -1; }
+          return 0;
+        })
+        .forEach(function (r) { tbody.appendChild(r); });
+      Array.prototype.forEach.call(headRow.cells, function (h) { h.removeAttribute('data-dir'); });
+      activeIdx = idx; activeDir = asc ? 'asc' : 'desc';
+      th.setAttribute('data-dir', activeDir);
+    }
+    th.addEventListener('click', sortBy);
+    th.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sortBy(); }
+    });
+  });
+
+  // Whole row is a click/keyboard target; it navigates to the row's own id link (a resolved href,
+  // never interpolated into script), so a mission id with a quote cannot break out. The id link
+  // itself stays the no-JS and cmd-click route.
+  Array.prototype.forEach.call(tbody.rows, function (row) {
+    var link = row.querySelector('a.id-link');
+    if (!link) { return; }
+    row.tabIndex = 0;
+    row.addEventListener('click', function (e) {
+      if (e.target.closest('a')) { return; }  // real link clicks (cmd-click, the id link) behave
+      window.location = link.href;
+    });
+    row.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { window.location = link.href; }
+    });
+  });
+})();
+</script>
 </main>
 {% endblock %}

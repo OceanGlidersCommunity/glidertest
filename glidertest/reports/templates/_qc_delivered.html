@@ -1,6 +1,6 @@
 {% import "_macros.html" as m %}
 {% if delivered.no_flags %}
-<p class="caption">No QC flags delivered in the file (rtqc_method: {{ delivered.rtqc }}) — itself a finding.</p>
+<p class="caption">No QC flags delivered in the file (rtqc_method: {{ delivered.rtqc }}).</p>
 {% else %}
 <p class="caption">{{ delivered.caption }}</p>
 {% if delivered.mismatch %}<p class="none-note">Inconsistent flag scale — {{ delivered.mismatch }}. Default category names used for these.</p>
