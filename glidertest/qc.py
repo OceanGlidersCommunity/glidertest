@@ -345,35 +345,39 @@ def suggest_gross_range(ds, var='TEMP', inner_pct=99.9, suspect_pad=0.01, fail_p
     }
 
 
-def suggest_flat_line(ds, suspect_factor=2, fail_factor=3):
-    """Suggest flat-line windows (seconds) from the median sampling interval.
+def suggest_flat_line(ds, var=None, suspect_factor=2, fail_factor=3):
+    """Suggest flat-line windows (seconds) from the sampling interval of *var* (or the whole record).
 
-    The ``ioos_qc`` flat-line test converts its window from seconds to a sample count by dividing by
-    the median sampling interval and truncating (``count = int(window_s / dt_s)``); the rolling
-    window then spans ``count + 1`` samples. A window shorter than the interval gives ``count = 0``,
-    collapsing the window to a single sample whose range is 0 — always within tolerance — so *every*
-    sample is flagged regardless of the data (a platform with a coarse sampling interval over-flags wholesale). So the
-    window must exceed the median interval: at least *suspect_factor*× (a 3-sample window) for suspect
-    and *fail_factor*× (a 4-sample window) for fail.
+    A flat-line window set in seconds must span at least a couple of the sensor's *own* samples to say
+    anything about flatness. For a sensor sampled off-phase (optics, oxygen — finite only every Nth
+    cycle) the per-variable interval is coarser than the record's, so basing the window on the record
+    would suggest one too short. Pass *var* to use that variable's finite-sample interval; omit it for
+    the whole-record interval. The suggestion is ``suspect_factor``× (default 2) and ``fail_factor``×
+    (default 3) that interval.
 
     Parameters
     ----------
     ds : xarray.Dataset
-        Dataset in **OG1 format**, with ``TIME``.
+        Dataset in **OG1 format**, with ``TIME`` (and *var* when given).
+    var : str, optional
+        Variable whose finite-sample interval to use; when ``None`` the whole-record interval is used.
     suspect_factor, fail_factor : int, optional
-        Multiples of the median sampling interval for the suspect (2) and fail (3) windows.
+        Multiples of the sampling interval for the suspect (2) and fail (3) windows.
 
     Returns
     -------
     dict
-        ``{dt, suspect, fail, suspect_factor, fail_factor}`` — the median interval and the suggested
-        windows in seconds (``dt`` NaN when there are fewer than two samples).
+        ``{dt, suspect, fail, suspect_factor, fail_factor}`` — the interval and the suggested windows in
+        seconds (``dt`` NaN when there are fewer than two finite samples).
 
     Notes
     -----
     Original Author: Eleanor Frajka-Williams
     """
-    dt = utilities._median_sampling_interval(ds.TIME.values)
+    t = np.asarray(ds.TIME.values)
+    if var is not None:
+        t = t[np.isfinite(np.asarray(ds[var].values, dtype=float))]
+    dt = utilities._median_sampling_interval(t)
     if not np.isfinite(dt):
         return {"dt": float("nan"), "suspect": float("nan"), "fail": float("nan"),
                 "suspect_factor": suspect_factor, "fail_factor": fail_factor}

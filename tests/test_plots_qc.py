@@ -149,6 +149,25 @@ def test_gross_mask_count_matches_matrix_and_plot(subset_ds):
 # --- robustness ----------------------------------------------------------------------------------
 
 
+def test_suggest_flat_line_is_per_variable(subset_ds):
+    # An off-phase sensor (CHLA, finite only every Nth cycle) has a coarser cadence than the CTD, so
+    # its suggested flat-line window must be based on its own interval, not the whole-record one.
+    temp = qc.suggest_flat_line(subset_ds, "TEMP")
+    chla = qc.suggest_flat_line(subset_ds, "CHLA")
+    assert chla["dt"] > temp["dt"]  # CHLA is sampled less often than TEMP
+    assert chla["suspect"] == round(chla["suspect_factor"] * chla["dt"])
+    note = qc_section.suggested_limits_note(subset_ds, "CHLA")
+    assert f"every {chla['dt']:g} s" in note  # the note names CHLA's own cadence, not the record's
+
+
+def test_suggested_limits_note_none_for_all_nan_variable(subset_ds):
+    # A present-but-all-NaN variable has no mission-descriptive limits: the note must be absent, not a
+    # misleading panel (and never a crash — guarded).
+    ds = subset_ds.copy()
+    ds["TEMP"] = ("N_MEASUREMENTS", np.full(ds.TEMP.shape, np.nan))
+    assert qc_section.suggested_limits_note(ds, "TEMP") is None
+
+
 def test_suggest_flat_line_handles_numeric_time(subset_ds):
     # TIME as numeric seconds (un-decoded) must not crash suggest_flat_line (shared _elapsed_seconds
     # handles both dtypes); the whole-record interval is still recovered.

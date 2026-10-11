@@ -203,7 +203,9 @@ def suggested_limits_note(ds: xr.Dataset, var: str) -> str | None:
     :func:`~glidertest.qc.suggest_flat_line`) — a starting point for a mission config, not a fix and
     not a physical range. ``None`` when the variable has no finite values.
     """
-    fl = qc.suggest_flat_line(ds)
+    if not np.isfinite(np.asarray(ds[var].values, dtype=float)).any():
+        return None  # no finite data for this variable: no mission-descriptive limits to suggest
+    fl = qc.suggest_flat_line(ds, var)  # the variable's own sampling interval, not the whole record's
     cfg = qc.configs.get(var, {})
     cur, items, explain = [], [], []
     # TEMP/PSAL gross range is shown jointly beside the T–S plot (gross_range_ts_note), so it is
@@ -241,9 +243,9 @@ def suggested_limits_note(ds: xr.Dataset, var: str) -> str | None:
         f'fail ≥ {fl["fail"]:g} s</li>'
     )
     explain.append(
-        f'A flat-line window shorter than the median sampling interval ({fl["dt"]:g} s) collapses to a '
-        f'single sample and flags every point; use suspect ≥ {fl["suspect_factor"]}× and '
-        f'fail ≥ {fl["fail_factor"]}× the interval.'
+        f'{var} is sampled about every {fl["dt"]:g} s; a flat-line window needs to span a couple of its '
+        f'samples, so use suspect ≥ {fl["suspect_factor"]}× and fail ≥ {fl["fail_factor"]}× that '
+        f'interval (a window shorter than the sampling flags every point).'
     )
     return (
         '<p class="note"><strong>Current limits (applied)</strong></p>'
