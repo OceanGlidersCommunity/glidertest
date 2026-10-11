@@ -126,10 +126,14 @@ def _delivered(ds: xr.Dataset) -> dict[str, Any]:
     }
 
 
-def _gross_cell(r: tuple, ds: xr.Dataset, v: str) -> dict[str, Any]:
-    """Diagnostics matrix cell for the gross-range test: out-of-range count + a small bar."""
+def _gross_cell(ds: xr.Dataset, v: str) -> dict[str, Any]:
+    """Diagnostics matrix cell for the gross-range test: out-of-range count + a small bar.
+
+    The count comes from :func:`glidertest.qc.gross_range_mask` — the same per-sample mask the QC
+    plots draw — so the table figure and the plotted hits cannot diverge.
+    """
     n = ds.sizes["N_MEASUREMENTS"] if "N_MEASUREMENTS" in ds.sizes else int(ds[v].size)
-    nv = len(r[0])
+    nv = int(qc.gross_range_mask(ds, v).sum())
     if nv == 0:
         return {"text": "clean", "cls": "qc-good"}
     return {
@@ -316,7 +320,7 @@ def _diagnostics(ds: xr.Dataset) -> dict[str, Any] | None:
             if r is None:
                 cells.append({"text": "–"})
             elif kind == "gross":
-                cells.append(_gross_cell(r, ds, v))
+                cells.append(_gross_cell(ds, v))
             elif kind == "sample":
                 cells.append(_sample_cell(np.asarray(r[idx])))
             elif kind == "hyst":

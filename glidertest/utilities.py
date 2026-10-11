@@ -51,6 +51,55 @@ def _calc_teos10_variables(ds):
         ds['DENSITY'] = ('N_MEASUREMENTS', gsw.rho(SA, CT, ds.DEPTH).values)
     return ds
 
+
+def _elapsed_seconds(time_values) -> np.ndarray:
+    """Return *time_values* as float seconds from the first finite sample.
+
+    Handles both a datetime64 ``TIME`` axis and a numeric one, and takes the first non-NaT/finite
+    value as the origin, so a missing first timestamp does not turn every value into NaN. A NaT/NaN
+    sample stays NaN. All-missing input returns all-NaN.
+
+    Parameters
+    ----------
+    time_values : array-like
+        The ``TIME`` values (``datetime64`` or numeric).
+
+    Returns
+    -------
+    numpy.ndarray
+        Seconds from the first finite sample, same shape as the input.
+    """
+    t = np.asarray(time_values)
+    if np.issubdtype(t.dtype, np.datetime64):
+        finite = ~np.isnat(t)
+        if not finite.any():
+            return np.full(t.shape, np.nan)
+        return (t - t[finite][0]).astype("timedelta64[ns]").astype(float) / 1e9
+    t = t.astype(float)
+    finite = np.isfinite(t)
+    if not finite.any():
+        return np.full(t.shape, np.nan)
+    return t - t[finite][0]
+
+
+def _median_sampling_interval(time_values) -> float:
+    """Return the median sampling interval of *time_values* in seconds, or NaN if < 2 finite samples.
+
+    Parameters
+    ----------
+    time_values : array-like
+        The ``TIME`` values (``datetime64`` or numeric).
+
+    Returns
+    -------
+    float
+        The median of the finite consecutive differences, in seconds.
+    """
+    d = np.diff(_elapsed_seconds(time_values))
+    d = d[np.isfinite(d)]
+    return float(np.median(d)) if d.size else float("nan")
+
+
 def _time_axis_formatter(ax, ds, format_x_axis=True):
     """
     Apply time formatter and locator to an axis.

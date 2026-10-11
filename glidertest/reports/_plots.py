@@ -184,43 +184,51 @@ def convective_resistance(ds: xr.Dataset, slot: str = "full") -> str | Stub | No
 # and _slots.render's width-forcing is a no-op (see feat-qc-page-plan.md "Sizing").
 
 
-def test_hits(ds: xr.Dataset, var: str, slot: str = "full") -> str | Stub | None:
+# The QC figure wrappers take `flags` — the (gross, spike, flat) tuple from qc.sample_tests — so the
+# per-variable section computes it once (Ctx.sample_tests) and threads it through every panel rather
+# than each plotter recomputing all three QARTOD tests (see plots_qc module docstring).
+def test_hits(ds: xr.Dataset, var: str, slot: str = "full", flags: tuple | None = None) -> str | Stub | None:
     """Render the "where glidertest's QC tests fire" panel for *var* (time series + test overlays)."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_test_hits(ds, var, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_test_hits(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_test_hits", optional=True)
 
 
-def flag_profile(ds: xr.Dataset, var: str, slot: str = "half") -> str | Stub | None:
+def flag_profile(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
     """Render *var* against depth (a profile) with the QC hits overlaid (where each test fires, by depth)."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_flag_profile(ds, var, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_flag_profile(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_flag_profile", optional=True)
 
 
-def flat_runs(ds: xr.Dataset, var: str, slot: str = "half") -> str | Stub | None:
+def flat_runs(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
     """Render the flat-run-duration histogram for *var* with the test windows and median sampling interval."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_flat_runs(ds, var, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_flat_runs(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_flat_runs", optional=True)
 
 
-def flat_change(ds: xr.Dataset, var: str, slot: str = "half") -> str | Stub | None:
+def flat_change(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
     """Render the start-to-end-change histogram for *var*'s flat runs (stuck sensor vs slow signal)."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_flat_change(ds, var, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_flat_change(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_flat_change", optional=True)
 
 
-def flat_excerpt(ds: xr.Dataset, var: str, slot: str = "half") -> str | Stub | None:
+def flat_excerpt(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
     """Render a zoom around *var*'s longest flagged flat run (samples + a ±tolerance band)."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_flat_excerpt(ds, var, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_flat_excerpt(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_flat_excerpt", optional=True)
 
 
-def spike_stat(ds: xr.Dataset, var: str, slot: str = "half") -> str | Stub | None:
-    """Render the spike-statistic histogram for *var* with the suspect/fail thresholds."""
+def spike_stat(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
+    """Render the spike-statistic histogram for *var* with the suspect/fail thresholds.
+
+    Accepts *flags* for a uniform call from the QC section builder; the spike statistic is computed
+    directly from the values, so it is not used here.
+    """
+    _ = flags
     return _slots.render_panel(
         lambda: plots_qc.plot_spike_stat(ds, var, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_spike_stat", optional=True)

@@ -259,6 +259,37 @@ def sample_tests(ds, var='TEMP'):
     return gr, spike, flat
 
 
+def gross_range_mask(ds, var='TEMP'):
+    """Return a boolean per-sample mask of *var* values outside the gross-range suspect span.
+
+    The one definition of "out of range" shared by the diagnostics-matrix count and the QC plots, so
+    the table and the plotted hits cannot diverge. NaN samples are not flagged (the comparison is
+    False for NaN). Returns an all-False mask when *var* has no ``gross_range_test`` suspect span in
+    :data:`configs`.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, containing *var*.
+    var : str, optional, default='TEMP'
+        Variable to test.
+
+    Returns
+    -------
+    numpy.ndarray
+        Boolean mask, True where the value is below the span minimum or above its maximum.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams
+    """
+    span = configs.get(var, {}).get('gross_range_test', {}).get('suspect_span')
+    v = np.asarray(ds[var].values, dtype=float)
+    if not span:
+        return np.zeros(v.shape, dtype=bool)
+    return (v < span[0]) | (v > span[1])
+
+
 #: Variables that cannot be negative — their suggested gross-range lower bound is clamped at 0.
 _NONNEGATIVE_VARS = ("DOXY", "CHLA", "BBP700")
 
@@ -342,12 +373,12 @@ def suggest_flat_line(ds, suspect_factor=2, fail_factor=3):
     -----
     Original Author: Eleanor Frajka-Williams
     """
-    t = np.asarray(ds.TIME.values)
-    if t.size < 2:
+    dt = utilities._median_sampling_interval(ds.TIME.values)
+    if not np.isfinite(dt):
         return {"dt": float("nan"), "suspect": float("nan"), "fail": float("nan"),
                 "suspect_factor": suspect_factor, "fail_factor": fail_factor}
-    dt = float(np.median(np.diff(t)).astype("timedelta64[ms]").astype(float)) / 1000.0
-    return {"dt": round(dt, 1), "suspect": round(suspect_factor * dt), "fail": round(fail_factor * dt),
+    dt = round(dt, 1)
+    return {"dt": dt, "suspect": round(suspect_factor * dt), "fail": round(fail_factor * dt),
             "suspect_factor": suspect_factor, "fail_factor": fail_factor}
 
 

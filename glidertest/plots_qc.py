@@ -60,20 +60,6 @@ TEST_MARKER: dict[str, dict] = {
 _FLAT_FALLBACK: dict[str, float] = {"suspect_threshold": 1.0, "fail_threshold": 3.0, "tolerance": 0.001}
 
 
-def _seconds(time_values: np.ndarray) -> np.ndarray:
-    """Return *time_values* (datetime64 or numeric) as float seconds from the first sample."""
-    t = np.asarray(time_values)
-    if np.issubdtype(t.dtype, np.datetime64):
-        return (t - t[0]).astype("timedelta64[ns]").astype(float) / 1e9
-    return t.astype(float) - float(t[0])
-
-
-def _median_dt(time_values: np.ndarray) -> float:
-    """Return the median sampling interval of *time_values* in seconds."""
-    d = np.diff(_seconds(time_values))
-    return float(np.nanmedian(d)) if d.size else float("nan")
-
-
 def _flat_config(var: str) -> dict[str, float]:
     """Return the flat-line thresholds for *var* from ``qc.configs``, or the fallback."""
     return qc.configs.get(var, {}).get("flat_line_test", _FLAT_FALLBACK)
@@ -106,7 +92,7 @@ def _runs(flags: np.ndarray, time_values: np.ndarray) -> list[tuple[int, int, fl
     bad = np.isin(np.asarray(flags), (3, 4))
     if not bad.any():
         return []
-    s = _seconds(time_values)
+    s = utilities._elapsed_seconds(time_values)
     edges = np.diff(bad.astype(np.int8))
     starts = np.where(edges == 1)[0] + 1
     ends = np.where(edges == -1)[0]
@@ -146,6 +132,10 @@ def plot_test_hits(
     -------
     tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)
         The figure and axis drawn into.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams (glidertest).
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.45 * width_in, ax)
@@ -153,15 +143,14 @@ def plot_test_hits(
         v = np.asarray(ds[var].values, dtype=float)
         # Points, not a line: on OG1 files a non-CTD sensor (CHLA, DOXY, BBP700) is sampled on a
         # different phase than the CTD, so its finite samples are isolated among NaNs and a line plot
-        # draws no segments at all. Markers show every finite value; dense TEMP/PSAL still read as a trace.
-        ax.plot(t, v, marker=".", ls="none", ms=1.5, color="0.55", zorder=1)
+        # draws no segments at all. Markers show every finite value; dense TEMP/PSAL still read as a
+        # trace. Rasterized so the whole-record base layer stays one image, not 10^6 vector glyphs.
+        ax.plot(t, v, marker=".", ls="none", ms=1.5, color="0.55", zorder=1, rasterized=True)
 
         _gr, spike, flat = _flags(ds, var, flags)
-        # Gross range: compute_global_range returns the out-of-range *values* (glidertest's
-        # convention; the matrix counts their length), not a per-sample flag array — so derive the
-        # per-sample mask from the suspect span here. Spike and flat are QARTOD flag arrays.
-        gspan = qc.configs.get(var, {}).get("gross_range_test", {}).get("suspect_span")
-        gross_hit = ((v < gspan[0]) | (v > gspan[1])) if gspan else np.zeros(v.shape, dtype=bool)
+        # Gross range: the shared per-sample mask (qc.gross_range_mask) — the same one the diagnostics
+        # matrix counts — so the plotted × and the table count cannot diverge. Spike/flat are QARTOD flags.
+        gross_hit = qc.gross_range_mask(ds, var)
         # Flat-line hits: a multi-sample run is an interval (shaded span, the background layer); a lone
         # flagged sample (common when a sensor is sampled off-phase, so every finite value is isolated)
         # has zero width, so it joins the marker overlays below instead of being an invisible span.
@@ -194,7 +183,8 @@ def plot_test_hits(
         ax.set_xlabel("Time")
         _time_xaxis(ax)
         ax.set_ylabel(_axis_label(ds, var))
-        ax.legend(loc="best", markerscale=1.5, framealpha=0.85)
+        if ax.get_legend_handles_labels()[0]:  # no legend box when nothing was flagged
+            ax.legend(loc="best", markerscale=1.5, framealpha=0.85)
         return fig, ax
 
 
@@ -227,6 +217,10 @@ def plot_flag_profile(
     -------
     tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)
         The figure and axis drawn into.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams (glidertest).
     """
     utilities._check_necessary_variables(ds, [var, "DEPTH"])
     with plt.style.context(plots._style()):
@@ -237,8 +231,9 @@ def plot_flag_profile(
         ax.scatter(v[fin], z[fin], s=2, color="0.7", linewidths=0, zorder=1, rasterized=True)
 
         _gr, spike, flat = _flags(ds, var, flags)
-        gspan = qc.configs.get(var, {}).get("gross_range_test", {}).get("suspect_span")
-        gross_hit = ((v < gspan[0]) | (v > gspan[1])) if gspan else np.zeros(v.shape, dtype=bool)
+        # Shared gross-range mask (same one the diagnostics matrix counts), so the plotted × and the
+        # table count cannot diverge.
+        gross_hit = qc.gross_range_mask(ds, var)
         hits = [
             ("gross_range", gross_hit & fin),
             ("spike", np.isin(np.asarray(spike), (3, 4)) & fin),
@@ -254,7 +249,8 @@ def plot_flag_profile(
         ax.set_xlabel(_axis_label(ds, var))
         ax.set_ylabel(_axis_label(ds, "DEPTH"))
         ax.invert_yaxis()
-        ax.legend(loc="best", markerscale=1.5, framealpha=0.85)
+        if ax.get_legend_handles_labels()[0]:  # no legend box when nothing was flagged
+            ax.legend(loc="best", markerscale=1.5, framealpha=0.85)
         return fig, ax
 
 
@@ -279,6 +275,10 @@ def plot_ts_gross_range(
     -------
     tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)
         The figure and axis drawn into.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams (glidertest).
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.9 * width_in, ax)
@@ -321,6 +321,10 @@ def plot_spike_stat(
     -------
     tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)
         The figure and axis drawn into.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams (glidertest).
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
@@ -334,9 +338,11 @@ def plot_spike_stat(
             ax.axvline(cfg[key], color=QC_COLORS[flag], lw=1.3,
                        label=f"{'suspect' if flag == 3 else 'fail'} ({cfg[key]:g})")
         ax.set_yscale("log")
-        ax.set_xlabel(f"spike statistic |Δ{var}|")
+        unit = utilities.plotting_units(ds, var)
+        ax.set_xlabel(f"spike statistic |Δ{var}| ({unit})" if unit else f"spike statistic |Δ{var}|")
         ax.set_ylabel("count")
-        ax.set_title(f"median sampling interval {_median_dt(ds.TIME.values):.1f} s", loc="right")
+        dt = utilities._median_sampling_interval(ds.TIME.values)
+        ax.set_title(f"median sampling interval {dt:.1f} s", loc="right")
         ax.legend(loc="best", framealpha=0.85)
         return fig, ax
 
@@ -368,11 +374,19 @@ def plot_flat_runs(
     -------
     tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)
         The figure and axis drawn into.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams (glidertest).
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
         _gr, _spike, flat = _flags(ds, var, flags)
-        dt = _median_dt(ds.TIME.values)
+        dt = utilities._median_sampling_interval(ds.TIME.values)
+        if not np.isfinite(dt) or dt <= 0:
+            # Degenerate interval (duplicate or missing timestamps): fall back to 1 s so the floored
+            # durations and the log-axis bounds stay positive (log10(0) would break the axis).
+            dt = 1.0
         # Durations span seconds to hours and a single-sample run is 0 s; floor at one sampling interval and
         # use a log axis so the bulk and the 1–3 s window lines are both legible.
         durations = np.array([max(dur, dt) for _i0, _i1, dur in _runs(flat, ds.TIME.values)])
@@ -428,6 +442,10 @@ def plot_flat_change(
     ValueError
         When *var* has no multi-sample flat run (e.g. an off-phase sensor whose flat flags are all
         isolated single samples), so there is no start-to-end change to measure.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams (glidertest).
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
@@ -479,6 +497,10 @@ def plot_flat_excerpt(
     -------
     tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)
         The figure and axis drawn into.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams (glidertest).
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.45 * width_in, ax)

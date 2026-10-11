@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from .. import og1_attrs
+from .. import og1_attrs, qc
 from . import _plots, inventory, metadata, qc_section, sensors
 from ._env import get_template
 from ._manifest import Panel, Profile, ResolvedReport, Section, resolve
@@ -49,6 +49,22 @@ class Ctx:
     def inv(self) -> dict[str, Any]:
         """File inventory (:func:`glidertest.reports.inventory.inventory_data`), computed once."""
         return inventory.inventory_data(self.ds)
+
+    @cached_property
+    def _sample_tests(self) -> dict[str, tuple]:
+        """Per-variable QARTOD flag cache (populated by :meth:`sample_tests`)."""
+        return {}
+
+    def sample_tests(self, var: str) -> tuple:
+        """Return ``qc.sample_tests(ds, var)``, computed once per variable and reused across panels.
+
+        A QC section has ~5 figure panels per variable; without this each would recompute all three
+        QARTOD tests on the full record. Threaded into the panels via ``flags=`` (see
+        :mod:`glidertest.reports._plots`).
+        """
+        if var not in self._sample_tests:
+            self._sample_tests[var] = qc.sample_tests(self.ds, var)
+        return self._sample_tests[var]
 
 
 def _deg_range(lo: float, hi: float, pos: str, neg: str) -> str:
@@ -380,7 +396,7 @@ PANELS["qc_ts_gross"] = Panel(
 PANELS["qc_gross_ts_note"] = Panel(
     id="qc_gross_ts_note",
     kind="html",
-    render=lambda c: qc_section.gross_range_ts_note(c.ds),
+    render=_guarded(lambda c: qc_section.gross_range_ts_note(c.ds)),
     slot="half",
     applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
 )
@@ -391,7 +407,7 @@ for _v in _QC_VARS:
     PANELS[f"qc_{_v}_suggest"] = Panel(
         id=f"qc_{_v}_suggest",
         kind="html",
-        render=(lambda c, var=_v: qc_section.suggested_limits_note(c.ds, var)),
+        render=_guarded(lambda c, var=_v: qc_section.suggested_limits_note(c.ds, var)),
         slot="half",  # sits beside the half-width profile, as the gross-range note sits beside the T–S plot
         applies_to=_has(_v),
     )
@@ -423,7 +439,7 @@ PANELS["full_qc_link"] = Panel(
     applies_to=_qc_applies,
 )
 
-for _pid, _adapter, _var, _cap, _slot in (*_VAR_FIGURE_PANELS, *_QC_FIGURE_PANELS):
+for _pid, _adapter, _var, _cap, _slot in _VAR_FIGURE_PANELS:
     # The slot sets both the Panel's display width and the adapter's render width (passed through),
     # so a narrow plot (updown_bias → half) renders small and tiles at that same width. The panel
     # applies only when its variable is present, so a page never lists a panel for an absent sibling
@@ -431,6 +447,17 @@ for _pid, _adapter, _var, _cap, _slot in (*_VAR_FIGURE_PANELS, *_QC_FIGURE_PANEL
     PANELS[_pid] = Panel(
         id=_pid,
         render=(lambda c, a=_adapter, v=_var, s=_slot: a(c.ds, v, slot=s)),
+        caption=_cap,
+        slot=_slot,
+        applies_to=_has(_var),
+    )
+
+for _pid, _adapter, _var, _cap, _slot in _QC_FIGURE_PANELS:
+    # QC panels get the variable's (gross, spike, flat) flags computed once per page (Ctx.sample_tests)
+    # and threaded in, so a section's ~5 panels do not each recompute all three QARTOD tests.
+    PANELS[_pid] = Panel(
+        id=_pid,
+        render=(lambda c, a=_adapter, v=_var, s=_slot: a(c.ds, v, slot=s, flags=c.sample_tests(v))),
         caption=_cap,
         slot=_slot,
         applies_to=_has(_var),

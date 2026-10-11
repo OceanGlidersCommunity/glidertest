@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from glidertest import plots_qc, qc, utilities
@@ -121,3 +122,49 @@ def test_gross_range_ts_note_shows_current_then_suggested(subset_ds):
     html = qc_section.gross_range_ts_note(subset_ds)
     assert html.index("Current gross-range limits (applied)") < html.index("Suggested gross-range limits")
     assert "[0, 30]" in html  # current TEMP gross suspect span, in brackets
+
+
+# --- shared gross mask: matrix count == plotted count --------------------------------------------
+
+
+def test_gross_mask_count_matches_matrix_and_plot(subset_ds):
+    # One definition of "out of range": the diagnostics-matrix cell and the plotted × must both equal
+    # qc.gross_range_mask(...).sum() on the committed subset, so the table and the figure cannot diverge.
+    had_hits = False
+    for var in ("TEMP", "PSAL", "DOXY", "CHLA"):
+        if var not in subset_ds:
+            continue
+        n = int(qc.gross_range_mask(subset_ds, var).sum())
+        cell = qc_section._gross_cell(subset_ds, var)
+        matrix_n = 0 if "spans" not in cell else int(cell["spans"][0]["text"].split()[0].replace(",", ""))
+        assert matrix_n == n
+        _fig, ax = plots_qc.plot_test_hits(subset_ds, var)
+        gross = [c for c in ax.collections if c.get_label() == "gross range"]
+        plotted = len(gross[0].get_offsets()) if gross else 0
+        assert plotted == n
+        had_hits = had_hits or n > 0
+    assert had_hits  # the subset must exercise at least one gross-range hit, else the test is vacuous
+
+
+# --- robustness ----------------------------------------------------------------------------------
+
+
+def test_suggest_flat_line_handles_numeric_time(subset_ds):
+    # TIME as numeric seconds (un-decoded) must not crash suggest_flat_line (shared _elapsed_seconds
+    # handles both dtypes); the whole-record interval is still recovered.
+    ds = subset_ds.copy()
+    ds["TIME"] = ("N_MEASUREMENTS", utilities._elapsed_seconds(subset_ds.TIME.values))
+    fl = qc.suggest_flat_line(ds)
+    assert np.isfinite(fl["dt"]) and fl["suspect"] == round(fl["suspect_factor"] * fl["dt"])
+
+
+def test_suggest_note_panel_is_guarded_against_a_raising_builder(subset_ds, monkeypatch):
+    # A note builder that raises must yield a visible failure block on the page, not abort the report.
+    from glidertest.reports import _mission
+
+    def boom(ds, var):
+        raise ValueError("kaboom")
+
+    monkeypatch.setattr(_mission.qc_section, "suggested_limits_note", boom)
+    html = _mission.PANELS["qc_TEMP_suggest"].render(_mission.Ctx(ds=subset_ds))
+    assert "none-note" in html and "kaboom" in html
