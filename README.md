@@ -35,6 +35,7 @@ glidertest turns an OG1 mission file into a self-contained HTML report — a lan
 
 ```python
 from glidertest import reports
+
 reports.report(ds, "reports/")
 ```
 
@@ -82,8 +83,8 @@ Try to ensure that all the lines of your contribution are covered in the tests.
 
 ## Acknowledgements
 
-glidertest is developed under the SEA-CODE project (SeaExplorer–Seaglider Cross-platform Open Diagnostics & Evaluation), funded by Voice of the Ocean (VOTO). SEA-CODE builds platform-independent, open-source diagnostics for glider data, with glidertest and seagliderOG1 as its core packages, and supports exchanges between the University of Hamburg and VOTO. VOTO also provides the sample data.
+glidertest began in 2024 as an OceanGliders community effort, with early development at Voice of the Ocean (VOTO) and the University of Hamburg. Its development has since been supported by VOTO through the SEA-CODE project (SeaExplorer–Seaglider Cross-platform Open Diagnostics & Evaluation), which builds platform-independent, open-source diagnostics for glider data, with glidertest and seagliderOG1 as its core packages, and supports exchanges between the University of Hamburg and VOTO. VOTO also provides the sample data.
 
-Till Moritz's contributions were funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the PycnMix project (Projektnummer 558671572). The HTML report and command-line interface were first developed in preparation for the DFG research infrastructure Swarm of Ocean Gliders (Projektnummer 544335393).
+Development at the University of Hamburg was also supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the PycnMix project (Projektnummer 558671572), and in preparation for the DFG research infrastructure Swarm of Ocean Gliders (Projektnummer 544335393).
 
 glidertest is an OceanGliders community package and welcomes contributions from the community. Development was assisted by Claude Code (Anthropic) and GitHub Copilot code review.
