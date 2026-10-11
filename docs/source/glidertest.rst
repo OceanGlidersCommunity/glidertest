@@ -23,6 +23,10 @@ Modules
    :members:
    :undoc-members:
 
+.. automodule:: glidertest.plots_qc
+   :members:
+   :undoc-members:
+
 .. automodule:: glidertest.qc
    :members:
    :undoc-members:

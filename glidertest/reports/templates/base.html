@@ -40,6 +40,14 @@ table.nc details.attrs td.mono { white-space: nowrap; }
 /* An html/table panel is one full-width item of the flex .fig-row, so its caption, headings and
    tables stack as normal block flow instead of sitting side by side. */
 .html-panel { flex: 1 1 100%; min-width: 0; }
+/* A half-slot html panel (e.g. the QC gross-range note beside the T–S plot) sits as a side item of
+   the .fig-row rather than taking a full row. */
+.html-panel.slot-half { flex: 1 1 45%; min-width: 14rem; align-self: flex-start; }
+/* Unnumbered QC sub-heading (Flat-line runs / Spike) inside a variable's section: a full-width
+   divider in the fig-row that breaks the plots beneath it onto their own line. Not in the jump-nav —
+   section numbering/nav is vendored and flat, so these group visually without a 6.1/6.2 number. */
+.qc-subsection { margin: 0.6rem 0 0; padding-top: 0.4rem; border-top: 1px solid var(--rule);
+  font-size: var(--fs-note); color: var(--muted); }
 /* Subtle in-table links: underline only, keep the text colour. */
 .meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 /* Expandable per-variable attribute list in a table cell (ported from ctdcast). */

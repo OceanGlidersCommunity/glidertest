@@ -45,6 +45,31 @@ def _style():
     return _ACTIVE_STYLE
 
 
+def _ax(width_in, height_in, ax=None):
+    """Return ``(fig, ax)`` at ``(width_in, height_in)`` inches with constrained layout, or reuse *ax*.
+
+    The slot-aware figure-creation helper: a plotter born at the report slot width calls this on its
+    first line, so the figure is the right size from the start and nothing is rescaled afterwards.
+    Shared by :mod:`glidertest.plots_qc` and the home for the staged ``plots.py`` sizing refactor.
+
+    Parameters
+    ----------
+    width_in, height_in : float
+        Figure width and height in inches.
+    ax : matplotlib.axes.Axes, optional
+        An existing axis to draw into; when given it is returned with its figure and no new figure
+        is made (so a plotter composes into a multi-panel layout).
+
+    Returns
+    -------
+    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)
+        The figure and axis to draw into.
+    """
+    if ax is not None:
+        return ax.get_figure(), ax
+    return plt.subplots(figsize=(width_in, height_in), layout="constrained")
+
+
 def _show():
     """
     Call plt.show() while ignoring the warning raised by non-interactive backends (e.g. Agg).

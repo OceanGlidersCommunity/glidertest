@@ -20,10 +20,12 @@ configs = {
         "fail_span": [-2.5, 40],
     },
         "spike_test": {"suspect_threshold": 2.0, "fail_threshold": 6.0},
+        "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
         "location_test": {"bbox": [10, 50, 25, 70]},
     },
     "PSAL": {"gross_range_test": {"suspect_span": [5, 38], "fail_span": [2, 41]},
              "spike_test": {"suspect_threshold": 0.3, "fail_threshold": 0.9},
+             "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
              "location_test": {"bbox": [10, 50, 25, 70]},
              },
     "DOXY": {"gross_range_test": {
@@ -31,6 +33,7 @@ configs = {
         "fail_span": [0, 500],
     },
         "spike_test": {"suspect_threshold": 10, "fail_threshold": 50},
+        "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
         "location_test": {"bbox": [10, 50, 25, 70]},
     },
     "CHLA": {"gross_range_test": {
@@ -38,6 +41,7 @@ configs = {
         "fail_span": [-1, 20],
     },
         "spike_test": {"suspect_threshold": 1, "fail_threshold": 5},
+        "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
         "location_test": {"bbox": [10, 50, 25, 70]},
     },
 }
@@ -209,15 +213,142 @@ def qc_checks(ds, var='TEMP'):
     - Thresholds for QC tests are taken from the global `configs` dictionary.
     Original Author: Chiara  Monforte
     """
-    utilities._check_necessary_variables(ds, [var, 'TIME'])
-    gr = tools.compute_global_range(ds, variable=var, min_val=configs[var]['gross_range_test']['suspect_span'][0],
-                                    max_val=configs[var]['gross_range_test']['suspect_span'][1])
-    spike = qartod.spike_test(ds[var], suspect_threshold=configs[var]['spike_test']['suspect_threshold'],
-                              fail_threshold=configs[var]['spike_test']['fail_threshold'], method="average")
-    flat = qartod.flat_line_test(ds[var], ds.TIME, 1, 3, 0.001)
+    gr, spike, flat = sample_tests(ds, var)
     __, __, err_mean, err_range, __ = tools.compute_hyst_stat(ds, variable=var, v_res=1)
 
     return gr, spike, flat, err_mean, err_range
+
+
+def sample_tests(ds, var='TEMP'):
+    """Run the three sample-wise QARTOD tests (gross range, spike, flat line) on *var*.
+
+    Split out of :func:`qc_checks` (which adds the hysteresis statistics) so the report's QC page
+    plots and the delivered-vs-glidertest matrix share one computation and one set of thresholds.
+    All thresholds come from the global :data:`configs` dictionary.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, containing *var* and ``TIME``.
+    var : str, optional, default='TEMP'
+        Variable to test.
+
+    Returns
+    -------
+    gr : numpy.ndarray
+        Gross-range test flags.
+    spike : numpy.ndarray
+        Spike test flags.
+    flat : numpy.ndarray
+        Flat-line test flags.
+
+    Notes
+    -----
+    Original Author: Chiara Monforte
+    """
+    utilities._check_necessary_variables(ds, [var, 'TIME'])
+    gr_cfg = configs[var]['gross_range_test']
+    gr = tools.compute_global_range(ds, variable=var, min_val=gr_cfg['suspect_span'][0],
+                                    max_val=gr_cfg['suspect_span'][1])
+    sp_cfg = configs[var]['spike_test']
+    spike = qartod.spike_test(ds[var], suspect_threshold=sp_cfg['suspect_threshold'],
+                              fail_threshold=sp_cfg['fail_threshold'], method="average")
+    fl = configs[var]['flat_line_test']
+    flat = qartod.flat_line_test(ds[var], ds.TIME, fl['suspect_threshold'],
+                                 fl['fail_threshold'], fl['tolerance'])
+    return gr, spike, flat
+
+
+#: Variables that cannot be negative — their suggested gross-range lower bound is clamped at 0.
+_NONNEGATIVE_VARS = ("DOXY", "CHLA", "BBP700")
+
+
+def suggest_gross_range(ds, var='TEMP', inner_pct=99.9, suspect_pad=0.01, fail_pad=0.05):
+    """Suggest data-driven gross-range spans for *var* from this mission's value distribution.
+
+    A diagnostic suggestion, not a fix: it describes where *this* deployment's values lie, as a
+    starting point for a mission config — not a universal physical range. The inner *inner_pct* of
+    the finite values is taken (default the central 99.9%, i.e. the 0.05th–99.95th percentiles), then
+    padded outward by a fraction of that span — *suspect_pad* and *fail_pad* — so the margin scales
+    with each variable's own range rather than with the value (1% of 4 °C is not 1% of 35 psu). The
+    lower bound is clamped at 0 for non-negative variables (:data:`_NONNEGATIVE_VARS`).
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, containing *var*.
+    var : str, optional, default='TEMP'
+        Variable to suggest limits for.
+    inner_pct : float, optional, default=99.9
+        Central percentile of the data taken as the core range before padding.
+    suspect_pad, fail_pad : float, optional
+        Fractions of the core span added on each side for the suspect (0.01) and fail (0.05) spans.
+
+    Returns
+    -------
+    dict or None
+        ``{lo, hi, inner_pct, suspect, fail, suspect_pad, fail_pad}`` (spans as ``[min, max]``, all
+        rounded), or ``None`` when *var* has no finite values.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams
+    """
+    x = np.asarray(ds[var].values, dtype=float)
+    x = x[np.isfinite(x)]
+    if x.size == 0:
+        return None
+    half = (100.0 - inner_pct) / 2.0
+    lo, hi = (float(p) for p in np.percentile(x, [half, 100.0 - half]))
+    span = hi - lo
+    clamp = var in _NONNEGATIVE_VARS
+
+    def _pad(frac):
+        a, b = lo - frac * span, hi + frac * span
+        return [round(max(a, 0.0) if clamp else a, 2), round(b, 2)]
+
+    return {
+        "lo": round(lo, 2), "hi": round(hi, 2), "inner_pct": inner_pct,
+        "suspect": _pad(suspect_pad), "fail": _pad(fail_pad),
+        "suspect_pad": suspect_pad, "fail_pad": fail_pad,
+    }
+
+
+def suggest_flat_line(ds, suspect_factor=2, fail_factor=3):
+    """Suggest flat-line windows (seconds) from the median sampling interval.
+
+    The ``ioos_qc`` flat-line test converts its window from seconds to a sample count by dividing by
+    the median sampling interval and truncating (``count = int(window_s / dt_s)``); the rolling
+    window then spans ``count + 1`` samples. A window shorter than the interval gives ``count = 0``,
+    collapsing the window to a single sample whose range is 0 — always within tolerance — so *every*
+    sample is flagged regardless of the data (a platform with a coarse sampling interval over-flags wholesale). So the
+    window must exceed the median interval: at least *suspect_factor*× (a 3-sample window) for suspect
+    and *fail_factor*× (a 4-sample window) for fail.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, with ``TIME``.
+    suspect_factor, fail_factor : int, optional
+        Multiples of the median sampling interval for the suspect (2) and fail (3) windows.
+
+    Returns
+    -------
+    dict
+        ``{dt, suspect, fail, suspect_factor, fail_factor}`` — the median interval and the suggested
+        windows in seconds (``dt`` NaN when there are fewer than two samples).
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams
+    """
+    t = np.asarray(ds.TIME.values)
+    if t.size < 2:
+        return {"dt": float("nan"), "suspect": float("nan"), "fail": float("nan"),
+                "suspect_factor": suspect_factor, "fail_factor": fail_factor}
+    dt = float(np.median(np.diff(t)).astype("timedelta64[ms]").astype(float)) / 1000.0
+    return {"dt": round(dt, 1), "suspect": round(suspect_factor * dt), "fail": round(fail_factor * dt),
+            "suspect_factor": suspect_factor, "fail_factor": fail_factor}
 
 
 def phrase_duration_check(ds):

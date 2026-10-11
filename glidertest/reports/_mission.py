@@ -344,7 +344,86 @@ PANELS["ctd_cr"] = Panel(
     slot="half",
     applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
 )
-for _pid, _adapter, _var, _cap, _slot in _VAR_FIGURE_PANELS:
+# QC page (#295): per-variable figure panels visualising where each glidertest QC test fires and
+# whether a test fits the sampling (the flat-line / spike diagnostics). Same (id, adapter, var,
+# caption, slot) shape as the sensor panels, so they go through the same loop below.
+_QC_FIGURE_PANELS: tuple[tuple[str, Callable[[xr.Dataset, str], str | None], str, str, str], ...] = tuple(
+    panel
+    for _v in _QC_VARS
+    for panel in (
+        (f"qc_{_v}_hits", _plots.test_hits, _v,
+         f"{_v}: where glidertest's QC tests fire (gross range, spike, flat line) over the full record", "full"),
+        (f"qc_{_v}_profile", _plots.flag_profile, _v,
+         f"{_v} against depth: where the QC tests fire in the water column", "half"),
+        (f"qc_{_v}_flat", _plots.flat_runs, _v,
+         f"{_v}: flat-run durations against the test windows and the median sampling interval", "half"),
+        (f"qc_{_v}_change", _plots.flat_change, _v,
+         f"{_v}: start-to-end change of each flat run against the tolerance (stuck sensor vs slow signal)", "half"),
+        (f"qc_{_v}_excerpt", _plots.flat_excerpt, _v,
+         f"{_v}: zoom on the longest flagged flat run, with the ±tolerance band", "half"),
+        (f"qc_{_v}_spike", _plots.spike_stat, _v,
+         f"{_v}: spike statistic against the suspect and fail thresholds", "half"),
+    )
+)
+
+# Gross range on the T–S plane (once per page; needs TEMP and PSAL): the suspect/fail spans as
+# nested rectangles over the cloud, so a reader sees whether the limits are regional or the hits are
+# outliers.
+PANELS["qc_ts_gross"] = Panel(
+    id="qc_ts_gross",
+    render=lambda c: _plots.ts_gross_range(c.ds, slot="half"),
+    caption="Gross-range suspect and fail spans on the T–S diagram (TEMP × PSAL)",
+    slot="half",
+    applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
+)
+# The suggested gross-range limits for TEMP and PSAL, as a half-slot note beside the T–S plot.
+PANELS["qc_gross_ts_note"] = Panel(
+    id="qc_gross_ts_note",
+    kind="html",
+    render=lambda c: qc_section.gross_range_ts_note(c.ds),
+    slot="half",
+    applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
+)
+
+# Per-variable "suggested limits" note (gross range + flat line) derived from this mission's data —
+# an html panel heading each variable's QC section; forward to a config-yaml snippet (#267).
+for _v in _QC_VARS:
+    PANELS[f"qc_{_v}_suggest"] = Panel(
+        id=f"qc_{_v}_suggest",
+        kind="html",
+        render=(lambda c, var=_v: qc_section.suggested_limits_note(c.ds, var)),
+        slot="half",  # sits beside the half-width profile, as the gross-range note sits beside the T–S plot
+        applies_to=_has(_v),
+    )
+
+
+# Unnumbered h3 sub-headings inside a variable's QC section — grouping, not navigation (the vendored
+# _manifest numbers sections flatly and gives one jump-nav entry per Section, so a true 6.1/6.2 would
+# need an upstream engine change). An html panel at full width forces its own line in the fig-row.
+def _subheading(text: str) -> Callable[[Ctx], str]:
+    """Return an html-panel render emitting *text* as a full-width ``<h3>`` QC sub-heading."""
+    return lambda _c: f'<h3 class="qc-subsection">{text}</h3>'
+
+
+for _v in _QC_VARS:
+    PANELS[f"qc_{_v}_sub_flat"] = Panel(id=f"qc_{_v}_sub_flat", kind="html",
+                                        render=_subheading("Flat-line runs"), applies_to=_has(_v))
+    PANELS[f"qc_{_v}_sub_spike"] = Panel(id=f"qc_{_v}_sub_spike", kind="html",
+                                         render=_subheading("Spike"), applies_to=_has(_v))
+
+# Link from the landing page's QC summary to the full QC page (only on the landing — the QC page's
+# own glidertest section does not carry it).
+PANELS["full_qc_link"] = Panel(
+    id="full_qc_link",
+    kind="html",
+    render=lambda c: (
+        '<p class="caption"><a href="qc.html">Full QC →</a> per-variable diagnostics: where each '
+        "glidertest test fires, and whether its thresholds fit the sampling.</p>"
+    ),
+    applies_to=_qc_applies,
+)
+
+for _pid, _adapter, _var, _cap, _slot in (*_VAR_FIGURE_PANELS, *_QC_FIGURE_PANELS):
     # The slot sets both the Panel's display width and the adapter's render width (passed through),
     # so a narrow plot (updown_bias → half) renders small and tiles at that same width. The panel
     # applies only when its variable is present, so a page never lists a panel for an absent sibling
@@ -380,7 +459,7 @@ PROFILE = Profile(
         Section(
             id="qc_glidertest",
             title="QC — glidertest diagnostics",
-            panels=("qc_glidertest",),
+            panels=("qc_glidertest", "full_qc_link"),
             applies_to=_qc_applies,
         ),
     ),
@@ -542,6 +621,40 @@ FLIGHT = Profile(
     entries=(Section(id="velocity", title="Vertical velocity", panels=("flight_vspeed",)),),
 )
 
+# The QC page (#295): the QC glidertest *applies* and why it flagged — the glidertest diagnostics
+# matrix (same panel the landing page shows, one data build, so the two cannot drift), with
+# per-variable "where it fires / why" plot sections added below (see feat-qc-page-plan.md). The
+# as-delivered census stays on the landing page only (it is the provider's QC, not glidertest's).
+QC = Profile(
+    entries=(
+        Section(
+            id="qc_glidertest",
+            title="QC — glidertest diagnostics",
+            panels=("qc_glidertest",),
+            applies_to=_qc_applies,
+        ),
+        Section(
+            id="qc_gross_ts",
+            title="Gross range (T–S)",
+            panels=("qc_ts_gross", "qc_gross_ts_note"),
+            applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
+        ),
+        *(
+            Section(
+                id=f"qc_{_v}",
+                title=f"QC — {_v}",
+                panels=(
+                    f"qc_{_v}_hits", f"qc_{_v}_profile", f"qc_{_v}_suggest",
+                    f"qc_{_v}_sub_flat", f"qc_{_v}_flat", f"qc_{_v}_change", f"qc_{_v}_excerpt",
+                    f"qc_{_v}_sub_spike", f"qc_{_v}_spike",
+                ),
+                applies_to=_has(_v),
+            )
+            for _v in _QC_VARS
+        ),
+    ),
+)
+
 
 def _inventory_lead(ctx: Ctx) -> str:
     """Inventory page intro (above the jump-nav): the OG1 verdict and the variable/QC counts."""
@@ -558,6 +671,7 @@ def _inventory_lead(ctx: Ctx) -> str:
 # mapping is reconciled when the masthead nav is vendored, per the shared-nav plan §3.2.)
 PAGES: tuple[Page, ...] = (
     Page("index.html", "Mission", "Mission report", "landing", "summary", PROFILE, lambda _c: True),
+    Page("qc.html", "QC", "QC", "aggregate-a", "summary", QC, _qc_applies),
     Page("ctd.html", "CTD", "CTD", "aggregate-b", "reports", CTD,
          lambda c: "TEMP" in c.ds or "PSAL" in c.ds),
     Page("oxygen.html", "Oxygen", "Oxygen", "aggregate-b", "reports", OXYGEN, _has("DOXY")),

@@ -15,13 +15,13 @@
   <figure class="slot-{{ sl }}">
     {%- if p.caption %}<figcaption>{{ p.caption }}</figcaption>{% endif %}
     <img src="data:image/png;base64,{{ p.payload }}" alt="{{ p.caption or p.id }}">
-    {%- set src = figsource(p.payload) %}{% if src %}<div class="fig-source">source: glidertest/plots.py:{{ src }}</div>{% endif %}
+    {%- set src = figsource(p.payload) %}{% if src %}<div class="fig-source">source: glidertest/{% if ".py:" not in src %}plots.py:{% endif %}{{ src }}</div>{% endif %}
     {{- dbg(p.payload, sl) }}
   </figure>
 {%- else %}{# html | table #}
   {# One full-width flex item so the panel's caption, headings and tables flow as normal blocks
      instead of becoming side-by-side flex items of the .fig-row. #}
-  <div class="html-panel">{{ p.payload | safe }}</div>
+  <div class="html-panel slot-{{ sl }}">{{ p.payload | safe }}</div>
 {%- endif %}
 {% endmacro %}
 

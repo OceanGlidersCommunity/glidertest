@@ -160,6 +160,96 @@ def _hyst_cell(err: np.ndarray) -> dict[str, Any]:
     return {"text": f"{n_over}/{arr.size} bins", "cls": cls}
 
 
+def gross_range_ts_note(ds: xr.Dataset) -> str | None:
+    """Return an HTML note of the suggested gross-range spans for TEMP and PSAL (beside the T–S plot).
+
+    ``None`` when neither TEMP nor PSAL has finite values.
+    """
+    rows = [(v, qc.suggest_gross_range(ds, v)) for v in ("TEMP", "PSAL")]
+    rows = [(v, g) for v, g in rows if g]
+    if not rows:
+        return None
+    pct = rows[0][1]["inner_pct"]
+    cur = "".join(
+        f'<li><strong>{v}</strong> — suspect [{gc["suspect_span"][0]}, {gc["suspect_span"][1]}], '
+        f'fail [{gc["fail_span"][0]}, {gc["fail_span"][1]}]</li>'
+        for v, _g in rows
+        if (gc := qc.configs.get(v, {}).get("gross_range_test", {})).get("suspect_span")
+        and gc.get("fail_span")
+    )
+    items = "".join(
+        f'<li><strong>{v}</strong> — suspect [{g["suspect"][0]}, {g["suspect"][1]}], '
+        f'fail [{g["fail"][0]}, {g["fail"][1]}]</li>'
+        for v, g in rows
+    )
+    return (
+        '<p class="note"><strong>Current gross-range limits (applied)</strong></p>'
+        f'<ul class="note">{cur}</ul>'
+        '<p class="note"><strong>Suggested gross-range limits (this deployment)</strong></p>'
+        f'<ul class="note">{items}</ul>'
+        f'<p class="note">Each span is the central {pct:g}% of the finite values padded by 1% '
+        "(suspect) and 5% (fail) of that span. Descriptive of this mission, not a physical range.</p>"
+    )
+
+
+def suggested_limits_note(ds: xr.Dataset, var: str) -> str | None:
+    """Return an HTML note with glidertest's suggested gross-range and flat-line config for *var*.
+
+    A diagnostic suggestion derived from *this* mission (:func:`glidertest.qc.suggest_gross_range` and
+    :func:`~glidertest.qc.suggest_flat_line`) — a starting point for a mission config, not a fix and
+    not a physical range. ``None`` when the variable has no finite values.
+    """
+    fl = qc.suggest_flat_line(ds)
+    cfg = qc.configs.get(var, {})
+    cur, items, explain = [], [], []
+    # TEMP/PSAL gross range is shown jointly beside the T–S plot (gross_range_ts_note), so it is
+    # omitted here to avoid duplication; DOXY/CHLA (no T–S) carry their gross suggestion here. Current
+    # (applied) limits are shown with brackets, suggested with parentheses, as the diagnostics table does.
+    if var not in ("TEMP", "PSAL"):
+        gr = qc.suggest_gross_range(ds, var)
+        if gr is None:
+            return None
+        clamp = " (lower bound clamped at 0)" if var in qc._NONNEGATIVE_VARS else ""
+        gc = cfg.get("gross_range_test", {})
+        if gc.get("suspect_span") and gc.get("fail_span"):
+            cur.append(
+                f'<li><strong>{var}</strong> gross range — '
+                f'suspect [{gc["suspect_span"][0]}, {gc["suspect_span"][1]}], '
+                f'fail [{gc["fail_span"][0]}, {gc["fail_span"][1]}]</li>'
+            )
+        items.append(
+            f'<li><strong>{var}</strong> gross range — suspect [{gr["suspect"][0]}, {gr["suspect"][1]}], '
+            f'fail [{gr["fail"][0]}, {gr["fail"][1]}]</li>'
+        )
+        explain.append(
+            f'The gross span is the central {gr["inner_pct"]:g}% of the finite values '
+            f'([{gr["lo"]}, {gr["hi"]}]) padded by {gr["suspect_pad"] * 100:g}% (suspect) and '
+            f'{gr["fail_pad"] * 100:g}% (fail) of that span{clamp}.'
+        )
+    fc = cfg.get("flat_line_test", {})
+    if fc:
+        cur.append(
+            f'<li><strong>{var}</strong> flat line — suspect ≥ {fc["suspect_threshold"]:g} s, '
+            f'fail ≥ {fc["fail_threshold"]:g} s (tol ±{fc["tolerance"]:g})</li>'
+        )
+    items.append(
+        f'<li><strong>{var}</strong> flat line — suspect ≥ {fl["suspect"]:g} s, '
+        f'fail ≥ {fl["fail"]:g} s</li>'
+    )
+    explain.append(
+        f'A flat-line window shorter than the median sampling interval ({fl["dt"]:g} s) collapses to a '
+        f'single sample and flags every point; use suspect ≥ {fl["suspect_factor"]}× and '
+        f'fail ≥ {fl["fail_factor"]}× the interval.'
+    )
+    return (
+        '<p class="note"><strong>Current limits (applied)</strong></p>'
+        f'<ul class="note">{"".join(cur)}</ul>'
+        '<p class="note"><strong>Suggested limits (this deployment)</strong></p>'
+        f'<ul class="note">{"".join(items)}</ul>'
+        f'<p class="note">{" ".join(explain)} Descriptive of this mission, not a physical range.</p>'
+    )
+
+
 def _diagnostics(ds: xr.Dataset) -> dict[str, Any] | None:
     """Return the glidertest-diagnostics data (thresholds + matrix), or ``None`` when no QC var applies."""
     config = qc.configs
@@ -185,6 +275,26 @@ def _diagnostics(ds: xr.Dataset) -> dict[str, Any] | None:
                 "test": "spike",
                 "suspect": f"|Δ| > {s['suspect_threshold']}",
                 "fail": f"|Δ| > {s['fail_threshold']}",
+            }
+        )
+        f = config[v]["flat_line_test"]
+        thr_rows.append(
+            {
+                "var": v,
+                "test": "flat-line",
+                "suspect": f"flat ≥ {f['suspect_threshold']:g} s (tol ±{f['tolerance']:g})",
+                "fail": f"flat ≥ {f['fail_threshold']:g} s (tol ±{f['tolerance']:g})",
+            }
+        )
+        # Hysteresis thresholds are hysteresis_verdict's defaults (pct per bin, then bin count), read
+        # from the function so the table cannot drift from the verdict rule.
+        _pct, _bins = qc.hysteresis_verdict.__defaults__
+        thr_rows.append(
+            {
+                "var": v,
+                "test": "hysteresis",
+                "suspect": f"> {_pct}% dive–climb error per depth bin",
+                "fail": f"> {_bins} bins exceed",
             }
         )
 
