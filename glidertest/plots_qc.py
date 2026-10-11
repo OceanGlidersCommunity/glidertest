@@ -341,7 +341,12 @@ def plot_spike_stat(
         unit = utilities.plotting_units(ds, var)
         ax.set_xlabel(f"spike statistic |Δ{var}| ({unit})" if unit else f"spike statistic |Δ{var}|")
         ax.set_ylabel("count")
-        dt = utilities._median_sampling_interval(ds.TIME.values)
+        # The variable's own sampling interval (finite samples), falling back to the whole record if
+        # the variable has none; a spike threshold is read against the sensor's real cadence.
+        finite = np.isfinite(v)
+        dt = utilities._median_sampling_interval(ds.TIME.values[finite])
+        if not np.isfinite(dt):
+            dt = utilities._median_sampling_interval(ds.TIME.values)
         ax.set_title(f"median sampling interval {dt:.1f} s", loc="right")
         ax.legend(loc="best", framealpha=0.85)
         return fig, ax
@@ -382,7 +387,10 @@ def plot_flat_runs(
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
         _gr, _spike, flat = _flags(ds, var, flags)
-        dt = utilities._median_sampling_interval(ds.TIME.values)
+        # The variable's own sampling interval (finite samples), not the whole record's: an off-phase
+        # sensor's windows must be judged against its real cadence (CHLA finite only every ~Nth cycle).
+        finite = np.isfinite(np.asarray(ds[var].values, dtype=float))
+        dt = utilities._median_sampling_interval(ds.TIME.values[finite])
         if not np.isfinite(dt) or dt <= 0:
             # Degenerate interval (duplicate or missing timestamps): fall back to 1 s so the floored
             # durations and the log-axis bounds stay positive (log10(0) would break the axis).
@@ -390,11 +398,17 @@ def plot_flat_runs(
         # Durations span seconds to hours and a single-sample run is 0 s; floor at one sampling interval and
         # use a log axis so the bulk and the 1–3 s window lines are both legible.
         durations = np.array([max(dur, dt) for _i0, _i1, dur in _runs(flat, ds.TIME.values)])
+        fl = _flat_config(var)
+        # Range spans every mark on the axis — the two config windows, the sampling interval and the
+        # run durations — so a window line never falls off the edge when the interval is coarse.
+        marks = [dt, float(fl["suspect_threshold"]), float(fl["fail_threshold"])]
+        if durations.size:
+            marks += [float(durations.min()), float(durations.max())]
+        lo, hi = max(min(marks) * 0.8, 1e-6), max(marks) * 1.2
         ax.set_xscale("log")
         if durations.size:
-            lo, hi = max(dt * 0.5, durations.min() * 0.9), durations.max() * 1.1
             ax.hist(durations, bins=np.logspace(np.log10(lo), np.log10(hi), 40), color="0.6")
-        fl = _flat_config(var)
+        ax.set_xlim(lo, hi)
         ax.axvline(fl["suspect_threshold"], color=QC_COLORS[3], lw=1.3,
                    label=f"suspect window ({fl['suspect_threshold']:g} s)")
         ax.axvline(fl["fail_threshold"], color=QC_COLORS[4], lw=1.3,
