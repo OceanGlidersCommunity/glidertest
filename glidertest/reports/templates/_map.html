@@ -74,10 +74,33 @@
     fitTarget = [];
     TRACKS.forEach(function (t) { fitTarget = fitTarget.concat(t.track); });
   }
-  // maxZoom caps a zero-size extent (a one-point track, or coincident points) so fitBounds does not
-  // compute an infinite zoom and blank the map.
-  if (fitTarget && fitTarget.length) { map.fitBounds(fitTarget, { padding: [16, 16], maxZoom: 12 }); }
+  // One place for the fit padding and the zoom cap; maxZoom keeps a zero-size extent (a one-point
+  // track, or coincident points) from making fitBounds compute an infinite zoom and blank the map.
+  var FIT_OPTS = { padding: [16, 16], maxZoom: 12 };
+  function resetView() {
+    if (fitTarget && fitTarget.length) { map.fitBounds(fitTarget, FIT_OPTS); }
+  }
+  if (fitTarget && fitTarget.length) { resetView(); }
   else { map.setView([0, 0], 1); }
+
+  // Reset-view control: a home button stacked under the zoom control that re-fits to the data extent
+  // (not the wider coastline). Reuses Leaflet's control styling so it matches the zoom buttons.
+  var ResetControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function () {
+      var bar = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+      var btn = L.DomUtil.create('a', '', bar);
+      btn.href = '#';
+      btn.title = 'Reset view';
+      btn.setAttribute('role', 'button');
+      btn.setAttribute('aria-label', 'Reset view');
+      btn.innerHTML = '⌂';
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop).on(btn, 'click', resetView);
+      L.DomEvent.disableClickPropagation(bar);
+      return bar;
+    },
+  });
+  map.addControl(new ResetControl());
 
   if (COAST) {
     L.geoJSON(COAST, {
@@ -136,7 +159,7 @@
   // size is known, so vectors are not clipped.
   setTimeout(function () {
     map.invalidateSize();
-    if (fitTarget && fitTarget.length) { map.fitBounds(fitTarget, { padding: [16, 16], maxZoom: 12 }); }
+    resetView();
   }, 0);
 })();
 </script>
