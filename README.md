@@ -18,15 +18,16 @@ Diagnostics include:
 
 ## Install
 
-Install from conda with
-```sh
-conda install --channel conda-forge glidertest
-```
-
-Install from PyPI with
+Install from PyPI with pip:
 
 ```sh
 python -m pip install glidertest
+```
+
+or with [uv](https://docs.astral.sh/uv/):
+
+```sh
+uv pip install glidertest
 ```
 
 ## HTML report
