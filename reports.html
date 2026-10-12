@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The HTML report &mdash; glidertest 0.1.1.dev45+g02a5b36bc documentation</title>
+  <title>The HTML report &mdash; glidertest 0.1.1.dev46+g1503b8f58 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=c006e7a3"></script>
+      <script src="_static/documentation_options.js?v=1d9a8846"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -340,10 +340,19 @@ the OG1 vocabulary. For that, use the IOOS compliance checker with the
 <h3>Fleet page — <code class="docutils literal notranslate"><span class="pre">ROOT/index.html</span></code><a class="headerlink" href="#fleet-page-root-index-html" title="Link to this heading"></a></h3>
 <p>Built from the <code class="docutils literal notranslate"><span class="pre">report.json</span></code> of every mission under the root: one row per mission —
 platform, dates, profiles, maximum depth, which sensor pages exist, OG1 conformance, worst
-QC — with buttons to its pages, and a map of all tracks. Rebuilt whenever a mission is
+QC — with a button to its pages, and a map of all tracks. Rebuilt whenever a mission is
 reported into the root, or on demand with <code class="docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">navigator</span> <span class="pre">ROOT</span></code> after missions are
 added, removed or renamed by hand. You want a fleet page for a season of deployments, a glider
 pool, or a cruise with several gliders at once.</p>
+<p>The map is interactive (Leaflet): one coloured line per mission over a coastline, with the
+same colour shown as a swatch in that mission’s row. Hovering a track — or its row —
+highlights both and shows a panel with the mission’s dates, profile count and maximum depth;
+clicking a track or a row opens that mission’s report. Leaflet and its stylesheet are bundled
+in the package and inlined into the page, so the map needs no internet at view time. A static
+image of the same tracks sits behind the live map as the fallback for printing, PDF export and
+browsers with JavaScript disabled. The coastline is drawn from Natural Earth land polygons
+(via cartopy); if those are not available the map simply draws the tracks on a plain
+background.</p>
 </section>
 </section>
 <section id="the-qc-section">
