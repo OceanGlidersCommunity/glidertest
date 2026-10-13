@@ -117,6 +117,23 @@ def test_report_mission_id_override(tmp_path, subset_path, fake_report):
     assert (tmp_path / "custom" / "index.html").exists()
 
 
+def test_report_config_valid_is_passed_through(tmp_path, subset_path, fake_report):
+    cfg = tmp_path / "report.yaml"
+    cfg.write_text("qc:\n  TEMP:\n    spike_test: {suspect_threshold: 1.5}\n")
+    argv = ["report", str(subset_path), "--report-dir", str(tmp_path), "-c", str(cfg)]
+    assert _run(argv) == 0
+    assert fake_report[0]["config"] == cfg
+
+
+def test_report_config_invalid_fails_before_writing(tmp_path, subset_path, capsys):
+    cfg = tmp_path / "bad.yaml"
+    cfg.write_text("qc:\n  NOPE:\n    spike_test: {suspect_threshold: 1}\n")
+    out = tmp_path / "reports"
+    assert _run(["report", str(subset_path), "--report-dir", str(out), "-c", str(cfg)]) == 2
+    assert "unknown variable 'NOPE'" in capsys.readouterr().err
+    assert not out.exists()  # nothing written when the config is rejected
+
+
 def test_report_mission_id_rejects_multiple(tmp_path, subset_path):
     a, b = tmp_path / "a.nc", tmp_path / "b.nc"
     shutil.copy(subset_path, a)

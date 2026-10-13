@@ -95,7 +95,7 @@ def fake_report(monkeypatch):
     """
     calls = []
 
-    def _stub(ds, outdir, *, navigator=True, mission_id=None, layout="root"):
+    def _stub(ds, outdir, *, navigator=True, mission_id=None, layout="root", config=None):
         from glidertest.reports import manifest as _manifest
         from glidertest.reports import paths, resolve_mission_id
 
@@ -116,7 +116,8 @@ def fake_report(monkeypatch):
         )
         paths.manifest_in(mdir).write_text(json.dumps(man), encoding="utf-8")
         calls.append(
-            {"source": source, "mdir": mdir, "navigator": navigator, "mission_id": mission_id, "layout": layout}
+            {"source": source, "mdir": mdir, "navigator": navigator, "mission_id": mission_id,
+             "layout": layout, "config": config}
         )
         return mdir / "index.html"
 

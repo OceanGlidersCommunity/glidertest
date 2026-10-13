@@ -144,6 +144,16 @@ def _add_report_parser(sub: argparse._SubParsersAction) -> None:
         "not recursive).",
     )
     p.add_argument(
+        "-c",
+        "--config",
+        dest="config",
+        type=Path,
+        default=None,
+        metavar="FILE",
+        help="Report config (YAML) overriding QC thresholds per variable and test. Validated before "
+        "anything is written; applies to every FILE in the run.",
+    )
+    p.add_argument(
         "-n",
         "--dry-run",
         dest="dry_run",
@@ -228,6 +238,18 @@ def cmd_report(args: argparse.Namespace) -> int:
     if not files:
         print("no files matched", file=sys.stderr)
         return 1
+
+    # Validate the report config once, up front: a bad config fails the whole run before any file is
+    # opened, rather than surfacing as a per-file error inside the loop. report() re-validates per
+    # file against that file's variables (warning about thresholds for absent variables).
+    if args.config is not None:
+        from glidertest.config import loader
+
+        try:
+            loader.check(loader.load(args.config))
+        except loader.ConfigError as exc:
+            print(f"glidertest report: error: {exc}", file=sys.stderr)
+            return 2
     if flat and len(files) > 1:
         print(
             "glidertest report: error: -o/--output-dir takes a single FILE; "
@@ -311,6 +333,7 @@ def cmd_report(args: argparse.Namespace) -> int:
                     navigator=False,
                     mission_id=(None if flat else name),
                     layout="flat" if flat else "root",
+                    config=args.config,
                 )
             print(landing)
             wrote += 1
