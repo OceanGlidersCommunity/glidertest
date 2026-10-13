@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The HTML report &mdash; glidertest 0.1.1.dev50+gca2af2b8f documentation</title>
+  <title>The HTML report &mdash; glidertest 0.1.1.dev51+g1bf686924 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=63814470"></script>
+      <script src="_static/documentation_options.js?v=cb191026"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -66,6 +66,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#what-the-diagnostics-tell-you">What the diagnostics tell you</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#report-pages">Report pages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#landing-page-index-html">Landing page — <code class="docutils literal notranslate"><span class="pre">index.html</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#qc-page-qc-html">QC page — <code class="docutils literal notranslate"><span class="pre">qc.html</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sensor-pages-ctd-html-oxygen-html-optics-html">Sensor pages — <code class="docutils literal notranslate"><span class="pre">ctd.html</span></code>, <code class="docutils literal notranslate"><span class="pre">oxygen.html</span></code>, <code class="docutils literal notranslate"><span class="pre">optics.html</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flight-page-flight-html">Flight page — <code class="docutils literal notranslate"><span class="pre">flight.html</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inventory-page-inventory-html">Inventory page — <code class="docutils literal notranslate"><span class="pre">inventory.html</span></code></a></li>
@@ -138,6 +139,7 @@ same code you run.</p>
   index.html                    fleet page: one row per mission, map of all tracks
   &lt;mission_id&gt;/
     index.html                  landing page — about the mission
+    qc.html                     present when the file carries a QC variable or *_QC flags
     ctd.html                    present when TEMP or PSAL is in the file
     oxygen.html                 present when DOXY is in the file
     optics.html                 present when CHLA or BBP700 is in the file
@@ -270,8 +272,8 @@ diagnostic follows Frajka-Williams et al. (2011).</p>
 <p>Every page shares the <strong>masthead</strong> (the coloured header): the mission id, a page-type label,
 generation time, the
 mission facts (profiles with the dive/climb split, time span and duration, sample rate,
-extent, platform, source file), the page navigation — <strong>Summary / Reports: CTD · Oxygen ·
-Optics / Derived: Flight</strong> — and a <strong>Data inventory</strong> strip linking the inventory page. When
+extent, platform, source file), the page navigation — <strong>Summary: Mission · QC / Reports: CTD ·
+Oxygen · Optics / Derived: Flight</strong> — and a <strong>Data inventory</strong> strip linking the inventory page. When
 the report sits in a fleet, “← All missions” leads back. Each section heading carries “↑ top”.</p>
 <section id="landing-page-index-html">
 <h3>Landing page — <code class="docutils literal notranslate"><span class="pre">index.html</span></code><a class="headerlink" href="#landing-page-index-html" title="Link to this heading"></a></h3>
@@ -287,8 +289,37 @@ oxygen and chlorophyll that the file carries (<code class="docutils literal notr
 <li><p><strong>Sampling</strong> — grid spacing (<code class="docutils literal notranslate"><span class="pre">plots.plot_grid_spacing</span></code>), sampling period of every variable
 (<code class="docutils literal notranslate"><span class="pre">plots.plot_sampling_period_all</span></code>), maximum depth per profile
 (<code class="docutils literal notranslate"><span class="pre">plots.plot_max_depth_per_profile</span></code>) and profile monotony (<code class="docutils literal notranslate"><span class="pre">plots.plot_prof_monotony</span></code>).</p></li>
-<li><p><strong>QC — as delivered</strong> and <strong>QC — glidertest diagnostics</strong> — see <a class="reference internal" href="#qc-section"><span class="std std-ref">The QC section</span></a>.</p></li>
+<li><p><strong>QC — as delivered</strong> and <strong>QC — glidertest diagnostics</strong> — see <a class="reference internal" href="#qc-section"><span class="std std-ref">The QC section</span></a>. The
+diagnostics section links to the dedicated QC page for the per-variable detail.</p></li>
 </ul>
+</section>
+<section id="qc-page-qc-html">
+<h3>QC page — <code class="docutils literal notranslate"><span class="pre">qc.html</span></code><a class="headerlink" href="#qc-page-qc-html" title="Link to this heading"></a></h3>
+<p>Written when the file carries a QC variable or <code class="docutils literal notranslate"><span class="pre">*_QC</span></code> flags. Where the landing page’s QC
+summary answers <em>how much</em> was flagged, this page answers <em>where</em> each glidertest test fires and
+<em>whether its thresholds suit the sampling</em> — it visualises the QC, it does not change it. The
+<code class="docutils literal notranslate"><span class="pre">plot_*</span></code> functions live in <code class="docutils literal notranslate"><span class="pre">glidertest.plots_qc</span></code>.</p>
+<ul class="simple">
+<li><p><strong>Gross range (T–S)</strong> — the TEMP×PSAL suspect and fail spans as nested rectangles over the
+T–S cloud (<code class="docutils literal notranslate"><span class="pre">plot_ts_gross_range</span></code>), with the current (applied) and suggested spans beside it.</p></li>
+<li><p>One section per QC variable (TEMP, PSAL, DOXY, CHLA), each holding:</p>
+<ul>
+<li><p>a time series of the variable with gross-range, spike and flat-line hits overlaid
+(<code class="docutils literal notranslate"><span class="pre">plot_test_hits</span></code>) — the data is drawn as markers, so an off-phase sensor whose samples are
+isolated among NaNs still shows;</p></li>
+<li><p>a value-against-depth profile with the same hits (<code class="docutils literal notranslate"><span class="pre">plot_flag_profile</span></code>), so a reader sees at
+what depth each test fires, beside a note comparing the current and suggested limits;</p></li>
+<li><p><strong>Flat-line runs</strong> — the run-duration histogram against the test windows and the median
+sampling interval (<code class="docutils literal notranslate"><span class="pre">plot_flat_runs</span></code>), the start-to-end change of each run against the
+tolerance (<code class="docutils literal notranslate"><span class="pre">plot_flat_change</span></code>, titled with the fraction of runs whose data moved more than
+the tolerance), and a zoom on the longest run (<code class="docutils literal notranslate"><span class="pre">plot_flat_excerpt</span></code>);</p></li>
+<li><p><strong>Spike</strong> — the spike statistic against the suspect and fail thresholds (<code class="docutils literal notranslate"><span class="pre">plot_spike_stat</span></code>).</p></li>
+</ul>
+</li>
+</ul>
+<p>Overlaid hits are drawn most-frequent test first, so a rarer test’s symbols land on top of a
+common one’s. The suggested limits describe <em>this</em> mission’s distribution and sampling; they are
+a starting point for a per-mission configuration, not a physical range.</p>
 </section>
 <section id="sensor-pages-ctd-html-oxygen-html-optics-html">
 <h3>Sensor pages — <code class="docutils literal notranslate"><span class="pre">ctd.html</span></code>, <code class="docutils literal notranslate"><span class="pre">oxygen.html</span></code>, <code class="docutils literal notranslate"><span class="pre">optics.html</span></code><a class="headerlink" href="#sensor-pages-ctd-html-oxygen-html-optics-html" title="Link to this heading"></a></h3>
@@ -367,8 +398,9 @@ QC) reads the same way, not as a clean bill of health.</p>
 <p><strong>QC — glidertest diagnostics</strong> runs glidertest’s own checks on the data — gross range, spike
 and flat-line tests per variable, the dive–climb hysteresis verdict — and shows the result
 with the thresholds that were applied printed next to it, so a reader can judge whether a
-“suspect” means anything for their region. Today the thresholds are the package defaults;
-a per-mission configuration file is planned.</p>
+“suspect” means anything for their region. The per-variable detail — where each test fires and
+whether its thresholds suit the sampling — is on the dedicated QC page (<code class="docutils literal notranslate"><span class="pre">qc.html</span></code>). Today the
+thresholds are the package defaults; a per-mission configuration file is planned.</p>
 <p>The two are never merged: a value the provider flagged good and glidertest finds suspect is
 shown as both.</p>
 </section>
@@ -379,8 +411,9 @@ shown as both.</p>
 reports, the derived flight page — and the current page’s button is muted.</p></li>
 <li><p><strong>Amber</strong> marks a missing mandatory OG1 attribute, on the inventory page and in the
 landing-page verdict. A dash marks a missing highly-desirable attribute.</p></li>
-<li><p>Under every figure, <code class="docutils literal notranslate"><span class="pre">source:</span> <span class="pre">plot_…</span></code> names the <code class="docutils literal notranslate"><span class="pre">glidertest.plots</span></code> function that drew
-it, so the figure can be reproduced in a notebook.</p></li>
+<li><p>Under every figure, <code class="docutils literal notranslate"><span class="pre">source:</span> <span class="pre">…</span></code> names the glidertest plotter that drew it
+(<code class="docutils literal notranslate"><span class="pre">glidertest.plots</span></code>, or <code class="docutils literal notranslate"><span class="pre">glidertest.plots_qc</span></code> for the QC page), so the figure can be
+reproduced in a notebook.</p></li>
 <li><p>A diagnostic that could not be computed for this file says so in place, in a visible
 block; it is never silently dropped.</p></li>
 </ul>

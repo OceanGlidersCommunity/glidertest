@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; glidertest 0.1.1.dev50+gca2af2b8f documentation</title>
+  <title>Index &mdash; glidertest 0.1.1.dev51+g1bf686924 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=63814470"></script>
+      <script src="_static/documentation_options.js?v=cb191026"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -108,6 +108,7 @@
  | <a href="#P"><strong>P</strong></a>
  | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  
@@ -237,13 +238,20 @@
         <li><a href="glidertest.html#module-glidertest.og1_attrs">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     glidertest.plots
 
       <ul>
         <li><a href="glidertest.html#module-glidertest.plots">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    glidertest.plots_qc
+
+      <ul>
+        <li><a href="glidertest.html#module-glidertest.plots_qc">module</a>
 </li>
       </ul></li>
       <li>
@@ -268,6 +276,8 @@
 </li>
       </ul></li>
       <li><a href="glidertest.html#glidertest.og1_attrs.GLOBAL_ATTR_ORDER">GLOBAL_ATTR_ORDER (in module glidertest.og1_attrs)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.qc.gross_range_mask">gross_range_mask() (in module glidertest.qc)</a>
 </li>
       <li><a href="glidertest.html#glidertest.utilities.group_by_profiles">group_by_profiles() (in module glidertest.utilities)</a>
 </li>
@@ -327,6 +337,8 @@
 </li>
         <li><a href="glidertest.html#module-glidertest.plots">glidertest.plots</a>
 </li>
+        <li><a href="glidertest.html#module-glidertest.plots_qc">glidertest.plots_qc</a>
+</li>
         <li><a href="glidertest.html#module-glidertest.qc">glidertest.qc</a>
 </li>
         <li><a href="glidertest.html#module-glidertest.tools">glidertest.tools</a>
@@ -372,6 +384,14 @@
 </li>
       <li><a href="glidertest.html#glidertest.plots.plot_daynight_avg">plot_daynight_avg() (in module glidertest.plots)</a>
 </li>
+      <li><a href="glidertest.html#glidertest.plots_qc.plot_flag_profile">plot_flag_profile() (in module glidertest.plots_qc)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.plots_qc.plot_flat_change">plot_flat_change() (in module glidertest.plots_qc)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.plots_qc.plot_flat_excerpt">plot_flat_excerpt() (in module glidertest.plots_qc)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.plots_qc.plot_flat_runs">plot_flat_runs() (in module glidertest.plots_qc)</a>
+</li>
       <li><a href="glidertest.html#glidertest.plots.plot_glider_track">plot_glider_track() (in module glidertest.plots)</a>
 </li>
       <li><a href="glidertest.html#glidertest.plots.plot_global_range">plot_global_range() (in module glidertest.plots)</a>
@@ -400,7 +420,13 @@
 </li>
       <li><a href="glidertest.html#glidertest.plots.plot_section">plot_section() (in module glidertest.plots)</a>
 </li>
+      <li><a href="glidertest.html#glidertest.plots_qc.plot_spike_stat">plot_spike_stat() (in module glidertest.plots_qc)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.plots_qc.plot_test_hits">plot_test_hits() (in module glidertest.plots_qc)</a>
+</li>
       <li><a href="glidertest.html#glidertest.plots.plot_ts">plot_ts() (in module glidertest.plots)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.plots_qc.plot_ts_gross_range">plot_ts_gross_range() (in module glidertest.plots_qc)</a>
 </li>
       <li><a href="glidertest.html#glidertest.plots.plot_updown_bias">plot_updown_bias() (in module glidertest.plots)</a>
 </li>
@@ -426,6 +452,8 @@
 </li>
       <li><a href="glidertest.html#glidertest.qc.QC_FLAG_CATEGORIES">QC_FLAG_CATEGORIES (in module glidertest.qc)</a>
 </li>
+      <li><a href="glidertest.html#glidertest.plots_qc.QC_MARKER">QC_MARKER (in module glidertest.plots_qc)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="glidertest.html#glidertest.tools.quant_binavg">quant_binavg() (in module glidertest.tools)</a>
@@ -445,13 +473,29 @@
   </ul></td>
 </tr></table>
 
-<h2 id="T">T</h2>
+<h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="glidertest.html#glidertest.og1_attrs.Tier">Tier (in module glidertest.og1_attrs)</a>
+      <li><a href="glidertest.html#glidertest.qc.sample_tests">sample_tests() (in module glidertest.qc)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.qc.suggest_flat_line">suggest_flat_line() (in module glidertest.qc)</a>
+</li>
+      <li><a href="glidertest.html#glidertest.qc.suggest_gross_range">suggest_gross_range() (in module glidertest.qc)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.plots_qc.TEST_MARKER">TEST_MARKER (in module glidertest.plots_qc)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glidertest.html#glidertest.og1_attrs.Tier">Tier (in module glidertest.og1_attrs)</a>
+</li>
       <li><a href="glidertest.html#glidertest.interactive.ts_plot">ts_plot() (in module glidertest.interactive)</a>
 </li>
   </ul></td>

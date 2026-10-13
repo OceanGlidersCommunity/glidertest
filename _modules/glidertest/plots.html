@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>glidertest.plots &mdash; glidertest 0.1.1.dev50+gca2af2b8f documentation</title>
+  <title>glidertest.plots &mdash; glidertest 0.1.1.dev51+g1bf686924 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=63814470"></script>
+      <script src="../../_static/documentation_options.js?v=cb191026"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -135,6 +135,31 @@
 <span class="sd">        set ``_ACTIVE_STYLE`` to for the current build.</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">_ACTIVE_STYLE</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ax</span><span class="p">(</span><span class="n">width_in</span><span class="p">,</span> <span class="n">height_in</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(fig, ax)`` at ``(width_in, height_in)`` inches with constrained layout, or reuse *ax*.</span>
+
+<span class="sd">    The slot-aware figure-creation helper: a plotter born at the report slot width calls this on its</span>
+<span class="sd">    first line, so the figure is the right size from the start and nothing is rescaled afterwards.</span>
+<span class="sd">    Shared by :mod:`glidertest.plots_qc` and the home for the staged ``plots.py`` sizing refactor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    width_in, height_in : float</span>
+<span class="sd">        Figure width and height in inches.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        An existing axis to draw into; when given it is returned with its figure and no new figure</span>
+<span class="sd">        is made (so a plotter composes into a multi-panel layout).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</span>
+<span class="sd">        The figure and axis to draw into.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">(),</span> <span class="n">ax</span>
+    <span class="k">return</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">width_in</span><span class="p">,</span> <span class="n">height_in</span><span class="p">),</span> <span class="n">layout</span><span class="o">=</span><span class="s2">"constrained"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_show</span><span class="p">():</span>

@@ -1,0 +1,683 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>glidertest.plots_qc &mdash; glidertest 0.1.1.dev51+g1bf686924 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=cb191026"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            glidertest
+              <img src="../../_static/glider.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html">Glidertest demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html#1.-Load-dataset">1. Load dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html#2.-General-mission-overview">2. General mission overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html#3.-Sensors-data-overview">3. Sensors data overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo-output.html#CTD">CTD</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html">Example HTML report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli_reference.html">CLI reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reports.html">The HTML report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glidertest.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest/issues/new">Report a problem</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OG1 format manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">glidertest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">glidertest.plots_qc</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for glidertest.plots_qc</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""QC diagnostic plots: where glidertest's QC tests fire, and whether a test fits the sampling.</span>
+
+<span class="sd">These answer the two questions a flag count cannot: *where* the flagged samples fall (on the data,</span>
+<span class="sd">so a reader can tell outliers from a water mass or a dark count) and *why* a test fired — whether</span>
+<span class="sd">its thresholds suit the platform's sampling or the data are genuinely bad. They back the per-test</span>
+<span class="sd">sections of the ``qc.html`` report page; each is also callable in a notebook.</span>
+
+<span class="sd">Figures are born at the report slot width (``width_in``) under the active style, via</span>
+<span class="sd">:func:`glidertest.plots._ax`, so the report shows them at the width they were drawn at with no</span>
+<span class="sd">rescaling — see ``feat-qc-page-plan.md`` "Sizing". The flag arrays come from</span>
+<span class="sd">:func:`glidertest.qc.sample_tests` (one computation, the same the delivered-vs-glidertest matrix</span>
+<span class="sd">uses); pass them in via ``flags`` to avoid recomputing across the panels of one page.</span>
+
+<span class="sd">Original Author: Eleanor Frajka-Williams (glidertest).</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.dates</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mdates</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="kn">import</span> <span class="n">Rectangle</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">plots</span><span class="p">,</span> <span class="n">qc</span><span class="p">,</span> <span class="n">utilities</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.axes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Axes</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.figure</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">report_tokens</span>
+
+<span class="c1"># Flag-level colours — the matplotlib twin of base.html's --qc-good / --qc-suspect / --qc-fail, same</span>
+<span class="c1"># hex as the sibling packages use for QARTOD 1/3/4 (a test asserts they match the CSS).</span>
+<span class="n">QC_COLORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"#27ae60"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">"#f39c12"</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="s2">"#e74c3c"</span><span class="p">}</span>
+
+<span class="c1">#: Delivered-flag overlay markers (suspect/fail only), keyed by flag value — small "+" in the flag</span>
+<span class="c1">#: colour, rasterized so the overlay is cheap even at 10^6 samples.</span>
+<span class="n">QC_MARKER</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"+"</span><span class="p">,</span> <span class="s2">"color"</span><span class="p">:</span> <span class="n">QC_COLORS</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">"s"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s2">"linewidths"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span> <span class="s2">"zorder"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"rasterized"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="mi">4</span><span class="p">:</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"+"</span><span class="p">,</span> <span class="s2">"color"</span><span class="p">:</span> <span class="n">QC_COLORS</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="s2">"s"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s2">"linewidths"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span> <span class="s2">"zorder"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"rasterized"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># Per-*test* colours — Okabe–Ito (colour-blind safe), distinct from the flag-level QC_COLORS because</span>
+<span class="c1"># here the question is which test fired, not at what level.</span>
+<span class="n">TEST_COLORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"gross_range"</span><span class="p">:</span> <span class="s2">"#0072B2"</span><span class="p">,</span> <span class="s2">"spike"</span><span class="p">:</span> <span class="s2">"#E69F00"</span><span class="p">,</span> <span class="s2">"flat_line"</span><span class="p">:</span> <span class="s2">"#009E73"</span><span class="p">}</span>
+
+<span class="c1">#: Per-test hit markers for the "where it fires" overlay. A multi-sample flat run is drawn as a</span>
+<span class="c1">#: shaded span (an interval); a lone flat sample has no width, so it uses this square marker.</span>
+<span class="n">TEST_MARKER</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"gross_range"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"s"</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s2">"linewidths"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"zorder"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">"rasterized"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">"spike"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"^"</span><span class="p">,</span> <span class="s2">"s"</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span> <span class="s2">"linewidths"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"zorder"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">"rasterized"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="s2">"flat_line"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"s"</span><span class="p">,</span> <span class="s2">"s"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"linewidths"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"zorder"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">"rasterized"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1">#: Flat-line thresholds used when a variable has no ``flat_line_test`` entry in ``qc.configs`` (a</span>
+<span class="c1">#: safety fallback; the four report variables carry one). Seconds, seconds, tolerance.</span>
+<span class="n">_FLAT_FALLBACK</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span> <span class="s2">"tolerance"</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_flat_config</span><span class="p">(</span><span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the flat-line thresholds for *var* from ``qc.configs``, or the fallback."""</span>
+    <span class="k">return</span> <span class="n">qc</span><span class="o">.</span><span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"flat_line_test"</span><span class="p">,</span> <span class="n">_FLAT_FALLBACK</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_axis_label</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return ``"Label (units)"`` via :mod:`glidertest.utilities`, or just the label when no units."""</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">plotting_units</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">utilities</span><span class="o">.</span><span class="n">plotting_labels</span><span class="p">(</span><span class="n">var</span><span class="p">)</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">unit</span> <span class="k">else</span> <span class="n">utilities</span><span class="o">.</span><span class="n">plotting_labels</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_time_xaxis</span><span class="p">(</span><span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Give a datetime x-axis compact, non-overlapping labels (concise auto date formatter)."""</span>
+    <span class="n">loc</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">AutoDateLocator</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">mdates</span><span class="o">.</span><span class="n">ConciseDateFormatter</span><span class="p">(</span><span class="n">loc</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_flags</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the ``(gross, spike, flat)`` flag tuple — *flags* if given, else computed once."""</span>
+    <span class="k">return</span> <span class="n">flags</span> <span class="k">if</span> <span class="n">flags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">qc</span><span class="o">.</span><span class="n">sample_tests</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_runs</span><span class="p">(</span><span class="n">flags</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">time_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Return ``[(i_start, i_end, duration_s), ...]`` for each maximal run of flagged samples.</span>
+
+<span class="sd">    Flagged means suspect (3) or fail (4) only — flag 9 (missing) and 2 (not evaluated) are not flat.</span>
+<span class="sd">    Vectorised (run edges from one ``diff``), so it is cheap at glider record sizes.</span>
+<span class="sd">    """</span>
+    <span class="n">bad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">flags</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_elapsed_seconds</span><span class="p">(</span><span class="n">time_values</span><span class="p">)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">bad</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">))</span>
+    <span class="n">starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">edges</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">ends</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">edges</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">bad</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">starts</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">bad</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">ends</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">ends</span><span class="p">,</span> <span class="n">bad</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="nb">int</span><span class="p">(</span><span class="n">i0</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">i1</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="p">[</span><span class="n">i0</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i0</span><span class="p">,</span> <span class="n">i1</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">starts</span><span class="p">,</span> <span class="n">ends</span><span class="p">)]</span>
+
+
+<div class="viewcode-block" id="plot_test_hits">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots_qc.plot_test_hits">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_test_hits</span><span class="p">(</span>
+    <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">width_in</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">report_tokens</span><span class="o">.</span><span class="n">W_FULL</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Figure</span><span class="p">,</span> <span class="n">Axes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Plot *var* over the full record with glidertest's QC test hits overlaid — "where it fires".</span>
+
+<span class="sd">    Gross-range hits as ``×``, spike hits as ``▲`` (one colour per test), and flat-line runs as</span>
+<span class="sd">    shaded spans (a run is an interval). When the file carries ``&lt;var&gt;_QC``, the delivered suspect</span>
+<span class="sd">    and fail samples are overlaid as ``+`` in the flag colours. Only hits are drawn, so the overlay</span>
+<span class="sd">    is cheap even at 10^6 samples.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        An OG1 glider dataset.</span>
+<span class="sd">    var : str</span>
+<span class="sd">        The variable to plot (e.g. ``"TEMP"``).</span>
+<span class="sd">    flags : tuple, optional</span>
+<span class="sd">        The ``(gross, spike, flat)`` flag arrays from :func:`glidertest.qc.sample_tests`; computed on</span>
+<span class="sd">        demand when ``None`` (so a notebook call needs nothing extra; the report passes them in once).</span>
+<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_FULL`</span>
+<span class="sd">        Figure width in inches; the height is derived from it.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        Draw into this axis instead of creating a figure.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</span>
+<span class="sd">        The figure and axis drawn into.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams (glidertest).</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">plots</span><span class="o">.</span><span class="n">_style</span><span class="p">()):</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">_ax</span><span class="p">(</span><span class="n">width_in</span><span class="p">,</span> <span class="mf">0.45</span> <span class="o">*</span> <span class="n">width_in</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="c1"># Points, not a line: on OG1 files a non-CTD sensor (CHLA, DOXY, BBP700) is sampled on a</span>
+        <span class="c1"># different phase than the CTD, so its finite samples are isolated among NaNs and a line plot</span>
+        <span class="c1"># draws no segments at all. Markers show every finite value; dense TEMP/PSAL still read as a</span>
+        <span class="c1"># trace. Rasterized so the whole-record base layer stays one image, not 10^6 vector glyphs.</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">"."</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">"none"</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.55"</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rasterized</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">_gr</span><span class="p">,</span> <span class="n">spike</span><span class="p">,</span> <span class="n">flat</span> <span class="o">=</span> <span class="n">_flags</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
+        <span class="c1"># Gross range: the shared per-sample mask (qc.gross_range_mask) — the same one the diagnostics</span>
+        <span class="c1"># matrix counts — so the plotted × and the table count cannot diverge. Spike/flat are QARTOD flags.</span>
+        <span class="n">gross_hit</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">gross_range_mask</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+        <span class="c1"># Flat-line hits: a multi-sample run is an interval (shaded span, the background layer); a lone</span>
+        <span class="c1"># flagged sample (common when a sensor is sampled off-phase, so every finite value is isolated)</span>
+        <span class="c1"># has zero width, so it joins the marker overlays below instead of being an invisible span.</span>
+        <span class="n">runs</span> <span class="o">=</span> <span class="n">_runs</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="n">spans</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i0</span><span class="p">,</span> <span class="n">i1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i0</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">_d</span> <span class="ow">in</span> <span class="n">runs</span> <span class="k">if</span> <span class="n">i1</span> <span class="o">&gt;</span> <span class="n">i0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">i0</span><span class="p">,</span> <span class="n">i1</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spans</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axvspan</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">i0</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="n">i1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">TEST_COLORS</span><span class="p">[</span><span class="s2">"flat_line"</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                       <span class="n">label</span><span class="o">=</span><span class="s2">"flat line (run)"</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">lone</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">lone</span><span class="p">[[</span><span class="n">i0</span> <span class="k">for</span> <span class="n">i0</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">_d</span> <span class="ow">in</span> <span class="n">runs</span> <span class="k">if</span> <span class="n">i1</span> <span class="o">==</span> <span class="n">i0</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># Marker overlays, most-frequent first so a rarer test's symbols land on top and stay visible</span>
+        <span class="c1"># (e.g. a few spikes over a flood of flat-line hits).</span>
+        <span class="n">overlays</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">"gross range"</span><span class="p">,</span> <span class="n">gross_hit</span><span class="p">,</span> <span class="s2">"gross_range"</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"spike"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spike</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span> <span class="s2">"spike"</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"flat line (sample)"</span><span class="p">,</span> <span class="n">lone</span><span class="p">,</span> <span class="s2">"flat_line"</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">overlays</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+                           <span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">TEST_MARKER</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s2">"color"</span><span class="p">:</span> <span class="n">TEST_COLORS</span><span class="p">[</span><span class="n">key</span><span class="p">]})</span>
+
+        <span class="n">qc_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">_QC"</span>
+        <span class="k">if</span> <span class="n">qc_name</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+            <span class="n">dq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">qc_name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+                <span class="n">hit</span> <span class="o">=</span> <span class="n">dq</span> <span class="o">==</span> <span class="n">level</span>
+                <span class="k">if</span> <span class="n">hit</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">hit</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="n">hit</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"delivered: </span><span class="si">{</span><span class="s1">'suspect'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">level</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'fail'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                               <span class="o">**</span><span class="n">QC_MARKER</span><span class="p">[</span><span class="n">level</span><span class="p">])</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Time"</span><span class="p">)</span>
+        <span class="n">_time_xaxis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">_axis_label</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()[</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># no legend box when nothing was flagged</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"best"</span><span class="p">,</span> <span class="n">markerscale</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="plot_flag_profile">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots_qc.plot_flag_profile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_flag_profile</span><span class="p">(</span>
+    <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">width_in</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">report_tokens</span><span class="o">.</span><span class="n">W_HALF</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Figure</span><span class="p">,</span> <span class="n">Axes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Plot *var* against depth — a profile — with glidertest's QC hits overlaid, "where it fires".</span>
+
+<span class="sd">    Every finite sample is a small grey point at its (value, depth); gross-range, spike and flat-line</span>
+<span class="sd">    hits are overlaid in the per-test colours. The y-axis is depth (deepest at the bottom), so a reader</span>
+<span class="sd">    sees at what depth each flag falls — surface, a water mass, or the deep — which is what matters for</span>
+<span class="sd">    a depth-structured sensor (optics, oxygen). The base is grey, not value-coloured. Requires DEPTH.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        An OG1 glider dataset carrying DEPTH and *var*.</span>
+<span class="sd">    var : str</span>
+<span class="sd">        The variable whose QC hits to place against depth (e.g. ``"CHLA"``).</span>
+<span class="sd">    flags : tuple, optional</span>
+<span class="sd">        The ``(gross, spike, flat)`` flag arrays from :func:`glidertest.qc.sample_tests`; computed on</span>
+<span class="sd">        demand when ``None``.</span>
+<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">        Figure width in inches; the height is derived from it.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        Draw into this axis instead of creating a figure.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</span>
+<span class="sd">        The figure and axis drawn into.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams (glidertest).</span>
+<span class="sd">    """</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">_check_necessary_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="s2">"DEPTH"</span><span class="p">])</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">plots</span><span class="o">.</span><span class="n">_style</span><span class="p">()):</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">_ax</span><span class="p">(</span><span class="n">width_in</span><span class="p">,</span> <span class="mf">1.1</span> <span class="o">*</span> <span class="n">width_in</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">fin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">fin</span><span class="p">],</span> <span class="n">z</span><span class="p">[</span><span class="n">fin</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.7"</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rasterized</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">_gr</span><span class="p">,</span> <span class="n">spike</span><span class="p">,</span> <span class="n">flat</span> <span class="o">=</span> <span class="n">_flags</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
+        <span class="c1"># Shared gross-range mask (same one the diagnostics matrix counts), so the plotted × and the</span>
+        <span class="c1"># table count cannot diverge.</span>
+        <span class="n">gross_hit</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">gross_range_mask</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+        <span class="n">hits</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">"gross_range"</span><span class="p">,</span> <span class="n">gross_hit</span> <span class="o">&amp;</span> <span class="n">fin</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"spike"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spike</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">fin</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"flat_line"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">flat</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">fin</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="c1"># Draw the most-frequent test first so a rarer test's symbols land on top and stay visible</span>
+        <span class="c1"># (e.g. a handful of spikes over a flood of flat-line hits).</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hits</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">nm</span><span class="p">:</span> <span class="n">nm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">m</span><span class="p">],</span> <span class="n">z</span><span class="p">[</span><span class="n">m</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">),</span>
+                           <span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">TEST_MARKER</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="s2">"color"</span><span class="p">:</span> <span class="n">TEST_COLORS</span><span class="p">[</span><span class="n">name</span><span class="p">]})</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">_axis_label</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">_axis_label</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">"DEPTH"</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()[</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># no legend box when nothing was flagged</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"best"</span><span class="p">,</span> <span class="n">markerscale</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="plot_ts_gross_range">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots_qc.plot_ts_gross_range">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_ts_gross_range</span><span class="p">(</span>
+    <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">width_in</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">report_tokens</span><span class="o">.</span><span class="n">W_HALF</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Figure</span><span class="p">,</span> <span class="n">Axes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Plot the T–S cloud with the TEMP×PSAL gross-range suspect and fail spans as nested rectangles.</span>
+
+<span class="sd">    One glance says whether the limits are regional (the whole cloud hugs an edge) or the points</span>
+<span class="sd">    outside are genuine outliers. Requires TEMP and PSAL.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        An OG1 glider dataset carrying TEMP and PSAL.</span>
+<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">        Figure width in inches.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        Draw into this axis instead of creating a figure.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</span>
+<span class="sd">        The figure and axis drawn into.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams (glidertest).</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">plots</span><span class="o">.</span><span class="n">_style</span><span class="p">()):</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">_ax</span><span class="p">(</span><span class="n">width_in</span><span class="p">,</span> <span class="mf">0.9</span> <span class="o">*</span> <span class="n">width_in</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s2">"PSAL"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s2">"TEMP"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.6"</span><span class="p">,</span> <span class="n">rasterized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">span_key</span><span class="p">,</span> <span class="n">flag</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"fail_span"</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="s2">"suspect_span"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)):</span>
+            <span class="n">sx</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">configs</span><span class="p">[</span><span class="s2">"PSAL"</span><span class="p">][</span><span class="s2">"gross_range_test"</span><span class="p">][</span><span class="n">span_key</span><span class="p">]</span>
+            <span class="n">ty</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">configs</span><span class="p">[</span><span class="s2">"TEMP"</span><span class="p">][</span><span class="s2">"gross_range_test"</span><span class="p">][</span><span class="n">span_key</span><span class="p">]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">Rectangle</span><span class="p">((</span><span class="n">sx</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ty</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">sx</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">sx</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ty</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ty</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="n">QC_COLORS</span><span class="p">[</span><span class="n">flag</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                                   <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'fail'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'suspect'</span><span class="si">}</span><span class="s2"> span"</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">_axis_label</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">"PSAL"</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">_axis_label</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">"TEMP"</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"best"</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="plot_spike_stat">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots_qc.plot_spike_stat">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_spike_stat</span><span class="p">(</span>
+    <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">width_in</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">report_tokens</span><span class="o">.</span><span class="n">W_HALF</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Figure</span><span class="p">,</span> <span class="n">Axes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Plot the spike statistic (|value − neighbour average|) as a histogram with the thresholds.</span>
+
+<span class="sd">    The suspect and fail thresholds are drawn as vertical lines; if the bulk of the distribution sits</span>
+<span class="sd">    past a line the threshold is wrong for this platform, if only a tail does the test is doing its</span>
+<span class="sd">    job. The median sampling interval is printed, since a spike threshold assumes a sampling interval.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        An OG1 glider dataset.</span>
+<span class="sd">    var : str</span>
+<span class="sd">        The variable to assess.</span>
+<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">        Figure width in inches.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        Draw into this axis instead of creating a figure.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</span>
+<span class="sd">        The figure and axis drawn into.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams (glidertest).</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">plots</span><span class="o">.</span><span class="n">_style</span><span class="p">()):</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">_ax</span><span class="p">(</span><span class="n">width_in</span><span class="p">,</span> <span class="mf">0.6</span> <span class="o">*</span> <span class="n">width_in</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">stat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">:]))</span>
+        <span class="n">stat</span> <span class="o">=</span> <span class="n">stat</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">stat</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.6"</span><span class="p">)</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">configs</span><span class="p">[</span><span class="n">var</span><span class="p">][</span><span class="s2">"spike_test"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">flag</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"suspect_threshold"</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="s2">"fail_threshold"</span><span class="p">,</span> <span class="mi">4</span><span class="p">)):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">cfg</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">QC_COLORS</span><span class="p">[</span><span class="n">flag</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span>
+                       <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'suspect'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'fail'</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">cfg</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">"log"</span><span class="p">)</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">plotting_units</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">"spike statistic |Δ</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">| (</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">unit</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"spike statistic |Δ</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">|"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"count"</span><span class="p">)</span>
+        <span class="c1"># The variable's own sampling interval (finite samples), falling back to the whole record if</span>
+        <span class="c1"># the variable has none; a spike threshold is read against the sensor's real cadence.</span>
+        <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_median_sampling_interval</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">finite</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_median_sampling_interval</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"median sampling interval </span><span class="si">{</span><span class="n">dt</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> s"</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">"right"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"best"</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="plot_flat_runs">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots_qc.plot_flat_runs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_flat_runs</span><span class="p">(</span>
+    <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">width_in</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">report_tokens</span><span class="o">.</span><span class="n">W_HALF</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Figure</span><span class="p">,</span> <span class="n">Axes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Plot flat-run durations as a histogram with the test windows and the median sampling interval.</span>
+
+<span class="sd">    This is the plot that shows the flat-line test is misconfigured: if the suspect and fail windows</span>
+<span class="sd">    sit *left* of the median sampling interval, every sample is a "flat run" by construction and the</span>
+<span class="sd">    counts are meaningless.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        An OG1 glider dataset.</span>
+<span class="sd">    var : str</span>
+<span class="sd">        The variable to assess.</span>
+<span class="sd">    flags : tuple, optional</span>
+<span class="sd">        The ``(gross, spike, flat)`` flag arrays; computed on demand when ``None``.</span>
+<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">        Figure width in inches.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        Draw into this axis instead of creating a figure.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</span>
+<span class="sd">        The figure and axis drawn into.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams (glidertest).</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">plots</span><span class="o">.</span><span class="n">_style</span><span class="p">()):</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">_ax</span><span class="p">(</span><span class="n">width_in</span><span class="p">,</span> <span class="mf">0.6</span> <span class="o">*</span> <span class="n">width_in</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="n">_gr</span><span class="p">,</span> <span class="n">_spike</span><span class="p">,</span> <span class="n">flat</span> <span class="o">=</span> <span class="n">_flags</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
+        <span class="c1"># The variable's own sampling interval (finite samples), not the whole record's: an off-phase</span>
+        <span class="c1"># sensor's windows must be judged against its real cadence (CHLA finite only every ~Nth cycle).</span>
+        <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_median_sampling_interval</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">finite</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dt</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Degenerate interval (duplicate or missing timestamps): fall back to 1 s so the floored</span>
+            <span class="c1"># durations and the log-axis bounds stay positive (log10(0) would break the axis).</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="c1"># Durations span seconds to hours and a single-sample run is 0 s; floor at one sampling interval and</span>
+        <span class="c1"># use a log axis so the bulk and the 1–3 s window lines are both legible.</span>
+        <span class="n">durations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">dur</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span> <span class="k">for</span> <span class="n">_i0</span><span class="p">,</span> <span class="n">_i1</span><span class="p">,</span> <span class="n">dur</span> <span class="ow">in</span> <span class="n">_runs</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="p">)])</span>
+        <span class="n">fl</span> <span class="o">=</span> <span class="n">_flat_config</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        <span class="c1"># Range spans every mark on the axis — the two config windows, the sampling interval and the</span>
+        <span class="c1"># run durations — so a window line never falls off the edge when the interval is coarse.</span>
+        <span class="n">marks</span> <span class="o">=</span> <span class="p">[</span><span class="n">dt</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">fl</span><span class="p">[</span><span class="s2">"suspect_threshold"</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">fl</span><span class="p">[</span><span class="s2">"fail_threshold"</span><span class="p">])]</span>
+        <span class="k">if</span> <span class="n">durations</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">marks</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">durations</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="n">durations</span><span class="o">.</span><span class="n">max</span><span class="p">())]</span>
+        <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">marks</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">marks</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.2</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s2">"log"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">durations</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">durations</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">lo</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">hi</span><span class="p">),</span> <span class="mi">40</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.6"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">lo</span><span class="p">,</span> <span class="n">hi</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">fl</span><span class="p">[</span><span class="s2">"suspect_threshold"</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">QC_COLORS</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span>
+                   <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"suspect window (</span><span class="si">{</span><span class="n">fl</span><span class="p">[</span><span class="s1">'suspect_threshold'</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> s)"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">fl</span><span class="p">[</span><span class="s2">"fail_threshold"</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">QC_COLORS</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span>
+                   <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"fail window (</span><span class="si">{</span><span class="n">fl</span><span class="p">[</span><span class="s1">'fail_threshold'</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> s)"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"k"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"median sampling interval (</span><span class="si">{</span><span class="n">dt</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> s)"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"flat-run duration (s)"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"count"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"best"</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="plot_flat_change">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots_qc.plot_flat_change">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_flat_change</span><span class="p">(</span>
+    <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">width_in</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">report_tokens</span><span class="o">.</span><span class="n">W_HALF</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Figure</span><span class="p">,</span> <span class="n">Axes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Histogram the start-to-end value change of each multi-sample flat run, against the tolerance.</span>
+
+<span class="sd">    The flat-line test is meant to catch a *stuck* sensor — a run whose values are near-identical, so</span>
+<span class="sd">    its start-to-end change falls within the test tolerance. A run whose total change far exceeds the</span>
+<span class="sd">    tolerance is a slowly-varying real signal the test caught only because its short *window* (not the</span>
+<span class="sd">    whole run) stayed within tolerance — a sign the window is too short for the sampling, not a stuck</span>
+<span class="sd">    sensor. The count split at the tolerance line is the guess at how many flagged runs are genuinely</span>
+<span class="sd">    flat: left of the line, stuck-like; right of it, the data moved.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        An OG1 glider dataset.</span>
+<span class="sd">    var : str</span>
+<span class="sd">        The variable to assess.</span>
+<span class="sd">    flags : tuple, optional</span>
+<span class="sd">        The ``(gross, spike, flat)`` flag arrays; computed on demand when ``None``.</span>
+<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">        Figure width in inches.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        Draw into this axis instead of creating a figure.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</span>
+<span class="sd">        The figure and axis drawn into.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        When *var* has no multi-sample flat run (e.g. an off-phase sensor whose flat flags are all</span>
+<span class="sd">        isolated single samples), so there is no start-to-end change to measure.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams (glidertest).</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">plots</span><span class="o">.</span><span class="n">_style</span><span class="p">()):</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">_ax</span><span class="p">(</span><span class="n">width_in</span><span class="p">,</span> <span class="mf">0.6</span> <span class="o">*</span> <span class="n">width_in</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="n">_gr</span><span class="p">,</span> <span class="n">_spike</span><span class="p">,</span> <span class="n">flat</span> <span class="o">=</span> <span class="n">_flags</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">runs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i0</span><span class="p">,</span> <span class="n">i1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i0</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">_d</span> <span class="ow">in</span> <span class="n">_runs</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">if</span> <span class="n">i1</span> <span class="o">&gt;</span> <span class="n">i0</span><span class="p">]</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span> <span class="o">-</span> <span class="n">v</span><span class="p">[</span><span class="n">i0</span><span class="p">])</span> <span class="k">for</span> <span class="n">i0</span><span class="p">,</span> <span class="n">i1</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">])</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="n">changes</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">changes</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">changes</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">: no multi-sample flat run (flat flags are all isolated samples)"</span><span class="p">)</span>
+        <span class="n">tol</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">_flat_config</span><span class="p">(</span><span class="n">var</span><span class="p">)[</span><span class="s2">"tolerance"</span><span class="p">])</span>
+        <span class="n">n_moved</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">changes</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="n">pct</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">n_moved</span> <span class="o">/</span> <span class="n">changes</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">changes</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.6"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"flat runs (n=</span><span class="si">{</span><span class="n">changes</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">tol</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">QC_COLORS</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"tolerance (</span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">plotting_units</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">"flat-run start-to-end change (</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">unit</span> <span class="k">else</span> <span class="s2">"flat-run start-to-end change"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"count"</span><span class="p">)</span>
+        <span class="c1"># The fraction of flagged runs whose data moved more than the tolerance — the "stuck sensor vs</span>
+        <span class="c1"># slow signal" guess: a high value means the flat test is firing on data that is not flat.</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pct</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">% above tolerance"</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"best"</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="plot_flat_excerpt">
+<a class="viewcode-back" href="../../glidertest.html#glidertest.plots_qc.plot_flat_excerpt">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_flat_excerpt</span><span class="p">(</span>
+    <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">width_in</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">report_tokens</span><span class="o">.</span><span class="n">W_HALF</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Figure</span><span class="p">,</span> <span class="n">Axes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Plot a zoom around the longest flagged flat run: samples as dots and a ±tolerance band.</span>
+
+<span class="sd">    Shows what the test called "flat" — often two samples a tolerance apart in genuinely stable</span>
+<span class="sd">    water or low signal, not a stuck sensor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xarray.Dataset</span>
+<span class="sd">        An OG1 glider dataset.</span>
+<span class="sd">    var : str</span>
+<span class="sd">        The variable to assess.</span>
+<span class="sd">    flags : tuple, optional</span>
+<span class="sd">        The ``(gross, spike, flat)`` flag arrays; computed on demand when ``None``.</span>
+<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">        Figure width in inches.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        Draw into this axis instead of creating a figure.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</span>
+<span class="sd">        The figure and axis drawn into.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Original Author: Eleanor Frajka-Williams (glidertest).</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="n">plots</span><span class="o">.</span><span class="n">_style</span><span class="p">()):</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">_ax</span><span class="p">(</span><span class="n">width_in</span><span class="p">,</span> <span class="mf">0.45</span> <span class="o">*</span> <span class="n">width_in</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="n">_gr</span><span class="p">,</span> <span class="n">_spike</span><span class="p">,</span> <span class="n">flat</span> <span class="o">=</span> <span class="n">_flags</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
+        <span class="n">runs</span> <span class="o">=</span> <span class="n">_runs</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">runs</span><span class="p">:</span>
+            <span class="n">i0</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">_dur</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">runs</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="p">(</span><span class="n">i1</span> <span class="o">-</span> <span class="n">i0</span><span class="p">))</span>
+            <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i0</span> <span class="o">-</span> <span class="n">pad</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">i1</span> <span class="o">+</span> <span class="n">pad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">hi</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">hi</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.5"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">"."</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span><span class="n">i1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span><span class="n">i1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">QC_COLORS</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"flagged run"</span><span class="p">)</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="n">_flat_config</span><span class="p">(</span><span class="n">var</span><span class="p">)[</span><span class="s2">"tolerance"</span><span class="p">]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axhspan</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">i0</span><span class="p">]</span> <span class="o">-</span> <span class="n">tol</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="n">i0</span><span class="p">]</span> <span class="o">+</span> <span class="n">tol</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">QC_COLORS</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                       <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"±tolerance (</span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"best"</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mf">0.85</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Time"</span><span class="p">)</span>
+        <span class="n">_time_xaxis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">_axis_label</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">var</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo, Till Moritz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

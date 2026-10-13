@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API reference &mdash; glidertest 0.1.1.dev50+gca2af2b8f documentation</title>
+  <title>API reference &mdash; glidertest 0.1.1.dev51+g1bf686924 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=63814470"></script>
+      <script src="_static/documentation_options.js?v=cb191026"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -109,15 +109,28 @@
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.plots.plot_updown_bias"><code class="docutils literal notranslate"><span class="pre">plot_updown_bias()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.plots.plot_vertical_speeds_with_histograms"><code class="docutils literal notranslate"><span class="pre">plot_vertical_speeds_with_histograms()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.plots.process_optics_assess"><code class="docutils literal notranslate"><span class="pre">process_optics_assess()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.plots_qc.QC_MARKER"><code class="docutils literal notranslate"><span class="pre">QC_MARKER</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.plots_qc.TEST_MARKER"><code class="docutils literal notranslate"><span class="pre">TEST_MARKER</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.plots_qc.plot_flag_profile"><code class="docutils literal notranslate"><span class="pre">plot_flag_profile()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.plots_qc.plot_flat_change"><code class="docutils literal notranslate"><span class="pre">plot_flat_change()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.plots_qc.plot_flat_excerpt"><code class="docutils literal notranslate"><span class="pre">plot_flat_excerpt()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.plots_qc.plot_flat_runs"><code class="docutils literal notranslate"><span class="pre">plot_flat_runs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.plots_qc.plot_spike_stat"><code class="docutils literal notranslate"><span class="pre">plot_spike_stat()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.plots_qc.plot_test_hits"><code class="docutils literal notranslate"><span class="pre">plot_test_hits()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.plots_qc.plot_ts_gross_range"><code class="docutils literal notranslate"><span class="pre">plot_ts_gross_range()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.QC_FLAG_CATEGORIES"><code class="docutils literal notranslate"><span class="pre">QC_FLAG_CATEGORIES</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.fill_str"><code class="docutils literal notranslate"><span class="pre">fill_str()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.flag_counts"><code class="docutils literal notranslate"><span class="pre">flag_counts()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.flag_labels"><code class="docutils literal notranslate"><span class="pre">flag_labels()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.flag_scale_mismatch"><code class="docutils literal notranslate"><span class="pre">flag_scale_mismatch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.gross_range_mask"><code class="docutils literal notranslate"><span class="pre">gross_range_mask()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.hysteresis_verdict"><code class="docutils literal notranslate"><span class="pre">hysteresis_verdict()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.phrase_duration_check"><code class="docutils literal notranslate"><span class="pre">phrase_duration_check()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.phrase_numberprof_check"><code class="docutils literal notranslate"><span class="pre">phrase_numberprof_check()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.qc_checks"><code class="docutils literal notranslate"><span class="pre">qc_checks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.sample_tests"><code class="docutils literal notranslate"><span class="pre">sample_tests()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.suggest_flat_line"><code class="docutils literal notranslate"><span class="pre">suggest_flat_line()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.suggest_gross_range"><code class="docutils literal notranslate"><span class="pre">suggest_gross_range()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.og1_attrs.ATTR_GROUPS"><code class="docutils literal notranslate"><span class="pre">ATTR_GROUPS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.og1_attrs.GLOBAL_ATTR_ORDER"><code class="docutils literal notranslate"><span class="pre">GLOBAL_ATTR_ORDER</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.og1_attrs.MANDATORY_GLOBALS"><code class="docutils literal notranslate"><span class="pre">MANDATORY_GLOBALS</span></code></a></li>
@@ -1394,6 +1407,233 @@ Data should not be gridded.</p></li>
 <p>Original Author: Chiara Monforte</p>
 </dd></dl>
 
+<p id="module-glidertest.plots_qc">QC diagnostic plots: where glidertest’s QC tests fire, and whether a test fits the sampling.</p>
+<p>These answer the two questions a flag count cannot: <em>where</em> the flagged samples fall (on the data,
+so a reader can tell outliers from a water mass or a dark count) and <em>why</em> a test fired — whether
+its thresholds suit the platform’s sampling or the data are genuinely bad. They back the per-test
+sections of the <code class="docutils literal notranslate"><span class="pre">qc.html</span></code> report page; each is also callable in a notebook.</p>
+<p>Figures are born at the report slot width (<code class="docutils literal notranslate"><span class="pre">width_in</span></code>) under the active style, via
+<code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.plots._ax()</span></code>, so the report shows them at the width they were drawn at with no
+rescaling — see <code class="docutils literal notranslate"><span class="pre">feat-qc-page-plan.md</span></code> “Sizing”. The flag arrays come from
+<a class="reference internal" href="#glidertest.qc.sample_tests" title="glidertest.qc.sample_tests"><code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.qc.sample_tests()</span></code></a> (one computation, the same the delivered-vs-glidertest matrix
+uses); pass them in via <code class="docutils literal notranslate"><span class="pre">flags</span></code> to avoid recomputing across the panels of one page.</p>
+<p>Original Author: Eleanor Frajka-Williams (glidertest).</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="glidertest.plots_qc.QC_MARKER">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">QC_MARKER</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{3:</span> <span class="pre">{'color':</span> <span class="pre">'#f39c12',</span> <span class="pre">'linewidths':</span> <span class="pre">0.8,</span> <span class="pre">'marker':</span> <span class="pre">'+',</span> <span class="pre">'rasterized':</span> <span class="pre">True,</span> <span class="pre">'s':</span> <span class="pre">15,</span> <span class="pre">'zorder':</span> <span class="pre">3},</span> <span class="pre">4:</span> <span class="pre">{'color':</span> <span class="pre">'#e74c3c',</span> <span class="pre">'linewidths':</span> <span class="pre">0.8,</span> <span class="pre">'marker':</span> <span class="pre">'+',</span> <span class="pre">'rasterized':</span> <span class="pre">True,</span> <span class="pre">'s':</span> <span class="pre">15,</span> <span class="pre">'zorder':</span> <span class="pre">4}}</span></em><a class="headerlink" href="#glidertest.plots_qc.QC_MARKER" title="Link to this definition"></a></dt>
+<dd><p>Delivered-flag overlay markers (suspect/fail only), keyed by flag value — small “+” in the flag
+colour, rasterized so the overlay is cheap even at 10^6 samples.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="glidertest.plots_qc.TEST_MARKER">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">TEST_MARKER</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'flat_line':</span> <span class="pre">{'linewidths':</span> <span class="pre">0.0,</span> <span class="pre">'marker':</span> <span class="pre">'s',</span> <span class="pre">'rasterized':</span> <span class="pre">True,</span> <span class="pre">'s':</span> <span class="pre">10,</span> <span class="pre">'zorder':</span> <span class="pre">5},</span> <span class="pre">'gross_range':</span> <span class="pre">{'linewidths':</span> <span class="pre">1.0,</span> <span class="pre">'marker':</span> <span class="pre">'x',</span> <span class="pre">'rasterized':</span> <span class="pre">True,</span> <span class="pre">'s':</span> <span class="pre">20,</span> <span class="pre">'zorder':</span> <span class="pre">5},</span> <span class="pre">'spike':</span> <span class="pre">{'linewidths':</span> <span class="pre">0.0,</span> <span class="pre">'marker':</span> <span class="pre">'^',</span> <span class="pre">'rasterized':</span> <span class="pre">True,</span> <span class="pre">'s':</span> <span class="pre">18,</span> <span class="pre">'zorder':</span> <span class="pre">5}}</span></em><a class="headerlink" href="#glidertest.plots_qc.TEST_MARKER" title="Link to this definition"></a></dt>
+<dd><p>Per-test hit markers for the “where it fires” overlay. A multi-sample flat run is drawn as a
+shaded span (an interval); a lone flat sample has no width, so it uses this square marker.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots_qc.plot_flag_profile">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">plot_flag_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">xr.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Axes</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/glidertest/plots_qc.html#plot_flag_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots_qc.plot_flag_profile" title="Link to this definition"></a></dt>
+<dd><p>Plot <em>var</em> against depth — a profile — with glidertest’s QC hits overlaid, “where it fires”.</p>
+<p>Every finite sample is a small grey point at its (value, depth); gross-range, spike and flat-line
+hits are overlaid in the per-test colours. The y-axis is depth (deepest at the bottom), so a reader
+sees at what depth each flag falls — surface, a water mass, or the deep — which is what matters for
+a depth-structured sensor (optics, oxygen). The base is grey, not value-coloured. Requires DEPTH.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – An OG1 glider dataset carrying DEPTH and <em>var</em>.</p></li>
+<li><p><strong>var</strong> (<em>str</em>) – The variable whose QC hits to place against depth (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;CHLA&quot;</span></code>).</p></li>
+<li><p><strong>flags</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The <code class="docutils literal notranslate"><span class="pre">(gross,</span> <span class="pre">spike,</span> <span class="pre">flat)</span></code> flag arrays from <a class="reference internal" href="#glidertest.qc.sample_tests" title="glidertest.qc.sample_tests"><code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.qc.sample_tests()</span></code></a>; computed on
+demand when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches; the height is derived from it.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axis drawn into.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams (glidertest).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots_qc.plot_flat_change">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">plot_flat_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">xr.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Axes</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/glidertest/plots_qc.html#plot_flat_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots_qc.plot_flat_change" title="Link to this definition"></a></dt>
+<dd><p>Histogram the start-to-end value change of each multi-sample flat run, against the tolerance.</p>
+<p>The flat-line test is meant to catch a <em>stuck</em> sensor — a run whose values are near-identical, so
+its start-to-end change falls within the test tolerance. A run whose total change far exceeds the
+tolerance is a slowly-varying real signal the test caught only because its short <em>window</em> (not the
+whole run) stayed within tolerance — a sign the window is too short for the sampling, not a stuck
+sensor. The count split at the tolerance line is the guess at how many flagged runs are genuinely
+flat: left of the line, stuck-like; right of it, the data moved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – An OG1 glider dataset.</p></li>
+<li><p><strong>var</strong> (<em>str</em>) – The variable to assess.</p></li>
+<li><p><strong>flags</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The <code class="docutils literal notranslate"><span class="pre">(gross,</span> <span class="pre">spike,</span> <span class="pre">flat)</span></code> flag arrays; computed on demand when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axis drawn into.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – When <em>var</em> has no multi-sample flat run (e.g. an off-phase sensor whose flat flags are all
+    isolated single samples), so there is no start-to-end change to measure.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams (glidertest).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots_qc.plot_flat_excerpt">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">plot_flat_excerpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">xr.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Axes</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/glidertest/plots_qc.html#plot_flat_excerpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots_qc.plot_flat_excerpt" title="Link to this definition"></a></dt>
+<dd><p>Plot a zoom around the longest flagged flat run: samples as dots and a ±tolerance band.</p>
+<p>Shows what the test called “flat” — often two samples a tolerance apart in genuinely stable
+water or low signal, not a stuck sensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – An OG1 glider dataset.</p></li>
+<li><p><strong>var</strong> (<em>str</em>) – The variable to assess.</p></li>
+<li><p><strong>flags</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The <code class="docutils literal notranslate"><span class="pre">(gross,</span> <span class="pre">spike,</span> <span class="pre">flat)</span></code> flag arrays; computed on demand when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axis drawn into.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams (glidertest).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots_qc.plot_flat_runs">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">plot_flat_runs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">xr.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Axes</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/glidertest/plots_qc.html#plot_flat_runs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots_qc.plot_flat_runs" title="Link to this definition"></a></dt>
+<dd><p>Plot flat-run durations as a histogram with the test windows and the median sampling interval.</p>
+<p>This is the plot that shows the flat-line test is misconfigured: if the suspect and fail windows
+sit <em>left</em> of the median sampling interval, every sample is a “flat run” by construction and the
+counts are meaningless.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – An OG1 glider dataset.</p></li>
+<li><p><strong>var</strong> (<em>str</em>) – The variable to assess.</p></li>
+<li><p><strong>flags</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The <code class="docutils literal notranslate"><span class="pre">(gross,</span> <span class="pre">spike,</span> <span class="pre">flat)</span></code> flag arrays; computed on demand when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axis drawn into.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams (glidertest).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots_qc.plot_spike_stat">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">plot_spike_stat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">xr.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Axes</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/glidertest/plots_qc.html#plot_spike_stat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots_qc.plot_spike_stat" title="Link to this definition"></a></dt>
+<dd><p>Plot the spike statistic (<a href="#id5"><span class="problematic" id="id6">|value − neighbour average|</span></a>) as a histogram with the thresholds.</p>
+<p>The suspect and fail thresholds are drawn as vertical lines; if the bulk of the distribution sits
+past a line the threshold is wrong for this platform, if only a tail does the test is doing its
+job. The median sampling interval is printed, since a spike threshold assumes a sampling interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – An OG1 glider dataset.</p></li>
+<li><p><strong>var</strong> (<em>str</em>) – The variable to assess.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axis drawn into.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams (glidertest).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots_qc.plot_test_hits">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">plot_test_hits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">xr.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">9.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Axes</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/glidertest/plots_qc.html#plot_test_hits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots_qc.plot_test_hits" title="Link to this definition"></a></dt>
+<dd><p>Plot <em>var</em> over the full record with glidertest’s QC test hits overlaid — “where it fires”.</p>
+<p>Gross-range hits as <code class="docutils literal notranslate"><span class="pre">×</span></code>, spike hits as <code class="docutils literal notranslate"><span class="pre">▲</span></code> (one colour per test), and flat-line runs as
+shaded spans (a run is an interval). When the file carries <code class="docutils literal notranslate"><span class="pre">&lt;var&gt;_QC</span></code>, the delivered suspect
+and fail samples are overlaid as <code class="docutils literal notranslate"><span class="pre">+</span></code> in the flag colours. Only hits are drawn, so the overlay
+is cheap even at 10^6 samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – An OG1 glider dataset.</p></li>
+<li><p><strong>var</strong> (<em>str</em>) – The variable to plot (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;TEMP&quot;</span></code>).</p></li>
+<li><p><strong>flags</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The <code class="docutils literal notranslate"><span class="pre">(gross,</span> <span class="pre">spike,</span> <span class="pre">flat)</span></code> flag arrays from <a class="reference internal" href="#glidertest.qc.sample_tests" title="glidertest.qc.sample_tests"><code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.qc.sample_tests()</span></code></a>; computed on
+demand when <code class="docutils literal notranslate"><span class="pre">None</span></code> (so a notebook call needs nothing extra; the report passes them in once).</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_FULL</span></code>) – Figure width in inches; the height is derived from it.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axis drawn into.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams (glidertest).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.plots_qc.plot_ts_gross_range">
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">plot_ts_gross_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">xr.Dataset</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Axes</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/glidertest/plots_qc.html#plot_ts_gross_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots_qc.plot_ts_gross_range" title="Link to this definition"></a></dt>
+<dd><p>Plot the T–S cloud with the TEMP×PSAL gross-range suspect and fail spans as nested rectangles.</p>
+<p>One glance says whether the limits are regional (the whole cloud hugs an edge) or the points
+outside are genuine outliers. Requires TEMP and PSAL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – An OG1 glider dataset carrying TEMP and PSAL.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axis drawn into.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams (glidertest).</p>
+</dd></dl>
+
 <p id="module-glidertest.qc">Quality-control checks and thresholds, independent of any output format.</p>
 <p>Holds the QARTOD threshold <code class="docutils literal notranslate"><span class="pre">configs</span></code>, the on-the-fly check runner <code class="docutils literal notranslate"><span class="pre">qc_checks</span></code>, the verdict
 helpers (<code class="docutils literal notranslate"><span class="pre">fill_str</span></code>, <code class="docutils literal notranslate"><span class="pre">hysteresis_verdict</span></code>), the profile sentences (<code class="docutils literal notranslate"><span class="pre">phrase_*_check</span></code>), and the
@@ -1517,6 +1757,32 @@ or one/both attributes absent).</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="glidertest.qc.gross_range_mask">
+<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">gross_range_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TEMP'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#gross_range_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.gross_range_mask" title="Link to this definition"></a></dt>
+<dd><p>Return a boolean per-sample mask of <em>var</em> values outside the gross-range suspect span.</p>
+<p>The one definition of “out of range” shared by the diagnostics-matrix count and the QC plots, so
+the table and the plotted hits cannot diverge. NaN samples are not flagged (the comparison is
+False for NaN). Returns an all-False mask when <em>var</em> has no <code class="docutils literal notranslate"><span class="pre">gross_range_test</span></code> suspect span in
+<code class="xref py py-data docutils literal notranslate"><span class="pre">configs</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing <em>var</em>.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='TEMP'</em>) – Variable to test.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Boolean mask, True where the value is below the span minimum or above its maximum.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="glidertest.qc.hysteresis_verdict">
 <span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">hysteresis_verdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">err</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pct_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#hysteresis_verdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.hysteresis_verdict" title="Link to this definition"></a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">(n_over,</span> <span class="pre">flagged)</span></code> for a hysteresis dive-climb error array.</p>
@@ -1612,6 +1878,96 @@ We use functions from glidertest.tools as well as ioos qartod.</p>
 <li><p>Thresholds for QC tests are taken from the global <cite>configs</cite> dictionary.</p></li>
 </ul>
 <p>Original Author: Chiara  Monforte</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.qc.sample_tests">
+<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">sample_tests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TEMP'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#sample_tests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.sample_tests" title="Link to this definition"></a></dt>
+<dd><p>Run the three sample-wise QARTOD tests (gross range, spike, flat line) on <em>var</em>.</p>
+<p>Split out of <a class="reference internal" href="#glidertest.qc.qc_checks" title="glidertest.qc.qc_checks"><code class="xref py py-func docutils literal notranslate"><span class="pre">qc_checks()</span></code></a> (which adds the hysteresis statistics) so the report’s QC page
+plots and the delivered-vs-glidertest matrix share one computation and one set of thresholds.
+All thresholds come from the global <code class="xref py py-data docutils literal notranslate"><span class="pre">configs</span></code> dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing <em>var</em> and <code class="docutils literal notranslate"><span class="pre">TIME</span></code>.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='TEMP'</em>) – Variable to test.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>gr</strong> (<em>numpy.ndarray</em>) – Gross-range test flags.</p></li>
+<li><p><strong>spike</strong> (<em>numpy.ndarray</em>) – Spike test flags.</p></li>
+<li><p><strong>flat</strong> (<em>numpy.ndarray</em>) – Flat-line test flags.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Chiara Monforte</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.qc.suggest_flat_line">
+<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">suggest_flat_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suspect_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fail_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#suggest_flat_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.suggest_flat_line" title="Link to this definition"></a></dt>
+<dd><p>Suggest flat-line windows (seconds) from the sampling interval of <em>var</em> (or the whole record).</p>
+<p>A flat-line window set in seconds must span at least a couple of the sensor’s <em>own</em> samples to say
+anything about flatness. For a sensor sampled off-phase (optics, oxygen — finite only every Nth
+cycle) the per-variable interval is coarser than the record’s, so basing the window on the record
+would suggest one too short. Pass <em>var</em> to use that variable’s finite-sample interval; omit it for
+the whole-record interval. The suggestion is <a href="#id1"><span class="problematic" id="id2">``</span></a>suspect_factor``× (default 2) and <a href="#id3"><span class="problematic" id="id4">``</span></a>fail_factor``×
+(default 3) that interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, with <code class="docutils literal notranslate"><span class="pre">TIME</span></code> (and <em>var</em> when given).</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em>) – Variable whose finite-sample interval to use; when <code class="docutils literal notranslate"><span class="pre">None</span></code> the whole-record interval is used.</p></li>
+<li><p><strong>suspect_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Multiples of the sampling interval for the suspect (2) and fail (3) windows.</p></li>
+<li><p><strong>fail_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Multiples of the sampling interval for the suspect (2) and fail (3) windows.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">{dt,</span> <span class="pre">suspect,</span> <span class="pre">fail,</span> <span class="pre">suspect_factor,</span> <span class="pre">fail_factor}</span></code> — the interval and the suggested windows in
+seconds (<code class="docutils literal notranslate"><span class="pre">dt</span></code> NaN when there are fewer than two finite samples).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.qc.suggest_gross_range">
+<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">suggest_gross_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TEMP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_pct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">99.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suspect_pad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fail_pad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#suggest_gross_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.suggest_gross_range" title="Link to this definition"></a></dt>
+<dd><p>Suggest data-driven gross-range spans for <em>var</em> from this mission’s value distribution.</p>
+<p>A diagnostic suggestion, not a fix: it describes where <em>this</em> deployment’s values lie, as a
+starting point for a mission config — not a universal physical range. The inner <em>inner_pct</em> of
+the finite values is taken (default the central 99.9%, i.e. the 0.05th–99.95th percentiles), then
+padded outward by a fraction of that span — <em>suspect_pad</em> and <em>fail_pad</em> — so the margin scales
+with each variable’s own range rather than with the value (1% of 4 °C is not 1% of 35 psu). The
+lower bound is clamped at 0 for non-negative variables (<code class="xref py py-data docutils literal notranslate"><span class="pre">_NONNEGATIVE_VARS</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing <em>var</em>.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='TEMP'</em>) – Variable to suggest limits for.</p></li>
+<li><p><strong>inner_pct</strong> (<em>float</em><em>, </em><em>optional</em><em>, </em><em>default=99.9</em>) – Central percentile of the data taken as the core range before padding.</p></li>
+<li><p><strong>suspect_pad</strong> (<em>float</em><em>, </em><em>optional</em>) – Fractions of the core span added on each side for the suspect (0.01) and fail (0.05) spans.</p></li>
+<li><p><strong>fail_pad</strong> (<em>float</em><em>, </em><em>optional</em>) – Fractions of the core span added on each side for the suspect (0.01) and fail (0.05) spans.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">{lo,</span> <span class="pre">hi,</span> <span class="pre">inner_pct,</span> <span class="pre">suspect,</span> <span class="pre">fail,</span> <span class="pre">suspect_pad,</span> <span class="pre">fail_pad}</span></code> (spans as <code class="docutils literal notranslate"><span class="pre">[min,</span> <span class="pre">max]</span></code>, all
+rounded), or <code class="docutils literal notranslate"><span class="pre">None</span></code> when <em>var</em> has no finite values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict or None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams</p>
 </dd></dl>
 
 <p id="module-glidertest.og1_attrs">OG1 global-attribute registry, transcribed from the OceanGliders format user manual.</p>

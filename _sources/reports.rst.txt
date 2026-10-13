@@ -33,6 +33,7 @@ Output layout
      index.html                    fleet page: one row per mission, map of all tracks
      <mission_id>/
        index.html                  landing page — about the mission
+       qc.html                     present when the file carries a QC variable or *_QC flags
        ctd.html                    present when TEMP or PSAL is in the file
        oxygen.html                 present when DOXY is in the file
        optics.html                 present when CHLA or BBP700 is in the file
@@ -134,8 +135,8 @@ Report pages
 Every page shares the **masthead** (the coloured header): the mission id, a page-type label,
 generation time, the
 mission facts (profiles with the dive/climb split, time span and duration, sample rate,
-extent, platform, source file), the page navigation — **Summary / Reports: CTD · Oxygen ·
-Optics / Derived: Flight** — and a **Data inventory** strip linking the inventory page. When
+extent, platform, source file), the page navigation — **Summary: Mission · QC / Reports: CTD ·
+Oxygen · Optics / Derived: Flight** — and a **Data inventory** strip linking the inventory page. When
 the report sits in a fleet, "← All missions" leads back. Each section heading carries "↑ top".
 
 Landing page — ``index.html``
@@ -153,7 +154,35 @@ About the mission.
 - **Sampling** — grid spacing (``plots.plot_grid_spacing``), sampling period of every variable
   (``plots.plot_sampling_period_all``), maximum depth per profile
   (``plots.plot_max_depth_per_profile``) and profile monotony (``plots.plot_prof_monotony``).
-- **QC — as delivered** and **QC — glidertest diagnostics** — see :ref:`qc-section`.
+- **QC — as delivered** and **QC — glidertest diagnostics** — see :ref:`qc-section`. The
+  diagnostics section links to the dedicated QC page for the per-variable detail.
+
+QC page — ``qc.html``
+~~~~~~~~~~~~~~~~~~~~~~
+
+Written when the file carries a QC variable or ``*_QC`` flags. Where the landing page's QC
+summary answers *how much* was flagged, this page answers *where* each glidertest test fires and
+*whether its thresholds suit the sampling* — it visualises the QC, it does not change it. The
+``plot_*`` functions live in ``glidertest.plots_qc``.
+
+- **Gross range (T–S)** — the TEMP×PSAL suspect and fail spans as nested rectangles over the
+  T–S cloud (``plot_ts_gross_range``), with the current (applied) and suggested spans beside it.
+- One section per QC variable (TEMP, PSAL, DOXY, CHLA), each holding:
+
+  - a time series of the variable with gross-range, spike and flat-line hits overlaid
+    (``plot_test_hits``) — the data is drawn as markers, so an off-phase sensor whose samples are
+    isolated among NaNs still shows;
+  - a value-against-depth profile with the same hits (``plot_flag_profile``), so a reader sees at
+    what depth each test fires, beside a note comparing the current and suggested limits;
+  - **Flat-line runs** — the run-duration histogram against the test windows and the median
+    sampling interval (``plot_flat_runs``), the start-to-end change of each run against the
+    tolerance (``plot_flat_change``, titled with the fraction of runs whose data moved more than
+    the tolerance), and a zoom on the longest run (``plot_flat_excerpt``);
+  - **Spike** — the spike statistic against the suspect and fail thresholds (``plot_spike_stat``).
+
+Overlaid hits are drawn most-frequent test first, so a rarer test's symbols land on top of a
+common one's. The suggested limits describe *this* mission's distribution and sampling; they are
+a starting point for a per-mission configuration, not a physical range.
 
 Sensor pages — ``ctd.html``, ``oxygen.html``, ``optics.html``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,8 +270,9 @@ QC) reads the same way, not as a clean bill of health.
 **QC — glidertest diagnostics** runs glidertest's own checks on the data — gross range, spike
 and flat-line tests per variable, the dive–climb hysteresis verdict — and shows the result
 with the thresholds that were applied printed next to it, so a reader can judge whether a
-"suspect" means anything for their region. Today the thresholds are the package defaults;
-a per-mission configuration file is planned.
+"suspect" means anything for their region. The per-variable detail — where each test fires and
+whether its thresholds suit the sampling — is on the dedicated QC page (``qc.html``). Today the
+thresholds are the package defaults; a per-mission configuration file is planned.
 
 The two are never merged: a value the provider flagged good and glidertest finds suspect is
 shown as both.
@@ -254,8 +284,9 @@ Colour and status conventions
   reports, the derived flight page — and the current page's button is muted.
 - **Amber** marks a missing mandatory OG1 attribute, on the inventory page and in the
   landing-page verdict. A dash marks a missing highly-desirable attribute.
-- Under every figure, ``source: plot_…`` names the ``glidertest.plots`` function that drew
-  it, so the figure can be reproduced in a notebook.
+- Under every figure, ``source: …`` names the glidertest plotter that drew it
+  (``glidertest.plots``, or ``glidertest.plots_qc`` for the QC page), so the figure can be
+  reproduced in a notebook.
 - A diagnostic that could not be computed for this file says so in place, in a visible
   block; it is never silently dropped.
 

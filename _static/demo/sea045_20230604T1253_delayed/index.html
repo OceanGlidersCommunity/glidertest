@@ -281,6 +281,14 @@ table.nc details.attrs td.mono { white-space: nowrap; }
 /* An html/table panel is one full-width item of the flex .fig-row, so its caption, headings and
    tables stack as normal block flow instead of sitting side by side. */
 .html-panel { flex: 1 1 100%; min-width: 0; }
+/* A half-slot html panel (e.g. the QC gross-range note beside the T–S plot) sits as a side item of
+   the .fig-row rather than taking a full row. */
+.html-panel.slot-half { flex: 1 1 45%; min-width: 14rem; align-self: flex-start; }
+/* Unnumbered QC sub-heading (Flat-line runs / Spike) inside a variable's section: a full-width
+   divider in the fig-row that breaks the plots beneath it onto their own line. Not in the jump-nav —
+   section numbering/nav is vendored and flat, so these group visually without a 6.1/6.2 number. */
+.qc-subsection { margin: 0.6rem 0 0; padding-top: 0.4rem; border-top: 1px solid var(--rule);
+  font-size: var(--fs-note); color: var(--muted); }
 /* Subtle in-table links: underline only, keep the text colour. */
 .meta a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 /* Expandable per-variable attribute list in a table cell (ported from ctdcast). */
@@ -326,13 +334,13 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
     <h1>sea045_20230604T1253_delayed</h1>
     <span class="masthead-type">Mission report</span>
   </div>
-  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sea045_20230604T1253_delayed.nc</span><span>generated 2026-10-13 12:46 UTC</span></p>
+  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sea045_20230604T1253_delayed.nc</span><span>generated 2026-10-13 14:24 UTC</span></p>
   
 
 <nav class="page-nav">
   <span class="page-nav-label">Summary</span>
   
-  <span class="nav-pill nav-landing nav-current">Mission</span>
+  <span class="nav-pill nav-landing nav-current">Mission</span><a class="nav-pill nav-aggregate-a" href="qc.html">QC</a>
 </nav>
 
 <nav class="page-nav">
@@ -408,7 +416,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
   
   
   
-  <div class="html-panel"><p class="caption">OG1: 16 of 16 mandatory global attributes present · 12 highly-desirable missing — see the <a href="inventory.html#og1">File contents</a> page for the full attribute listing.</p>
+  <div class="html-panel slot-full"><p class="caption">OG1: 16 of 16 mandatory global attributes present · 12 highly-desirable missing — see the <a href="inventory.html#og1">File contents</a> page for the full attribute listing.</p>
 
 <p class="caption">Payload — a sensor counts as present when its OG1 variable exists in the file; the source is the <code>SENSOR_*</code> catalog entry named by the variable's <code>sensor</code> attribute, and the model and attributes are read from that entry (as in the File-contents sensor catalog).</p>
 <table class="nc">
@@ -496,7 +504,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
   
   
   
-  <div class="html-panel">
+  <div class="html-panel slot-full">
 
 <p class="caption">As delivered — rtqc_method: IOOS QC QARTOD https://github.com/ioos/ioos_qc. Flag labels are read from each variable&#39;s flag_meanings. The file does not record the thresholds used.</p>
 
@@ -527,7 +535,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
   
   
   
-  <div class="html-panel">
+  <div class="html-panel slot-full">
 <p class="caption">Profile number: No issues detected. Profile duration: 4 profiles have abnormal duration.</p>
 
 
@@ -537,12 +545,20 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 <tbody>
 <tr><td>TEMP</td><td>gross-range</td><td class="mono qc-susp">[0, 30]</td><td class="mono qc-fail">[-2.5, 40] (not applied)</td></tr>
 <tr><td>TEMP</td><td>spike</td><td class="mono qc-susp">|Δ| &gt; 2.0</td><td class="mono qc-fail">|Δ| &gt; 6.0</td></tr>
+<tr><td>TEMP</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 1 s (tol ±0.001)</td><td class="mono qc-fail">flat ≥ 3 s (tol ±0.001)</td></tr>
+<tr><td>TEMP</td><td>hysteresis</td><td class="mono qc-susp">&gt; 5% dive–climb error per depth bin</td><td class="mono qc-fail">&gt; 5 bins exceed</td></tr>
 <tr><td>PSAL</td><td>gross-range</td><td class="mono qc-susp">[5, 38]</td><td class="mono qc-fail">[2, 41] (not applied)</td></tr>
 <tr><td>PSAL</td><td>spike</td><td class="mono qc-susp">|Δ| &gt; 0.3</td><td class="mono qc-fail">|Δ| &gt; 0.9</td></tr>
+<tr><td>PSAL</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 1 s (tol ±0.001)</td><td class="mono qc-fail">flat ≥ 3 s (tol ±0.001)</td></tr>
+<tr><td>PSAL</td><td>hysteresis</td><td class="mono qc-susp">&gt; 5% dive–climb error per depth bin</td><td class="mono qc-fail">&gt; 5 bins exceed</td></tr>
 <tr><td>DOXY</td><td>gross-range</td><td class="mono qc-susp">[0, 350]</td><td class="mono qc-fail">[0, 500] (not applied)</td></tr>
 <tr><td>DOXY</td><td>spike</td><td class="mono qc-susp">|Δ| &gt; 10</td><td class="mono qc-fail">|Δ| &gt; 50</td></tr>
+<tr><td>DOXY</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 1 s (tol ±0.001)</td><td class="mono qc-fail">flat ≥ 3 s (tol ±0.001)</td></tr>
+<tr><td>DOXY</td><td>hysteresis</td><td class="mono qc-susp">&gt; 5% dive–climb error per depth bin</td><td class="mono qc-fail">&gt; 5 bins exceed</td></tr>
 <tr><td>CHLA</td><td>gross-range</td><td class="mono qc-susp">[0, 15]</td><td class="mono qc-fail">[-1, 20] (not applied)</td></tr>
 <tr><td>CHLA</td><td>spike</td><td class="mono qc-susp">|Δ| &gt; 1</td><td class="mono qc-fail">|Δ| &gt; 5</td></tr>
+<tr><td>CHLA</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 1 s (tol ±0.001)</td><td class="mono qc-fail">flat ≥ 3 s (tol ±0.001)</td></tr>
+<tr><td>CHLA</td><td>hysteresis</td><td class="mono qc-susp">&gt; 5% dive–climb error per depth bin</td><td class="mono qc-fail">&gt; 5 bins exceed</td></tr>
 
 </tbody>
 </table>
@@ -561,6 +577,9 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 </div>
 
   
+  <div class="html-panel slot-full"><p class="caption"><a href="qc.html">Full QC →</a> per-variable diagnostics: where each glidertest test fires, and whether its thresholds fit the sampling.</p></div>
+
+  
 </div>
 
 
@@ -569,7 +588,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 </main>
 
 
-<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev50 &nbsp;·&nbsp; sea045_20230604T1253_delayed &nbsp;·&nbsp; 2026-10-13 12:46 UTC</footer>
+<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev51 &nbsp;·&nbsp; sea045_20230604T1253_delayed &nbsp;·&nbsp; 2026-10-13 14:24 UTC</footer>
 <script>
 document.querySelectorAll('h2').forEach(h => {
   const a = document.createElement('a');
