@@ -88,13 +88,15 @@ def temporal_drift(ds: xr.Dataset, var: str, slot: str = "full") -> str | Stub |
     return _slots.render_panel(lambda: plots.check_temporal_drift(ds, variable=var)[0], slot=slot, source="check_temporal_drift", optional=True)
 
 
-def global_range(ds: xr.Dataset, var: str, slot: str = "half") -> str | Stub | None:
-    """Render the global-range histogram for *var*, using its qc.configs suspect span as the range.
+def global_range(ds: xr.Dataset, var: str, slot: str = "half", config: dict | None = None) -> str | Stub | None:
+    """Render the global-range histogram for *var*, using its suspect span as the range.
 
     The plotter's default range is oxygen-shaped (−5..600); using the per-variable suspect span puts
     the limit lines where they belong. Falls back to the plotter default if *var* has no config.
+    *config* supplies the resolved (possibly overridden) thresholds; ``None`` uses the defaults.
     """
-    span = qc.configs.get(var, {}).get("gross_range_test", {}).get("suspect_span")
+    cfg = config if config is not None else qc.configs
+    span = cfg.get(var, {}).get("gross_range_test", {}).get("suspect_span")
     kw = {"min_val": span[0], "max_val": span[1]} if span else {}
     return _slots.render_panel(
         lambda: plots.plot_global_range(ds, variable=var, **kw)[0],
@@ -187,42 +189,42 @@ def convective_resistance(ds: xr.Dataset, slot: str = "full") -> str | Stub | No
 # The QC figure wrappers take `flags` — the (gross, spike, flat) tuple from qc.sample_tests — so the
 # per-variable section computes it once (Ctx.sample_tests) and threads it through every panel rather
 # than each plotter recomputing all three QARTOD tests (see plots_qc module docstring).
-def test_hits(ds: xr.Dataset, var: str, slot: str = "full", flags: tuple | None = None) -> str | Stub | None:
+def test_hits(ds: xr.Dataset, var: str, slot: str = "full", flags: tuple | None = None, config: dict | None = None) -> str | Stub | None:
     """Render the "where glidertest's QC tests fire" panel for *var* (time series + test overlays)."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_test_hits(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_test_hits(ds, var, flags=flags, config=config, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_test_hits", optional=True)
 
 
-def flag_profile(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
+def flag_profile(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None, config: dict | None = None) -> str | Stub | None:
     """Render *var* against depth (a profile) with the QC hits overlaid (where each test fires, by depth)."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_flag_profile(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_flag_profile(ds, var, flags=flags, config=config, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_flag_profile", optional=True)
 
 
-def flat_runs(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
+def flat_runs(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None, config: dict | None = None) -> str | Stub | None:
     """Render the flat-run-duration histogram for *var* with the test windows and median sampling interval."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_flat_runs(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_flat_runs(ds, var, flags=flags, config=config, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_flat_runs", optional=True)
 
 
-def flat_change(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
+def flat_change(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None, config: dict | None = None) -> str | Stub | None:
     """Render the start-to-end-change histogram for *var*'s flat runs (stuck sensor vs slow signal)."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_flat_change(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_flat_change(ds, var, flags=flags, config=config, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_flat_change", optional=True)
 
 
-def flat_excerpt(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
+def flat_excerpt(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None, config: dict | None = None) -> str | Stub | None:
     """Render a zoom around *var*'s longest flagged flat run (samples + a ±tolerance band)."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_flat_excerpt(ds, var, flags=flags, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_flat_excerpt(ds, var, flags=flags, config=config, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_flat_excerpt", optional=True)
 
 
-def spike_stat(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None) -> str | Stub | None:
+def spike_stat(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None = None, config: dict | None = None) -> str | Stub | None:
     """Render the spike-statistic histogram for *var* with the suspect/fail thresholds.
 
     Accepts *flags* for a uniform call from the QC section builder; the spike statistic is computed
@@ -230,12 +232,12 @@ def spike_stat(ds: xr.Dataset, var: str, slot: str = "half", flags: tuple | None
     """
     _ = flags
     return _slots.render_panel(
-        lambda: plots_qc.plot_spike_stat(ds, var, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_spike_stat(ds, var, config=config, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_spike_stat", optional=True)
 
 
-def ts_gross_range(ds: xr.Dataset, slot: str = "half") -> str | Stub | None:
+def ts_gross_range(ds: xr.Dataset, slot: str = "half", config: dict | None = None) -> str | Stub | None:
     """Render the T–S cloud with the TEMP×PSAL gross-range suspect and fail spans as rectangles."""
     return _slots.render_panel(
-        lambda: plots_qc.plot_ts_gross_range(ds, width_in=SLOTS[slot][1])[0],
+        lambda: plots_qc.plot_ts_gross_range(ds, config=config, width_in=SLOTS[slot][1])[0],
         slot=slot, source="plots_qc.py:plot_ts_gross_range", optional=True)
