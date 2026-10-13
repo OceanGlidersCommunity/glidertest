@@ -480,7 +480,7 @@ def plot_quench_assess(ds: xr.Dataset, variable: str, ax: plt.Axes = None, start
         utilities._time_axis_formatter(ax, ds_sel, format_x_axis=True)
         # Less x axis ticks
         ax.xaxis.set_major_locator(mdates.AutoDateLocator(minticks=4, maxticks=6))
-
+        ax.set_xlim(logchla.TIME.min().values, logchla.TIME.max().values)
         plt.colorbar(c, label=f'log₁₀({utilities.plotting_labels(variable)}) ({utilities.plotting_units(ds, variable)})')
         _show()
     return fig, ax
