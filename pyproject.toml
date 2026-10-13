@@ -41,6 +41,7 @@ dependencies = [
   "pandas",
   "pillow",
   "pooch",
+  "pyyaml",
   "scipy",
   "seaborn",
   "sgp4>=2.14",
