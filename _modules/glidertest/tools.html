@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>glidertest.tools &mdash; glidertest 0.1.1.dev49+g177a56941 documentation</title>
+  <title>glidertest.tools &mdash; glidertest 0.1.1.dev50+gca2af2b8f documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=57ddf683"></script>
+      <script src="../../_static/documentation_options.js?v=63814470"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -107,7 +107,8 @@
 <a class="viewcode-back" href="../../glidertest.html#glidertest.tools.quant_updown_bias">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">quant_updown_bias</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="s1">'PSAL'</span><span class="p">,</span> <span class="n">v_res</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    This function computes up and downcast averages for a specific variable</span>
+<span class="sd">    This function computes up and downcast averages for a specific variable and their standard errors</span>
+<span class="sd">    for each depth bin</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -122,7 +123,11 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    df: pandas.DataFrame </span>
-<span class="sd">        Dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth</span>
+<span class="sd">        Dataframe containing:</span>
+<span class="sd">        dc, cd       : Mean Dive-Climb and Climb-Dive differences</span>
+<span class="sd">        dc_se, cd_se : Standard errors of the mean differences</span>
+<span class="sd">        dc_n, cd_n   : Number of valid differences per depth bin</span>
+<span class="sd">        depth        : Depth-bin centers/coordinates</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -135,17 +140,42 @@
     <span class="k">if</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
         <span class="n">varG</span><span class="p">,</span> <span class="n">profG</span><span class="p">,</span> <span class="n">depthG</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">construct_2dgrid</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">PROFILE_NUMBER</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">DEPTH</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">variable</span><span class="p">],</span> <span class="n">p</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">x_bin_center</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="c1">## included x_bin_center = False to take left edge of the bin (profile number i.e. 1,2 ....)</span>
 
-        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">varG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Horizontal gradients</span>
-        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
-            <span class="n">dc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Dive - CLimb</span>
-            <span class="n">cd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">grad</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Climb - Dive</span>
+        <span class="c1"># Differences between consecutive profiles</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">varG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">'dc'</span><span class="p">:</span> <span class="n">dc</span><span class="p">,</span> <span class="s1">'cd'</span><span class="p">:</span> <span class="n">cd</span><span class="p">,</span> <span class="s1">'depth'</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]})</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s1"> is not in the dataset'</span><span class="p">)</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">df</span></div>
+        <span class="c1"># Differences Dive-Climb and Climb-Dive</span>
+        <span class="n">dc_grad</span> <span class="o">=</span> <span class="n">grad</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">cd_grad</span> <span class="o">=</span> <span class="n">grad</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">mean_and_se</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+
+                <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># SE is undefined when fewer than two valid observations exist</span>
+            <span class="n">se</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">std</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+            <span class="n">se</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="n">valid</span><span class="p">])</span>
+
+            <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">se</span><span class="p">,</span> <span class="n">n</span>
+
+        <span class="n">dc</span><span class="p">,</span> <span class="n">dc_se</span><span class="p">,</span> <span class="n">dc_n</span> <span class="o">=</span> <span class="n">mean_and_se</span><span class="p">(</span><span class="n">dc_grad</span><span class="p">)</span>
+        <span class="n">cd</span><span class="p">,</span> <span class="n">cd_se</span><span class="p">,</span> <span class="n">cd_n</span> <span class="o">=</span> <span class="n">mean_and_se</span><span class="p">(</span><span class="n">cd_grad</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+            <span class="s1">'dc'</span><span class="p">:</span> <span class="n">dc</span><span class="p">,</span>
+            <span class="s1">'cd'</span><span class="p">:</span> <span class="n">cd</span><span class="p">,</span>
+            <span class="s1">'dc_se'</span><span class="p">:</span> <span class="n">dc_se</span><span class="p">,</span>
+            <span class="s1">'cd_se'</span><span class="p">:</span> <span class="n">cd_se</span><span class="p">,</span>
+            <span class="s1">'dc_n'</span><span class="p">:</span> <span class="n">dc_n</span><span class="p">,</span>
+            <span class="s1">'cd_n'</span><span class="p">:</span> <span class="n">cd_n</span><span class="p">,</span>
+            <span class="s1">'depth'</span><span class="p">:</span> <span class="n">depthG</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>
+        <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">df</span></div>
 
 
 <div class="viewcode-block" id="mean_profile">

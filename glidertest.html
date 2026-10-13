@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API reference &mdash; glidertest 0.1.1.dev49+g177a56941 documentation</title>
+  <title>API reference &mdash; glidertest 0.1.1.dev50+gca2af2b8f documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=57ddf683"></script>
+      <script src="_static/documentation_options.js?v=63814470"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -732,7 +732,8 @@ Data should <strong>not</strong> be gridded.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.quant_updown_bias">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">quant_updown_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PSAL'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#quant_updown_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.quant_updown_bias" title="Link to this definition"></a></dt>
-<dd><p>This function computes up and downcast averages for a specific variable</p>
+<dd><p>This function computes up and downcast averages for a specific variable and their standard errors
+for each depth bin</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -743,7 +744,11 @@ Data should <strong>not</strong> be gridded.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>df</strong> – Dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth</p>
+<dd class="field-even"><p><strong>df</strong> – Dataframe containing:
+dc, cd       : Mean Dive-Climb and Climb-Dive differences
+dc_se, cd_se : Standard errors of the mean differences
+dc_n, cd_n   : Number of valid differences per depth bin
+depth        : Depth-bin centers/coordinates</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>pandas.DataFrame</p>
