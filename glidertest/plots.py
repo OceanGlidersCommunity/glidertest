@@ -101,10 +101,12 @@ def plot_updown_bias(ds: xr.Dataset, variable='TEMP', v_res=1, ax: plt.Axes = No
             ax.text(0.5, 0.45, 'data unavailable', va='center', ha='center', transform=ax.transAxes,
                     bbox=dict(facecolor='white', alpha=0.5, edgecolor='none'))
         else:
-            ax.plot(df.dc, df.depth, label='Dive-Climb', **kw)
-            ax.plot(df.cd, df.depth, label='Climb-Dive', **kw)
-            ax.legend(loc=3)
-            lims = np.abs(df.dc)
+            line_dc, = ax.plot(df.dc, df.depth, label='Dive-Climb', **kw)
+            line_cd, = ax.plot(df.cd, df.depth, label='Climb-Dive', **kw)
+            ax.fill_betweenx( df.depth, df.dc - df.dc_se, df.dc + df.dc_se, color=line_dc.get_color(), alpha=0.2, linewidth=0, label='Dive-Climb ± SE')
+            ax.fill_betweenx(df.depth, df.cd - df.cd_se, df.cd + df.cd_se, color=line_cd.get_color(), alpha=0.2,linewidth=0,label='Climb-Dive ± SE')
+            ax.legend()
+            lims = np.abs(df.dc + df.dc_se)
             ax.set_xlim(-np.nanpercentile(lims, 99.5), np.nanpercentile(lims, 99.5))
             ax.set_ylim(df.depth.max() + 1, -df.depth.max() / 30)
         ax.set_xlabel(f'{utilities.plotting_labels(variable)} ({utilities.plotting_units(ds, variable)})')

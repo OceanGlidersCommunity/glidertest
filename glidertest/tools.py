@@ -11,7 +11,8 @@ from glidertest.utilities import _log
 
 def quant_updown_bias(ds, variable='PSAL', v_res=1):
     """
-    This function computes up and downcast averages for a specific variable
+    This function computes up and downcast averages for a specific variable and their standard errors
+    for each depth bin
 
     Parameters
     ----------
@@ -26,7 +27,11 @@ def quant_updown_bias(ds, variable='PSAL', v_res=1):
     Returns
     -------
     df: pandas.DataFrame 
-        Dataframe containing dc (Dive - Climb average), cd (Climb - Dive average) and depth
+        Dataframe containing:
+        dc, cd       : Mean Dive-Climb and Climb-Dive differences
+        dc_se, cd_se : Standard errors of the mean differences
+        dc_n, cd_n   : Number of valid differences per depth bin
+        depth        : Depth-bin centers/coordinates
 
     Notes
     -----
@@ -39,17 +44,42 @@ def quant_updown_bias(ds, variable='PSAL', v_res=1):
     if variable in ds.variables:
         varG, profG, depthG = utilities.construct_2dgrid(ds.PROFILE_NUMBER, ds.DEPTH, ds[variable], p, z, x_bin_center = False) ## included x_bin_center = False to take left edge of the bin (profile number i.e. 1,2 ....)
 
-        grad = np.diff(varG, axis=0)  # Horizontal gradients
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=RuntimeWarning)
-            dc = np.nanmean(grad[0::2, :], axis=0)  # Dive - CLimb
-            cd = np.nanmean(grad[1::2, :], axis=0)  # Climb - Dive
+        # Differences between consecutive profiles
+        grad = np.diff(varG, axis=0)
 
-        df = pd.DataFrame(data={'dc': dc, 'cd': cd, 'depth': depthG[0, :]})
-    else:
-        _log.info(f'{variable} is not in the dataset')
-        df = pd.DataFrame()
-    return df
+        # Differences Dive-Climb and Climb-Dive
+        dc_grad = grad[0::2, :]
+        cd_grad = grad[1::2, :]
+        def mean_and_se(values):
+            n = np.sum(np.isfinite(values), axis=0)
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+
+                mean = np.nanmean(values, axis=0)
+                std = np.nanstd(values, axis=0, ddof=1)
+
+            # SE is undefined when fewer than two valid observations exist
+            se = np.full(std.shape, np.nan, dtype=float)
+            valid = n >= 2
+            se[valid] = std[valid] / np.sqrt(n[valid])
+
+            return mean, se, n
+
+        dc, dc_se, dc_n = mean_and_se(dc_grad)
+        cd, cd_se, cd_n = mean_and_se(cd_grad)
+
+        df = pd.DataFrame({
+            'dc': dc,
+            'cd': cd,
+            'dc_se': dc_se,
+            'cd_se': cd_se,
+            'dc_n': dc_n,
+            'cd_n': cd_n,
+            'depth': depthG[0, :],
+        })
+
+        return df
 
 def mean_profile(ds, variable='TEMP', v_res=1):
     """

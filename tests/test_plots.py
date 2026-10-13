@@ -24,7 +24,7 @@ def test_up_down_bias(fresh_subset, v_res=1):
     fig, ax = plt.subplots()
     plots.plot_updown_bias(ds, variable='PSAL', v_res=1, ax=ax)
     df = tools.quant_updown_bias(ds, variable='PSAL', v_res=v_res)
-    lims = np.abs(df.dc)
+    lims = np.abs(df.dc + df.dc_se)
     assert ax.get_xlim() == (-np.nanpercentile(lims, 99.5), np.nanpercentile(lims, 99.5))
     assert ax.get_ylim() == (df.depth.max() + 1, -df.depth.max() / 30)
     assert ax.get_xlabel() == f'{utilities.plotting_labels("PSAL")} ({utilities.plotting_units(ds,"PSAL")})'
