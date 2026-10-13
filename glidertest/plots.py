@@ -1437,7 +1437,7 @@ def plot_hysteresis(ds, variable='DOXY', v_res=1, threshold=2, ax=None):
         [a.invert_yaxis() for a in ax]
         ax[0].set_ylabel('Depth (m)')
         ax[0].set_xlabel(f'{utilities.plotting_labels(variable)} \nmean ({utilities.plotting_units(ds, variable)})', fontsize= 15)
-        ax[1].set_xlabel(f'Absolute difference \n|Δ| ({ds[variable].units})', fontsize= 15)
+        ax[1].set_xlabel(f'Absolute difference \n|Δ| ({utilities.plotting_units(ds, variable)})', fontsize= 15)
         ax[2].set_xlabel('Error [|Δ| / mean] \n(%)', fontsize= 15)
         ax[3].set_xlabel('Scaled error [|Δ| / range] \n(%)', fontsize= 15)
         for ax1 in ax[:-1]:
@@ -1445,7 +1445,7 @@ def plot_hysteresis(ds, variable='DOXY', v_res=1, threshold=2, ax=None):
         c = ax[4].pcolor(profG[:-1, :], depthG[:-1, :], np.diff(varG, axis=0),
                          vmin=np.nanpercentile(np.diff(varG, axis=0), 0.5),
                          vmax=np.nanpercentile(np.diff(varG, axis=0), 99.5), cmap='seismic')
-        plt.colorbar(c, ax=ax[4], label=f'Difference dive-climb \n({ds[variable].units})', fraction=0.05)
+        plt.colorbar(c, ax=ax[4], label=f'Difference dive-climb \n({utilities.plotting_units(ds, variable)})', fraction=0.05)
         ax[4].set(ylabel='Depth (m)', xlabel='Profile number')
         fig.suptitle(utilities.plotting_labels(variable), y=1.04)
         if force_plot:
