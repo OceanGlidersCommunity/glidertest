@@ -78,8 +78,13 @@ def test_profile_check(fresh_subset):
     ds = fresh_subset
     tools.check_monotony(ds.PROFILE_NUMBER)
     fig, ax = plots.plot_prof_monotony(ds)
-    assert ax[0].get_ylabel() == 'Profile number'
-    assert ax[1].get_ylabel() == 'Depth (m)'
+    if isinstance(ax, np.ndarray):
+        # If two subplots
+        assert ax[0].get_ylabel() == 'Profile number'
+        assert ax[1].get_ylabel() == 'Depth (m)'
+    else:
+        # If only one plot
+        assert ax.get_ylabel() == 'Profile number'
     duration = tools.compute_prof_duration(ds)
     rolling_mean, overtime = tools.find_outlier_duration(duration, rolling=20, std=2)
     fig, ax = plots.plot_outlier_duration(ds, rolling_mean, overtime, std=2)

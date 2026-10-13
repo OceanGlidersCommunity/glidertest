@@ -568,6 +568,8 @@ def check_temporal_drift(ds: xr.Dataset, variable: str, ax: plt.Axes = None, **k
 def plot_prof_monotony(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict, ) -> tuple({plt.Figure, plt.Axes}):
     """
     Checks for potential issues with the assigned **profile index** by plotting its progression over time.
+    If no issues are detected, only the profile-number plot is shown.     Otherwise, a second plot highlights the depths
+    where issues occur.
 
     Parameters
     ----------
@@ -584,9 +586,9 @@ def plot_prof_monotony(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict, ) -> tup
     fig : matplotlib.figure.Figure
         The generated figure.
     ax : matplotlib.axes.Axes
-        Axes containing the two plots.
+        Axes containing the one or two plots.
         - 1. One line plot with the profile number over time (expected to be always increasing).
-        - 2. Scatter plot showing at which depth over time there was a profile index where the
+        - 2. If there are issues, a scatter plot is created showing at which depth over time there was a profile index where the
         difference was neither 0 nor 1 (meaning there are possibly issues with how the profile index was assigned).
 
     Notes
@@ -595,33 +597,52 @@ def plot_prof_monotony(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict, ) -> tup
     """
     utilities._check_necessary_variables(ds, ['TIME', 'PROFILE_NUMBER', 'DEPTH'])
     with plt.style.context(_style()):
+        # Identify profile-number differences that are neither 0 nor 1
+        diff = np.diff(ds.PROFILE_NUMBER.values)
+        issue_idx = np.where((diff != 0) & (diff != 1))[0]
+        has_issues = len(issue_idx) > 0
+
         if ax is None:
-            fig, ax = plt.subplots(2, 1, sharex=True)
+            if has_issues:
+                fig, ax = plt.subplots(2, 1, sharex=True)
+            else:
+                fig, ax = plt.subplots()
             force_plot = True
         else:
             fig = plt.gcf()
             force_plot = False
 
-        ax[0].plot(ds.TIME, ds.PROFILE_NUMBER)
 
-        ax[0].set(ylabel='Profile number')
-        if len(np.where((np.diff(ds.PROFILE_NUMBER) != 0) & (np.diff(ds.PROFILE_NUMBER) != 1))[0]) == 0:
-            ax[1].text(0.2, 0.5, 'Data are monotonically increasing - no issues identified',
-                       transform=ax[1].transAxes)
+        if has_issues:
+            ax0, ax1 = ax if isinstance(ax, (list, np.ndarray)) else (ax, None)
+            if ax1 is None:
+                raise ValueError( "Two axes are required when profile-number issues exist.")
         else:
-            ax[1].scatter(ds.TIME[np.where((np.diff(ds.PROFILE_NUMBER) != 0) & (np.diff(ds.PROFILE_NUMBER) != 1))],
-                          ds.DEPTH[np.where((np.diff(ds.PROFILE_NUMBER) != 0) & (np.diff(ds.PROFILE_NUMBER) != 1))],
-                          s=10, c='red', label='Depth at which we have issues \n with the profile number assigned')
-            ax[1].legend()
-        ax[1].set(ylabel='Depth (m)')
-        ax[1].invert_yaxis()
-        ax[1].xaxis.set_major_locator(plt.MaxNLocator(8))
-        utilities._time_axis_formatter(ax[1], ds, format_x_axis=True)
-        [a.grid() for a in ax]
+            ax0 = ax[0] if isinstance(ax, (list, np.ndarray)) else ax
+            ax1 = None
+
+        # Profile number over time
+        ax0.plot(ds.TIME, ds.PROFILE_NUMBER, **kw)
+        ax0.set(ylabel='Profile number')
+        ax0.grid()
+
+        if has_issues:
+            # Highlight locations where profile-number differences are unexpected
+            ax1.scatter( ds.TIME[issue_idx], ds.DEPTH[issue_idx], s=10, c='red', label='Potential profile-number assignment issues')
+            ax1.legend()
+            ax1.set(ylabel='Depth (m)')
+            ax1.invert_yaxis()
+            ax1.xaxis.set_major_locator(plt.MaxNLocator(8))
+            utilities._time_axis_formatter( ax1, ds, format_x_axis=True)
+            ax1.grid()
+        else:
+            ax0.xaxis.set_major_locator(plt.MaxNLocator(8))
+            utilities._time_axis_formatter( ax0, ds, format_x_axis=True)
 
         if force_plot:
             _show()
-    return fig, ax
+
+        return fig, ax
 
 
 def plot_glider_track(ds: xr.Dataset, ax: plt.Axes = None, **kw: dict) -> tuple({plt.Figure, plt.Axes}):
