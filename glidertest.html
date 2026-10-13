@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API reference &mdash; glidertest 0.1.1.dev48+g35628d463 documentation</title>
+  <title>API reference &mdash; glidertest 0.1.1.dev49+g177a56941 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=7e6fa5af"></script>
+      <script src="_static/documentation_options.js?v=57ddf683"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -1098,7 +1098,9 @@ outliers.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.plots.plot_prof_monotony">
 <span class="sig-prename descclassname"><span class="pre">glidertest.plots.</span></span><span class="sig-name descname"><span class="pre">plot_prof_monotony</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds:</span> <span class="pre">~xarray.core.dataset.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax:</span> <span class="pre">~matplotlib.axes._axes.Axes</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kw:</span> <span class="pre">dict)</span> <span class="pre">-&gt;</span> <span class="pre">(&lt;class</span> <span class="pre">'matplotlib.axes._axes.Axes'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;class</span> <span class="pre">'matplotlib.figure.Figure'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/plots.html#plot_prof_monotony"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.plots.plot_prof_monotony" title="Link to this definition"></a></dt>
-<dd><p>Checks for potential issues with the assigned <strong>profile index</strong> by plotting its progression over time.</p>
+<dd><p>Checks for potential issues with the assigned <strong>profile index</strong> by plotting its progression over time.
+If no issues are detected, only the profile-number plot is shown.     Otherwise, a second plot highlights the depths
+where issues occur.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1111,9 +1113,9 @@ Data <strong>should not be gridded</strong>.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>fig</strong> (<em>matplotlib.figure.Figure</em>) – The generated figure.</p></li>
-<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes containing the two plots.
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Axes containing the one or two plots.
 - 1. One line plot with the profile number over time (expected to be always increasing).
-- 2. Scatter plot showing at which depth over time there was a profile index where the
+- 2. If there are issues, a scatter plot is created showing at which depth over time there was a profile index where the
 difference was neither 0 nor 1 (meaning there are possibly issues with how the profile index was assigned).</p></li>
 </ul>
 </p>
