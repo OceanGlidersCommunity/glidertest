@@ -565,8 +565,8 @@ def plotting_units(ds: xr.Dataset, variable: str):
     Returns
     -------
     str: 
-        The units corresponding to the variable `var`. If the units exist in the attributes, the function returns
-        the units from `ds[var]`. If not, and the variable is found in `label_dict`, the associated units will be returned.
+        The units associated with the variable. Units defined in label_dict are preferred over those stored in the
+        variable's dataset attributes. If neither source provides the units, an empty string is returned.
 
     Notes
     -----
