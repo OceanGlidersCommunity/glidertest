@@ -4,9 +4,9 @@
 {% if diagnostics %}
 <p class="caption">glidertest diagnostics — run on the fly, not written to the file. Thresholds are glidertest's defaults unless a report config overrides them, shown so the verdict can be reproduced.</p>
 <table>
-<thead><tr><th>Variable</th><th>Test</th><th>Suspect range / threshold</th><th>Fail range / threshold</th></tr></thead>
+<thead><tr><th>Variable</th><th>Test</th><th>Suspect range / threshold</th><th>Fail range / threshold</th><th>Source</th></tr></thead>
 <tbody>
-{% for t in diagnostics.thresholds %}<tr><td>{{ t.var }}</td><td>{{ t.test }}</td><td class="mono qc-susp">{{ t.suspect }}</td><td class="mono qc-fail">{{ t.fail }}</td></tr>
+{% for t in diagnostics.thresholds %}<tr><td>{{ t.var }}</td><td>{{ t.test }}</td><td class="mono qc-susp">{{ t.suspect }}</td><td class="mono qc-fail">{{ t.fail }}</td><td>{% if t.src == 'config' %}<strong>config</strong>{% else %}default{% endif %}</td></tr>
 {% endfor %}
 </tbody>
 </table>

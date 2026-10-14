@@ -280,6 +280,10 @@ def report(
             version=__version__,
             generated_at=generated_at,
             facts=ctx.facts,
+            qc_thresholds=loader.resolve_qc(cfg),
+            qc_config=cfg.user_blocks() if cfg is not None else None,
+            qc_config_source=cfg.source if cfg is not None else None,
+            region=cfg.bbox if cfg is not None else None,
         )
         existing.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 

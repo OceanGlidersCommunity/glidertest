@@ -266,3 +266,22 @@ def test_region_sentence_renders_in_qc_panel(subset_ds):
     assert "Region test" in html and "fall outside the region" in html
     # No region row when no box is configured.
     assert "Region test" not in _mission.PANELS["qc_glidertest"].render(_mission.Ctx(ds=subset_ds))
+
+
+# --- provenance: default vs config marking --------------------------------------------------------
+
+
+def test_thresholds_table_marks_config_vs_default(subset_ds):
+    from glidertest.config import loader
+
+    cfg = loader.resolve_qc(loader.load({"qc": {"TEMP": {"spike_test": {"suspect_threshold": 99.0}}}}))
+    rows = qc_section.diagnostics_data(subset_ds, cfg)["diagnostics"]["thresholds"]
+    spike = next(r for r in rows if r["var"] == "TEMP" and r["test"] == "spike")
+    gross = next(r for r in rows if r["var"] == "TEMP" and r["test"] == "gross-range")
+    assert spike["src"] == "config"  # the overridden test
+    assert gross["src"] == "default"  # an untouched test on the same variable
+
+
+def test_thresholds_table_all_default_without_config(subset_ds):
+    rows = qc_section.diagnostics_data(subset_ds)["diagnostics"]["thresholds"]
+    assert all(r["src"] == "default" for r in rows)

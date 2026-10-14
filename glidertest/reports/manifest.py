@@ -87,6 +87,10 @@ def mission_manifest(
     version: str,
     generated_at: str,
     facts: dict[str, Any] | None = None,
+    qc_thresholds: dict[str, Any] | None = None,
+    qc_config: dict[str, Any] | None = None,
+    qc_config_source: str | None = None,
+    region: list[float] | None = None,
 ) -> dict[str, Any]:
     """Return the mission manifest dict, serialised to ``report.json`` beside ``index.html``.
 
@@ -109,6 +113,16 @@ def mission_manifest(
     facts : dict, optional
         A prebuilt :func:`glidertest.reports.metadata.mission_facts` result; computed from *ds*
         when None. The report passes one build so the masthead and manifest share it.
+    qc_thresholds : dict, optional
+        The effective (resolved) QC thresholds the diagnostics ran with, recorded so the report is
+        self-describing. ``None`` records the built-in defaults were in effect.
+    qc_config : dict, optional
+        The user's report-config blocks as given (``{"qc", "region", "source"}``), or ``None`` when
+        no config was passed — the exact overrides, for anyone who needs them without value-compare.
+    qc_config_source : str, optional
+        The report config's free-text ``source:`` provenance string, or ``None``.
+    region : list of float, optional
+        The configured region box ``[west, south, east, north]`` for the region test, or ``None``.
 
     Returns
     -------
@@ -156,6 +170,10 @@ def mission_manifest(
             "missing": missing,
         },
         "qc": _worst_qc(ds),
+        "qc_thresholds": qc_thresholds,
+        "qc_config": qc_config,
+        "qc_config_source": qc_config_source,
+        "region": region,
         "pages": [{"file": f, "label": lbl} for f, lbl in pages],
         "track": _track(ds),
         "glidertest_version": version,

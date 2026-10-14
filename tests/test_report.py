@@ -854,3 +854,32 @@ def test_render_panel_stub_keeps_message_when_first_line_blank():
     stub = _slots.render_panel(raises, source="raises")
     assert isinstance(stub, Stub)
     assert stub.reason == "ValueError: TEMP missing on N_MEASUREMENTS"
+
+
+def test_manifest_records_qc_config_provenance(subset_ds):
+    # report.json carries the effective thresholds, the raw overrides, the source string and region.
+    from glidertest.reports.manifest import mission_manifest
+
+    man = mission_manifest(
+        subset_ds, mission_id="m", source_name="m.nc", source_size_bytes=None, pages=[],
+        version="t", generated_at="t",
+        qc_thresholds={"TEMP": {"spike_test": {"suspect_threshold": 9.0}}},
+        qc_config={"qc": {"TEMP": {"spike_test": {"suspect_threshold": 9.0}}}, "region": None, "source": "pass 1"},
+        qc_config_source="pass 1", region=[10, 50, 25, 70],
+    )
+    assert man["qc_thresholds"]["TEMP"]["spike_test"]["suspect_threshold"] == 9.0
+    assert man["qc_config_source"] == "pass 1"
+    assert man["region"] == [10, 50, 25, 70]
+    json.dumps(man)  # must stay JSON-serialisable
+
+
+def test_manifest_qc_provenance_null_without_config(subset_ds):
+    from glidertest.reports.manifest import mission_manifest
+
+    man = mission_manifest(
+        subset_ds, mission_id="m", source_name="m.nc", source_size_bytes=None, pages=[],
+        version="t", generated_at="t",
+    )
+    assert man["qc_config"] is None
+    assert man["qc_config_source"] is None
+    assert man["region"] is None

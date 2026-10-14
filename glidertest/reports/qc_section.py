@@ -259,6 +259,15 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
     )
 
 
+def _src(config: dict, var: str, test: str) -> str:
+    """Return ``"config"`` when *var*'s *test* thresholds differ from the built-in default, else ``"default"``.
+
+    Value-compare (a user who sets a value equal to the default reads as ``default`` — the report.json
+    ``qc_config`` block carries the exact overrides for anyone who needs the precise key set).
+    """
+    return "config" if config.get(var, {}).get(test) != qc.configs.get(var, {}).get(test) else "default"
+
+
 def _region(ds: xr.Dataset, bbox: list) -> dict[str, Any]:
     """Return the mission-level region-test result: the box, and how many samples fall outside it.
 
@@ -296,6 +305,7 @@ def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None =
                 "test": "gross-range",
                 "suspect": f"[{g['suspect_span'][0]}, {g['suspect_span'][1]}]",
                 "fail": f"[{g['fail_span'][0]}, {g['fail_span'][1]}] (not applied)",
+                "src": _src(config, v, "gross_range_test"),
             }
         )
         thr_rows.append(
@@ -304,6 +314,7 @@ def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None =
                 "test": "spike",
                 "suspect": f"|Δ| > {s['suspect_threshold']}",
                 "fail": f"|Δ| > {s['fail_threshold']}",
+                "src": _src(config, v, "spike_test"),
             }
         )
         f = config[v]["flat_line_test"]
@@ -313,10 +324,12 @@ def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None =
                 "test": "flat-line",
                 "suspect": f"flat ≥ {f['suspect_threshold']:g} s (tol ±{f['tolerance']:g})",
                 "fail": f"flat ≥ {f['fail_threshold']:g} s (tol ±{f['tolerance']:g})",
+                "src": _src(config, v, "flat_line_test"),
             }
         )
         # Hysteresis thresholds are hysteresis_verdict's defaults (pct per bin, then bin count), read
-        # from the function so the table cannot drift from the verdict rule.
+        # from the function so the table cannot drift from the verdict rule. Not configurable here, so
+        # always "default".
         _pct, _bins = qc.hysteresis_verdict.__defaults__
         thr_rows.append(
             {
@@ -324,6 +337,7 @@ def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None =
                 "test": "hysteresis",
                 "suspect": f"> {_pct}% dive–climb error per depth bin",
                 "fail": f"> {_bins} bins exceed",
+                "src": "default",
             }
         )
 
