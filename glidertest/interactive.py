@@ -84,10 +84,9 @@ def profile(ds):
     Original author: Till Moritz
     """
 
-    def plot_profile(profile_num, var1, var2, var3, use_bins, binning):
-        vars = [var1, var2, var3]
-        fig, ax = plots.plot_profile(ds, profile_num, vars, use_bins, binning)
-        display(fig)
+    def plot_profile(profile_num, variable1, variable2, variable3, use_bins, binning):
+        variables = [variable1, variable2, variable3]
+        fig, ax = plots.plot_profile(ds, profile_num, variables, use_bins, binning)
         plt.close(fig)
         del fig, ax
 
@@ -96,12 +95,12 @@ def profile(ds):
 
     # Variable selection dropdowns (with an empty option)
     # take only into account the variables with float or int data type
-    var_options = [''] + [var for var in ds.data_vars if ds[var].dtype.kind in {'i', 'f'}]
+    var_options = [''] + [variable for variable in ds.data_vars if ds[variable].dtype.kind in {'i', 'f'}]
 
 
-    var1_dropdown = widgets.Dropdown(options=var_options, value=var_options[0], description="Var 1:")
-    var2_dropdown = widgets.Dropdown(options=var_options, value=var_options[0], description="Var 2:")
-    var3_dropdown = widgets.Dropdown(options=var_options, value=var_options[0], description="Var 3:")
+    variable1_dropdown = widgets.Dropdown(options=var_options, value=var_options[0], description="Variable 1:")
+    variable2_dropdown = widgets.Dropdown(options=var_options, value=var_options[0], description="Variable 2:")
+    variable3_dropdown = widgets.Dropdown(options=var_options, value=var_options[0], description="Variable 3:")
 
     # Checkbox for using binned data
     use_bins_button = widgets.Checkbox(value=False, description='Bin Data')
@@ -122,7 +121,7 @@ def profile(ds):
     binning_box.layout.display = 'none' if not use_bins_button.value else 'flex'
 
     # Arrange variable dropdowns in a horizontal row
-    var_selection_box = widgets.HBox([var1_dropdown, var2_dropdown, var3_dropdown])
+    var_selection_box = widgets.HBox([variable1_dropdown, variable2_dropdown, variable3_dropdown])
 
     # Arrange all widgets in a vertical layout
     ui = widgets.VBox([widgets.Label("Select the profile number to visualize:"),profile_slider,
@@ -132,9 +131,9 @@ def profile(ds):
     # Create interactive plot
     out = widgets.interactive_output(plot_profile, {
         'profile_num': profile_slider,
-        'var1': var1_dropdown,
-        'var2': var2_dropdown,
-        'var3': var3_dropdown,
+        'variable1': variable1_dropdown,
+        'variable2': variable2_dropdown,
+        'variable3': variable3_dropdown,
         'use_bins': use_bins_button,
         'binning': binning_slider
     })
@@ -160,14 +159,13 @@ def up_down_bias(ds):
     Original author: Till Moritz
     """
 
-    def plot_up_down_bias(var, v_res):
-        fig, ax = plots.plot_updown_bias(ds, var, v_res)
-        display(fig)
+    def plot_up_down_bias(variable, v_res):
+        fig, ax = plots.plot_updown_bias(ds, variable, v_res)
         plt.close(fig)
         del fig, ax
 
     # Variable selection dropdown (with an empty option)
-    var_options = [var for var in ds.data_vars if ds[var].dtype.kind in {'i', 'f'}]
+    var_options = [variable for variable in ds.data_vars if ds[variable].dtype.kind in {'i', 'f'}]
     var_dropdown = widgets.Dropdown(options=var_options, value=var_options[0], description="Variable:")
     res_slider = widgets.FloatSlider(value=1, min=0.1, max=10, step=0.1, description='Vertical Resolution (m):', continuous_update=False)
 
@@ -176,7 +174,7 @@ def up_down_bias(ds):
 
     # Create interactive plot
     out = widgets.interactive_output(plot_up_down_bias, {
-        'var': var_dropdown,
+        'variable': var_dropdown,
         'v_res': res_slider
     })
 
@@ -200,14 +198,13 @@ def daynight_avg(ds):
     Original author: Till Moritz
     """
 
-    def plot_daynight_avg(var, sel_day):
-        fig, ax = plots.plot_daynight_avg(ds, variable= var, sel_day =f'{sel_day}')
-        display(fig)
+    def plot_daynight_avg(variable, sel_day):
+        fig, ax = plots.plot_daynight_avg(ds, variable= variable, sel_day=None)
         plt.close(fig)
         del fig, ax
 
     # Variable selection dropdown (with an empty option)
-    var_options = [var for var in ds.data_vars if ds[var].dtype.kind in {'i', 'f'}]
+    var_options = [variable for variable in ds.data_vars if ds[variable].dtype.kind in {'i', 'f'}]
     var_dropdown = widgets.Dropdown(options=var_options, value=var_options[0], description="Variable:")
     day_options = np.unique(ds.TIME.values.astype('datetime64[D]'))
     day_options = [str(i) for i in day_options]
@@ -219,7 +216,7 @@ def daynight_avg(ds):
 
     # Create interactive plot
     out = widgets.interactive_output(plot_daynight_avg, {
-        'var': var_dropdown,
+        'variable': var_dropdown,
         'sel_day': day_slider
     })
 
@@ -244,7 +241,6 @@ def ts_plot(ds):
 
     def plot_ts_plot(percentile):
         fig, ax = plots.plot_ts(ds, percentile=percentile)
-        display(fig)
         plt.close(fig)
         del fig, ax
 
