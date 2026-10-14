@@ -184,3 +184,18 @@ def test_check_warns_and_returns_when_clean():
     cfg = loader.load({"display": {"vmin": {"TEMP": 4}}})
     with pytest.warns(UserWarning, match="not applied in this release"):
         assert loader.check(cfg) is cfg
+
+
+# --- init template --------------------------------------------------------------------------------
+
+
+def test_init_template_round_trips_and_validates(subset_ds):
+    import yaml
+
+    text = loader.init_template(subset_ds)
+    assert "config_version: 1" in text
+    assert "# default:" in text  # built-in default shown beside each seeded value
+    assert "# region:" in text and "bbox" in text  # region left commented out
+    cfg = loader.load(yaml.safe_load(text))
+    assert loader.validate(cfg, subset_ds) == []  # generated template is clean as written
+    assert "TEMP" in cfg.qc  # seeds the variables present in the file

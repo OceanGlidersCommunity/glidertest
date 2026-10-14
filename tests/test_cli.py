@@ -368,3 +368,15 @@ def test_report_skip_existing_leaves_fleet_page(tmp_path, subset_path, fake_repo
     capsys.readouterr()
     assert _run(["report", p, "--report-dir", str(tmp_path), "--skip-existing", "-n"]) == 0
     assert "would not be rebuilt" in capsys.readouterr().out
+
+
+def test_init_writes_template_file(tmp_path, subset_path):
+    out = tmp_path / "report.yaml"
+    assert _run(["init", str(subset_path), "-o", str(out)]) == 0
+    text = out.read_text()
+    assert "config_version: 1" in text and "TEMP" in text
+
+
+def test_init_missing_file(capsys):
+    assert _run(["init", "nope.nc"]) == 1
+    assert "no such file" in capsys.readouterr().err
