@@ -42,7 +42,7 @@ The file
 .. code-block:: yaml
 
    config_version: 1
-   source: "sea045 QC pass, 2026-10"      # free text, recorded in report.json and on the QC page
+   source: "sea045 QC pass, 2026-10"      # free text, recorded in report.json (qc_config_source)
 
    region:                                # optional; absent → the region test is not run
      bbox: [10, 50, 25, 70]               # [west, south, east, north] = lon_min, lat_min, lon_max, lat_max

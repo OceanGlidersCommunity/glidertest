@@ -159,9 +159,20 @@ class Config:
         }
 
 
-def _as_mapping(value: Any) -> Mapping[str, Any]:
-    """Return *value* as a read-only mapping, or an empty one when it is not a mapping."""
-    return MappingProxyType(dict(value)) if isinstance(value, Mapping) else MappingProxyType({})
+def _block_mapping(raw: Mapping[str, Any], key: str, shape: str) -> Mapping[str, Any] | None:
+    """Return ``raw[key]`` as a read-only mapping, ``None`` when absent, raising on a wrong type.
+
+    A known block present with the wrong type (``region: [10, 50, 25, 70]``, ``qc: TEMP``) is a
+    :class:`ConfigError` naming the key and the *shape* it expected — never silently coerced to an
+    empty mapping, which would run the report on defaults while the user believed the override applied.
+    """
+    if key not in raw or raw[key] is None:
+        return None
+    value = raw[key]
+    if not isinstance(value, Mapping):
+        msg = f"{key}: expected {shape}, got {type(value).__name__}"
+        raise ConfigError(msg)
+    return MappingProxyType(dict(value))
 
 
 def load(source: str | Path | Mapping[str, Any]) -> Config:
@@ -185,14 +196,24 @@ def load(source: str | Path | Mapping[str, Any]) -> Config:
     Raises
     ------
     ConfigError
-        If a file's top-level YAML is not a mapping.
+        If the file cannot be read, its YAML does not parse, its top-level document is not a mapping,
+        or a known block (``qc``, ``region``, ``display``, ``mission``, ``pages``) has the wrong type.
     """
     path: Path | None = None
     if isinstance(source, Mapping):
         raw: Mapping[str, Any] = source
     else:
         path = Path(source)
-        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            msg = f"{path}: cannot read config file ({exc.strerror or exc})"
+            raise ConfigError(msg) from exc
+        try:
+            loaded = yaml.safe_load(text)
+        except yaml.YAMLError as exc:
+            msg = f"{path}: invalid YAML ({exc})"
+            raise ConfigError(msg) from exc
         if loaded is None:
             loaded = {}
         if not isinstance(loaded, Mapping):
@@ -205,14 +226,15 @@ def load(source: str | Path | Mapping[str, Any]) -> Config:
     if isinstance(raw.get("glidertest"), Mapping):
         raw = raw["glidertest"]
 
+    qc_block = _block_mapping(raw, "qc", "a mapping of variables (or 'hysteresis') to tests")
     return Config(
         config_version=raw.get("config_version", _SUPPORTED_VERSION),
         source=raw.get("source"),
-        qc=_as_mapping(raw.get("qc")),
-        region=_as_mapping(raw["region"]) if isinstance(raw.get("region"), Mapping) else None,
-        display=_as_mapping(raw["display"]) if isinstance(raw.get("display"), Mapping) else None,
-        mission=_as_mapping(raw["mission"]) if isinstance(raw.get("mission"), Mapping) else None,
-        pages=_as_mapping(raw["pages"]) if isinstance(raw.get("pages"), Mapping) else None,
+        qc=qc_block if qc_block is not None else MappingProxyType({}),
+        region=_block_mapping(raw, "region", "a mapping with a 'bbox' key"),
+        display=_block_mapping(raw, "display", "a mapping"),
+        mission=_block_mapping(raw, "mission", "a mapping"),
+        pages=_block_mapping(raw, "pages", "a mapping"),
         path=path,
         extra_keys=tuple(k for k in raw if k not in _TOP_LEVEL_KEYS),
     )
@@ -233,14 +255,6 @@ def _span_issue(span: Any) -> str | None:
     if lo >= hi:
         return f"min must be less than max, got [{lo}, {hi}]"
     return None
-
-
-def _allowed_vars(ds: xr.Dataset | None) -> set[str]:
-    """Return the variable names a ``qc:`` block may key on: the built-in set plus any in *ds*."""
-    allowed = set(qc.configs)
-    if ds is not None:
-        allowed |= set(ds.data_vars)
-    return allowed
 
 
 def _validate_test(
@@ -337,8 +351,8 @@ def validate(cfg: Config, ds: xr.Dataset | None = None) -> list[ValidationIssue]
     cfg : Config
         The config to check (from :func:`load`).
     ds : xarray.Dataset, optional
-        The dataset the config will run against; lets the check accept OG1 variables beyond the
-        built-in set and warn about thresholds for absent variables.
+        The dataset the config will run against. Without it the check is shape-only (any variable
+        name is accepted); with it, a threshold set for a variable the file lacks is a WARNING.
 
     Returns
     -------
@@ -367,7 +381,6 @@ def validate(cfg: Config, ds: xr.Dataset | None = None) -> list[ValidationIssue]
                 ValidationIssue(WARNING, f"{key!r} is recognised but not applied in this release", key)
             )
 
-    allowed_vars = _allowed_vars(ds)
     for name, block in cfg.qc.items():
         path = f"qc.{name}"
         if name in _PACKAGE_TEST_FIELDS:
@@ -378,11 +391,10 @@ def validate(cfg: Config, ds: xr.Dataset | None = None) -> list[ValidationIssue]
                 ValidationIssue(WARNING, f"qc.{name} is recognised but not applied in this release", path)
             )
             continue
-        if name not in allowed_vars:
-            issues.append(
-                ValidationIssue(ERROR, f"unknown variable {name!r}; allowed: {_fmt(allowed_vars)}", path)
-            )
-            continue
+        # A variable name is not checked against a vocabulary: the built-in four are defaults, not the
+        # allowed set, so a user may configure CNDC/BBP700/… thresholds. Shape is still checked here
+        # (no dataset needed); whether the file actually carries the variable is a WARNING, raised once
+        # in report() with the file open — never an error that blocks the run from the CLI pre-check.
         if ds is not None and name not in ds.data_vars:
             issues.append(
                 ValidationIssue(WARNING, f"{name!r} is not in this dataset; its thresholds will not be used", path)

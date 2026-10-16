@@ -203,6 +203,15 @@ def _qc_applies(c: Ctx) -> bool:
     return any(v in c.ds for v in _QC_VARS) or any(n.endswith("_QC") for n in c.ds.data_vars)
 
 
+def _qc_or_region_applies(c: Ctx) -> bool:
+    """The glidertest-diagnostics section/page applies when QC applies or a region box is configured.
+
+    The mission-level region test is position-only, so it must reach the page even for a file with a
+    configured ``region.bbox`` but no standard QC variable (then the only row shown is the region one).
+    """
+    return _qc_applies(c) or c.bbox is not None
+
+
 def _has(var: str) -> Callable[[Ctx], bool]:
     """Return an ``applies_to`` predicate: the panel applies only when *var* is in the dataset."""
     return lambda c: var in c.ds
@@ -443,7 +452,7 @@ PANELS["full_qc_link"] = Panel(
         '<p class="caption"><a href="qc.html">Full QC →</a> per-variable diagnostics: where each '
         "glidertest test fires, and whether its thresholds fit the sampling.</p>"
     ),
-    applies_to=_qc_applies,
+    applies_to=_qc_or_region_applies,
 )
 
 for _pid, _adapter, _var, _cap, _slot in _VAR_FIGURE_PANELS:
@@ -510,7 +519,7 @@ PROFILE = Profile(
             id="qc_glidertest",
             title="QC — glidertest diagnostics",
             panels=("qc_glidertest", "full_qc_link"),
-            applies_to=_qc_applies,
+            applies_to=_qc_or_region_applies,
         ),
     ),
 )
@@ -681,7 +690,7 @@ QC = Profile(
             id="qc_glidertest",
             title="QC — glidertest diagnostics",
             panels=("qc_glidertest",),
-            applies_to=_qc_applies,
+            applies_to=_qc_or_region_applies,
         ),
         Section(
             id="qc_gross_ts",
@@ -721,7 +730,7 @@ def _inventory_lead(ctx: Ctx) -> str:
 # mapping is reconciled when the masthead nav is vendored, per the shared-nav plan §3.2.)
 PAGES: tuple[Page, ...] = (
     Page("index.html", "Mission", "Mission report", "landing", "summary", PROFILE, lambda _c: True),
-    Page("qc.html", "QC", "QC", "aggregate-a", "summary", QC, _qc_applies),
+    Page("qc.html", "QC", "QC", "aggregate-a", "summary", QC, _qc_or_region_applies),
     Page("ctd.html", "CTD", "CTD", "aggregate-b", "reports", CTD,
          lambda c: "TEMP" in c.ds or "PSAL" in c.ds),
     Page("oxygen.html", "Oxygen", "Oxygen", "aggregate-b", "reports", OXYGEN, _has("DOXY")),

@@ -58,6 +58,35 @@ def test_load_records_unknown_top_level_keys():
     assert cfg.extra_keys == ("bogus",)
 
 
+def test_load_missing_file_is_configerror(tmp_path):
+    # Review finding 1: a missing -c file must surface as ConfigError (caught by the CLI -> exit 2),
+    # not an unhandled FileNotFoundError traceback.
+    with pytest.raises(loader.ConfigError, match="cannot read config file"):
+        loader.load(tmp_path / "does_not_exist.yaml")
+
+
+def test_load_malformed_yaml_is_configerror(tmp_path):
+    # Review finding 1: a syntactically broken YAML file is a ConfigError, not a raw yaml.YAMLError.
+    path = tmp_path / "broken.yaml"
+    path.write_text("qc:\n  TEMP: [unclosed\n")
+    with pytest.raises(loader.ConfigError, match="invalid YAML"):
+        loader.load(path)
+
+
+@pytest.mark.parametrize(
+    ("block", "shape"),
+    [
+        ({"region": [10, 50, 25, 70]}, "bbox"),  # list where a {bbox: ...} mapping was meant
+        ({"qc": "TEMP"}, "mapping"),  # scalar where the variables mapping was meant
+    ],
+)
+def test_load_wrong_typed_block_is_configerror(block, shape):
+    # Review finding 4: never silently coerce a wrong-typed known block to {} (which would run the
+    # report on defaults while the user believed their override applied) — error naming the shape.
+    with pytest.raises(loader.ConfigError, match=shape):
+        loader.load(block)
+
+
 # --- resolve_qc ----------------------------------------------------------------------------------
 
 
@@ -97,11 +126,12 @@ def test_validate_unknown_top_level_key():
     assert any(i.severity == loader.ERROR and "unknown top-level key 'bogus'" in i.message for i in issues)
 
 
-def test_validate_unknown_variable_names_allowed_set():
-    issues = loader.validate(loader.load({"qc": {"NOPE": {"spike_test": {"suspect_threshold": 1}}}}))
-    err = next(i for i in issues if i.severity == loader.ERROR)
-    assert "unknown variable 'NOPE'" in err.message
-    assert "TEMP" in err.message  # names the allowed set
+def test_validate_variable_name_not_a_vocabulary():
+    # The built-in four are defaults, not an allowed-set: without a dataset the check is shape-only,
+    # so any variable name validates (CNDC/BBP700/…). Variable existence is a WARNING, checked only
+    # with the file open in report(), never an error that blocks the run.
+    issues = loader.validate(loader.load({"qc": {"CNDC": {"spike_test": {"suspect_threshold": 1}}}}))
+    assert not any(i.severity == loader.ERROR for i in issues)
 
 
 def test_validate_unknown_test():
@@ -158,10 +188,11 @@ def test_validate_deferred_block_warns():
 
 def test_validate_with_ds_accepts_og1_variable():
     cfg = loader.load({"qc": {"BBP700": {"spike_test": {"suspect_threshold": 1}}}})
-    # BBP700 is not a built-in default variable, but it is in the dataset, so it is allowed.
+    # BBP700 is not a built-in default variable; it is still accepted (shape-only), and with the
+    # dataset carrying it the check raises nothing.
     assert loader.validate(cfg, _ds("BBP700")) == []
-    # Without the dataset, it is unknown.
-    assert any(i.severity == loader.ERROR for i in loader.validate(cfg))
+    # Without the dataset the check is shape-only — the unknown name is not an error.
+    assert not any(i.severity == loader.ERROR for i in loader.validate(cfg))
 
 
 def test_validate_with_ds_warns_on_absent_variable():

@@ -258,7 +258,7 @@ def sample_tests(ds, var='TEMP', *, config=None):
                                     max_val=gr_cfg['suspect_span'][1])
     sp_cfg = cfg[var]['spike_test']
     spike = qartod.spike_test(ds[var], suspect_threshold=sp_cfg['suspect_threshold'],
-                              fail_threshold=sp_cfg['fail_threshold'], method="average")
+                              fail_threshold=sp_cfg['fail_threshold'], method=sp_cfg.get('method', "average"))
     fl = cfg[var]['flat_line_test']
     flat = qartod.flat_line_test(ds[var], ds.TIME, fl['suspect_threshold'],
                                  fl['fail_threshold'], fl['tolerance'])

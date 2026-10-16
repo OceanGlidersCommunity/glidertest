@@ -256,6 +256,38 @@ def test_region_not_evaluated_without_position(fresh_subset):
     assert region["evaluated"] is False
 
 
+def test_region_runs_without_standard_qc_variable(fresh_subset):
+    # Review finding 3 (+ Copilot): the region test is mission-level and position-only, so it must run
+    # for a file with position but no TEMP/PSAL/DOXY/CHLA — both the diagnostics data and the page gate.
+    from glidertest.reports import _mission
+
+    ds = fresh_subset.drop_vars([v for v in ("TEMP", "PSAL", "DOXY", "CHLA") if v in fresh_subset])
+    lon, lat = ds["LONGITUDE"].values, ds["LATITUDE"].values
+    bbox = [float(np.nanmin(lon)) - 1, float(np.nanmin(lat)) - 1, float(np.nanmax(lon)) + 1, float(np.nanmax(lat)) + 1]
+    diag = qc_section.diagnostics_data(ds, None, bbox)["diagnostics"]
+    assert diag is not None and diag["present"] == [] and "region" in diag  # region row, empty var table
+    ctx = _mission.Ctx(ds=ds, bbox=bbox)
+    assert _mission._qc_or_region_applies(ctx) is True  # the page/section gate admits it
+    assert "Region test" in _mission.PANELS["qc_glidertest"].render(ctx)
+
+
+def test_spike_method_from_config_is_applied(fresh_subset, monkeypatch):
+    # Copilot finding: a configured spike_test.method must reach qartod.spike_test, not be ignored
+    # while the thresholds table still marks the row "config".
+    from glidertest.config import loader
+
+    captured = {}
+
+    def spy(*args, **kwargs):
+        captured["method"] = kwargs.get("method")
+        return np.zeros(fresh_subset.sizes["N_MEASUREMENTS"], dtype="uint8")
+
+    monkeypatch.setattr(qc.qartod, "spike_test", spy)
+    cfg = loader.resolve_qc(loader.load({"qc": {"TEMP": {"spike_test": {"method": "differential"}}}}))
+    qc.sample_tests(fresh_subset, var="TEMP", config=cfg)
+    assert captured["method"] == "differential"
+
+
 def test_region_sentence_renders_in_qc_panel(subset_ds):
     # The region row reaches the HTML (guards against a template typo in _qc_glidertest.html).
     from glidertest.reports import _mission

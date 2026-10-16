@@ -2,6 +2,7 @@
 {% if basic_checks %}<p class="caption">Profile number: {{ basic_checks.profnum }}. Profile duration: {{ basic_checks.dur }}.</p>
 {% endif %}
 {% if diagnostics %}
+{% if diagnostics.present %}
 <p class="caption">glidertest diagnostics — run on the fly, not written to the file. Thresholds are glidertest's defaults unless a report config overrides them, shown so the verdict can be reproduced.</p>
 <table>
 <thead><tr><th>Variable</th><th>Test</th><th>Suspect range / threshold</th><th>Fail range / threshold</th><th>Source</th></tr></thead>
@@ -10,8 +11,10 @@
 {% endfor %}
 </tbody>
 </table>
+{% endif %}
 {% if diagnostics.region %}<p class="note"><strong>Region test</strong> — allowed box [west, south, east, north]: <span class="mono">{{ diagnostics.region.bbox }}</span>. {% if diagnostics.region.evaluated %}{{ diagnostics.region.n_outside }} of {{ diagnostics.region.n_evaluated }} positioned samples fall outside the region (flagged fail){% if diagnostics.region.n_unknown %}; {{ diagnostics.region.n_unknown }} samples had no position and were not evaluated{% endif %}.{% else %}Not evaluated: no position data (LONGITUDE/LATITUDE absent or all-NaN).{% endif %}</p>
 {% endif %}
+{% if diagnostics.present %}
 <p class="caption">Test × variable: flagged-sample counts (per-sample tests show a small dashed bar). Gross range applies the suspect span only — the fail span above is not yet evaluated. Hysteresis counts depth bins with &gt;5% dive–climb error; a variable is flagged when more than 5 bins exceed it.</p>
 <table>
 <thead><tr><th>Test</th>{% for v in diagnostics.present %}<th>{{ v }}</th>{% endfor %}</tr></thead>
@@ -20,6 +23,9 @@
 {% endfor %}
 </tbody>
 </table>
+{% else %}
+<p class="caption">No per-variable QC diagnostics apply to this dataset's variables; only the mission-level region test above is shown.</p>
+{% endif %}
 {% else %}
 <p class="caption">No glidertest QC diagnostics apply to this dataset's variables.</p>
 {% endif %}

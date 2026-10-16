@@ -295,11 +295,23 @@ def _region(ds: xr.Dataset, bbox: list) -> dict[str, Any]:
     }
 
 
+def _span_display(block: dict, key: str) -> str:
+    """Return ``[min, max]`` for *block[key]*, or ``—`` when that span is absent (never an invented value)."""
+    span = block.get(key)
+    return f"[{span[0]}, {span[1]}]" if span else "—"
+
+
 def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None = None) -> dict[str, Any] | None:
-    """Return the glidertest-diagnostics data (thresholds + matrix + region), or ``None`` when no QC var applies."""
+    """Return the glidertest-diagnostics data (thresholds + matrix + region), or ``None`` when nothing applies.
+
+    The region test is mission-level: it runs whenever a *bbox* is configured and the file has position
+    data, independent of which QC variables are present — so a file with position but no standard QC
+    variable still gets a region row. ``None`` only when there is neither a QC variable nor a region.
+    """
     config = config if config is not None else qc.configs
     present = [v for v in _QC_VARS if v in ds]
-    if not present:
+    region = _region(ds, bbox) if bbox is not None else None
+    if not present and region is None:
         return None
 
     thr_rows = []
@@ -310,8 +322,8 @@ def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None =
             {
                 "var": v,
                 "test": "gross-range",
-                "suspect": f"[{g['suspect_span'][0]}, {g['suspect_span'][1]}]",
-                "fail": f"[{g['fail_span'][0]}, {g['fail_span'][1]}] (not applied)",
+                "suspect": _span_display(g, "suspect_span"),
+                "fail": f"{_span_display(g, 'fail_span')} (not applied)",
                 "src": _src(config, v, "gross_range_test"),
             }
         )
@@ -359,25 +371,26 @@ def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None =
             results[v] = None
 
     matrix_rows = []
-    for label, kind, idx in _MATRIX_ROWS:
-        cells = []
-        for v in present:
-            r = results[v]
-            if r is None:
-                cells.append({"text": "–"})
-            elif kind == "gross":
-                cells.append(_gross_cell(ds, v, config))
-            elif kind == "sample":
-                cells.append(_sample_cell(np.asarray(r[idx])))
-            elif kind == "hyst":
-                cells.append(_hyst_cell(r[idx]))
-            else:
-                raise ValueError(f"unknown matrix cell kind: {kind!r}")
-        matrix_rows.append({"label": label, "cells": cells})
+    if present:
+        for label, kind, idx in _MATRIX_ROWS:
+            cells = []
+            for v in present:
+                r = results[v]
+                if r is None:
+                    cells.append({"text": "–"})
+                elif kind == "gross":
+                    cells.append(_gross_cell(ds, v, config))
+                elif kind == "sample":
+                    cells.append(_sample_cell(np.asarray(r[idx])))
+                elif kind == "hyst":
+                    cells.append(_hyst_cell(r[idx]))
+                else:
+                    raise ValueError(f"unknown matrix cell kind: {kind!r}")
+            matrix_rows.append({"label": label, "cells": cells})
 
     result: dict[str, Any] = {"present": present, "thresholds": thr_rows, "matrix": matrix_rows}
-    if bbox is not None:
-        result["region"] = _region(ds, bbox)
+    if region is not None:
+        result["region"] = region
     return result
 
 
