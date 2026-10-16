@@ -126,14 +126,14 @@ def _delivered(ds: xr.Dataset) -> dict[str, Any]:
     }
 
 
-def _gross_cell(ds: xr.Dataset, v: str) -> dict[str, Any]:
+def _gross_cell(ds: xr.Dataset, v: str, config: dict | None = None) -> dict[str, Any]:
     """Diagnostics matrix cell for the gross-range test: out-of-range count + a small bar.
 
     The count comes from :func:`glidertest.qc.gross_range_mask` — the same per-sample mask the QC
     plots draw — so the table figure and the plotted hits cannot diverge.
     """
     n = ds.sizes["N_MEASUREMENTS"] if "N_MEASUREMENTS" in ds.sizes else int(ds[v].size)
-    nv = int(qc.gross_range_mask(ds, v).sum())
+    nv = int(qc.gross_range_mask(ds, v, config=config).sum())
     if nv == 0:
         return {"text": "clean", "cls": "qc-good"}
     return {
@@ -164,26 +164,33 @@ def _hyst_cell(err: np.ndarray) -> dict[str, Any]:
     return {"text": f"{n_over}/{arr.size} bins", "cls": cls}
 
 
-def gross_range_ts_note(ds: xr.Dataset) -> str | None:
+def _fmt_span(span: list | None) -> str:
+    """Return a span as ``[min, max]``, or ``—`` when it is absent (never an invented or crashed value)."""
+    return f"[{span[0]}, {span[1]}]" if span else "—"
+
+
+def gross_range_ts_note(ds: xr.Dataset, config: dict | None = None) -> str | None:
     """Return an HTML note of the suggested gross-range spans for TEMP and PSAL (beside the T–S plot).
 
-    ``None`` when neither TEMP nor PSAL has finite values.
+    ``None`` when neither TEMP nor PSAL has finite values. *config* supplies the applied thresholds
+    (resolved overrides); ``None`` uses the built-in defaults.
     """
+    cfg = config if config is not None else qc.configs
     rows = [(v, qc.suggest_gross_range(ds, v)) for v in ("TEMP", "PSAL")]
     rows = [(v, g) for v, g in rows if g]
     if not rows:
         return None
     pct = rows[0][1]["inner_pct"]
     cur = "".join(
-        f'<li><strong>{v}</strong> — suspect [{gc["suspect_span"][0]}, {gc["suspect_span"][1]}], '
-        f'fail [{gc["fail_span"][0]}, {gc["fail_span"][1]}]</li>'
+        f'<li><strong>{v}</strong> — suspect {_fmt_span(gc["suspect_span"])}, '
+        f'fail {_fmt_span(gc["fail_span"])}</li>'
         for v, _g in rows
-        if (gc := qc.configs.get(v, {}).get("gross_range_test", {})).get("suspect_span")
+        if (gc := cfg.get(v, {}).get("gross_range_test", {})).get("suspect_span")
         and gc.get("fail_span")
     )
     items = "".join(
-        f'<li><strong>{v}</strong> — suspect [{g["suspect"][0]}, {g["suspect"][1]}], '
-        f'fail [{g["fail"][0]}, {g["fail"][1]}]</li>'
+        f'<li><strong>{v}</strong> — suspect {_fmt_span(g["suspect"])}, '
+        f'fail {_fmt_span(g["fail"])}</li>'
         for v, g in rows
     )
     return (
@@ -196,17 +203,18 @@ def gross_range_ts_note(ds: xr.Dataset) -> str | None:
     )
 
 
-def suggested_limits_note(ds: xr.Dataset, var: str) -> str | None:
+def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) -> str | None:
     """Return an HTML note with glidertest's suggested gross-range and flat-line config for *var*.
 
     A diagnostic suggestion derived from *this* mission (:func:`glidertest.qc.suggest_gross_range` and
     :func:`~glidertest.qc.suggest_flat_line`) — a starting point for a mission config, not a fix and
-    not a physical range. ``None`` when the variable has no finite values.
+    not a physical range. ``None`` when the variable has no finite values. *config* supplies the
+    applied (current) thresholds shown alongside; ``None`` uses the built-in defaults.
     """
     if not np.isfinite(np.asarray(ds[var].values, dtype=float)).any():
         return None  # no finite data for this variable: no mission-descriptive limits to suggest
     fl = qc.suggest_flat_line(ds, var)  # the variable's own sampling interval, not the whole record's
-    cfg = qc.configs.get(var, {})
+    cfg = (config if config is not None else qc.configs).get(var, {})
     cur, items, explain = [], [], []
     # TEMP/PSAL gross range is shown jointly beside the T–S plot (gross_range_ts_note), so it is
     # omitted here to avoid duplication; DOXY/CHLA (no T–S) carry their gross suggestion here. Current
@@ -220,12 +228,12 @@ def suggested_limits_note(ds: xr.Dataset, var: str) -> str | None:
         if gc.get("suspect_span") and gc.get("fail_span"):
             cur.append(
                 f'<li><strong>{var}</strong> gross range — '
-                f'suspect [{gc["suspect_span"][0]}, {gc["suspect_span"][1]}], '
-                f'fail [{gc["fail_span"][0]}, {gc["fail_span"][1]}]</li>'
+                f'suspect {_fmt_span(gc["suspect_span"])}, '
+                f'fail {_fmt_span(gc["fail_span"])}</li>'
             )
         items.append(
-            f'<li><strong>{var}</strong> gross range — suspect [{gr["suspect"][0]}, {gr["suspect"][1]}], '
-            f'fail [{gr["fail"][0]}, {gr["fail"][1]}]</li>'
+            f'<li><strong>{var}</strong> gross range — suspect {_fmt_span(gr["suspect"])}, '
+            f'fail {_fmt_span(gr["fail"])}</li>'
         )
         explain.append(
             f'The gross span is the central {gr["inner_pct"]:g}% of the finite values '
@@ -256,11 +264,63 @@ def suggested_limits_note(ds: xr.Dataset, var: str) -> str | None:
     )
 
 
-def _diagnostics(ds: xr.Dataset) -> dict[str, Any] | None:
-    """Return the glidertest-diagnostics data (thresholds + matrix), or ``None`` when no QC var applies."""
-    config = qc.configs
+def _src(config: dict, var: str, test: str) -> str:
+    """Return ``"config"`` when *var*'s *test* thresholds differ from the built-in default, else ``"default"``.
+
+    Value-compare (a user who sets a value equal to the default reads as ``default`` — the report.json
+    ``qc_config`` block carries the exact overrides for anyone who needs the precise key set).
+    """
+    return "config" if config.get(var, {}).get(test) != qc.configs.get(var, {}).get(test) else "default"
+
+
+def region_result(ds: xr.Dataset, bbox: list) -> dict[str, Any]:
+    """Return the mission-level region-test result: the box, and how many samples fall outside it.
+
+    The outside fraction is reported over *evaluated* samples (a known position), never over the
+    whole record: a sample whose position is unknown (NaN ``LONGITUDE``/``LATITUDE``, QARTOD flag 9)
+    is not "inside" and must not pad the denominator. ``{"bbox", "evaluated": False}`` when no sample
+    has a usable position (vars absent, or every position NaN) — a finding about the file, shown not
+    skipped; else ``{"bbox", "evaluated": True, "n_outside", "n_evaluated", "n_unknown"}``.
+    """
+    w, s, e, n = bbox
+    box = f"[{w}, {s}, {e}, {n}]"
+    if "LONGITUDE" not in ds or "LATITUDE" not in ds:
+        return {"bbox": box, "evaluated": False}
+    flags = np.asarray(qc.region_test(ds, bbox))
+    n_unknown = int((flags == 9).sum())
+    n_evaluated = int((flags != 9).sum())  # positioned samples: inside (1) or outside (4)
+    if n_evaluated == 0:
+        return {"bbox": box, "evaluated": False}  # every position unknown — nothing to check
+    return {
+        "bbox": box,
+        "evaluated": True,
+        "n_outside": int((flags == 4).sum()),
+        "n_evaluated": n_evaluated,
+        "n_unknown": n_unknown,
+    }
+
+
+def _span_display(block: dict, key: str) -> str:
+    """Return ``[min, max]`` for *block[key]*, or ``—`` when that span is absent (never an invented value)."""
+    return _fmt_span(block.get(key))
+
+
+def _diagnostics(
+    ds: xr.Dataset, config: dict | None = None, bbox: list | None = None, region: dict | None = None
+) -> dict[str, Any] | None:
+    """Return the glidertest-diagnostics data (thresholds + matrix + region), or ``None`` when nothing applies.
+
+    The region test is mission-level: it runs whenever a *bbox* is configured and the file has position
+    data, independent of which QC variables are present — so a file with position but no standard QC
+    variable still gets a region row. ``None`` only when there is neither a QC variable nor a region.
+    *region* lets the caller pass a pre-computed :func:`region_result` (cached on the Ctx across pages);
+    when ``None`` it is computed here from *bbox*.
+    """
+    config = config if config is not None else qc.configs
     present = [v for v in _QC_VARS if v in ds]
-    if not present:
+    if region is None and bbox is not None:
+        region = region_result(ds, bbox)
+    if not present and region is None:
         return None
 
     thr_rows = []
@@ -271,8 +331,9 @@ def _diagnostics(ds: xr.Dataset) -> dict[str, Any] | None:
             {
                 "var": v,
                 "test": "gross-range",
-                "suspect": f"[{g['suspect_span'][0]}, {g['suspect_span'][1]}]",
-                "fail": f"[{g['fail_span'][0]}, {g['fail_span'][1]}] (not applied)",
+                "suspect": _span_display(g, "suspect_span"),
+                "fail": f"{_span_display(g, 'fail_span')} (not applied)",
+                "src": _src(config, v, "gross_range_test"),
             }
         )
         thr_rows.append(
@@ -281,6 +342,7 @@ def _diagnostics(ds: xr.Dataset) -> dict[str, Any] | None:
                 "test": "spike",
                 "suspect": f"|Δ| > {s['suspect_threshold']}",
                 "fail": f"|Δ| > {s['fail_threshold']}",
+                "src": _src(config, v, "spike_test"),
             }
         )
         f = config[v]["flat_line_test"]
@@ -290,17 +352,18 @@ def _diagnostics(ds: xr.Dataset) -> dict[str, Any] | None:
                 "test": "flat-line",
                 "suspect": f"flat ≥ {f['suspect_threshold']:g} s (tol ±{f['tolerance']:g})",
                 "fail": f"flat ≥ {f['fail_threshold']:g} s (tol ±{f['tolerance']:g})",
+                "src": _src(config, v, "flat_line_test"),
             }
         )
-        # Hysteresis thresholds are hysteresis_verdict's defaults (pct per bin, then bin count), read
-        # from the function so the table cannot drift from the verdict rule.
-        _pct, _bins = qc.hysteresis_verdict.__defaults__
+        # Hysteresis thresholds are the named verdict constants (shared with hysteresis_verdict's
+        # defaults), so the table cannot drift from the rule. Not configurable here, so always "default".
         thr_rows.append(
             {
                 "var": v,
                 "test": "hysteresis",
-                "suspect": f"> {_pct}% dive–climb error per depth bin",
-                "fail": f"> {_bins} bins exceed",
+                "suspect": f"> {qc.HYSTERESIS_PCT_THRESHOLD}% dive–climb error per depth bin",
+                "fail": f"> {qc.HYSTERESIS_BIN_THRESHOLD} bins exceed",
+                "src": "default",
             }
         )
 
@@ -310,28 +373,37 @@ def _diagnostics(ds: xr.Dataset) -> dict[str, Any] | None:
     results: dict[str, tuple | None] = {}
     for v in present:
         try:
-            results[v] = qc.qc_checks(ds, var=v)
+            results[v] = qc.qc_checks(ds, var=v, config=config)
         except (ValueError, KeyError, IndexError, ZeroDivisionError, RuntimeError):
             results[v] = None
 
     matrix_rows = []
-    for label, kind, idx in _MATRIX_ROWS:
-        cells = []
-        for v in present:
-            r = results[v]
-            if r is None:
-                cells.append({"text": "–"})
-            elif kind == "gross":
-                cells.append(_gross_cell(ds, v))
-            elif kind == "sample":
-                cells.append(_sample_cell(np.asarray(r[idx])))
-            elif kind == "hyst":
-                cells.append(_hyst_cell(r[idx]))
-            else:
-                raise ValueError(f"unknown matrix cell kind: {kind!r}")
-        matrix_rows.append({"label": label, "cells": cells})
+    if present:
+        for label, kind, idx in _MATRIX_ROWS:
+            cells = []
+            for v in present:
+                r = results[v]
+                if r is None:
+                    cells.append({"text": "–"})
+                elif kind == "gross":
+                    cells.append(_gross_cell(ds, v, config))
+                elif kind == "sample":
+                    cells.append(_sample_cell(np.asarray(r[idx])))
+                elif kind == "hyst":
+                    cells.append(_hyst_cell(r[idx]))
+                else:
+                    raise ValueError(f"unknown matrix cell kind: {kind!r}")
+            matrix_rows.append({"label": label, "cells": cells})
 
-    return {"present": present, "thresholds": thr_rows, "matrix": matrix_rows}
+    result: dict[str, Any] = {
+        "present": present,
+        "thresholds": thr_rows,
+        "matrix": matrix_rows,
+        "hyst": {"pct": qc.HYSTERESIS_PCT_THRESHOLD, "bins": qc.HYSTERESIS_BIN_THRESHOLD},
+    }
+    if region is not None:
+        result["region"] = region
+    return result
 
 
 def delivered_data(ds: xr.Dataset) -> dict[str, Any]:
@@ -339,15 +411,20 @@ def delivered_data(ds: xr.Dataset) -> dict[str, Any]:
     return {"delivered": _delivered(ds)}
 
 
-def diagnostics_data(ds: xr.Dataset) -> dict[str, Any]:
+def diagnostics_data(
+    ds: xr.Dataset, config: dict | None = None, bbox: list | None = None, region: dict | None = None
+) -> dict[str, Any]:
     """Return glidertest's on-the-fly QC diagnostics as data for ``_qc_glidertest.html``.
 
     Includes the basic profile-number/duration checks, which glidertest computes on the fly (they are
     not file flags), so they sit with the glidertest diagnostics rather than the delivered census.
+    *config* supplies the resolved (possibly overridden) thresholds; ``None`` uses the defaults.
+    *bbox* (``[west, south, east, north]``) adds the mission-level region test; ``None`` omits it.
+    *region* is an optional pre-computed :func:`region_result` (cached on the Ctx, reused across pages).
     """
-    return {"basic_checks": _basic_checks(ds), "diagnostics": _diagnostics(ds)}
+    return {"basic_checks": _basic_checks(ds), "diagnostics": _diagnostics(ds, config, bbox, region)}
 
 
-def qc_section_data(ds: xr.Dataset) -> dict[str, Any]:
+def qc_section_data(ds: xr.Dataset, config: dict | None = None, bbox: list | None = None) -> dict[str, Any]:
     """Return the combined QC section data (delivered census + glidertest diagnostics)."""
-    return {**delivered_data(ds), **diagnostics_data(ds)}
+    return {**delivered_data(ds), **diagnostics_data(ds, config, bbox)}

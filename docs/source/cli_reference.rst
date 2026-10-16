@@ -52,6 +52,9 @@ Examples:
    # One mission's pages straight into a folder, no tree and no fleet page:
    glidertest report sea045_20230604T1253_delayed.nc -o sea045_report/
 
+   # Override the QC thresholds from a report config (see :ref:`config_reference`):
+   glidertest report sea045_20230604T1253_delayed.nc --report-dir reports/ -c report.yaml
+
 Notes:
 
 - ``FILE`` may be a directory; ``--pattern`` (default ``*.nc``) selects files inside it, not
@@ -76,3 +79,27 @@ renaming mission directories.
    :prog: glidertest
    :path: navigator
    :nodescription:
+
+----
+
+glidertest init
+---------------
+
+Read an OG1 netCDF file and write a commented report-config template, seeded with glidertest's
+suggested QC thresholds for that mission and the built-in default beside each. Edit it and pass it
+back with ``glidertest report -c``. See :ref:`config_reference`.
+
+.. argparse::
+   :module: glidertest.cli
+   :func: build_parser
+   :prog: glidertest
+   :path: init
+   :nodescription:
+
+Example:
+
+.. code-block:: bash
+
+   glidertest init sea045_20230604T1253_delayed.nc -o report.yaml
+   # edit report.yaml, then:
+   glidertest report sea045_20230604T1253_delayed.nc --report-dir reports/ -c report.yaml

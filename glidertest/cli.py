@@ -144,6 +144,16 @@ def _add_report_parser(sub: argparse._SubParsersAction) -> None:
         "not recursive).",
     )
     p.add_argument(
+        "-c",
+        "--config",
+        dest="config",
+        type=Path,
+        default=None,
+        metavar="FILE",
+        help="Report config (YAML) overriding QC thresholds per variable and test. Validated before "
+        "anything is written; applies to every FILE in the run.",
+    )
+    p.add_argument(
         "-n",
         "--dry-run",
         dest="dry_run",
@@ -203,6 +213,32 @@ def _add_navigator_parser(sub: argparse._SubParsersAction) -> None:
     p.set_defaults(func=cmd_navigator)
 
 
+def _add_init_parser(sub: argparse._SubParsersAction) -> None:
+    """Add the ``init`` subcommand and its arguments to *sub*."""
+    p = sub.add_parser(
+        "init",
+        help="Write a report-config template seeded from a mission file.",
+        description=(
+            "Read an OG1 netCDF file and write a commented report-config template, seeded with "
+            "glidertest's suggested QC thresholds for that mission (and the built-in default beside "
+            "each). Edit it and pass it back with 'glidertest report -c'. The region box is left "
+            "empty — a box drawn from the data cannot fail its own region test, so set it yourself."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("input", metavar="FILE", help="OG1 netCDF file to seed the template from.")
+    p.add_argument(
+        "-o",
+        "--output",
+        dest="output",
+        type=Path,
+        default=None,
+        metavar="OUT",
+        help="Write the template to OUT instead of standard output.",
+    )
+    p.set_defaults(func=cmd_init)
+
+
 def cmd_report(args: argparse.Namespace) -> int:
     """Run the ``report`` subcommand; return a process exit code (0 ok, 1 failures, 2 usage)."""
     import matplotlib
@@ -228,6 +264,18 @@ def cmd_report(args: argparse.Namespace) -> int:
     if not files:
         print("no files matched", file=sys.stderr)
         return 1
+
+    # Validate the report config once, up front: a bad config fails the whole run before any file is
+    # opened, rather than surfacing as a per-file error inside the loop. report() re-validates per
+    # file against that file's variables (warning about thresholds for absent variables).
+    if args.config is not None:
+        from glidertest.config import loader
+
+        try:
+            loader.check(loader.load(args.config))
+        except loader.ConfigError as exc:
+            print(f"glidertest report: error: {exc}", file=sys.stderr)
+            return 2
     if flat and len(files) > 1:
         print(
             "glidertest report: error: -o/--output-dir takes a single FILE; "
@@ -249,7 +297,7 @@ def cmd_report(args: argparse.Namespace) -> int:
         try:
             with xr.open_dataset(path) as ds:
                 return resolve_mission_id(ds)
-        except Exception:  # any unreadable file is reported in the main loop, so None here
+        except Exception:  # noqa: BLE001  # I/O boundary: any unreadable file is reported in the main loop, None here
             return None
 
     # Resolve each mission's directory name once, up front (root layout only; flat is single-file
@@ -311,10 +359,11 @@ def cmd_report(args: argparse.Namespace) -> int:
                     navigator=False,
                     mission_id=(None if flat else name),
                     layout="flat" if flat else "root",
+                    config=args.config,
                 )
             print(landing)
             wrote += 1
-        except Exception as exc:  # catch-all at the file boundary: one line per failure, run on
+        except Exception as exc:  # noqa: BLE001  # catch-all at the file boundary: one line per failure, run on
             print(f"{path}: {type(exc).__name__}: {exc}", file=sys.stderr)
             failed += 1
             continue
@@ -351,8 +400,35 @@ def cmd_navigator(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_init(args: argparse.Namespace) -> int:
+    """Run the ``init`` subcommand; return a process exit code (0 ok, 1 on a bad file)."""
+    import matplotlib
+
+    matplotlib.use("Agg")  # a CLI must not depend on the caller's backend; set before xarray
+    import xarray as xr
+
+    from glidertest.config import loader
+
+    path = Path(args.input)
+    if not path.is_file():
+        print(f"{path}: no such file", file=sys.stderr)
+        return 1
+    try:
+        with xr.open_dataset(path) as ds:
+            text = loader.init_template(ds)
+    except (OSError, ValueError, KeyError) as exc:  # unreadable file or a dataset init cannot seed
+        print(f"{path}: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+    if args.output is not None:
+        args.output.write_text(text, encoding="utf-8")
+        print(args.output)
+    else:
+        print(text, end="")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
-    """Build the ``glidertest`` argument parser (the ``report`` and ``navigator`` subcommands).
+    """Build the ``glidertest`` argument parser (the ``report``, ``navigator`` and ``init`` subcommands).
 
     Separated from :func:`main` so the documentation can render the parser with
     ``sphinx-argparse`` and the two cannot drift apart.
@@ -372,6 +448,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", title="commands", metavar="<command>")
     _add_report_parser(sub)
     _add_navigator_parser(sub)
+    _add_init_parser(sub)
     return parser
 
 

@@ -181,9 +181,158 @@ def test_suggest_note_panel_is_guarded_against_a_raising_builder(subset_ds, monk
     # A note builder that raises must yield a visible failure block on the page, not abort the report.
     from glidertest.reports import _mission
 
-    def boom(ds, var):
+    def boom(ds, var, config=None):
         raise ValueError("kaboom")
 
     monkeypatch.setattr(_mission.qc_section, "suggested_limits_note", boom)
     html = _mission.PANELS["qc_TEMP_suggest"].render(_mission.Ctx(ds=subset_ds))
     assert "none-note" in html and "kaboom" in html
+
+
+# --- config overrides propagate through the seam --------------------------------------------------
+
+
+def test_override_changes_gross_range_count(subset_ds):
+    # A narrower suspect span must flag more samples: the override reaches qc.gross_range_mask.
+    from glidertest.config import loader
+
+    default = int(qc.gross_range_mask(subset_ds, "TEMP").sum())
+    cfg = loader.resolve_qc(loader.load({"qc": {"TEMP": {"gross_range_test": {"suspect_span": [10, 11]}}}}))
+    overridden = int(qc.gross_range_mask(subset_ds, "TEMP", config=cfg).sum())
+    assert overridden > default
+
+
+def test_override_shows_in_diagnostics_thresholds_table(subset_ds):
+    # An overridden spike threshold appears in the glidertest-diagnostics thresholds table.
+    from glidertest.config import loader
+
+    cfg = loader.resolve_qc(loader.load({"qc": {"TEMP": {"spike_test": {"suspect_threshold": 99.0}}}}))
+    rows = qc_section.diagnostics_data(subset_ds, cfg)["diagnostics"]["thresholds"]
+    spike = next(r for r in rows if r["var"] == "TEMP" and r["test"] == "spike")
+    assert "99" in spike["suspect"]
+
+
+def test_no_config_matches_defaults(subset_ds):
+    # Passing the resolved defaults is identical to passing nothing (the byte-identical guarantee).
+    from glidertest.config import loader
+
+    default = qc.sample_tests(subset_ds, "TEMP")
+    resolved = qc.sample_tests(subset_ds, "TEMP", config=loader.resolve_qc(None))
+    for a, b in zip(default, resolved):
+        assert np.array_equal(np.asarray(a), np.asarray(b))
+
+
+# --- region test (mission-level) ------------------------------------------------------------------
+
+
+def test_region_test_flags_inside_outside_and_missing():
+    import xarray as xr
+
+    ds = xr.Dataset({
+        "LONGITUDE": ("N_MEASUREMENTS", np.array([15.0, 5.0, np.nan, 20.0])),
+        "LATITUDE": ("N_MEASUREMENTS", np.array([60.0, 60.0, 60.0, 80.0])),
+    })
+    flags = qc.region_test(ds, [10, 50, 25, 70])  # [west, south, east, north]
+    # inside -> 1, west of box -> 4, NaN lon -> 9, north of box -> 4
+    assert flags.tolist() == [1, 4, 9, 4]
+
+
+def test_region_row_absent_without_bbox(subset_ds):
+    assert "region" not in qc_section.diagnostics_data(subset_ds)["diagnostics"]
+
+
+def test_region_row_present_and_evaluated_with_bbox(subset_ds):
+    # A box around the mission's own track evaluates with no samples outside.
+    lon, lat = subset_ds["LONGITUDE"].values, subset_ds["LATITUDE"].values
+    bbox = [float(np.nanmin(lon)) - 1, float(np.nanmin(lat)) - 1, float(np.nanmax(lon)) + 1, float(np.nanmax(lat)) + 1]
+    region = qc_section.diagnostics_data(subset_ds, None, bbox)["diagnostics"]["region"]
+    assert region["evaluated"] is True
+    assert region["n_outside"] == 0 and region["n_evaluated"] > 0 and region["n_unknown"] == 0
+
+
+def test_region_not_evaluated_without_position(fresh_subset):
+    ds = fresh_subset.drop_vars([v for v in ("LONGITUDE", "LATITUDE") if v in fresh_subset])
+    region = qc_section.diagnostics_data(ds, None, [10, 50, 25, 70])["diagnostics"]["region"]
+    assert region["evaluated"] is False
+
+
+def test_region_runs_without_standard_qc_variable(fresh_subset):
+    # Review finding 3 (+ Copilot): the region test is mission-level and position-only, so it must run
+    # for a file with position but no TEMP/PSAL/DOXY/CHLA — both the diagnostics data and the page gate.
+    from glidertest.reports import _mission
+
+    ds = fresh_subset.drop_vars([v for v in ("TEMP", "PSAL", "DOXY", "CHLA") if v in fresh_subset])
+    lon, lat = ds["LONGITUDE"].values, ds["LATITUDE"].values
+    bbox = [float(np.nanmin(lon)) - 1, float(np.nanmin(lat)) - 1, float(np.nanmax(lon)) + 1, float(np.nanmax(lat)) + 1]
+    diag = qc_section.diagnostics_data(ds, None, bbox)["diagnostics"]
+    assert diag is not None and diag["present"] == [] and "region" in diag  # region row, empty var table
+    ctx = _mission.Ctx(ds=ds, bbox=bbox)
+    assert _mission._qc_or_region_applies(ctx) is True  # the page/section gate admits it
+    assert "Region test" in _mission.PANELS["qc_glidertest"].render(ctx)
+
+
+def test_spike_method_from_config_is_applied(fresh_subset, monkeypatch):
+    # Copilot finding: a configured spike_test.method must reach qartod.spike_test, not be ignored
+    # while the thresholds table still marks the row "config".
+    from glidertest.config import loader
+
+    captured = {}
+
+    def spy(*args, **kwargs):
+        captured["method"] = kwargs.get("method")
+        return np.zeros(fresh_subset.sizes["N_MEASUREMENTS"], dtype="uint8")
+
+    monkeypatch.setattr(qc.qartod, "spike_test", spy)
+    cfg = loader.resolve_qc(loader.load({"qc": {"TEMP": {"spike_test": {"method": "differential"}}}}))
+    qc.sample_tests(fresh_subset, var="TEMP", config=cfg)
+    assert captured["method"] == "differential"
+
+
+def test_region_sentence_renders_in_qc_panel(subset_ds):
+    # The region row reaches the HTML (guards against a template typo in _qc_glidertest.html).
+    from glidertest.reports import _mission
+
+    lon, lat = subset_ds["LONGITUDE"].values, subset_ds["LATITUDE"].values
+    bbox = [float(np.nanmin(lon)) - 1, float(np.nanmin(lat)) - 1, float(np.nanmax(lon)) + 1, float(np.nanmax(lat)) + 1]
+    html = _mission.PANELS["qc_glidertest"].render(_mission.Ctx(ds=subset_ds, bbox=bbox))
+    assert "Region test" in html and "fall outside the region" in html
+    # No region row when no box is configured.
+    assert "Region test" not in _mission.PANELS["qc_glidertest"].render(_mission.Ctx(ds=subset_ds))
+
+
+# --- provenance: default vs config marking --------------------------------------------------------
+
+
+def test_thresholds_table_marks_config_vs_default(subset_ds):
+    from glidertest.config import loader
+
+    cfg = loader.resolve_qc(loader.load({"qc": {"TEMP": {"spike_test": {"suspect_threshold": 99.0}}}}))
+    rows = qc_section.diagnostics_data(subset_ds, cfg)["diagnostics"]["thresholds"]
+    spike = next(r for r in rows if r["var"] == "TEMP" and r["test"] == "spike")
+    gross = next(r for r in rows if r["var"] == "TEMP" and r["test"] == "gross-range")
+    assert spike["src"] == "config"  # the overridden test
+    assert gross["src"] == "default"  # an untouched test on the same variable
+
+
+def test_thresholds_table_all_default_without_config(subset_ds):
+    rows = qc_section.diagnostics_data(subset_ds)["diagnostics"]["thresholds"]
+    assert all(r["src"] == "default" for r in rows)
+
+
+def test_region_excludes_unknown_position_from_denominator(fresh_subset):
+    # Finding 3: samples with no position (NaN lon/lat → flag 9) must not pad the denominator; the
+    # outside fraction is over positioned samples, and unknown positions are surfaced separately.
+    ds = fresh_subset
+    lon = np.asarray(ds["LONGITUDE"].values, dtype=float)
+    lat = np.asarray(ds["LATITUDE"].values, dtype=float)
+    half = lon.size // 2
+    lon[:half] = np.nan
+    lat[:half] = np.nan
+    ds["LONGITUDE"] = ("N_MEASUREMENTS", lon)
+    ds["LATITUDE"] = ("N_MEASUREMENTS", lat)
+    pad = 1.0
+    bbox = [float(np.nanmin(lon)) - pad, float(np.nanmin(lat)) - pad, float(np.nanmax(lon)) + pad, float(np.nanmax(lat)) + pad]
+    region = qc_section.diagnostics_data(ds, None, bbox)["diagnostics"]["region"]
+    assert region["n_unknown"] == half
+    assert region["n_evaluated"] == lon.size - half
+    assert region["n_outside"] == 0  # the box contains the whole positioned track

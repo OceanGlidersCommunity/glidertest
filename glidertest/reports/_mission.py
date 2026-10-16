@@ -36,9 +36,19 @@ class Ctx:
     again in each ``applies_to``, and ``mission_facts`` would run for the masthead, the manifest and
     the spatiotemporal table separately. One :class:`Ctx` is shared across a report's pages, so each
     is computed once per report.
+
+    ``qc_config`` holds the resolved QC thresholds for this report (a report config's ``qc:`` block
+    deep-merged over the built-in defaults, from :func:`glidertest.config.loader.resolve_qc`), or
+    ``None`` for the built-in defaults. It is set once in :func:`glidertest.reports.report` and
+    threaded into every QC panel, so overridden thresholds reach the checks, plots and tables and no
+    panel reads the module defaults by reference. ``bbox`` is the configured region box
+    (``[west, south, east, north]``) for the mission-level region test, or ``None`` when no region is
+    configured (then no region row is shown).
     """
 
     ds: xr.Dataset
+    qc_config: dict | None = None
+    bbox: list | None = None
 
     @cached_property
     def facts(self) -> dict[str, Any]:
@@ -60,11 +70,21 @@ class Ctx:
 
         A QC section has ~5 figure panels per variable; without this each would recompute all three
         QARTOD tests on the full record. Threaded into the panels via ``flags=`` (see
-        :mod:`glidertest.reports._plots`).
+        :mod:`glidertest.reports._plots`). Uses this report's resolved :attr:`qc_config` thresholds.
         """
         if var not in self._sample_tests:
-            self._sample_tests[var] = qc.sample_tests(self.ds, var)
+            self._sample_tests[var] = qc.sample_tests(self.ds, var, config=self.qc_config)
         return self._sample_tests[var]
+
+    @cached_property
+    def region(self) -> dict[str, Any] | None:
+        """The mission-level region-test result for this report's :attr:`bbox`, computed once.
+
+        The qc_glidertest panel renders on both the landing and QC pages off one shared :class:`Ctx`,
+        so this caches :func:`glidertest.reports.qc_section.region_result` rather than scanning the full
+        position arrays twice per report. ``None`` when no region box is configured.
+        """
+        return qc_section.region_result(self.ds, self.bbox) if self.bbox is not None else None
 
 
 def _deg_range(lo: float, hi: float, pos: str, neg: str) -> str:
@@ -193,6 +213,15 @@ def _qc_applies(c: Ctx) -> bool:
     return any(v in c.ds for v in _QC_VARS) or any(n.endswith("_QC") for n in c.ds.data_vars)
 
 
+def _qc_or_region_applies(c: Ctx) -> bool:
+    """The glidertest-diagnostics section/page applies when QC applies or a region box is configured.
+
+    The mission-level region test is position-only, so it must reach the page even for a file with a
+    configured ``region.bbox`` but no standard QC variable (then the only row shown is the region one).
+    """
+    return _qc_applies(c) or c.bbox is not None
+
+
 def _has(var: str) -> Callable[[Ctx], bool]:
     """Return an ``applies_to`` predicate: the panel applies only when *var* is in the dataset."""
     return lambda c: var in c.ds
@@ -269,7 +298,9 @@ PANELS: dict[str, Panel] = {
         id="qc_glidertest",
         kind="html",
         render=_guarded(
-            lambda c: get_template("_qc_glidertest.html").render(**qc_section.diagnostics_data(c.ds))
+            lambda c: get_template("_qc_glidertest.html").render(
+                **qc_section.diagnostics_data(c.ds, c.qc_config, c.bbox, region=c.region)
+            )
         ),
     ),
 }
@@ -306,7 +337,6 @@ _VAR_FIGURE_PANELS: tuple[tuple[str, Callable[[xr.Dataset, str], str | None], st
     ("oxy_hysteresis", _plots.hysteresis, "DOXY", "Dissolved oxygen hysteresis (dive vs climb)", "full"),
     ("oxy_updown", _plots.updown_bias, "DOXY", "Dissolved oxygen up/down-cast bias", "half"),
     ("oxy_drift", _plots.temporal_drift, "DOXY", "Dissolved oxygen temporal drift", "full"),
-    ("oxy_global_range", _plots.global_range, "DOXY", "Dissolved oxygen global-range check", "half"),
     ("oxy_sampling", _plots.sampling_period_var, "DOXY", "Dissolved oxygen sampling period", "half"),
     ("ctd_hyst_temp", _plots.hysteresis, "TEMP", "Temperature hysteresis (dive vs climb)", "full"),
     ("ctd_hyst_psal", _plots.hysteresis, "PSAL", "Salinity hysteresis (dive vs climb)", "full"),
@@ -314,8 +344,6 @@ _VAR_FIGURE_PANELS: tuple[tuple[str, Callable[[xr.Dataset, str], str | None], st
     ("ctd_updown_psal", _plots.updown_bias, "PSAL", "Salinity up/down-cast bias", "half"),
     ("ctd_drift_temp", _plots.temporal_drift, "TEMP", "Temperature temporal drift", "full"),
     ("ctd_drift_psal", _plots.temporal_drift, "PSAL", "Salinity temporal drift", "full"),
-    ("ctd_global_temp", _plots.global_range, "TEMP", "Temperature global-range check", "half"),
-    ("ctd_global_psal", _plots.global_range, "PSAL", "Salinity global-range check", "half"),
     ("ctd_daynight_psal", _plots.daynight, "PSAL", "Salinity day/night average", "half"),
     ("ctd_sampling_temp", _plots.sampling_period_var, "TEMP", "Temperature sampling period", "half"),
     ("ctd_sampling_psal", _plots.sampling_period_var, "PSAL", "Salinity sampling period", "half"),
@@ -387,7 +415,7 @@ _QC_FIGURE_PANELS: tuple[tuple[str, Callable[[xr.Dataset, str], str | None], str
 # outliers.
 PANELS["qc_ts_gross"] = Panel(
     id="qc_ts_gross",
-    render=lambda c: _plots.ts_gross_range(c.ds, slot="half"),
+    render=lambda c: _plots.ts_gross_range(c.ds, slot="half", config=c.qc_config),
     caption="Gross-range suspect and fail spans on the T–S diagram (TEMP × PSAL)",
     slot="half",
     applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
@@ -396,7 +424,7 @@ PANELS["qc_ts_gross"] = Panel(
 PANELS["qc_gross_ts_note"] = Panel(
     id="qc_gross_ts_note",
     kind="html",
-    render=_guarded(lambda c: qc_section.gross_range_ts_note(c.ds)),
+    render=_guarded(lambda c: qc_section.gross_range_ts_note(c.ds, c.qc_config)),
     slot="half",
     applies_to=lambda c: "TEMP" in c.ds and "PSAL" in c.ds,
 )
@@ -407,7 +435,7 @@ for _v in _QC_VARS:
     PANELS[f"qc_{_v}_suggest"] = Panel(
         id=f"qc_{_v}_suggest",
         kind="html",
-        render=_guarded(lambda c, var=_v: qc_section.suggested_limits_note(c.ds, var)),
+        render=_guarded(lambda c, var=_v: qc_section.suggested_limits_note(c.ds, var, c.qc_config)),
         slot="half",  # sits beside the half-width profile, as the gross-range note sits beside the T–S plot
         applies_to=_has(_v),
     )
@@ -436,32 +464,54 @@ PANELS["full_qc_link"] = Panel(
         '<p class="caption"><a href="qc.html">Full QC →</a> per-variable diagnostics: where each '
         "glidertest test fires, and whether its thresholds fit the sampling.</p>"
     ),
-    applies_to=_qc_applies,
+    applies_to=_qc_or_region_applies,
 )
 
-for _pid, _adapter, _var, _cap, _slot in _VAR_FIGURE_PANELS:
-    # The slot sets both the Panel's display width and the adapter's render width (passed through),
-    # so a narrow plot (updown_bias → half) renders small and tiles at that same width. The panel
-    # applies only when its variable is present, so a page never lists a panel for an absent sibling
-    # variable (a PSAL-only CTD page drops the TEMP panels rather than relying on the plotter to raise).
-    PANELS[_pid] = Panel(
-        id=_pid,
-        render=(lambda c, a=_adapter, v=_var, s=_slot: a(c.ds, v, slot=s)),
-        caption=_cap,
-        slot=_slot,
-        applies_to=_has(_var),
-    )
+# global_range is a sensor-page adapter that consults the gross-range span (for the histogram extent),
+# so it declares a `config` parameter; it goes through the same loop as the other figure panels.
+_GLOBAL_RANGE_PANELS: tuple[tuple[str, Callable[..., str | None], str, str, str], ...] = (
+    ("oxy_global_range", _plots.global_range, "DOXY", "Dissolved oxygen global-range check", "half"),
+    ("ctd_global_temp", _plots.global_range, "TEMP", "Temperature global-range check", "half"),
+    ("ctd_global_psal", _plots.global_range, "PSAL", "Salinity global-range check", "half"),
+)
 
-for _pid, _adapter, _var, _cap, _slot in _QC_FIGURE_PANELS:
-    # QC panels get the variable's (gross, spike, flat) flags computed once per page (Ctx.sample_tests)
-    # and threaded in, so a section's ~5 panels do not each recompute all three QARTOD tests.
-    PANELS[_pid] = Panel(
-        id=_pid,
-        render=(lambda c, a=_adapter, v=_var, s=_slot: a(c.ds, v, slot=s, flags=c.sample_tests(v))),
-        caption=_cap,
-        slot=_slot,
-        applies_to=_has(_var),
-    )
+
+def _fig_render(
+    adapter: Callable[..., str | None], var: str, slot: str, needs: tuple[str, ...]
+) -> Callable[[Ctx], str | None]:
+    """Return a Panel render callable that threads *var*/*slot* and the Ctx values named in *needs*.
+
+    *needs* declares explicitly which of ``config`` (this report's resolved thresholds) and ``flags``
+    (the variable's cached QARTOD flags) the adapter takes — a declaration on the panel group, not
+    runtime signature introspection, so an adapter cannot silently stop receiving config when it is
+    renamed or wrapped (the silent-default class this registration exists to remove).
+    """
+    wants_config, wants_flags = "config" in needs, "flags" in needs
+
+    def render(c: Ctx) -> str | None:
+        kwargs: dict[str, Any] = {}
+        if wants_config:
+            kwargs["config"] = c.qc_config
+        if wants_flags:
+            kwargs["flags"] = c.sample_tests(var)
+        return adapter(c.ds, var, slot=slot, **kwargs)
+
+    return render
+
+
+# One registration loop for every variable-parameterised figure panel, each group declaring the Ctx
+# values its adapters take (sensor figures need nothing; global_range needs config; the QC panels need
+# config + the variable's cached flags) — explicit, not introspected. The slot sets both the Panel's
+# display width and the adapter's render width, and each panel applies only when its variable is present.
+for _group, _needs in ((_VAR_FIGURE_PANELS, ()), (_GLOBAL_RANGE_PANELS, ("config",)), (_QC_FIGURE_PANELS, ("config", "flags"))):
+    for _pid, _adapter, _var, _cap, _slot in _group:
+        PANELS[_pid] = Panel(
+            id=_pid,
+            render=_fig_render(_adapter, _var, _slot, _needs),
+            caption=_cap,
+            slot=_slot,
+            applies_to=_has(_var),
+        )
 
 PROFILE = Profile(
     entries=(
@@ -487,7 +537,7 @@ PROFILE = Profile(
             id="qc_glidertest",
             title="QC — glidertest diagnostics",
             panels=("qc_glidertest", "full_qc_link"),
-            applies_to=_qc_applies,
+            applies_to=_qc_or_region_applies,
         ),
     ),
 )
@@ -658,7 +708,7 @@ QC = Profile(
             id="qc_glidertest",
             title="QC — glidertest diagnostics",
             panels=("qc_glidertest",),
-            applies_to=_qc_applies,
+            applies_to=_qc_or_region_applies,
         ),
         Section(
             id="qc_gross_ts",
@@ -698,7 +748,7 @@ def _inventory_lead(ctx: Ctx) -> str:
 # mapping is reconciled when the masthead nav is vendored, per the shared-nav plan §3.2.)
 PAGES: tuple[Page, ...] = (
     Page("index.html", "Mission", "Mission report", "landing", "summary", PROFILE, lambda _c: True),
-    Page("qc.html", "QC", "QC", "aggregate-a", "summary", QC, _qc_applies),
+    Page("qc.html", "QC", "QC", "aggregate-a", "summary", QC, _qc_or_region_applies),
     Page("ctd.html", "CTD", "CTD", "aggregate-b", "reports", CTD,
          lambda c: "TEMP" in c.ds or "PSAL" in c.ds),
     Page("oxygen.html", "Oxygen", "Oxygen", "aggregate-b", "reports", OXYGEN, _has("DOXY")),

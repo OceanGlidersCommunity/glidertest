@@ -26,6 +26,8 @@ from matplotlib.patches import Rectangle
 from . import plots, qc, utilities
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     import xarray as xr
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
@@ -55,14 +57,19 @@ TEST_MARKER: dict[str, dict] = {
     "flat_line": {"marker": "s", "s": 10, "linewidths": 0.0, "zorder": 5, "rasterized": True},
 }
 
-#: Flat-line thresholds used when a variable has no ``flat_line_test`` entry in ``qc.configs`` (a
+#: Flat-line thresholds used when a variable has no ``flat_line_test`` entry in the thresholds (a
 #: safety fallback; the four report variables carry one). Seconds, seconds, tolerance.
 _FLAT_FALLBACK: dict[str, float] = {"suspect_threshold": 1.0, "fail_threshold": 3.0, "tolerance": 0.001}
 
 
-def _flat_config(var: str) -> dict[str, float]:
-    """Return the flat-line thresholds for *var* from ``qc.configs``, or the fallback."""
-    return qc.configs.get(var, {}).get("flat_line_test", _FLAT_FALLBACK)
+def _config(config: Mapping | None) -> Mapping:
+    """Return *config* if given, else the built-in :data:`glidertest.qc.configs` defaults."""
+    return config if config is not None else qc.configs
+
+
+def _flat_config(var: str, config: Mapping | None = None) -> dict[str, float]:
+    """Return the flat-line thresholds for *var* from *config* (or the defaults), or the fallback."""
+    return _config(config).get(var, {}).get("flat_line_test", _FLAT_FALLBACK)
 
 
 def _axis_label(ds: xr.Dataset, var: str) -> str:
@@ -78,9 +85,9 @@ def _time_xaxis(ax: Axes) -> None:
     ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
 
 
-def _flags(ds: xr.Dataset, var: str, flags: tuple | None) -> tuple:
+def _flags(ds: xr.Dataset, var: str, flags: tuple | None, config: Mapping | None = None) -> tuple:
     """Return the ``(gross, spike, flat)`` flag tuple — *flags* if given, else computed once."""
-    return flags if flags is not None else qc.sample_tests(ds, var)
+    return flags if flags is not None else qc.sample_tests(ds, var, config=config)
 
 
 def _runs(flags: np.ndarray, time_values: np.ndarray) -> list[tuple[int, int, float]]:
@@ -104,7 +111,7 @@ def _runs(flags: np.ndarray, time_values: np.ndarray) -> list[tuple[int, int, fl
 
 
 def plot_test_hits(
-    ds: xr.Dataset, var: str, *, flags: tuple | None = None,
+    ds: xr.Dataset, var: str, *, flags: tuple | None = None, config: Mapping | None = None,
     width_in: float = report_tokens.W_FULL, ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
     """Plot *var* over the full record with glidertest's QC test hits overlaid — "where it fires".
@@ -123,6 +130,9 @@ def plot_test_hits(
     flags : tuple, optional
         The ``(gross, spike, flat)`` flag arrays from :func:`glidertest.qc.sample_tests`; computed on
         demand when ``None`` (so a notebook call needs nothing extra; the report passes them in once).
+    config : Mapping, optional
+        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
+        the built-in defaults.
     width_in : float, default :data:`glidertest.config.report_tokens.W_FULL`
         Figure width in inches; the height is derived from it.
     ax : matplotlib.axes.Axes, optional
@@ -147,10 +157,10 @@ def plot_test_hits(
         # trace. Rasterized so the whole-record base layer stays one image, not 10^6 vector glyphs.
         ax.plot(t, v, marker=".", ls="none", ms=1.5, color="0.55", zorder=1, rasterized=True)
 
-        _gr, spike, flat = _flags(ds, var, flags)
+        _gr, spike, flat = _flags(ds, var, flags, config)
         # Gross range: the shared per-sample mask (qc.gross_range_mask) — the same one the diagnostics
         # matrix counts — so the plotted × and the table count cannot diverge. Spike/flat are QARTOD flags.
-        gross_hit = qc.gross_range_mask(ds, var)
+        gross_hit = qc.gross_range_mask(ds, var, config=config)
         # Flat-line hits: a multi-sample run is an interval (shaded span, the background layer); a lone
         # flagged sample (common when a sensor is sampled off-phase, so every finite value is isolated)
         # has zero width, so it joins the marker overlays below instead of being an invisible span.
@@ -189,7 +199,7 @@ def plot_test_hits(
 
 
 def plot_flag_profile(
-    ds: xr.Dataset, var: str, *, flags: tuple | None = None,
+    ds: xr.Dataset, var: str, *, flags: tuple | None = None, config: Mapping | None = None,
     width_in: float = report_tokens.W_HALF, ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
     """Plot *var* against depth — a profile — with glidertest's QC hits overlaid, "where it fires".
@@ -208,6 +218,9 @@ def plot_flag_profile(
     flags : tuple, optional
         The ``(gross, spike, flat)`` flag arrays from :func:`glidertest.qc.sample_tests`; computed on
         demand when ``None``.
+    config : Mapping, optional
+        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
+        the built-in defaults.
     width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
         Figure width in inches; the height is derived from it.
     ax : matplotlib.axes.Axes, optional
@@ -230,10 +243,10 @@ def plot_flag_profile(
         fin = np.isfinite(v) & np.isfinite(z)
         ax.scatter(v[fin], z[fin], s=2, color="0.7", linewidths=0, zorder=1, rasterized=True)
 
-        _gr, spike, flat = _flags(ds, var, flags)
+        _gr, spike, flat = _flags(ds, var, flags, config)
         # Shared gross-range mask (same one the diagnostics matrix counts), so the plotted × and the
         # table count cannot diverge.
-        gross_hit = qc.gross_range_mask(ds, var)
+        gross_hit = qc.gross_range_mask(ds, var, config=config)
         hits = [
             ("gross_range", gross_hit & fin),
             ("spike", np.isin(np.asarray(spike), (3, 4)) & fin),
@@ -255,7 +268,8 @@ def plot_flag_profile(
 
 
 def plot_ts_gross_range(
-    ds: xr.Dataset, *, width_in: float = report_tokens.W_HALF, ax: Axes | None = None
+    ds: xr.Dataset, *, config: Mapping | None = None, width_in: float = report_tokens.W_HALF,
+    ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
     """Plot the T–S cloud with the TEMP×PSAL gross-range suspect and fail spans as nested rectangles.
 
@@ -266,6 +280,9 @@ def plot_ts_gross_range(
     ----------
     ds : xarray.Dataset
         An OG1 glider dataset carrying TEMP and PSAL.
+    config : Mapping, optional
+        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
+        the built-in defaults.
     width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
@@ -285,9 +302,10 @@ def plot_ts_gross_range(
         s = np.asarray(ds["PSAL"].values, dtype=float)
         t = np.asarray(ds["TEMP"].values, dtype=float)
         ax.scatter(s, t, s=2, color="0.6", rasterized=True, zorder=1)
+        cfg = _config(config)
         for span_key, flag in (("fail_span", 4), ("suspect_span", 3)):
-            sx = qc.configs["PSAL"]["gross_range_test"][span_key]
-            ty = qc.configs["TEMP"]["gross_range_test"][span_key]
+            sx = cfg["PSAL"]["gross_range_test"][span_key]
+            ty = cfg["TEMP"]["gross_range_test"][span_key]
             ax.add_patch(Rectangle((sx[0], ty[0]), sx[1] - sx[0], ty[1] - ty[0],
                                    fill=False, edgecolor=QC_COLORS[flag], lw=1.3, zorder=3,
                                    label=f"{'fail' if flag == 4 else 'suspect'} span"))
@@ -298,7 +316,8 @@ def plot_ts_gross_range(
 
 
 def plot_spike_stat(
-    ds: xr.Dataset, var: str, *, width_in: float = report_tokens.W_HALF, ax: Axes | None = None
+    ds: xr.Dataset, var: str, *, config: Mapping | None = None,
+    width_in: float = report_tokens.W_HALF, ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
     """Plot the spike statistic (|value − neighbour average|) as a histogram with the thresholds.
 
@@ -312,6 +331,9 @@ def plot_spike_stat(
         An OG1 glider dataset.
     var : str
         The variable to assess.
+    config : Mapping, optional
+        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
+        the built-in defaults.
     width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
@@ -333,7 +355,7 @@ def plot_spike_stat(
         stat = stat[np.isfinite(stat)]
         if stat.size:
             ax.hist(stat, bins=60, color="0.6")
-        cfg = qc.configs[var]["spike_test"]
+        cfg = _config(config)[var]["spike_test"]
         for key, flag in (("suspect_threshold", 3), ("fail_threshold", 4)):
             ax.axvline(cfg[key], color=QC_COLORS[flag], lw=1.3,
                        label=f"{'suspect' if flag == 3 else 'fail'} ({cfg[key]:g})")
@@ -353,7 +375,7 @@ def plot_spike_stat(
 
 
 def plot_flat_runs(
-    ds: xr.Dataset, var: str, *, flags: tuple | None = None,
+    ds: xr.Dataset, var: str, *, flags: tuple | None = None, config: Mapping | None = None,
     width_in: float = report_tokens.W_HALF, ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
     """Plot flat-run durations as a histogram with the test windows and the median sampling interval.
@@ -370,6 +392,9 @@ def plot_flat_runs(
         The variable to assess.
     flags : tuple, optional
         The ``(gross, spike, flat)`` flag arrays; computed on demand when ``None``.
+    config : Mapping, optional
+        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
+        the built-in defaults.
     width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
@@ -386,7 +411,7 @@ def plot_flat_runs(
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
-        _gr, _spike, flat = _flags(ds, var, flags)
+        _gr, _spike, flat = _flags(ds, var, flags, config)
         # The variable's own sampling interval (finite samples), not the whole record's: an off-phase
         # sensor's windows must be judged against its real cadence (CHLA finite only every ~Nth cycle).
         finite = np.isfinite(np.asarray(ds[var].values, dtype=float))
@@ -398,7 +423,7 @@ def plot_flat_runs(
         # Durations span seconds to hours and a single-sample run is 0 s; floor at one sampling interval and
         # use a log axis so the bulk and the 1–3 s window lines are both legible.
         durations = np.array([max(dur, dt) for _i0, _i1, dur in _runs(flat, ds.TIME.values)])
-        fl = _flat_config(var)
+        fl = _flat_config(var, config)
         # Range spans every mark on the axis — the two config windows, the sampling interval and the
         # run durations — so a window line never falls off the edge when the interval is coarse.
         marks = [dt, float(fl["suspect_threshold"]), float(fl["fail_threshold"])]
@@ -421,7 +446,7 @@ def plot_flat_runs(
 
 
 def plot_flat_change(
-    ds: xr.Dataset, var: str, *, flags: tuple | None = None,
+    ds: xr.Dataset, var: str, *, flags: tuple | None = None, config: Mapping | None = None,
     width_in: float = report_tokens.W_HALF, ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
     """Histogram the start-to-end value change of each multi-sample flat run, against the tolerance.
@@ -441,6 +466,9 @@ def plot_flat_change(
         The variable to assess.
     flags : tuple, optional
         The ``(gross, spike, flat)`` flag arrays; computed on demand when ``None``.
+    config : Mapping, optional
+        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
+        the built-in defaults.
     width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
@@ -463,14 +491,14 @@ def plot_flat_change(
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
-        _gr, _spike, flat = _flags(ds, var, flags)
+        _gr, _spike, flat = _flags(ds, var, flags, config)
         v = np.asarray(ds[var].values, dtype=float)
         runs = [(i0, i1) for i0, i1, _d in _runs(flat, ds.TIME.values) if i1 > i0]
         changes = np.array([abs(v[i1] - v[i0]) for i0, i1 in runs])
         changes = changes[np.isfinite(changes)]
         if not changes.size:
             raise ValueError(f"{var}: no multi-sample flat run (flat flags are all isolated samples)")
-        tol = float(_flat_config(var)["tolerance"])
+        tol = float(_flat_config(var, config)["tolerance"])
         n_moved = int((changes > tol).sum())
         pct = 100.0 * n_moved / changes.size
         ax.hist(changes, bins=40, color="0.6", label=f"flat runs (n={changes.size})")
@@ -486,7 +514,7 @@ def plot_flat_change(
 
 
 def plot_flat_excerpt(
-    ds: xr.Dataset, var: str, *, flags: tuple | None = None,
+    ds: xr.Dataset, var: str, *, flags: tuple | None = None, config: Mapping | None = None,
     width_in: float = report_tokens.W_HALF, ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
     """Plot a zoom around the longest flagged flat run: samples as dots and a ±tolerance band.
@@ -502,6 +530,9 @@ def plot_flat_excerpt(
         The variable to assess.
     flags : tuple, optional
         The ``(gross, spike, flat)`` flag arrays; computed on demand when ``None``.
+    config : Mapping, optional
+        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
+        the built-in defaults.
     width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
@@ -518,7 +549,7 @@ def plot_flat_excerpt(
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.45 * width_in, ax)
-        _gr, _spike, flat = _flags(ds, var, flags)
+        _gr, _spike, flat = _flags(ds, var, flags, config)
         runs = _runs(flat, ds.TIME.values)
         t = np.asarray(ds.TIME.values)
         v = np.asarray(ds[var].values, dtype=float)
@@ -528,7 +559,7 @@ def plot_flat_excerpt(
             lo, hi = max(0, i0 - pad), min(v.size, i1 + pad + 1)
             ax.plot(t[lo:hi], v[lo:hi], color="0.5", lw=0.6, marker=".", ms=3)
             ax.scatter(t[i0:i1 + 1], v[i0:i1 + 1], color=QC_COLORS[4], s=10, zorder=3, label="flagged run")
-            tol = _flat_config(var)["tolerance"]
+            tol = _flat_config(var, config)["tolerance"]
             ax.axhspan(v[i0] - tol, v[i0] + tol, color=QC_COLORS[3], alpha=0.2, lw=0,
                        label=f"±tolerance ({tol:g})")
             ax.legend(loc="best", framealpha=0.85)

@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any
 from ._manifest import validate_nav
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     import xarray as xr
 
     from ._mission import Page
@@ -100,6 +102,7 @@ def report(
     navigator: bool = True,
     mission_id: str | None = None,
     layout: str = "root",
+    config: str | Path | Mapping | None = None,
 ) -> Path:
     """Write a self-contained HTML report for *ds* under *outdir* and return the landing page path.
 
@@ -142,6 +145,11 @@ def report(
     layout : {"root", "flat"}, default "root"
         ``"root"`` writes the mission into ``<outdir>/<mission_id>/``; ``"flat"`` writes the pages
         directly into *outdir* and builds no navigator.
+    config : str or pathlib.Path or Mapping, optional
+        A report config (a YAML file path or an already-parsed mapping) whose ``qc:`` block overrides
+        the built-in QC thresholds per variable and test; see :mod:`glidertest.config.loader`. It is
+        validated before any figure is drawn, raising :class:`~glidertest.config.loader.ConfigError`
+        on an error. ``None`` (the default) uses the built-in thresholds, so the output is unchanged.
 
     Returns
     -------
@@ -153,6 +161,7 @@ def report(
     import matplotlib.pyplot as plt
 
     from .._version import __version__
+    from ..config import loader
     from . import _figdebug, paths
     from ._env import get_template
     from ._mission import PAGES, Ctx, build, header_card
@@ -178,7 +187,13 @@ def report(
     do_navigator = navigator and layout == "root"
     (missiondir / "figures").mkdir(parents=True, exist_ok=True)
 
-    ctx = Ctx(ds=ds)
+    cfg = loader.check(loader.load(config), ds) if config is not None else None
+    resolved_qc = loader.resolve_qc(cfg)  # the effective thresholds (defaults when cfg is None); resolve once
+    ctx = Ctx(
+        ds=ds,
+        qc_config=resolved_qc,
+        bbox=cfg.bbox if cfg is not None else None,
+    )
     pages = [p for p in PAGES if p.applies_to(ctx)]
     source = ds.encoding.get("source")
     source_name = Path(source).name if source else f"{ds.attrs.get('id') or mid}.nc"
@@ -266,6 +281,10 @@ def report(
             version=__version__,
             generated_at=generated_at,
             facts=ctx.facts,
+            qc_thresholds=resolved_qc,
+            qc_config=cfg.user_blocks() if cfg is not None else None,
+            qc_config_source=cfg.source if cfg is not None else None,
+            region=cfg.bbox if cfg is not None else None,
         )
         existing.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 

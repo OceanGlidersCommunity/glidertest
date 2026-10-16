@@ -117,6 +117,41 @@ def test_report_mission_id_override(tmp_path, subset_path, fake_report):
     assert (tmp_path / "custom" / "index.html").exists()
 
 
+def test_report_config_valid_is_passed_through(tmp_path, subset_path, fake_report):
+    cfg = tmp_path / "report.yaml"
+    cfg.write_text("qc:\n  TEMP:\n    spike_test: {suspect_threshold: 1.5}\n")
+    argv = ["report", str(subset_path), "--report-dir", str(tmp_path), "-c", str(cfg)]
+    assert _run(argv) == 0
+    assert fake_report[0]["config"] == cfg
+
+
+def test_report_config_invalid_fails_before_writing(tmp_path, subset_path, capsys):
+    # A shape error (suspect span not inside fail) is caught by the up-front check, exit 2, no write.
+    cfg = tmp_path / "bad.yaml"
+    cfg.write_text("qc:\n  TEMP:\n    gross_range_test: {suspect_span: [-5, 45], fail_span: [0, 40]}\n")
+    out = tmp_path / "reports"
+    assert _run(["report", str(subset_path), "--report-dir", str(out), "-c", str(cfg)]) == 2
+    assert "must sit inside fail_span" in capsys.readouterr().err
+    assert not out.exists()  # nothing written when the config is rejected
+
+
+def test_report_config_missing_file_fails_cleanly(tmp_path, subset_path, capsys):
+    # Review finding 1: a missing -c file is a clean error + exit 2, not a FileNotFoundError traceback.
+    out = tmp_path / "reports"
+    assert _run(["report", str(subset_path), "--report-dir", str(out), "-c", str(tmp_path / "nope.yaml")]) == 2
+    assert "cannot read config file" in capsys.readouterr().err
+    assert not out.exists()
+
+
+def test_report_config_nonbuiltin_variable_passes_preflight(tmp_path, subset_path, fake_report):
+    # Review finding 2: the CLI pre-check is shape-only (no dataset), so a config for an OG1 variable
+    # outside the built-in four (CNDC) is not rejected before the file is opened.
+    cfg = tmp_path / "cndc.yaml"
+    cfg.write_text("qc:\n  CNDC:\n    spike_test: {suspect_threshold: 0.1}\n")
+    argv = ["report", str(subset_path), "--report-dir", str(tmp_path), "-c", str(cfg)]
+    assert _run(argv) == 0
+
+
 def test_report_mission_id_rejects_multiple(tmp_path, subset_path):
     a, b = tmp_path / "a.nc", tmp_path / "b.nc"
     shutil.copy(subset_path, a)
@@ -351,3 +386,15 @@ def test_report_skip_existing_leaves_fleet_page(tmp_path, subset_path, fake_repo
     capsys.readouterr()
     assert _run(["report", p, "--report-dir", str(tmp_path), "--skip-existing", "-n"]) == 0
     assert "would not be rebuilt" in capsys.readouterr().out
+
+
+def test_init_writes_template_file(tmp_path, subset_path):
+    out = tmp_path / "report.yaml"
+    assert _run(["init", str(subset_path), "-o", str(out)]) == 0
+    text = out.read_text()
+    assert "config_version: 1" in text and "TEMP" in text
+
+
+def test_init_missing_file(capsys):
+    assert _run(["init", "nope.nc"]) == 1
+    assert "no such file" in capsys.readouterr().err

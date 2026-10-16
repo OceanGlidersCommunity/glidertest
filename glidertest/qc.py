@@ -14,6 +14,10 @@ from ioos_qc import qartod
 
 from glidertest import tools, utilities
 
+#: Built-in QARTOD thresholds per variable (the layer-1 defaults). A report config's ``qc:`` block is
+#: deep-merged over this by :func:`glidertest.config.loader.resolve_qc`; the resolved mapping, not this
+#: dict, is what the checks and plots read when a config is in play. The location test is driven by a
+#: configured ``region.bbox`` (no built-in default), so no ``location_test`` entry lives here.
 configs = {
     "TEMP": {"gross_range_test": {
         "suspect_span": [0, 30],
@@ -21,12 +25,10 @@ configs = {
     },
         "spike_test": {"suspect_threshold": 2.0, "fail_threshold": 6.0},
         "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
-        "location_test": {"bbox": [10, 50, 25, 70]},
     },
     "PSAL": {"gross_range_test": {"suspect_span": [5, 38], "fail_span": [2, 41]},
              "spike_test": {"suspect_threshold": 0.3, "fail_threshold": 0.9},
              "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
-             "location_test": {"bbox": [10, 50, 25, 70]},
              },
     "DOXY": {"gross_range_test": {
         "suspect_span": [0, 350],
@@ -34,7 +36,6 @@ configs = {
     },
         "spike_test": {"suspect_threshold": 10, "fail_threshold": 50},
         "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
-        "location_test": {"bbox": [10, 50, 25, 70]},
     },
     "CHLA": {"gross_range_test": {
         "suspect_span": [0, 15],
@@ -42,7 +43,6 @@ configs = {
     },
         "spike_test": {"suspect_threshold": 1, "fail_threshold": 5},
         "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
-        "location_test": {"bbox": [10, 50, 25, 70]},
     },
 }
 
@@ -153,7 +153,15 @@ def flag_labels(da):
     return labels
 
 
-def hysteresis_verdict(err, pct_threshold=5, bin_threshold=5):
+#: Hysteresis verdict thresholds, named so the report table and the verdict rule cannot drift (the
+#: table reads these constants, not ``hysteresis_verdict.__defaults__`` by position): a depth bin
+#: counts as exceeded above ``HYSTERESIS_PCT_THRESHOLD`` percent dive–climb error, and a variable is
+#: flagged when more than ``HYSTERESIS_BIN_THRESHOLD`` bins exceed it.
+HYSTERESIS_PCT_THRESHOLD = 5
+HYSTERESIS_BIN_THRESHOLD = 5
+
+
+def hysteresis_verdict(err, pct_threshold=HYSTERESIS_PCT_THRESHOLD, bin_threshold=HYSTERESIS_BIN_THRESHOLD):
     """Return ``(n_over, flagged)`` for a hysteresis dive-climb error array.
 
     The single verdict rule shared by the RST summary (:func:`fill_str`) and the HTML report, so the
@@ -183,7 +191,7 @@ def hysteresis_verdict(err, pct_threshold=5, bin_threshold=5):
     return n_over, n_over > bin_threshold
 
 
-def qc_checks(ds, var='TEMP'):
+def qc_checks(ds, var='TEMP', *, config=None):
     """
     Run a series of basic quality control (global range, spike test, drift and hysteresis) checks on a selected variable in the dataset.
     We use functions from glidertest.tools as well as ioos qartod.
@@ -194,6 +202,9 @@ def qc_checks(ds, var='TEMP'):
         Dataset in **OG1 format**, containing the selected variable and time information.
     var : str, optional, default='TEMP'
         Variable to perform QC checks on.
+    config : Mapping, optional
+        Resolved per-variable thresholds (see :func:`sample_tests`); ``None`` uses the built-in
+        :data:`configs`.
 
     Returns
     -------
@@ -210,21 +221,20 @@ def qc_checks(ds, var='TEMP'):
 
     Notes
     ------
-    - Thresholds for QC tests are taken from the global `configs` dictionary.
+    - Thresholds for QC tests are taken from *config* when given, else the global `configs` dictionary.
     Original Author: Chiara  Monforte
     """
-    gr, spike, flat = sample_tests(ds, var)
+    gr, spike, flat = sample_tests(ds, var, config=config)
     __, __, err_mean, err_range, __ = tools.compute_hyst_stat(ds, variable=var, v_res=1)
 
     return gr, spike, flat, err_mean, err_range
 
 
-def sample_tests(ds, var='TEMP'):
+def sample_tests(ds, var='TEMP', *, config=None):
     """Run the three sample-wise QARTOD tests (gross range, spike, flat line) on *var*.
 
     Split out of :func:`qc_checks` (which adds the hysteresis statistics) so the report's QC page
     plots and the delivered-vs-glidertest matrix share one computation and one set of thresholds.
-    All thresholds come from the global :data:`configs` dictionary.
 
     Parameters
     ----------
@@ -232,6 +242,9 @@ def sample_tests(ds, var='TEMP'):
         Dataset in **OG1 format**, containing *var* and ``TIME``.
     var : str, optional, default='TEMP'
         Variable to test.
+    config : Mapping, optional
+        Resolved per-variable thresholds (as from :func:`glidertest.config.loader.resolve_qc`); when
+        ``None`` the built-in :data:`configs` are used, so a bare call is unchanged.
 
     Returns
     -------
@@ -247,25 +260,26 @@ def sample_tests(ds, var='TEMP'):
     Original Author: Chiara Monforte
     """
     utilities._check_necessary_variables(ds, [var, 'TIME'])
-    gr_cfg = configs[var]['gross_range_test']
+    cfg = config if config is not None else configs
+    gr_cfg = cfg[var]['gross_range_test']
     gr = tools.compute_global_range(ds, variable=var, min_val=gr_cfg['suspect_span'][0],
                                     max_val=gr_cfg['suspect_span'][1])
-    sp_cfg = configs[var]['spike_test']
+    sp_cfg = cfg[var]['spike_test']
     spike = qartod.spike_test(ds[var], suspect_threshold=sp_cfg['suspect_threshold'],
-                              fail_threshold=sp_cfg['fail_threshold'], method="average")
-    fl = configs[var]['flat_line_test']
+                              fail_threshold=sp_cfg['fail_threshold'], method=sp_cfg.get('method', "average"))
+    fl = cfg[var]['flat_line_test']
     flat = qartod.flat_line_test(ds[var], ds.TIME, fl['suspect_threshold'],
                                  fl['fail_threshold'], fl['tolerance'])
     return gr, spike, flat
 
 
-def gross_range_mask(ds, var='TEMP'):
+def gross_range_mask(ds, var='TEMP', *, config=None):
     """Return a boolean per-sample mask of *var* values outside the gross-range suspect span.
 
     The one definition of "out of range" shared by the diagnostics-matrix count and the QC plots, so
     the table and the plotted hits cannot diverge. NaN samples are not flagged (the comparison is
     False for NaN). Returns an all-False mask when *var* has no ``gross_range_test`` suspect span in
-    :data:`configs`.
+    the thresholds.
 
     Parameters
     ----------
@@ -273,6 +287,9 @@ def gross_range_mask(ds, var='TEMP'):
         Dataset in **OG1 format**, containing *var*.
     var : str, optional, default='TEMP'
         Variable to test.
+    config : Mapping, optional
+        Resolved per-variable thresholds (see :func:`sample_tests`); ``None`` uses the built-in
+        :data:`configs`.
 
     Returns
     -------
@@ -283,11 +300,51 @@ def gross_range_mask(ds, var='TEMP'):
     -----
     Original Author: Eleanor Frajka-Williams
     """
-    span = configs.get(var, {}).get('gross_range_test', {}).get('suspect_span')
+    cfg = config if config is not None else configs
+    span = cfg.get(var, {}).get('gross_range_test', {}).get('suspect_span')
     v = np.asarray(ds[var].values, dtype=float)
     if not span:
         return np.zeros(v.shape, dtype=bool)
     return (v < span[0]) | (v > span[1])
+
+
+def region_test(ds, bbox):
+    """Flag each sample by whether its position lies inside the configured region box.
+
+    glidertest's own region check: ``ioos_qc`` 3.0.0's ``location_test`` has no bounding box (it
+    checks only the global sane bounds lon [-180, 180], lat [-90, 90]), so the region test lives
+    here. A glider outside the region you declared is a **fail**, not a suspect — the point of the
+    test is to catch a mission that strayed from, or was mislabelled against, its expected area.
+    Points on the boundary count as inside. Run only when a report config supplies ``region.bbox``;
+    there is no built-in box (a box drawn from the data cannot fail its own test).
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**; reads ``LONGITUDE`` and ``LATITUDE``.
+    bbox : sequence of float
+        ``[lon_min, lat_min, lon_max, lat_max]`` = ``[west, south, east, north]`` (GeoJSON / ioos_qc
+        2.x order).
+
+    Returns
+    -------
+    numpy.ndarray
+        QARTOD flags per sample: ``1`` inside or on the box, ``4`` outside, ``9`` where ``LONGITUDE``
+        or ``LATITUDE`` is NaN (position unknown).
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams
+    """
+    utilities._check_necessary_variables(ds, ["LONGITUDE", "LATITUDE"])
+    lon = np.asarray(ds["LONGITUDE"].values, dtype=float)
+    lat = np.asarray(ds["LATITUDE"].values, dtype=float)
+    lon_min, lat_min, lon_max, lat_max = bbox
+    flags = np.full(lon.shape, 1, dtype=np.uint8)  # 1 = good (inside or on the box)
+    # NaN comparisons are False, so a NaN position is not caught here; it is set to 9 afterwards.
+    flags[(lon < lon_min) | (lon > lon_max) | (lat < lat_min) | (lat > lat_max)] = 4  # outside
+    flags[~np.isfinite(lon) | ~np.isfinite(lat)] = 9  # position unknown (overrides the above)
+    return flags
 
 
 #: Variables that cannot be negative — their suggested gross-range lower bound is clamped at 0.
