@@ -80,11 +80,39 @@ def test_load_malformed_yaml_is_configerror(tmp_path):
         ({"qc": "TEMP"}, "mapping"),  # scalar where the variables mapping was meant
     ],
 )
-def test_load_wrong_typed_block_is_configerror(block, shape):
-    # Review finding 4: never silently coerce a wrong-typed known block to {} (which would run the
-    # report on defaults while the user believed their override applied) — error naming the shape.
+def test_wrong_typed_block_is_error(block, shape):
+    # Review finding 4: never silently coerce a wrong-typed known block to {} — it is a validate ERROR
+    # naming the shape, collected with the config's other problems (one multi-issue report) and raised
+    # by check. load itself does not raise (so validate can report everything at once).
+    cfg = loader.load(block)
+    assert any(i.severity == loader.ERROR and shape in i.message for i in loader.validate(cfg))
     with pytest.raises(loader.ConfigError, match=shape):
-        loader.load(block)
+        loader.check(cfg)
+
+
+def test_wrong_typed_block_reported_with_other_issues():
+    # Finding 6: a wrong-typed block no longer short-circuits — validate returns it alongside the rest.
+    cfg = loader.load({"region": [1, 2, 3, 4], "qc": {"TEMP": {"bogus_test": {}}}})
+    msgs = [i.message for i in loader.validate(cfg) if i.severity == loader.ERROR]
+    assert any("region: expected" in m for m in msgs) and any("unknown test 'bogus_test'" in m for m in msgs)
+
+
+def test_validate_rejects_unknown_spike_method():
+    # Review round finding 1: an invalid spike_test.method is an ERROR naming the allowed values, not a
+    # late ValueError swallowed at render time (which would blank the column yet mark the row 'config').
+    issues = loader.validate(loader.load({"qc": {"TEMP": {"spike_test": {"method": "median"}}}}))
+    assert any(i.severity == loader.ERROR and i.path.endswith("method") and "average" in i.message for i in issues)
+    for m in ("average", "differential"):
+        clean = loader.load({"qc": {"TEMP": {"spike_test": {"method": m}}}})
+        assert not any(i.severity == loader.ERROR for i in loader.validate(clean))
+
+
+def test_validate_warns_on_nonbuiltin_variable_without_dataset():
+    # Review round finding 2: without a dataset, a variable name outside the built-ins is a WARNING
+    # (likely typo), surfaced by the CLI pre-check — not silently clean — but not an error that blocks.
+    issues = loader.validate(loader.load({"qc": {"TMEP": {"spike_test": {"suspect_threshold": 1}}}}))
+    assert any(i.severity == loader.WARNING and "TMEP" in i.message and "typo" in i.message for i in issues)
+    assert not any(i.severity == loader.ERROR for i in issues)
 
 
 def test_source_with_colon_round_trips(tmp_path):

@@ -9,7 +9,6 @@ a profile. The page is resolved against a dataset by :func:`build`, then rendere
 from __future__ import annotations
 
 import html
-import inspect
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
@@ -76,6 +75,16 @@ class Ctx:
         if var not in self._sample_tests:
             self._sample_tests[var] = qc.sample_tests(self.ds, var, config=self.qc_config)
         return self._sample_tests[var]
+
+    @cached_property
+    def region(self) -> dict[str, Any] | None:
+        """The mission-level region-test result for this report's :attr:`bbox`, computed once.
+
+        The qc_glidertest panel renders on both the landing and QC pages off one shared :class:`Ctx`,
+        so this caches :func:`glidertest.reports.qc_section.region_result` rather than scanning the full
+        position arrays twice per report. ``None`` when no region box is configured.
+        """
+        return qc_section.region_result(self.ds, self.bbox) if self.bbox is not None else None
 
 
 def _deg_range(lo: float, hi: float, pos: str, neg: str) -> str:
@@ -289,7 +298,9 @@ PANELS: dict[str, Panel] = {
         id="qc_glidertest",
         kind="html",
         render=_guarded(
-            lambda c: get_template("_qc_glidertest.html").render(**qc_section.diagnostics_data(c.ds, c.qc_config, c.bbox))
+            lambda c: get_template("_qc_glidertest.html").render(
+                **qc_section.diagnostics_data(c.ds, c.qc_config, c.bbox, region=c.region)
+            )
         ),
     ),
 }
@@ -465,15 +476,17 @@ _GLOBAL_RANGE_PANELS: tuple[tuple[str, Callable[..., str | None], str, str, str]
 )
 
 
-def _fig_render(adapter: Callable[..., str | None], var: str, slot: str) -> Callable[[Ctx], str | None]:
-    """Return a Panel render callable that threads *var*/*slot* and, when the adapter's signature
-    declares them, this report's resolved ``config`` and the variable's cached ``flags`` from the Ctx.
+def _fig_render(
+    adapter: Callable[..., str | None], var: str, slot: str, needs: tuple[str, ...]
+) -> Callable[[Ctx], str | None]:
+    """Return a Panel render callable that threads *var*/*slot* and the Ctx values named in *needs*.
 
-    One convention for every figure panel: an adapter opts into the config or the flags simply by
-    declaring the parameter, so a future adapter that needs either cannot be left out of the threading.
+    *needs* declares explicitly which of ``config`` (this report's resolved thresholds) and ``flags``
+    (the variable's cached QARTOD flags) the adapter takes — a declaration on the panel group, not
+    runtime signature introspection, so an adapter cannot silently stop receiving config when it is
+    renamed or wrapped (the silent-default class this registration exists to remove).
     """
-    params = inspect.signature(adapter).parameters
-    wants_config, wants_flags = "config" in params, "flags" in params
+    wants_config, wants_flags = "config" in needs, "flags" in needs
 
     def render(c: Ctx) -> str | None:
         kwargs: dict[str, Any] = {}
@@ -486,18 +499,19 @@ def _fig_render(adapter: Callable[..., str | None], var: str, slot: str) -> Call
     return render
 
 
-# One registration loop for every variable-parameterised figure panel (sensor pages and the QC page).
-# The slot sets both the Panel's display width and the adapter's render width (passed through), so a
-# narrow plot (updown_bias → half) renders small and tiles at that same width. Each panel applies only
-# when its variable is present, so a page never lists a panel for an absent sibling variable.
-for _pid, _adapter, _var, _cap, _slot in (*_VAR_FIGURE_PANELS, *_GLOBAL_RANGE_PANELS, *_QC_FIGURE_PANELS):
-    PANELS[_pid] = Panel(
-        id=_pid,
-        render=_fig_render(_adapter, _var, _slot),
-        caption=_cap,
-        slot=_slot,
-        applies_to=_has(_var),
-    )
+# One registration loop for every variable-parameterised figure panel, each group declaring the Ctx
+# values its adapters take (sensor figures need nothing; global_range needs config; the QC panels need
+# config + the variable's cached flags) — explicit, not introspected. The slot sets both the Panel's
+# display width and the adapter's render width, and each panel applies only when its variable is present.
+for _group, _needs in ((_VAR_FIGURE_PANELS, ()), (_GLOBAL_RANGE_PANELS, ("config",)), (_QC_FIGURE_PANELS, ("config", "flags"))):
+    for _pid, _adapter, _var, _cap, _slot in _group:
+        PANELS[_pid] = Panel(
+            id=_pid,
+            render=_fig_render(_adapter, _var, _slot, _needs),
+            caption=_cap,
+            slot=_slot,
+            applies_to=_has(_var),
+        )
 
 PROFILE = Profile(
     entries=(

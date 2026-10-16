@@ -164,6 +164,11 @@ def _hyst_cell(err: np.ndarray) -> dict[str, Any]:
     return {"text": f"{n_over}/{arr.size} bins", "cls": cls}
 
 
+def _fmt_span(span: list | None) -> str:
+    """Return a span as ``[min, max]``, or ``—`` when it is absent (never an invented or crashed value)."""
+    return f"[{span[0]}, {span[1]}]" if span else "—"
+
+
 def gross_range_ts_note(ds: xr.Dataset, config: dict | None = None) -> str | None:
     """Return an HTML note of the suggested gross-range spans for TEMP and PSAL (beside the T–S plot).
 
@@ -177,15 +182,15 @@ def gross_range_ts_note(ds: xr.Dataset, config: dict | None = None) -> str | Non
         return None
     pct = rows[0][1]["inner_pct"]
     cur = "".join(
-        f'<li><strong>{v}</strong> — suspect [{gc["suspect_span"][0]}, {gc["suspect_span"][1]}], '
-        f'fail [{gc["fail_span"][0]}, {gc["fail_span"][1]}]</li>'
+        f'<li><strong>{v}</strong> — suspect {_fmt_span(gc["suspect_span"])}, '
+        f'fail {_fmt_span(gc["fail_span"])}</li>'
         for v, _g in rows
         if (gc := cfg.get(v, {}).get("gross_range_test", {})).get("suspect_span")
         and gc.get("fail_span")
     )
     items = "".join(
-        f'<li><strong>{v}</strong> — suspect [{g["suspect"][0]}, {g["suspect"][1]}], '
-        f'fail [{g["fail"][0]}, {g["fail"][1]}]</li>'
+        f'<li><strong>{v}</strong> — suspect {_fmt_span(g["suspect"])}, '
+        f'fail {_fmt_span(g["fail"])}</li>'
         for v, g in rows
     )
     return (
@@ -223,12 +228,12 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
         if gc.get("suspect_span") and gc.get("fail_span"):
             cur.append(
                 f'<li><strong>{var}</strong> gross range — '
-                f'suspect [{gc["suspect_span"][0]}, {gc["suspect_span"][1]}], '
-                f'fail [{gc["fail_span"][0]}, {gc["fail_span"][1]}]</li>'
+                f'suspect {_fmt_span(gc["suspect_span"])}, '
+                f'fail {_fmt_span(gc["fail_span"])}</li>'
             )
         items.append(
-            f'<li><strong>{var}</strong> gross range — suspect [{gr["suspect"][0]}, {gr["suspect"][1]}], '
-            f'fail [{gr["fail"][0]}, {gr["fail"][1]}]</li>'
+            f'<li><strong>{var}</strong> gross range — suspect {_fmt_span(gr["suspect"])}, '
+            f'fail {_fmt_span(gr["fail"])}</li>'
         )
         explain.append(
             f'The gross span is the central {gr["inner_pct"]:g}% of the finite values '
@@ -268,7 +273,7 @@ def _src(config: dict, var: str, test: str) -> str:
     return "config" if config.get(var, {}).get(test) != qc.configs.get(var, {}).get(test) else "default"
 
 
-def _region(ds: xr.Dataset, bbox: list) -> dict[str, Any]:
+def region_result(ds: xr.Dataset, bbox: list) -> dict[str, Any]:
     """Return the mission-level region-test result: the box, and how many samples fall outside it.
 
     The outside fraction is reported over *evaluated* samples (a known position), never over the
@@ -297,20 +302,24 @@ def _region(ds: xr.Dataset, bbox: list) -> dict[str, Any]:
 
 def _span_display(block: dict, key: str) -> str:
     """Return ``[min, max]`` for *block[key]*, or ``—`` when that span is absent (never an invented value)."""
-    span = block.get(key)
-    return f"[{span[0]}, {span[1]}]" if span else "—"
+    return _fmt_span(block.get(key))
 
 
-def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None = None) -> dict[str, Any] | None:
+def _diagnostics(
+    ds: xr.Dataset, config: dict | None = None, bbox: list | None = None, region: dict | None = None
+) -> dict[str, Any] | None:
     """Return the glidertest-diagnostics data (thresholds + matrix + region), or ``None`` when nothing applies.
 
     The region test is mission-level: it runs whenever a *bbox* is configured and the file has position
     data, independent of which QC variables are present — so a file with position but no standard QC
     variable still gets a region row. ``None`` only when there is neither a QC variable nor a region.
+    *region* lets the caller pass a pre-computed :func:`region_result` (cached on the Ctx across pages);
+    when ``None`` it is computed here from *bbox*.
     """
     config = config if config is not None else qc.configs
     present = [v for v in _QC_VARS if v in ds]
-    region = _region(ds, bbox) if bbox is not None else None
+    if region is None and bbox is not None:
+        region = region_result(ds, bbox)
     if not present and region is None:
         return None
 
@@ -386,7 +395,12 @@ def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None =
                     raise ValueError(f"unknown matrix cell kind: {kind!r}")
             matrix_rows.append({"label": label, "cells": cells})
 
-    result: dict[str, Any] = {"present": present, "thresholds": thr_rows, "matrix": matrix_rows}
+    result: dict[str, Any] = {
+        "present": present,
+        "thresholds": thr_rows,
+        "matrix": matrix_rows,
+        "hyst": {"pct": qc.HYSTERESIS_PCT_THRESHOLD, "bins": qc.HYSTERESIS_BIN_THRESHOLD},
+    }
     if region is not None:
         result["region"] = region
     return result
@@ -397,15 +411,18 @@ def delivered_data(ds: xr.Dataset) -> dict[str, Any]:
     return {"delivered": _delivered(ds)}
 
 
-def diagnostics_data(ds: xr.Dataset, config: dict | None = None, bbox: list | None = None) -> dict[str, Any]:
+def diagnostics_data(
+    ds: xr.Dataset, config: dict | None = None, bbox: list | None = None, region: dict | None = None
+) -> dict[str, Any]:
     """Return glidertest's on-the-fly QC diagnostics as data for ``_qc_glidertest.html``.
 
     Includes the basic profile-number/duration checks, which glidertest computes on the fly (they are
     not file flags), so they sit with the glidertest diagnostics rather than the delivered census.
     *config* supplies the resolved (possibly overridden) thresholds; ``None`` uses the defaults.
     *bbox* (``[west, south, east, north]``) adds the mission-level region test; ``None`` omits it.
+    *region* is an optional pre-computed :func:`region_result` (cached on the Ctx, reused across pages).
     """
-    return {"basic_checks": _basic_checks(ds), "diagnostics": _diagnostics(ds, config, bbox)}
+    return {"basic_checks": _basic_checks(ds), "diagnostics": _diagnostics(ds, config, bbox, region)}
 
 
 def qc_section_data(ds: xr.Dataset, config: dict | None = None, bbox: list | None = None) -> dict[str, Any]:

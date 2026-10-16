@@ -36,6 +36,7 @@ from glidertest import qc
 
 if TYPE_CHECKING:
     import xarray as xr
+    from ruamel.yaml.comments import CommentedMap
 
 #: Severity labels for a :class:`ValidationIssue`.
 ERROR = "ERROR"
@@ -55,6 +56,10 @@ _PACKAGE_TEST_FIELDS: Mapping[str, frozenset[str]] = {
     "hysteresis": frozenset({"threshold"}),
 }
 
+#: The spike-detection methods ioos_qc's ``spike_test`` accepts; a ``spike_test.method`` outside this
+#: set is rejected at validation rather than raising deep inside qartod at render time.
+_SPIKE_METHODS = frozenset({"average", "differential"})
+
 #: Fields whose value must be a two-element increasing numeric list ``[min, max]``.
 _SPAN_FIELDS = frozenset({"suspect_span", "fail_span"})
 
@@ -63,6 +68,15 @@ _SPAN_FIELDS = frozenset({"suspect_span", "fail_span"})
 _ACTIVE_KEYS = frozenset({"config_version", "source", "qc", "region"})
 _DEFERRED_KEYS = frozenset({"display", "mission", "pages"})
 _TOP_LEVEL_KEYS = _ACTIVE_KEYS | _DEFERRED_KEYS
+
+#: Each block key mapped to the shape a wrong-typed value is reported against (``validate`` ERROR).
+_BLOCK_SHAPES = {
+    "qc": "a mapping of variables (or 'hysteresis') to tests",
+    "region": "a mapping with a 'bbox' key",
+    "display": "a mapping",
+    "mission": "a mapping",
+    "pages": "a mapping",
+}
 
 #: Config file schema version this loader understands.
 _SUPPORTED_VERSION = 1
@@ -139,7 +153,7 @@ class Config:
     @property
     def bbox(self) -> list[float] | None:
         """Return the location-test bounding box ``[lon_min, lat_min, lon_max, lat_max]`` or None."""
-        if not self.region:
+        if not isinstance(self.region, Mapping):  # absent, or wrong-typed (reported by validate)
             return None
         bbox = self.region.get("bbox")
         return list(bbox) if bbox is not None else None
@@ -152,27 +166,26 @@ class Config:
         dicts), so a reader of the manifest sees what was overridden without diffing against the
         defaults.
         """
+        qc = self.qc.items() if isinstance(self.qc, Mapping) else ()
         return {
-            "qc": {k: dict(v) if isinstance(v, Mapping) else v for k, v in self.qc.items()},
-            "region": dict(self.region) if self.region else None,
+            "qc": {k: dict(v) if isinstance(v, Mapping) else v for k, v in qc},
+            "region": dict(self.region) if isinstance(self.region, Mapping) else None,
             "source": self.source,
         }
 
 
-def _block_mapping(raw: Mapping[str, Any], key: str, shape: str) -> Mapping[str, Any] | None:
-    """Return ``raw[key]`` as a read-only mapping, ``None`` when absent, raising on a wrong type.
+def _block(raw: Mapping[str, Any], key: str, default: Any = None) -> Any:
+    """Return ``raw[key]`` as a read-only mapping, *default* when absent, or the raw value unchanged.
 
-    A known block present with the wrong type (``region: [10, 50, 25, 70]``, ``qc: TEMP``) is a
-    :class:`ConfigError` naming the key and the *shape* it expected — never silently coerced to an
-    empty mapping, which would run the report on defaults while the user believed the override applied.
+    A known block present with the wrong type (``region: [10, 50, 25, 70]``, ``qc: TEMP``) is passed
+    through as-is — never silently coerced to an empty mapping — so :func:`validate` can report it as an
+    ERROR alongside the config's other problems (one multi-issue report), rather than load raising on
+    the first wrong type before the rest is seen.
     """
     if key not in raw or raw[key] is None:
-        return None
+        return default
     value = raw[key]
-    if not isinstance(value, Mapping):
-        msg = f"{key}: expected {shape}, got {type(value).__name__}"
-        raise ConfigError(msg)
-    return MappingProxyType(dict(value))
+    return MappingProxyType(dict(value)) if isinstance(value, Mapping) else value
 
 
 def load(source: str | Path | Mapping[str, Any]) -> Config:
@@ -226,15 +239,14 @@ def load(source: str | Path | Mapping[str, Any]) -> Config:
     if isinstance(raw.get("glidertest"), Mapping):
         raw = raw["glidertest"]
 
-    qc_block = _block_mapping(raw, "qc", "a mapping of variables (or 'hysteresis') to tests")
     return Config(
         config_version=raw.get("config_version", _SUPPORTED_VERSION),
         source=raw.get("source"),
-        qc=qc_block if qc_block is not None else MappingProxyType({}),
-        region=_block_mapping(raw, "region", "a mapping with a 'bbox' key"),
-        display=_block_mapping(raw, "display", "a mapping"),
-        mission=_block_mapping(raw, "mission", "a mapping"),
-        pages=_block_mapping(raw, "pages", "a mapping"),
+        qc=_block(raw, "qc", MappingProxyType({})),
+        region=_block(raw, "region"),
+        display=_block(raw, "display"),
+        mission=_block(raw, "mission"),
+        pages=_block(raw, "pages"),
         path=path,
         extra_keys=tuple(k for k in raw if k not in _TOP_LEVEL_KEYS),
     )
@@ -281,6 +293,10 @@ def _validate_test(
             continue
         if field in _SPAN_FIELDS and (why := _span_issue(value)) is not None:
             issues.append(ValidationIssue(ERROR, f"{field} {why}", fpath))
+        if field == "method" and value not in _SPIKE_METHODS:
+            issues.append(
+                ValidationIssue(ERROR, f"method {value!r} not supported; allowed: {_fmt(_SPIKE_METHODS)}", fpath)
+            )
     # The suspect-inside-fail cross-check is done on the *merged* spans in validate(), not here: a
     # partial override that sets only one span must be checked against the default it merges with.
     return issues
@@ -366,6 +382,11 @@ def validate(cfg: Config, ds: xr.Dataset | None = None) -> list[ValidationIssue]
             ValidationIssue(ERROR, f"unknown top-level key {key!r}; allowed: {_fmt(_TOP_LEVEL_KEYS)}", key)
         )
 
+    for key, shape in _BLOCK_SHAPES.items():
+        value = getattr(cfg, key)
+        if value is not None and not isinstance(value, Mapping):
+            issues.append(ValidationIssue(ERROR, f"{key}: expected {shape}, got {type(value).__name__}", key))
+
     if cfg.config_version != _SUPPORTED_VERSION:
         issues.append(
             ValidationIssue(
@@ -381,7 +402,8 @@ def validate(cfg: Config, ds: xr.Dataset | None = None) -> list[ValidationIssue]
                 ValidationIssue(WARNING, f"{key!r} is recognised but not applied in this release", key)
             )
 
-    for name, block in cfg.qc.items():
+    # A non-mapping qc block is already reported above; iterate nothing rather than crash on .items().
+    for name, block in (cfg.qc.items() if isinstance(cfg.qc, Mapping) else ()):
         path = f"qc.{name}"
         if name in _PACKAGE_TEST_FIELDS:
             issues += _validate_test(name, block, path, _PACKAGE_TEST_FIELDS)
@@ -393,11 +415,23 @@ def validate(cfg: Config, ds: xr.Dataset | None = None) -> list[ValidationIssue]
             continue
         # A variable name is not checked against a vocabulary: the built-in four are defaults, not the
         # allowed set, so a user may configure CNDC/BBP700/… thresholds. Shape is still checked here
-        # (no dataset needed); whether the file actually carries the variable is a WARNING, raised once
-        # in report() with the file open — never an error that blocks the run from the CLI pre-check.
-        if ds is not None and name not in ds.data_vars:
+        # (no dataset needed); whether the file carries the variable is a WARNING, never an error that
+        # blocks the run. With the file open that is a concrete "not in this dataset"; without it (the
+        # CLI pre-check), a name outside the built-ins is flagged as a likely typo — it only applies if
+        # the file turns out to have the variable.
+        if ds is not None:
+            if name not in ds.data_vars:
+                issues.append(
+                    ValidationIssue(WARNING, f"{name!r} is not in this dataset; its thresholds will not be used", path)
+                )
+        elif name not in qc.configs:
             issues.append(
-                ValidationIssue(WARNING, f"{name!r} is not in this dataset; its thresholds will not be used", path)
+                ValidationIssue(
+                    WARNING,
+                    f"{name!r} is not a built-in QC variable; its thresholds apply only if the file has it "
+                    "(check for a typo)",
+                    path,
+                )
             )
         if not isinstance(block, Mapping):
             issues.append(ValidationIssue(ERROR, f"{name} must be a mapping of tests", path))
@@ -407,7 +441,7 @@ def validate(cfg: Config, ds: xr.Dataset | None = None) -> list[ValidationIssue]
         if (issue := _gross_span_issue(name, block)) is not None:
             issues.append(issue)
 
-    if cfg.region is not None:
+    if isinstance(cfg.region, Mapping):  # a non-mapping region is already reported above
         issues += _validate_bbox(cfg.region)
 
     return issues
@@ -517,18 +551,23 @@ def _init_cmap_name(var: str) -> str:
     return getattr(cmap, "name", "viridis")
 
 
-def _seeded_qc(ds: xr.Dataset, present: list[str], commented_map, flow_seq):
+def _seeded_qc(ds: xr.Dataset, present: list[str]) -> CommentedMap:
     """Build the ``qc:`` block as a ruamel ``CommentedMap`` — suggested value, default in an eol comment.
 
-    *commented_map*/*flow_seq* are the ruamel ``CommentedMap``/flow-``CommentedSeq`` factories, passed
-    in so this helper does not import ruamel at module load (it is only used by :func:`init_template`).
+    ruamel is imported here (only :func:`init_template` calls this), not at module load.
     """
+    from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
-    def num(x: float):
+    def flow_seq(values: list) -> CommentedSeq:
+        seq = CommentedSeq(values)
+        seq.fa.set_flow_style()
+        return seq
+
+    def num(x: float) -> int | float:
         f = float(x)
         return int(f) if f.is_integer() else f
 
-    qc_map = commented_map()
+    qc_map = CommentedMap()
     for var in present:
         d = qc.configs[var]
         gd, sd, fd = d["gross_range_test"], d["spike_test"], d["flat_line_test"]
@@ -539,24 +578,24 @@ def _seeded_qc(ds: xr.Dataset, present: list[str], commented_map, flow_seq):
         # spans so the generated template validates (min<max, suspect inside fail) as promised.
         if _span_issue(susp) is not None or _span_issue(fail) is not None or susp[0] < fail[0] or susp[1] > fail[1]:
             susp, fail = gd["suspect_span"], gd["fail_span"]
-        gross = commented_map()
+        gross = CommentedMap()
         gross["suspect_span"] = flow_seq([num(susp[0]), num(susp[1])])
         gross.yaml_add_eol_comment(f"default: [{gd['suspect_span'][0]}, {gd['suspect_span'][1]}]", "suspect_span")
         gross["fail_span"] = flow_seq([num(fail[0]), num(fail[1])])
         gross.yaml_add_eol_comment(f"default: [{gd['fail_span'][0]}, {gd['fail_span'][1]}]", "fail_span")
-        spike = commented_map()
+        spike = CommentedMap()
         spike["suspect_threshold"] = num(sd["suspect_threshold"])
         spike.yaml_add_eol_comment("default (no mission-derived suggestion)", "suspect_threshold")
         spike["fail_threshold"] = num(sd["fail_threshold"])
         spike.yaml_add_eol_comment("default (no mission-derived suggestion)", "fail_threshold")
-        flat = commented_map()
+        flat = CommentedMap()
         flat["suspect_threshold"] = num(_finite_or(fl["suspect"], fd["suspect_threshold"]))
         flat.yaml_add_eol_comment(f"seconds; default: {num(fd['suspect_threshold'])}", "suspect_threshold")
         flat["fail_threshold"] = num(_finite_or(fl["fail"], fd["fail_threshold"]))
         flat.yaml_add_eol_comment(f"seconds; default: {num(fd['fail_threshold'])}", "fail_threshold")
         flat["tolerance"] = fd["tolerance"]
         flat.yaml_add_eol_comment(f"default: {fd['tolerance']:g}", "tolerance")
-        block = commented_map()
+        block = CommentedMap()
         block["gross_range_test"] = gross
         block["spike_test"] = spike
         block["flat_line_test"] = flat
@@ -599,19 +638,14 @@ def init_template(ds: xr.Dataset) -> str:
     import io
 
     from ruamel.yaml import YAML
-    from ruamel.yaml.comments import CommentedMap, CommentedSeq
-
-    def flow_seq(values: list) -> CommentedSeq:
-        seq = CommentedSeq(values)
-        seq.fa.set_flow_style()
-        return seq
+    from ruamel.yaml.comments import CommentedMap
 
     present = [v for v in _INIT_VARS if v in ds.data_vars]
     doc = CommentedMap()
     doc["config_version"] = _SUPPORTED_VERSION
     doc["source"] = ""
     doc.yaml_add_eol_comment("free text recorded in report.json (qc_config_source)", "source")
-    doc["qc"] = _seeded_qc(ds, present, CommentedMap, flow_seq)
+    doc["qc"] = _seeded_qc(ds, present)
 
     buf = io.StringIO()
     yaml_rt = YAML()
