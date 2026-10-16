@@ -188,9 +188,10 @@ def report(
     (missiondir / "figures").mkdir(parents=True, exist_ok=True)
 
     cfg = loader.check(loader.load(config), ds) if config is not None else None
+    resolved_qc = loader.resolve_qc(cfg)  # the effective thresholds (defaults when cfg is None); resolve once
     ctx = Ctx(
         ds=ds,
-        qc_config=loader.resolve_qc(cfg) if cfg is not None else None,
+        qc_config=resolved_qc,
         bbox=cfg.bbox if cfg is not None else None,
     )
     pages = [p for p in PAGES if p.applies_to(ctx)]
@@ -280,7 +281,7 @@ def report(
             version=__version__,
             generated_at=generated_at,
             facts=ctx.facts,
-            qc_thresholds=loader.resolve_qc(cfg),
+            qc_thresholds=resolved_qc,
             qc_config=cfg.user_blocks() if cfg is not None else None,
             qc_config_source=cfg.source if cfg is not None else None,
             region=cfg.bbox if cfg is not None else None,

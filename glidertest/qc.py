@@ -153,7 +153,15 @@ def flag_labels(da):
     return labels
 
 
-def hysteresis_verdict(err, pct_threshold=5, bin_threshold=5):
+#: Hysteresis verdict thresholds, named so the report table and the verdict rule cannot drift (the
+#: table reads these constants, not ``hysteresis_verdict.__defaults__`` by position): a depth bin
+#: counts as exceeded above ``HYSTERESIS_PCT_THRESHOLD`` percent dive–climb error, and a variable is
+#: flagged when more than ``HYSTERESIS_BIN_THRESHOLD`` bins exceed it.
+HYSTERESIS_PCT_THRESHOLD = 5
+HYSTERESIS_BIN_THRESHOLD = 5
+
+
+def hysteresis_verdict(err, pct_threshold=HYSTERESIS_PCT_THRESHOLD, bin_threshold=HYSTERESIS_BIN_THRESHOLD):
     """Return ``(n_over, flagged)`` for a hysteresis dive-climb error array.
 
     The single verdict rule shared by the RST summary (:func:`fill_str`) and the HTML report, so the

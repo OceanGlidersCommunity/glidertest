@@ -87,6 +87,17 @@ def test_load_wrong_typed_block_is_configerror(block, shape):
         loader.load(block)
 
 
+def test_source_with_colon_round_trips(tmp_path):
+    # Review finding 8: a source carrying a YAML-special character (a colon) round-trips — load reads
+    # it back whole and check raises nothing. init builds with ruamel for the same reason (comments +
+    # proper quoting on write).
+    path = tmp_path / "c.yaml"
+    path.write_text('config_version: 1\nsource: "a: b"\nqc: {}\n')
+    cfg = loader.load(path)
+    assert cfg.source == "a: b"
+    assert loader.check(cfg) is cfg  # no error raised
+
+
 # --- resolve_qc ----------------------------------------------------------------------------------
 
 

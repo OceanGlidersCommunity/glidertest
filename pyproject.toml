@@ -42,6 +42,7 @@ dependencies = [
   "pillow",
   "pooch",
   "pyyaml",
+  "ruamel.yaml>=0.18",
   "scipy",
   "seaborn",
   "sgp4>=2.14",

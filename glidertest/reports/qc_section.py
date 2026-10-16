@@ -346,16 +346,14 @@ def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None =
                 "src": _src(config, v, "flat_line_test"),
             }
         )
-        # Hysteresis thresholds are hysteresis_verdict's defaults (pct per bin, then bin count), read
-        # from the function so the table cannot drift from the verdict rule. Not configurable here, so
-        # always "default".
-        _pct, _bins = qc.hysteresis_verdict.__defaults__
+        # Hysteresis thresholds are the named verdict constants (shared with hysteresis_verdict's
+        # defaults), so the table cannot drift from the rule. Not configurable here, so always "default".
         thr_rows.append(
             {
                 "var": v,
                 "test": "hysteresis",
-                "suspect": f"> {_pct}% dive–climb error per depth bin",
-                "fail": f"> {_bins} bins exceed",
+                "suspect": f"> {qc.HYSTERESIS_PCT_THRESHOLD}% dive–climb error per depth bin",
+                "fail": f"> {qc.HYSTERESIS_BIN_THRESHOLD} bins exceed",
                 "src": "default",
             }
         )

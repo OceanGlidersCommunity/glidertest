@@ -9,6 +9,7 @@ a profile. The page is resolved against a dataset by :func:`build`, then rendere
 from __future__ import annotations
 
 import html
+import inspect
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
@@ -455,41 +456,44 @@ PANELS["full_qc_link"] = Panel(
     applies_to=_qc_or_region_applies,
 )
 
-for _pid, _adapter, _var, _cap, _slot in _VAR_FIGURE_PANELS:
-    # The slot sets both the Panel's display width and the adapter's render width (passed through),
-    # so a narrow plot (updown_bias → half) renders small and tiles at that same width. The panel
-    # applies only when its variable is present, so a page never lists a panel for an absent sibling
-    # variable (a PSAL-only CTD page drops the TEMP panels rather than relying on the plotter to raise).
-    PANELS[_pid] = Panel(
-        id=_pid,
-        render=(lambda c, a=_adapter, v=_var, s=_slot: a(c.ds, v, slot=s)),
-        caption=_cap,
-        slot=_slot,
-        applies_to=_has(_var),
-    )
+# global_range is a sensor-page adapter that consults the gross-range span (for the histogram extent),
+# so it declares a `config` parameter; it goes through the same loop as the other figure panels.
+_GLOBAL_RANGE_PANELS: tuple[tuple[str, Callable[..., str | None], str, str, str], ...] = (
+    ("oxy_global_range", _plots.global_range, "DOXY", "Dissolved oxygen global-range check", "half"),
+    ("ctd_global_temp", _plots.global_range, "TEMP", "Temperature global-range check", "half"),
+    ("ctd_global_psal", _plots.global_range, "PSAL", "Salinity global-range check", "half"),
+)
 
-# global_range is the one sensor-page adapter that consults the gross-range span (for the histogram
-# extent), so it takes the report's resolved config from the Ctx; the generic loop above passes no
-# config, which the other sensor adapters do not read.
-for _pid, _var, _cap in (
-    ("oxy_global_range", "DOXY", "Dissolved oxygen global-range check"),
-    ("ctd_global_temp", "TEMP", "Temperature global-range check"),
-    ("ctd_global_psal", "PSAL", "Salinity global-range check"),
-):
-    PANELS[_pid] = Panel(
-        id=_pid,
-        render=(lambda c, v=_var: _plots.global_range(c.ds, v, slot="half", config=c.qc_config)),
-        caption=_cap,
-        slot="half",
-        applies_to=_has(_var),
-    )
 
-for _pid, _adapter, _var, _cap, _slot in _QC_FIGURE_PANELS:
-    # QC panels get the variable's (gross, spike, flat) flags computed once per page (Ctx.sample_tests)
-    # and threaded in, so a section's ~5 panels do not each recompute all three QARTOD tests.
+def _fig_render(adapter: Callable[..., str | None], var: str, slot: str) -> Callable[[Ctx], str | None]:
+    """Return a Panel render callable that threads *var*/*slot* and, when the adapter's signature
+    declares them, this report's resolved ``config`` and the variable's cached ``flags`` from the Ctx.
+
+    One convention for every figure panel: an adapter opts into the config or the flags simply by
+    declaring the parameter, so a future adapter that needs either cannot be left out of the threading.
+    """
+    params = inspect.signature(adapter).parameters
+    wants_config, wants_flags = "config" in params, "flags" in params
+
+    def render(c: Ctx) -> str | None:
+        kwargs: dict[str, Any] = {}
+        if wants_config:
+            kwargs["config"] = c.qc_config
+        if wants_flags:
+            kwargs["flags"] = c.sample_tests(var)
+        return adapter(c.ds, var, slot=slot, **kwargs)
+
+    return render
+
+
+# One registration loop for every variable-parameterised figure panel (sensor pages and the QC page).
+# The slot sets both the Panel's display width and the adapter's render width (passed through), so a
+# narrow plot (updown_bias → half) renders small and tiles at that same width. Each panel applies only
+# when its variable is present, so a page never lists a panel for an absent sibling variable.
+for _pid, _adapter, _var, _cap, _slot in (*_VAR_FIGURE_PANELS, *_GLOBAL_RANGE_PANELS, *_QC_FIGURE_PANELS):
     PANELS[_pid] = Panel(
         id=_pid,
-        render=(lambda c, a=_adapter, v=_var, s=_slot: a(c.ds, v, slot=s, flags=c.sample_tests(v), config=c.qc_config)),
+        render=_fig_render(_adapter, _var, _slot),
         caption=_cap,
         slot=_slot,
         applies_to=_has(_var),

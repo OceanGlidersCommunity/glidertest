@@ -500,43 +500,68 @@ def resolve_qc(cfg: Config | None) -> dict[str, Any]:
 #: Built-in QC variables an init template seeds a ``qc:`` block for (those present in the file).
 _INIT_VARS = ("TEMP", "PSAL", "DOXY", "CHLA")
 
-#: The colormap glidertest draws each init variable with, by name — mirrors the ``colormap`` objects
-#: in :data:`glidertest.utilities.label_dict`. Used only to seed the commented ``display:`` stub in
-#: :func:`init_template`, so the stub shows the real current default rather than a placeholder.
-_INIT_CMAPS = {"TEMP": "thermal", "PSAL": "haline", "DOXY": "oxy", "CHLA": "algae"}
-
-
 def _finite_or(value: float, fallback: float) -> float:
     """Return *value* unless it is NaN, else *fallback* (for suggesters that return NaN on short data)."""
     return fallback if math.isnan(value) else value
 
 
-def _init_var_block(ds: xr.Dataset, var: str) -> list[str]:
-    """Return the YAML lines for one variable's seeded ``qc:`` block (suggestion as value, default in a comment)."""
-    d = qc.configs[var]
-    gd, sd, fd = d["gross_range_test"], d["spike_test"], d["flat_line_test"]
-    gr = qc.suggest_gross_range(ds, var)
-    fl = qc.suggest_flat_line(ds, var)
-    susp, fail = (gr["suspect"], gr["fail"]) if gr else (gd["suspect_span"], gd["fail_span"])
-    # A near-constant variable gives a degenerate [v, v] span (min==max); fall back to the built-in
-    # default spans so the generated template validates (min<max, suspect inside fail) as promised.
-    if _span_issue(susp) is not None or _span_issue(fail) is not None or susp[0] < fail[0] or susp[1] > fail[1]:
-        susp, fail = gd["suspect_span"], gd["fail_span"]
-    fsusp = _finite_or(fl["suspect"], fd["suspect_threshold"])
-    ffail = _finite_or(fl["fail"], fd["fail_threshold"])
-    return [
-        f"  {var}:",
-        "    gross_range_test:",
-        f"      suspect_span: [{susp[0]}, {susp[1]}]   # default: [{gd['suspect_span'][0]}, {gd['suspect_span'][1]}]",
-        f"      fail_span: [{fail[0]}, {fail[1]}]   # default: [{gd['fail_span'][0]}, {gd['fail_span'][1]}]",
-        "    spike_test:",
-        f"      suspect_threshold: {sd['suspect_threshold']}   # default (no mission-derived suggestion)",
-        f"      fail_threshold: {sd['fail_threshold']}   # default (no mission-derived suggestion)",
-        "    flat_line_test:",
-        f"      suspect_threshold: {fsusp:g}   # seconds; default: {fd['suspect_threshold']:g}",
-        f"      fail_threshold: {ffail:g}   # seconds; default: {fd['fail_threshold']:g}",
-        f"      tolerance: {fd['tolerance']:g}   # default: {fd['tolerance']:g}",
-    ]
+def _init_cmap_name(var: str) -> str:
+    """Return the colormap name glidertest draws *var* with (from :data:`glidertest.utilities.label_dict`).
+
+    Derived from the actual default rather than a frozen literal, so the seeded commented ``display:``
+    stub cannot advertise a colormap that no longer matches what the plots use. Falls back to ``viridis``.
+    """
+    from glidertest import utilities
+
+    cmap = utilities.label_dict.get(var, {}).get("colormap")
+    return getattr(cmap, "name", "viridis")
+
+
+def _seeded_qc(ds: xr.Dataset, present: list[str], commented_map, flow_seq):
+    """Build the ``qc:`` block as a ruamel ``CommentedMap`` — suggested value, default in an eol comment.
+
+    *commented_map*/*flow_seq* are the ruamel ``CommentedMap``/flow-``CommentedSeq`` factories, passed
+    in so this helper does not import ruamel at module load (it is only used by :func:`init_template`).
+    """
+
+    def num(x: float):
+        f = float(x)
+        return int(f) if f.is_integer() else f
+
+    qc_map = commented_map()
+    for var in present:
+        d = qc.configs[var]
+        gd, sd, fd = d["gross_range_test"], d["spike_test"], d["flat_line_test"]
+        gr = qc.suggest_gross_range(ds, var)
+        fl = qc.suggest_flat_line(ds, var)
+        susp, fail = (gr["suspect"], gr["fail"]) if gr else (gd["suspect_span"], gd["fail_span"])
+        # A near-constant variable gives a degenerate [v, v] span; fall back to the built-in default
+        # spans so the generated template validates (min<max, suspect inside fail) as promised.
+        if _span_issue(susp) is not None or _span_issue(fail) is not None or susp[0] < fail[0] or susp[1] > fail[1]:
+            susp, fail = gd["suspect_span"], gd["fail_span"]
+        gross = commented_map()
+        gross["suspect_span"] = flow_seq([num(susp[0]), num(susp[1])])
+        gross.yaml_add_eol_comment(f"default: [{gd['suspect_span'][0]}, {gd['suspect_span'][1]}]", "suspect_span")
+        gross["fail_span"] = flow_seq([num(fail[0]), num(fail[1])])
+        gross.yaml_add_eol_comment(f"default: [{gd['fail_span'][0]}, {gd['fail_span'][1]}]", "fail_span")
+        spike = commented_map()
+        spike["suspect_threshold"] = num(sd["suspect_threshold"])
+        spike.yaml_add_eol_comment("default (no mission-derived suggestion)", "suspect_threshold")
+        spike["fail_threshold"] = num(sd["fail_threshold"])
+        spike.yaml_add_eol_comment("default (no mission-derived suggestion)", "fail_threshold")
+        flat = commented_map()
+        flat["suspect_threshold"] = num(_finite_or(fl["suspect"], fd["suspect_threshold"]))
+        flat.yaml_add_eol_comment(f"seconds; default: {num(fd['suspect_threshold'])}", "suspect_threshold")
+        flat["fail_threshold"] = num(_finite_or(fl["fail"], fd["fail_threshold"]))
+        flat.yaml_add_eol_comment(f"seconds; default: {num(fd['fail_threshold'])}", "fail_threshold")
+        flat["tolerance"] = fd["tolerance"]
+        flat.yaml_add_eol_comment(f"default: {fd['tolerance']:g}", "tolerance")
+        block = commented_map()
+        block["gross_range_test"] = gross
+        block["spike_test"] = spike
+        block["flat_line_test"] = flat
+        qc_map[var] = block
+    return qc_map
 
 
 def init_template(ds: xr.Dataset) -> str:
@@ -553,6 +578,10 @@ def init_template(ds: xr.Dataset) -> str:
     without tripping their not-applied warnings. ``glidertest init`` writes this for the user to edit
     and pass back with ``glidertest report -c``.
 
+    The ``config_version``/``source``/``qc`` data block is emitted with ``ruamel.yaml`` (not string
+    concatenation), so the per-value default comments are attached as real YAML comments and a value
+    carrying a YAML-special character (e.g. a ``source`` with a colon) round-trips through a later edit.
+
     Parameters
     ----------
     ds : xarray.Dataset
@@ -567,29 +596,42 @@ def init_template(ds: xr.Dataset) -> str:
     -----
     Original Author: Eleanor Frajka-Williams.
     """
+    import io
+
+    from ruamel.yaml import YAML
+    from ruamel.yaml.comments import CommentedMap, CommentedSeq
+
+    def flow_seq(values: list) -> CommentedSeq:
+        seq = CommentedSeq(values)
+        seq.fa.set_flow_style()
+        return seq
+
     present = [v for v in _INIT_VARS if v in ds.data_vars]
-    lines = [
-        "# glidertest report config — generated by `glidertest init`.",
-        "# Edit the values to override, then run: glidertest report -c <this file> <mission.nc>",
-        "# Thresholds are in each variable's OG1 units. Values below are glidertest's suggestions for",
-        "# THIS mission (from its data distribution); the built-in default is in a comment beside each.",
-        "config_version: 1",
-        'source: ""   # free text recorded in the report (who ran this QC pass, when, why)',
-        "",
-        "# region:   # uncomment and set to run the region test (samples outside the box are flagged fail)",
-        "#   bbox: [west, south, east, north]   # e.g. [10, 50, 25, 70] = lon_min, lat_min, lon_max, lat_max",
-        "",
-        "qc:",
-    ]
-    if not present:
-        lines.append("  {}   # no TEMP/PSAL/DOXY/CHLA in this file to seed")
-    for v in present:
-        lines += _init_var_block(ds, v)
-    # Override categories the loader recognises but does not apply in this release (qc.hysteresis, and
-    # the top-level display/mission/pages blocks): emitted commented-out so the template shows the whole
-    # menu without tripping the not-applied warnings — and so the generated file still round-trips to
-    # zero issues. Uncomment and edit once a release wires them up.
-    lines += [
+    doc = CommentedMap()
+    doc["config_version"] = _SUPPORTED_VERSION
+    doc["source"] = ""
+    doc.yaml_add_eol_comment("free text recorded in report.json (qc_config_source)", "source")
+    doc["qc"] = _seeded_qc(ds, present, CommentedMap, flow_seq)
+
+    buf = io.StringIO()
+    yaml_rt = YAML()
+    yaml_rt.indent(mapping=2, sequence=2, offset=0)
+    yaml_rt.dump(doc, buf)
+    body = buf.getvalue()
+
+    header = (
+        "# glidertest report config — generated by `glidertest init`.\n"
+        "# Edit the values to override, then run: glidertest report -c <this file> <mission.nc>\n"
+        "# Thresholds are in each variable's OG1 units. Values below are glidertest's suggestions for\n"
+        "# THIS mission (from its data distribution); the built-in default is in a comment beside each.\n"
+        "#\n"
+        "# region:   # uncomment and set to run the region test (samples outside the box are flagged fail)\n"
+        "#   bbox: [west, south, east, north]   # e.g. [10, 50, 25, 70] = lon_min, lat_min, lon_max, lat_max\n"
+    )
+    # Override categories the loader recognises but does not apply in this release (qc.hysteresis and the
+    # top-level display/mission/pages blocks): appended commented-out so the template shows the whole menu
+    # without tripping the not-applied warnings — and so the generated file still round-trips to zero issues.
+    menu = [
         "",
         "  # hysteresis — sits beside the variables, not keyed by a variable. Recognised and recorded",
         "  # for provenance; NOT applied yet (uncommenting it makes `report -c` print a warning).",
@@ -603,17 +645,12 @@ def init_template(ds: xr.Dataset) -> str:
         "#   variables:",
     ]
     for v in present:
-        lines += [
-            f"#     {v}:",
-            f"#       cmap: {_INIT_CMAPS.get(v, 'viridis')}",
-            "#       vmin:",
-            "#       vmax:",
-        ]
-    lines += [
+        menu += [f"#     {v}:", f"#       cmap: {_init_cmap_name(v)}", "#       vmin:", "#       vmax:"]
+    menu += [
         "",
         "# mission — display-only metadata (title, project, fleet label), shown with provenance, never",
         "# merged into the QC verdict. Recognised and recorded; NOT applied yet.",
         "# pages — which pages to build, e.g. {ctd, oxygen, optics, flight, inventory}: true/false.",
         "# Recognised and recorded; NOT applied yet.",
     ]
-    return "\n".join(lines) + "\n"
+    return header + body + "\n".join(menu) + "\n"
