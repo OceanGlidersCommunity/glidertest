@@ -199,3 +199,48 @@ def test_init_template_round_trips_and_validates(subset_ds):
     cfg = loader.load(yaml.safe_load(text))
     assert loader.validate(cfg, subset_ds) == []  # generated template is clean as written
     assert "TEMP" in cfg.qc  # seeds the variables present in the file
+    # The not-yet-applied override categories are shown commented out, so the template advertises the
+    # whole menu while the round-trip above still parses to zero issues (comments are not parsed).
+    for marker in ("# hysteresis:", "# display:", "#   variables:", "# mission —", "# pages —"):
+        assert marker in text
+
+
+# --- review fixes (findings 1, 2, 4) --------------------------------------------------------------
+
+
+def test_validate_partial_span_override_checked_against_merged_default():
+    # Finding 1: overriding only fail_span must be checked against the default suspect_span it merges
+    # with, so an effective suspect-outside-fail pair is caught (previously escaped — only-one-span).
+    cfg = loader.load({"qc": {"TEMP": {"gross_range_test": {"fail_span": [0, 20]}}}})
+    issues = loader.validate(cfg)
+    assert any(i.severity == loader.ERROR and "must sit inside fail_span" in i.message for i in issues)
+    # The both-present inconsistent case is still caught.
+    bad = loader.load({"qc": {"TEMP": {"gross_range_test": {"suspect_span": [-5, 45], "fail_span": [0, 40]}}}})
+    assert any("must sit inside fail_span" in i.message for i in loader.validate(bad))
+
+
+def test_hysteresis_warns_and_is_dropped_from_effective():
+    # Finding 4: hysteresis loads/validates but is not applied — it must warn, and must NOT appear in
+    # the effective thresholds (so report.json does not claim a threshold that never ran).
+    cfg = loader.load({"qc": {"hysteresis": {"threshold": 10}}})
+    issues = loader.validate(cfg)
+    assert any(i.severity == loader.WARNING and i.path == "qc.hysteresis" for i in issues)
+    assert "hysteresis" not in loader.resolve_qc(cfg)
+
+
+def test_init_template_validates_on_constant_variable():
+    # Finding 2: a near-constant variable gives a degenerate [v, v] suggested span; init must fall
+    # back to the defaults so the generated template still loads+validates clean (round-trip holds).
+    import yaml
+
+    n = 12
+    time = np.datetime64("2020-01-01T00:00:00") + np.arange(n) * np.timedelta64(10, "s")
+    ds = xr.Dataset(
+        {
+            "TEMP": ("N_MEASUREMENTS", np.full(n, 10.0)),
+            "TIME": ("N_MEASUREMENTS", time),
+        }
+    )
+    text = loader.init_template(ds)
+    cfg = loader.load(yaml.safe_load(text))
+    assert [i for i in loader.validate(cfg, ds) if i.severity == loader.ERROR] == []

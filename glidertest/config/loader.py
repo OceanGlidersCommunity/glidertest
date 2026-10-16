@@ -267,17 +267,35 @@ def _validate_test(
             continue
         if field in _SPAN_FIELDS and (why := _span_issue(value)) is not None:
             issues.append(ValidationIssue(ERROR, f"{field} {why}", fpath))
-    # A suspect span must sit inside the fail span: suspect flags a narrower band than fail.
-    susp, fail = fields.get("suspect_span"), fields.get("fail_span")
-    if _span_issue(susp) is None and _span_issue(fail) is None and (susp[0] < fail[0] or susp[1] > fail[1]):
-        issues.append(
-            ValidationIssue(
-                ERROR,
-                f"suspect_span {list(susp)} must sit inside fail_span {list(fail)}",
-                f"{path}.suspect_span",
-            )
-        )
+    # The suspect-inside-fail cross-check is done on the *merged* spans in validate(), not here: a
+    # partial override that sets only one span must be checked against the default it merges with.
     return issues
+
+
+def _gross_span_issue(var: str, block: Mapping[str, Any]) -> ValidationIssue | None:
+    """Return an issue when *var*'s effective gross-range suspect span is not inside its fail span.
+
+    Checks the *merged* spans — the user's ``gross_range_test`` fields over the built-in defaults — so
+    overriding only ``suspect_span`` (or only ``fail_span``) cannot leave a resolved config whose
+    suspect band spills past its fail band. Returns ``None`` when either span is absent or malformed
+    (the per-field shape check in :func:`_validate_test` reports those).
+    """
+    default = qc.configs.get(var, {}).get("gross_range_test", {})
+    user = block.get("gross_range_test", {}) if isinstance(block, Mapping) else {}
+    if not isinstance(user, Mapping):
+        return None
+    susp = user.get("suspect_span", default.get("suspect_span"))
+    fail = user.get("fail_span", default.get("fail_span"))
+    if _span_issue(susp) is not None or _span_issue(fail) is not None:
+        return None
+    if susp[0] < fail[0] or susp[1] > fail[1]:
+        return ValidationIssue(
+            ERROR,
+            f"effective suspect_span {list(susp)} must sit inside fail_span {list(fail)} "
+            "(after merging the override with the defaults)",
+            f"qc.{var}.gross_range_test.suspect_span",
+        )
+    return None
 
 
 def _validate_bbox(region: Mapping[str, Any]) -> list[ValidationIssue]:
@@ -354,6 +372,11 @@ def validate(cfg: Config, ds: xr.Dataset | None = None) -> list[ValidationIssue]
         path = f"qc.{name}"
         if name in _PACKAGE_TEST_FIELDS:
             issues += _validate_test(name, block, path, _PACKAGE_TEST_FIELDS)
+            # hysteresis validates for shape but nothing applies it yet, so warn rather than let the
+            # report silently claim a threshold it never used (see resolve_qc, which drops it).
+            issues.append(
+                ValidationIssue(WARNING, f"qc.{name} is recognised but not applied in this release", path)
+            )
             continue
         if name not in allowed_vars:
             issues.append(
@@ -369,6 +392,8 @@ def validate(cfg: Config, ds: xr.Dataset | None = None) -> list[ValidationIssue]
             continue
         for test, fields in block.items():
             issues += _validate_test(test, fields, f"{path}.{test}", _QC_TEST_FIELDS)
+        if (issue := _gross_span_issue(name, block)) is not None:
+            issues.append(issue)
 
     if cfg.region is not None:
         issues += _validate_bbox(cfg.region)
@@ -453,11 +478,20 @@ def resolve_qc(cfg: Config | None) -> dict[str, Any]:
     base = copy.deepcopy(qc.configs)  # fully independent of the module defaults at every level
     if cfg is None or not cfg.qc:
         return base
-    return _deep_merge(base, cfg.qc)
+    merged = _deep_merge(base, cfg.qc)
+    # hysteresis is a recognised-but-not-applied test block (validate() warns); it is not an applied
+    # per-variable threshold, so it must not appear in the effective thresholds the report records.
+    merged.pop("hysteresis", None)
+    return merged
 
 
 #: Built-in QC variables an init template seeds a ``qc:`` block for (those present in the file).
 _INIT_VARS = ("TEMP", "PSAL", "DOXY", "CHLA")
+
+#: The colormap glidertest draws each init variable with, by name — mirrors the ``colormap`` objects
+#: in :data:`glidertest.utilities.label_dict`. Used only to seed the commented ``display:`` stub in
+#: :func:`init_template`, so the stub shows the real current default rather than a placeholder.
+_INIT_CMAPS = {"TEMP": "thermal", "PSAL": "haline", "DOXY": "oxy", "CHLA": "algae"}
 
 
 def _finite_or(value: float, fallback: float) -> float:
@@ -472,6 +506,10 @@ def _init_var_block(ds: xr.Dataset, var: str) -> list[str]:
     gr = qc.suggest_gross_range(ds, var)
     fl = qc.suggest_flat_line(ds, var)
     susp, fail = (gr["suspect"], gr["fail"]) if gr else (gd["suspect_span"], gd["fail_span"])
+    # A near-constant variable gives a degenerate [v, v] span (min==max); fall back to the built-in
+    # default spans so the generated template validates (min<max, suspect inside fail) as promised.
+    if _span_issue(susp) is not None or _span_issue(fail) is not None or susp[0] < fail[0] or susp[1] > fail[1]:
+        susp, fail = gd["suspect_span"], gd["fail_span"]
     fsusp = _finite_or(fl["suspect"], fd["suspect_threshold"])
     ffail = _finite_or(fl["fail"], fd["fail_threshold"])
     return [
@@ -497,8 +535,11 @@ def init_template(ds: xr.Dataset) -> str:
     :func:`~glidertest.qc.suggest_flat_line`) as the value, with the built-in default shown in a
     comment beside each so the user sees both. Spike thresholds have no mission-derived suggestion, so
     they take the built-in default. ``region.bbox`` is left commented out — a box drawn from the data
-    cannot fail its own region test, so the user must set it deliberately. ``glidertest init`` writes
-    this for the user to edit and pass back with ``glidertest report -c``.
+    cannot fail its own region test, so the user must set it deliberately. The override categories the
+    loader recognises but does not yet apply (``qc.hysteresis`` and the top-level ``display``,
+    ``mission`` and ``pages`` blocks) are emitted commented-out, so the template shows the whole menu
+    without tripping their not-applied warnings. ``glidertest init`` writes this for the user to edit
+    and pass back with ``glidertest report -c``.
 
     Parameters
     ----------
@@ -532,4 +573,35 @@ def init_template(ds: xr.Dataset) -> str:
         lines.append("  {}   # no TEMP/PSAL/DOXY/CHLA in this file to seed")
     for v in present:
         lines += _init_var_block(ds, v)
+    # Override categories the loader recognises but does not apply in this release (qc.hysteresis, and
+    # the top-level display/mission/pages blocks): emitted commented-out so the template shows the whole
+    # menu without tripping the not-applied warnings — and so the generated file still round-trips to
+    # zero issues. Uncomment and edit once a release wires them up.
+    lines += [
+        "",
+        "  # hysteresis — sits beside the variables, not keyed by a variable. Recognised and recorded",
+        "  # for provenance; NOT applied yet (uncommenting it makes `report -c` print a warning).",
+        "  # hysteresis:",
+        "  #   threshold: 0.5",
+        "",
+        "# display — per-variable plot overrides. Recognised and recorded; NOT applied yet. Shape follows",
+        "# the package family: display.variables.<var> with cmap (a cmocean/matplotlib name) and",
+        "# vmin/vmax (soft axis limits). The cmap shown is glidertest's current default for the variable.",
+        "# display:",
+        "#   variables:",
+    ]
+    for v in present:
+        lines += [
+            f"#     {v}:",
+            f"#       cmap: {_INIT_CMAPS.get(v, 'viridis')}",
+            "#       vmin:",
+            "#       vmax:",
+        ]
+    lines += [
+        "",
+        "# mission — display-only metadata (title, project, fleet label), shown with provenance, never",
+        "# merged into the QC verdict. Recognised and recorded; NOT applied yet.",
+        "# pages — which pages to build, e.g. {ctd, oxygen, optics, flight, inventory}: true/false.",
+        "# Recognised and recorded; NOT applied yet.",
+    ]
     return "\n".join(lines) + "\n"

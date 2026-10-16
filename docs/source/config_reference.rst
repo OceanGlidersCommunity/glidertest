@@ -32,7 +32,9 @@ default shown beside each so you see both::
 
 Edit the values you want, then pass the file back with ``-c``. The region box is left commented
 out: a box drawn from the mission's own track cannot fail its own region test, so you set it
-deliberately.
+deliberately. The categories the loader recognises but does not yet apply (``qc.hysteresis`` and
+the top-level ``display``, ``mission`` and ``pages`` blocks) are written out commented, so the
+template shows the whole menu without triggering their not-applied warnings.
 
 The file
 --------
