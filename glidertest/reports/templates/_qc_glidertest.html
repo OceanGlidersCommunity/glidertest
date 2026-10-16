@@ -10,7 +10,7 @@
 {% endfor %}
 </tbody>
 </table>
-{% if diagnostics.region %}<p class="note"><strong>Region test</strong> — allowed box [west, south, east, north]: <span class="mono">{{ diagnostics.region.bbox }}</span>. {% if diagnostics.region.evaluated %}{{ diagnostics.region.n_outside }} of {{ diagnostics.region.n_total }} samples fall outside the region (flagged fail).{% else %}Not evaluated: no position data (LONGITUDE/LATITUDE absent or all-NaN).{% endif %}</p>
+{% if diagnostics.region %}<p class="note"><strong>Region test</strong> — allowed box [west, south, east, north]: <span class="mono">{{ diagnostics.region.bbox }}</span>. {% if diagnostics.region.evaluated %}{{ diagnostics.region.n_outside }} of {{ diagnostics.region.n_evaluated }} positioned samples fall outside the region (flagged fail){% if diagnostics.region.n_unknown %}; {{ diagnostics.region.n_unknown }} samples had no position and were not evaluated{% endif %}.{% else %}Not evaluated: no position data (LONGITUDE/LATITUDE absent or all-NaN).{% endif %}</p>
 {% endif %}
 <p class="caption">Test × variable: flagged-sample counts (per-sample tests show a small dashed bar). Gross range applies the suspect span only — the fail span above is not yet evaluated. Hysteresis counts depth bins with &gt;5% dive–climb error; a variable is flagged when more than 5 bins exceed it.</p>
 <table>

@@ -247,7 +247,7 @@ def test_region_row_present_and_evaluated_with_bbox(subset_ds):
     bbox = [float(np.nanmin(lon)) - 1, float(np.nanmin(lat)) - 1, float(np.nanmax(lon)) + 1, float(np.nanmax(lat)) + 1]
     region = qc_section.diagnostics_data(subset_ds, None, bbox)["diagnostics"]["region"]
     assert region["evaluated"] is True
-    assert region["n_outside"] == 0 and region["n_total"] > 0
+    assert region["n_outside"] == 0 and region["n_evaluated"] > 0 and region["n_unknown"] == 0
 
 
 def test_region_not_evaluated_without_position(fresh_subset):
@@ -285,3 +285,22 @@ def test_thresholds_table_marks_config_vs_default(subset_ds):
 def test_thresholds_table_all_default_without_config(subset_ds):
     rows = qc_section.diagnostics_data(subset_ds)["diagnostics"]["thresholds"]
     assert all(r["src"] == "default" for r in rows)
+
+
+def test_region_excludes_unknown_position_from_denominator(fresh_subset):
+    # Finding 3: samples with no position (NaN lon/lat → flag 9) must not pad the denominator; the
+    # outside fraction is over positioned samples, and unknown positions are surfaced separately.
+    ds = fresh_subset
+    lon = np.asarray(ds["LONGITUDE"].values, dtype=float)
+    lat = np.asarray(ds["LATITUDE"].values, dtype=float)
+    half = lon.size // 2
+    lon[:half] = np.nan
+    lat[:half] = np.nan
+    ds["LONGITUDE"] = ("N_MEASUREMENTS", lon)
+    ds["LATITUDE"] = ("N_MEASUREMENTS", lat)
+    pad = 1.0
+    bbox = [float(np.nanmin(lon)) - pad, float(np.nanmin(lat)) - pad, float(np.nanmax(lon)) + pad, float(np.nanmax(lat)) + pad]
+    region = qc_section.diagnostics_data(ds, None, bbox)["diagnostics"]["region"]
+    assert region["n_unknown"] == half
+    assert region["n_evaluated"] == lon.size - half
+    assert region["n_outside"] == 0  # the box contains the whole positioned track

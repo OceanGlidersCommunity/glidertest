@@ -271,21 +271,28 @@ def _src(config: dict, var: str, test: str) -> str:
 def _region(ds: xr.Dataset, bbox: list) -> dict[str, Any]:
     """Return the mission-level region-test result: the box, and how many samples fall outside it.
 
-    ``{"bbox": "[w, s, e, n]", "evaluated": False}`` when no usable position is present (LONGITUDE /
-    LATITUDE absent or all-NaN) — a finding about the file, shown rather than silently skipped; else
-    ``{"bbox", "evaluated": True, "n_outside", "n_total"}`` from :func:`glidertest.qc.region_test`.
+    The outside fraction is reported over *evaluated* samples (a known position), never over the
+    whole record: a sample whose position is unknown (NaN ``LONGITUDE``/``LATITUDE``, QARTOD flag 9)
+    is not "inside" and must not pad the denominator. ``{"bbox", "evaluated": False}`` when no sample
+    has a usable position (vars absent, or every position NaN) — a finding about the file, shown not
+    skipped; else ``{"bbox", "evaluated": True, "n_outside", "n_evaluated", "n_unknown"}``.
     """
     w, s, e, n = bbox
     box = f"[{w}, {s}, {e}, {n}]"
-    have = "LONGITUDE" in ds and "LATITUDE" in ds
-    if have:
-        lon = np.asarray(ds["LONGITUDE"].values, dtype=float)
-        lat = np.asarray(ds["LATITUDE"].values, dtype=float)
-        have = bool(np.isfinite(lon).any() and np.isfinite(lat).any())
-    if not have:
+    if "LONGITUDE" not in ds or "LATITUDE" not in ds:
         return {"bbox": box, "evaluated": False}
     flags = np.asarray(qc.region_test(ds, bbox))
-    return {"bbox": box, "evaluated": True, "n_outside": int((flags == 4).sum()), "n_total": int(flags.size)}
+    n_unknown = int((flags == 9).sum())
+    n_evaluated = int((flags != 9).sum())  # positioned samples: inside (1) or outside (4)
+    if n_evaluated == 0:
+        return {"bbox": box, "evaluated": False}  # every position unknown — nothing to check
+    return {
+        "bbox": box,
+        "evaluated": True,
+        "n_outside": int((flags == 4).sum()),
+        "n_evaluated": n_evaluated,
+        "n_unknown": n_unknown,
+    }
 
 
 def _diagnostics(ds: xr.Dataset, config: dict | None = None, bbox: list | None = None) -> dict[str, Any] | None:
