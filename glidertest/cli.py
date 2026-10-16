@@ -297,7 +297,7 @@ def cmd_report(args: argparse.Namespace) -> int:
         try:
             with xr.open_dataset(path) as ds:
                 return resolve_mission_id(ds)
-        except Exception:  # any unreadable file is reported in the main loop, so None here
+        except Exception:  # noqa: BLE001  # I/O boundary: any unreadable file is reported in the main loop, None here
             return None
 
     # Resolve each mission's directory name once, up front (root layout only; flat is single-file
@@ -363,7 +363,7 @@ def cmd_report(args: argparse.Namespace) -> int:
                 )
             print(landing)
             wrote += 1
-        except Exception as exc:  # catch-all at the file boundary: one line per failure, run on
+        except Exception as exc:  # noqa: BLE001  # catch-all at the file boundary: one line per failure, run on
             print(f"{path}: {type(exc).__name__}: {exc}", file=sys.stderr)
             failed += 1
             continue
