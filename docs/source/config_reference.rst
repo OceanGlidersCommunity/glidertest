@@ -96,5 +96,10 @@ So a reader can tell a configured threshold from a default and reproduce the run
 - the QC page's threshold table marks each row **default** or **config** (by comparing the applied
   value to the built-in), and the region row shows the box and how many samples fell outside it;
 - ``report.json`` carries ``qc_thresholds`` (the effective thresholds that ran), ``qc_config`` (the
-  overrides exactly as given, or ``null``), ``qc_config_source`` (the ``source:`` string) and
-  ``region`` (the box, or ``null``).
+  overrides exactly as given, or ``null``), ``qc_config_source`` (the ``source:`` string),
+  ``config_file`` (the path you passed, or ``null`` for a dict) and ``region`` (the box, or ``null``);
+- the config itself is saved beside ``report.json`` as ``report-config.yaml``, so a re-run can read
+  it back: ``report(ds, outdir, config="<report-dir>/report-config.yaml")``. A file is copied
+  verbatim (comments and the not-yet-applied ``display:``/``mission:``/``pages:`` blocks are kept); a
+  config given as a Python ``dict`` is written out from its ``qc``/``region``/``source`` blocks only,
+  so it carries no comments and drops any ``display:``/``mission:``/``pages:`` the dict held.

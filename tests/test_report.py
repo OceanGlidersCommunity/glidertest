@@ -882,4 +882,49 @@ def test_manifest_qc_provenance_null_without_config(subset_ds):
     )
     assert man["qc_config"] is None
     assert man["qc_config_source"] is None
+    assert man["config_file"] is None
     assert man["region"] is None
+
+
+def test_file_config_saved_verbatim(tmp_path, subset_ds):
+    # A file config is copied byte-for-byte to report-config.yaml; report.json records its path.
+    cfg = tmp_path / "my-overrides.yaml"
+    cfg.write_text(
+        "# a comment the copy must keep\nsource: pass 1\nqc:\n  TEMP:\n    spike_test: {suspect_threshold: 9.0}\n",
+        encoding="utf-8",
+    )
+    mdir = report(subset_ds, tmp_path, navigator=False, config=cfg).parent
+    saved = mdir / "report-config.yaml"
+    assert saved.read_bytes() == cfg.read_bytes()  # verbatim, comment and all
+    man = json.loads((mdir / "report.json").read_text(encoding="utf-8"))
+    assert man["config_file"] == str(cfg)
+
+
+def test_dict_config_dumped_and_round_trips(tmp_path, subset_ds):
+    # A dict config has no file, so it is dumped; config_file is null, and the dump reloads cleanly.
+    from glidertest.config import loader
+
+    cfg = {"qc": {"TEMP": {"spike_test": {"suspect_threshold": 9.0}}}}
+    mdir = report(subset_ds, tmp_path, navigator=False, config=cfg).parent
+    saved = mdir / "report-config.yaml"
+    assert saved.exists()
+    reloaded = loader.check(loader.load(saved), subset_ds)
+    assert reloaded.qc["TEMP"]["spike_test"]["suspect_threshold"] == 9.0
+    man = json.loads((mdir / "report.json").read_text(encoding="utf-8"))
+    assert man["config_file"] is None
+
+
+def test_rerun_from_saved_config_is_stable(tmp_path, subset_ds):
+    # Re-running with config=<saved copy> (source == destination) skips the copy, not SameFileError;
+    # the saved file and the resolved thresholds are identical across the two runs.
+    cfg = tmp_path / "overrides.yaml"
+    cfg.write_text("qc:\n  TEMP:\n    spike_test: {suspect_threshold: 9.0}\n", encoding="utf-8")
+    mdir = report(subset_ds, tmp_path, navigator=False, config=cfg).parent
+    saved = mdir / "report-config.yaml"
+    first = saved.read_bytes()
+    thresholds1 = json.loads((mdir / "report.json").read_text(encoding="utf-8"))["qc_thresholds"]
+
+    report(subset_ds, tmp_path, navigator=False, config=saved)
+    assert saved.read_bytes() == first
+    thresholds2 = json.loads((mdir / "report.json").read_text(encoding="utf-8"))["qc_thresholds"]
+    assert thresholds1 == thresholds2

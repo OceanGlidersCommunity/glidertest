@@ -90,6 +90,7 @@ def mission_manifest(
     qc_thresholds: dict[str, Any] | None = None,
     qc_config: dict[str, Any] | None = None,
     qc_config_source: str | None = None,
+    config_file: str | None = None,
     region: list[float] | None = None,
 ) -> dict[str, Any]:
     """Return the mission manifest dict, serialised to ``report.json`` beside ``index.html``.
@@ -121,6 +122,10 @@ def mission_manifest(
         no config was passed — the exact overrides, for anyone who needs them without value-compare.
     qc_config_source : str, optional
         The report config's free-text ``source:`` provenance string, or ``None``.
+    config_file : str, optional
+        The path the caller passed as ``config``, recorded for provenance, or ``None`` when no
+        config was passed or it was given as a dict (which has no source path). The config itself
+        is copied to ``report-config.yaml`` beside this manifest in both cases.
     region : list of float, optional
         The configured region box ``[west, south, east, north]`` for the region test, or ``None``.
 
@@ -173,6 +178,7 @@ def mission_manifest(
         "qc_thresholds": qc_thresholds,
         "qc_config": qc_config,
         "qc_config_source": qc_config_source,
+        "config_file": config_file,
         "region": region,
         "pages": [{"file": f, "label": lbl} for f, lbl in pages],
         "track": _track(ds),

@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
     import xarray as xr
 
+    from ..config.loader import Config
     from ._mission import Page
 
 __all__ = ["navigator", "report", "resolve_mission_id"]
@@ -24,6 +25,37 @@ __all__ = ["navigator", "report", "resolve_mission_id"]
 #: separate strip, not a row. Built in the planned shared-design-system shape
 #: (``notes/2026-10-07-shared-masthead-nav-plan.md`` §2) so the eventual vendored macro is a drop-in.
 _NAV_ROWS: tuple[tuple[str, str], ...] = (("summary", "Summary"), ("reports", "Reports"), ("derived", "Derived"))
+
+
+def _save_config_copy(cfg: Config, dest: Path) -> None:
+    """Write *cfg* to *dest* (``report-config.yaml``) so a re-run can consume it unchanged.
+
+    A file-backed config is copied byte-for-byte, so its comments and the carried-but-deferred
+    ``display``/``mission``/``pages`` blocks survive; a dict-backed config (``cfg.path`` is ``None``,
+    the Python-API case) is dumped from its ``qc``/``region``/``source`` blocks, which have no
+    comments to preserve. When the source file is already *dest* — a re-run that reads the saved
+    copy — the copy is skipped (``shutil.copyfile`` would raise ``SameFileError``).
+
+    No config value is a path today. Were one added as a path relative to the config file's own
+    directory, this verbatim copy into the mission dir would not resolve the same way; handle it here.
+
+    Parameters
+    ----------
+    cfg : glidertest.config.loader.Config
+        The validated config to save.
+    dest : pathlib.Path
+        The destination ``report-config.yaml`` path in the mission directory.
+    """
+    import shutil
+
+    import yaml
+
+    if cfg.path is not None:
+        if cfg.path.resolve() == dest.resolve():
+            return
+        shutil.copyfile(cfg.path, dest)
+        return
+    dest.write_text(yaml.safe_dump(cfg.user_blocks(), sort_keys=False), encoding="utf-8")
 
 
 def _build_nav(pages: list[Page], current: Page, source_name: str, *, back: bool) -> dict[str, Any]:
@@ -150,6 +182,9 @@ def report(
         the built-in QC thresholds per variable and test; see :mod:`glidertest.config.loader`. It is
         validated before any figure is drawn, raising :class:`~glidertest.config.loader.ConfigError`
         on an error. ``None`` (the default) uses the built-in thresholds, so the output is unchanged.
+        When given, the config is saved beside ``report.json`` as ``report-config.yaml`` so a re-run
+        can consume it (``config=<missiondir>/report-config.yaml``): a file is copied verbatim, a dict
+        is dumped (and so carries no comments).
 
     Returns
     -------
@@ -272,6 +307,13 @@ def report(
             # page has ✓/✗/⚠/– glyphs; Windows default is cp1252
             (missiondir / page.filename).write_text(rendered, encoding="utf-8")
 
+        # Save the config beside report.json so a re-run can consume it:
+        # report(ds, outdir, config=<missiondir>/report-config.yaml). A file config is copied
+        # verbatim (comments and the deferred display/mission/pages blocks survive); a dict config
+        # is dumped (it has no comments to keep). None means the built-in defaults, so nothing to save.
+        if cfg is not None:
+            _save_config_copy(cfg, missiondir / "report-config.yaml")
+
         manifest = mission_manifest(
             ds,
             mission_id=mid,
@@ -284,6 +326,7 @@ def report(
             qc_thresholds=resolved_qc,
             qc_config=cfg.user_blocks() if cfg is not None else None,
             qc_config_source=cfg.source if cfg is not None else None,
+            config_file=str(cfg.path) if cfg is not None and cfg.path is not None else None,
             region=cfg.bbox if cfg is not None else None,
         )
         existing.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
