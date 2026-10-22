@@ -53,7 +53,7 @@ See the [report guide](https://oceangliderscommunity.github.io/glidertest/report
 
 Documentation is available at [https://oceangliderscommunity.github.io/glidertest/](https://oceangliderscommunity.github.io/glidertest/)
 
-Check out the demo notebook `notebooks/demo.ipynb` for example functionality.
+Check out the demo notebook `notebooks/demo.ipynb` and `notebooks/interactive.ipynb` for example functionality.
 
 The demo notebook `notebooks/demo_data_issues.ipynb` uses example datasets to check how glidertest can help identify and visualize problems with data.
 
