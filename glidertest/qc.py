@@ -18,39 +18,40 @@ from glidertest import tools, utilities
 #: deep-merged over this by :func:`glidertest.config.loader.resolve_qc`; the resolved mapping, not this
 #: dict, is what the checks and plots read when a config is in play. The location test is driven by a
 #: configured ``region.bbox`` (no built-in default), so no ``location_test`` entry lives here.
-#: ``flat_line_test`` windows and tolerances are set per variable. CHLA takes a long window (suspect
-#: 10 s, fail 30 s): chlorophyll is sampled off-phase at a coarser cadence, so a short window flags
-#: nearly every point (#346). TEMP/PSAL/DOXY take a short window (suspect 2 s, fail 4 s). The
-#: tolerance is a flat-line value difference in each variable's own stored units — TEMP 0.003 Celsius,
-#: PSAL 0.005 (practical salinity), DOXY 0.5 mmol m-3, CHLA 0.001 mg m-3. These tolerances are defaults
-#: chosen for the report, of the order of the sensor resolution; no instrument datasheet was consulted,
-#: so adjust per instrument with a ``qc:`` override. The per-mission :func:`suggest_flat_line` (2–3× the
-#: sampling interval) suggests the windows for a specific deployment.
+#: ``flat_line_test`` windows and tolerances are set per variable. The test flags a point when the
+#: value's range (max − min) over the trailing window stays below ``tolerance`` — so a *tighter*
+#: tolerance flags fewer points (only a near-constant, genuinely-stuck sensor), and a *longer* window
+#: flags fewer points (the value must stay flat for longer). The tolerance is in each variable's own
+#: stored units, chosen small so real variation is not read as flat: TEMP 0.0005 Celsius, PSAL 0.0005
+#: (practical salinity), DOXY 0.01 mmol m-3, CHLA 0.01 mg m-3. Windows: CHLA 10 s / 30 s (chlorophyll
+#: is sampled off-phase at a coarser cadence, so a short window flags nearly every point, #346);
+#: TEMP/PSAL/DOXY 2 s / 4 s. These are report defaults, not instrument specifications — adjust per
+#: deployment with a ``qc:`` override; :func:`suggest_flat_line` suggests windows from the sampling.
 configs = {
     "TEMP": {"gross_range_test": {
         "suspect_span": [0, 30],
         "fail_span": [-2.5, 40],
     },
         "spike_test": {"suspect_threshold": 2.0, "fail_threshold": 6.0},
-        "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.003},
+        "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.0005},
     },
     "PSAL": {"gross_range_test": {"suspect_span": [5, 38], "fail_span": [2, 41]},
              "spike_test": {"suspect_threshold": 0.3, "fail_threshold": 0.9},
-             "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.005},
+             "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.0005},
              },
     "DOXY": {"gross_range_test": {
         "suspect_span": [0, 350],
         "fail_span": [0, 500],
     },
         "spike_test": {"suspect_threshold": 10, "fail_threshold": 50},
-        "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.5},
+        "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.01},
     },
     "CHLA": {"gross_range_test": {
         "suspect_span": [0, 15],
         "fail_span": [-1, 20],
     },
         "spike_test": {"suspect_threshold": 1, "fail_threshold": 5},
-        "flat_line_test": {"suspect_threshold": 10, "fail_threshold": 30, "tolerance": 0.001},
+        "flat_line_test": {"suspect_threshold": 10, "fail_threshold": 30, "tolerance": 0.01},
     },
 }
 

@@ -127,15 +127,16 @@ def test_suggested_limits_note_shows_current_then_suggested(subset_ds):
 
 def test_flat_line_defaults_are_per_variable(subset_ds):
     # #346: chlorophyll (off-phase, coarse cadence) takes a long window (10/30 s); TEMP/PSAL/DOXY take a
-    # short window (2/4 s) with a tolerance near each sensor's resolution. Guards the per-variable intent.
+    # short window (2/4 s). Tolerances are tight (only a near-constant signal is flat) and per variable.
     chla = qc.configs["CHLA"]["flat_line_test"]
     assert (chla["suspect_threshold"], chla["fail_threshold"]) == (10, 30)
     for v in ("TEMP", "PSAL", "DOXY"):
         fl = qc.configs[v]["flat_line_test"]
         assert (fl["suspect_threshold"], fl["fail_threshold"]) == (2, 4)
-    assert qc.configs["TEMP"]["flat_line_test"]["tolerance"] == 0.003
-    assert qc.configs["PSAL"]["flat_line_test"]["tolerance"] == 0.005
-    assert qc.configs["DOXY"]["flat_line_test"]["tolerance"] == 0.5
+    assert qc.configs["TEMP"]["flat_line_test"]["tolerance"] == 0.0005
+    assert qc.configs["PSAL"]["flat_line_test"]["tolerance"] == 0.0005
+    assert qc.configs["DOXY"]["flat_line_test"]["tolerance"] == 0.01
+    assert qc.configs["CHLA"]["flat_line_test"]["tolerance"] == 0.01
 
 
 def test_gross_range_ts_note_shows_current_then_suggested(subset_ds):

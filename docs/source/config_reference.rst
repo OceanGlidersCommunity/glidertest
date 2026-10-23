@@ -51,7 +51,7 @@ The file
      TEMP:
        gross_range_test: {suspect_span: [0, 30], fail_span: [-2.5, 40]}
        spike_test:       {suspect_threshold: 2.0, fail_threshold: 6.0}
-       flat_line_test:   {suspect_threshold: 2, fail_threshold: 4, tolerance: 0.003}
+       flat_line_test:   {suspect_threshold: 2, fail_threshold: 4, tolerance: 0.0005}
      PSAL:
        gross_range_test: {suspect_span: [5, 38]}   # partial: only the fields you set change
 
@@ -61,11 +61,13 @@ ioos_qc's own vocabulary (``gross_range_test.suspect_span`` / ``fail_span``,
 ``spike_test.suspect_threshold`` / ``fail_threshold``, ``flat_line_test`` windows in seconds plus
 ``tolerance``); the same keys read the same across the OG1 toolchain.
 
-The built-in ``flat_line_test`` defaults are per variable: CHLA uses a longer window (suspect 10 s,
-fail 30 s) because chlorophyll is sampled at a coarser cadence, while TEMP, PSAL and DOXY use a
-short window (suspect 2 s, fail 4 s) with a tolerance of the order of each sensor's resolution. The
-suggested-limits box on the QC page prints a ready-to-paste block scaled to the mission's own
-sampling; override any of these per deployment.
+The ``flat_line_test`` flags a point when the value's range over the trailing window stays below
+``tolerance``: a *tighter* tolerance and a *longer* window both flag fewer points (only a value that
+is nearly constant for the whole window counts as flat). The built-in defaults are per variable —
+CHLA uses a longer window (suspect 10 s, fail 30 s) because chlorophyll is sampled at a coarser
+cadence, while TEMP, PSAL and DOXY use a short window (suspect 2 s, fail 4 s); tolerances are small,
+in each variable's own units, so real variation is not read as flat. The suggested-limits box on the
+QC page prints a ready-to-paste block scaled to the mission's own sampling; override any per deployment.
 
 A config may also ride inside another tool's YAML under a top-level ``glidertest:`` key — then
 only that block is read.
