@@ -356,6 +356,7 @@ _VAR_FIGURE_PANELS: tuple[tuple[str, Callable[[xr.Dataset, str], str | None], st
     ("opt_updown_bbp", _plots.updown_bias, "BBP700", "Backscatter up/down-cast bias", "half"),
     ("opt_drift_chla", _plots.temporal_drift, "CHLA", "Chlorophyll temporal drift", "full"),
     ("opt_drift_bbp", _plots.temporal_drift, "BBP700", "Backscatter temporal drift", "full"),
+    ("opt_sampling_chla", _plots.sampling_period_var, "CHLA", "Chloropyll sampling period", "half"),
 )
 
 PANELS["oxy_sensor"] = _sensor_row_panel("oxy_sensor", ("DOXY",))
@@ -473,6 +474,7 @@ _GLOBAL_RANGE_PANELS: tuple[tuple[str, Callable[..., str | None], str, str, str]
     ("oxy_global_range", _plots.global_range, "DOXY", "Dissolved oxygen global-range check", "half"),
     ("ctd_global_temp", _plots.global_range, "TEMP", "Temperature global-range check", "half"),
     ("ctd_global_psal", _plots.global_range, "PSAL", "Salinity global-range check", "half"),
+    ("opt_global_chla", _plots.global_range, "CHLA", "Chlorophyll-a global-range check", "half"),
 )
 
 
@@ -689,6 +691,8 @@ OPTICS = Profile(
         Section(id="bias", title="Dive–climb bias",
                 panels=("opt_updown_chla", "opt_updown_bbp", "opt_hyst_chla", "opt_hyst_bbp")),
         Section(id="offset", title="Day/night offset", panels=("opt_daynight_chla", "opt_quench_chla")),
+        Section(id="qc", title="QC checks", panels=("opt_global_chla",)),
+        Section(id="sample_rate", title="Sample rate", panels=("opt_sampling_chla",)),
     ),
 )
 
