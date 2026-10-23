@@ -7,8 +7,8 @@ import xarray as xr
 from PIL import Image
 
 from glidertest import fetchers, plots
-from glidertest.config.report_tokens import FIG_DPI, W_FULL
 from glidertest.reports import _slots, report
+from glidertest.reports._vendored.design_tokens import FIG_DPI, W_FULL
 from glidertest.reports._mission import PROFILE, build
 from glidertest.reports.inventory import _fmt_scalar, inventory_data
 
@@ -555,7 +555,7 @@ def test_report_style_reaches_figure(subset_ds):
 
 
 def test_png_width(subset_report):
-    from glidertest.config.report_tokens import SLOTS
+    from glidertest.reports._vendored.design_tokens import SLOTS
     from glidertest.reports._mission import PANELS
 
     mdir = subset_report
@@ -803,7 +803,7 @@ def test_render_panel_turns_a_raising_draw_into_a_stub_reason():
     """
     import matplotlib.pyplot as plt
 
-    from glidertest.reports._manifest import Stub
+    from glidertest.reports._vendored.page_model import Stub
 
     def raises():
         raise ValueError("no TEMP in this file")
@@ -846,7 +846,7 @@ def test_build_nav_validates_and_has_one_current_pill_per_page():
 
 def test_render_panel_stub_keeps_message_when_first_line_blank():
     """A draw whose exception message starts with a newline keeps its text in the Stub reason."""
-    from glidertest.reports._manifest import Stub
+    from glidertest.reports._vendored.page_model import Stub
 
     def raises():
         raise ValueError("\nTEMP missing on N_MEASUREMENTS")

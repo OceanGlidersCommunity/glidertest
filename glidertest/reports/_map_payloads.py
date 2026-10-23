@@ -1,7 +1,7 @@
 """glidertest-specific map payloads for the vendored Leaflet layer.
 
 Owned (not vendored): this turns mission manifests into the generic payload the package-neutral
-:mod:`glidertest.reports._leaflet` and ``templates/_map.html`` consume — a list of tracks, each with
+:mod:`glidertest.reports._vendored.leaflet` and ``templates/_map.html`` consume — a list of tracks, each with
 a colour, a link and an info-panel HTML string. The vendored side knows nothing about missions.
 
 Original Author: Eleanor Frajka-Williams (glidertest).
@@ -13,6 +13,7 @@ import html
 from typing import TYPE_CHECKING, Any
 
 from . import metadata
+from ._vendored.design_tokens import TRACK_COLORS as _TRACK_COLORS
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -20,24 +21,11 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 # Shared track colours
 # ---------------------------------------------------------------------------
-# The Okabe–Ito colour-blind-safe set, strongest contrasts first (yellow last, faint as a thin
-# line). One colour per mission in mission order; it repeats from the ninth mission. The same list
-# colours the fallback PNG, the live-map polylines and the row swatch, so print and screen match.
-#
-# At re-vendor this moves to the vendored ``config/report_tokens.py`` as ``TRACK_COLORS`` (the
-# source of truth is ctdcast ``main``); it is defined here locally for now because that file is
-# vendored byte-identical and cannot be edited in glidertest. See
-# ``.claude/notes/2026-10-10-leaflet-map-plan.md`` ("Shared track colors").
-TRACK_COLORS: tuple[str, ...] = (
-    "#0072B2",  # blue
-    "#E69F00",  # orange
-    "#009E73",  # bluish green
-    "#D55E00",  # vermillion
-    "#CC79A7",  # reddish purple
-    "#56B4E9",  # sky blue
-    "#000000",  # black
-    "#F0E442",  # yellow
-)
+# The Okabe–Ito colour-blind-safe set (strongest contrasts first, yellow last), sourced from the
+# shared vendored palette so the family's packages cannot drift. One colour per mission in mission
+# order; it repeats from the ninth mission. The same list colours the fallback PNG, the live-map
+# polylines and the row swatch, so print and screen match.
+TRACK_COLORS: tuple[str, ...] = tuple(_TRACK_COLORS)
 
 
 def track_color(index: int) -> str:

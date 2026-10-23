@@ -54,8 +54,10 @@ table.nc details.attrs td.mono { white-space: nowrap; }
 details.attrs > summary { cursor: pointer; color: var(--ocean); font-size: var(--fs-xs); user-select: none; }
 details.attrs table { margin: 0.3rem 0 0.2rem; width: auto; }
 details.attrs td { font-size: var(--fs-xs); border: none; }
-/* QC palette — one source for text colours and bar-segment backgrounds. */
-:root { --qc-good: #27ae60; --qc-suspect: #f39c12; --qc-fail: #e74c3c; --qc-not_eval: #bdc3c7; --qc-missing: #7f8c8d; --qc-other: #4a4a4a; }
+/* QC palette — one source for text colours and bar-segment backgrounds. The good/suspect/fail hexes
+   mirror the shared vendored palette (design_tokens.QC_COLORS[1/3/4], Okabe–Ito, colour-blind safe);
+   a test asserts plots_qc.QC_COLORS equals these three. */
+:root { --qc-good: #009E73; --qc-suspect: #E69F00; --qc-fail: #D55E00; --qc-not_eval: #bdc3c7; --qc-missing: #7f8c8d; --qc-other: #4a4a4a; }
 .qc-good { color: var(--qc-good); }
 .qc-susp { color: var(--qc-suspect); }
 .qc-fail { color: var(--qc-fail); }

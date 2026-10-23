@@ -32,11 +32,12 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
 
-from .config import report_tokens
+from .reports._vendored import design_tokens as report_tokens
 
-# Flag-level colours — the matplotlib twin of base.html's --qc-good / --qc-suspect / --qc-fail, same
-# hex as the sibling packages use for QARTOD 1/3/4 (a test asserts they match the CSS).
-QC_COLORS: dict[int, str] = {1: "#27ae60", 3: "#f39c12", 4: "#e74c3c"}
+# Flag-level colours — the matplotlib twin of base.html's --qc-good / --qc-suspect / --qc-fail.
+# Sourced from the shared vendored palette (:data:`design_tokens.QC_COLORS`, Okabe–Ito, colour-blind
+# safe) so the family's packages cannot drift; a test asserts base.html's --qc-* equal these.
+QC_COLORS: dict[int, str] = report_tokens.QC_COLORS
 
 #: Delivered-flag overlay markers (suspect/fail only), keyed by flag value — small "+" in the flag
 #: colour, rasterized so the overlay is cheap even at 10^6 samples.
@@ -133,7 +134,7 @@ def plot_test_hits(
     config : Mapping, optional
         Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
         the built-in defaults.
-    width_in : float, default :data:`glidertest.config.report_tokens.W_FULL`
+    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_FULL`
         Figure width in inches; the height is derived from it.
     ax : matplotlib.axes.Axes, optional
         Draw into this axis instead of creating a figure.
@@ -221,7 +222,7 @@ def plot_flag_profile(
     config : Mapping, optional
         Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
         the built-in defaults.
-    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
+    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`
         Figure width in inches; the height is derived from it.
     ax : matplotlib.axes.Axes, optional
         Draw into this axis instead of creating a figure.
@@ -283,7 +284,7 @@ def plot_ts_gross_range(
     config : Mapping, optional
         Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
         the built-in defaults.
-    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
+    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
         Draw into this axis instead of creating a figure.
@@ -334,7 +335,7 @@ def plot_spike_stat(
     config : Mapping, optional
         Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
         the built-in defaults.
-    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
+    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
         Draw into this axis instead of creating a figure.
@@ -395,7 +396,7 @@ def plot_flat_runs(
     config : Mapping, optional
         Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
         the built-in defaults.
-    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
+    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
         Draw into this axis instead of creating a figure.
@@ -469,7 +470,7 @@ def plot_flat_change(
     config : Mapping, optional
         Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
         the built-in defaults.
-    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
+    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
         Draw into this axis instead of creating a figure.
@@ -533,7 +534,7 @@ def plot_flat_excerpt(
     config : Mapping, optional
         Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses
         the built-in defaults.
-    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`
+    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`
         Figure width in inches.
     ax : matplotlib.axes.Axes, optional
         Draw into this axis instead of creating a figure.

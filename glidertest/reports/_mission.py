@@ -19,7 +19,7 @@ import numpy as np
 from .. import og1_attrs, qc
 from . import _plots, inventory, metadata, qc_section, sensors
 from ._env import get_template
-from ._manifest import Panel, Profile, ResolvedReport, Section, resolve
+from ._vendored.page_model import Panel, Profile, ResolvedReport, Section, resolve
 
 if TYPE_CHECKING:
     from collections.abc import Callable

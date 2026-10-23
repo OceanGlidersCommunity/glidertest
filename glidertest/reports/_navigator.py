@@ -16,8 +16,8 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from ..config.report_tokens import USABLE_PX
 from . import _slots, paths
+from ._vendored.design_tokens import USABLE_PX
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 _MAP_HEIGHT_PX: int = 460
 
 #: Map container aspect (width / height), used to grow the clipped coastline so land fills the map.
-#: Width is the full content column (:data:`~glidertest.config.report_tokens.USABLE_PX`); using the
+#: Width is the full content column (:data:`~glidertest.reports._vendored.design_tokens.USABLE_PX`); using the
 #: widest layout over-covers on narrower screens, which is harmless (extra coastline off-view).
 _MAP_ASPECT: float = USABLE_PX / _MAP_HEIGHT_PX
 
@@ -82,7 +82,7 @@ def _track_map(missions: list[dict[str, Any]], colors: list[str]) -> str | None:
         import cartopy.feature as cfeature
         import matplotlib.pyplot as plt
 
-        from ..config.report_tokens import MPLSTYLE_PATH
+        from ._vendored.design_tokens import MPLSTYLE_PATH
 
         pc = ccrs.PlateCarree()
         with plt.style.context(str(MPLSTYLE_PATH)):
@@ -186,8 +186,8 @@ def _map_context(
     tight one — handling that properly without breaking a genuinely globe-spanning fleet is deferred
     (tracked as a follow-up issue).
     """
-    from . import _leaflet
     from ._map_payloads import fleet_payload
+    from ._vendored import leaflet as _leaflet
 
     payload = fleet_payload(missions, colors)
     if not payload:
@@ -266,9 +266,9 @@ def build_navigator(root: Path | str, title: str | None = None) -> Path:
         The path to the written ``<root>/index.html``.
     """
     from .._version import __version__
-    from . import _leaflet
     from ._env import get_template
-    from ._report_css import _JS_TOP_LINKS, PACKAGE_ACCENT, SHARED_CSS
+    from ._vendored import leaflet as _leaflet
+    from .design import _JS_TOP_LINKS, PACKAGE_ACCENT, SHARED_CSS
 
     root = Path(root)
     data = navigator_data(root)

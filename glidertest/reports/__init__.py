@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ._manifest import validate_nav
+from ._vendored.page_model import validate_nav
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -200,7 +200,7 @@ def report(
     from . import _figdebug, paths
     from ._env import get_template
     from ._mission import PAGES, Ctx, build, header_card
-    from ._report_css import _JS_TOP_LINKS, PACKAGE_ACCENT, SHARED_CSS
+    from .design import _JS_TOP_LINKS, PACKAGE_ACCENT, SHARED_CSS
     from .manifest import mission_manifest
 
     if layout not in ("root", "flat"):

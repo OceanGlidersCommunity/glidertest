@@ -7,7 +7,8 @@ locally cached cartopy data (as the existing navigator PNG test does).
 
 import json
 
-from glidertest.reports import _leaflet, _map_payloads
+from glidertest.reports import _map_payloads
+from glidertest.reports._vendored import leaflet as _leaflet
 
 
 def _manifest(mid, *, track):
@@ -69,11 +70,15 @@ def test_load_leaflet_returns_both():
 
 
 def test_safe_json_escapes_close_tag():
-    """safe_json rewrites </ so a payload string cannot close the <script> block early."""
-    out = _leaflet.safe_json({"html": "a</script>b"})
-    assert "</script>" not in out
-    assert "<\\/script>" in out
-    assert json.loads(out.replace("<\\/", "</")) == {"html": "a</script>b"}
+    """safe_json escapes <, > and & as \\uXXXX so a payload cannot break out of a <script> block."""
+    payload = {"html": "a</script>b & <!--c-->"}
+    out = _leaflet.safe_json(payload)
+    # No raw <, > or & survives: none of </script>, </SCRIPT>, <!-- or a bare & can close the
+    # block early or open a comment/CDATA.
+    assert "<" not in out and ">" not in out and "&" not in out
+    assert "\\u003c" in out  # '<' escaped
+    # A JSON parser decodes the escapes back, so the data round-trips unchanged.
+    assert json.loads(out) == payload
 
 
 # --- track colours & payload -------------------------------------------------

@@ -69,18 +69,22 @@ packages = [
   "glidertest",
   "glidertest.config",
   "glidertest.reports",
+  "glidertest.reports._vendored",
 ]
 include-package-data = true
 
 [tool.setuptools.package-data]
-"glidertest.config" = [
-  "*.mplstyle",
-]
 "glidertest.reports" = [
   "templates/*.html",
-  "leaflet/leaflet.min.js",
-  "leaflet/leaflet.min.css",
-  "leaflet/LICENSE",
+]
+# Vendored report layer, copied byte-identical from ctdcast (see glidertest/reports/_vendored/README.md).
+# Matches ctdcast's own package-data glob so the shipped set is identical across the family.
+"glidertest.reports._vendored" = [
+  "*.mplstyle",
+  "*.md",
+  "*.txt",
+  "leaflet/*",
+  "templates/*",
 ]
 
 [tool.setuptools.dynamic]

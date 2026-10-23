@@ -1,13 +1,13 @@
 """glidertest's concrete report stylesheet, from the package-neutral ``emit_css``.
 
-This is the package-specific wiring the vendored :mod:`glidertest.reports._css`
+This is the package-specific wiring the vendored :mod:`glidertest.reports._vendored.css`
 deliberately omits: the single place glidertest's accent is applied to the shared
-generator. The vendored ``_css.py`` carries no package-specific edit.
+generator. The vendored ``css.py`` carries no package-specific edit.
 """
 
 from __future__ import annotations
 
-from ._css import _JS_TOP_LINKS, emit_css
+from ._vendored.css import _JS_TOP_LINKS, emit_css
 
 #: glidertest's package accent — VOTO brand blue (#07264f). Sits next to the shared palette's
 #: ``--ocean`` (#1a3a5c), slightly deeper, so the masthead reads as the same family.

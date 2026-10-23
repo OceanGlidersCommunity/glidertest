@@ -12,14 +12,21 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import ChoiceLoader, Environment, FileSystemLoader, Template
 
 from . import _figdebug
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
+_VENDORED_TEMPLATES_DIR = Path(__file__).parent / "_vendored" / "templates"
 
+# Owned templates first, then the vendored shared partials (_nav.html, _map.html): an owned
+# template of the same name shadows the vendored one. The template-shadow test in
+# tests/test_vendored.py asserts no owned file silently forks a vendored shared partial.
 _env: Environment = Environment(
-    loader=FileSystemLoader(str(_TEMPLATES_DIR)),
+    loader=ChoiceLoader([
+        FileSystemLoader(str(_TEMPLATES_DIR)),
+        FileSystemLoader(str(_VENDORED_TEMPLATES_DIR)),
+    ]),
     autoescape=True,
 )
 # Per-figure debug overlay (opt-in via GLIDERTEST_REPORT_DEBUG); figdbg() returns "" when off,

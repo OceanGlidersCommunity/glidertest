@@ -4,7 +4,7 @@ Each adapter unwraps the plotter's ``(fig, ax)`` return to the Figure the slot l
 routes it through :func:`glidertest.reports._slots.render_panel`. Adapters never pass a width to the
 plotter — glidertest's plot functions do not accept one; the slot layer forces the width after the
 draw. Each returns a base64 PNG; ``None`` when the plot's data is absent (the panel drops out of the
-page); or a :class:`~glidertest.reports._manifest.Stub` carrying the reason when the draw raises, so
+page); or a :class:`~glidertest.reports._vendored.page_model.Stub` carrying the reason when the draw raises, so
 the panel shows "applicable but unavailable: …" instead of vanishing silently.
 """
 
@@ -15,13 +15,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from .. import plots, plots_qc, qc, tools
-from ..config.report_tokens import SLOTS
 from . import _slots
+from ._vendored.design_tokens import SLOTS
 
 if TYPE_CHECKING:
     import xarray as xr
 
-    from ._manifest import Stub
+    from ._vendored.page_model import Stub
 
 
 def track(ds: xr.Dataset) -> str | Stub | None:

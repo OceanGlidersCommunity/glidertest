@@ -14,9 +14,9 @@ from typing import TYPE_CHECKING, Any
 import matplotlib.pyplot as plt
 
 from .. import plots
-from ..config.report_tokens import MPLSTYLE_PATH, SLOTS
 from . import _figdebug
-from ._manifest import Stub
+from ._vendored.design_tokens import MPLSTYLE_PATH, SLOTS
+from ._vendored.page_model import Stub
 
 if TYPE_CHECKING:
     from collections.abc import Callable

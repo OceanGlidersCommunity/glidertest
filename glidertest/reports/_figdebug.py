@@ -4,7 +4,7 @@ When enabled, every embedded report figure gets a small ``.debug`` line under it
 **slot | draw-func · figsize · png_px**, so a figsize-vs-display-slot mismatch (the class
 of bug that shrinks fonts when a wide PNG is dropped in a narrow slot) is visible.
 
-Entirely package-local — it wraps the vendored encoder (:mod:`glidertest.reports._encode`)
+Entirely package-local — it wraps the vendored encoder (:mod:`glidertest.reports._vendored.figure_png`)
 without editing it, and the ``.debug`` CSS lives in ``base.html``'s local style block, not
 in the vendored ``emit_css``. Zero cost when off: :func:`record` no-ops and the template
 macro emits nothing (it guards on :func:`figdbg` being non-empty).
@@ -15,8 +15,8 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Any
 
-from ..config.report_tokens import FIG_DPI
-from . import _encode
+from ._vendored import figure_png as _encode
+from ._vendored.design_tokens import FIG_DPI
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -110,7 +110,7 @@ def render_b64(
 ) -> str | None:
     """Encode *draw* via the vendored encoder; when debug is on, record its geometry.
 
-    Drop-in for :func:`glidertest.reports._encode.render_b64`, and names ``on_error`` explicitly
+    Drop-in for :func:`glidertest.reports._vendored.figure_png.render_b64`, and names ``on_error`` explicitly
     (rather than letting it ride in ``**kwargs``) so it reaches the encoder, not *draw* — the
     signatures match. When disabled, delegates straight through (zero overhead). When enabled, wraps
     *draw* to capture the Figure it returns, then records the figsize/png_px under the base64 PNG.
