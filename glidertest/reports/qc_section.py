@@ -311,8 +311,10 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
         flat_entry = {**fl, "tolerance": fc.get("tolerance")}  # carry the applied tolerance into the box
         explain.append(
             f'{var} is sampled about every {fl["dt"]:g} s; a flat-line window needs to span a couple of its '
-            f'samples, so use suspect ≥ {fl["suspect_factor"]}× and fail ≥ {fl["fail_factor"]}× that '
-            f'interval (a window shorter than the sampling flags every point).'
+            f'samples, so the suggested suspect is {fl["suspect_factor"]}× and fail {fl["fail_factor"]}× that '
+            f'interval (a window shorter than the sampling flags every point). This is a starting point: if '
+            f'it flags too many points as flat-line, lengthen the window (raise suspect_threshold / '
+            f'fail_threshold) or lower the tolerance.'
         )
     else:
         explain.append(f'{var} flat line — too few finite samples ({n_finite}) to suggest a window.')

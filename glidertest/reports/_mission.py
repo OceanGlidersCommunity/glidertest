@@ -712,7 +712,7 @@ QC = Profile(
                 "<li><strong>Flat-line test:</strong> flags a stretch where the value barely changes "
                 "— its range (max − min) over a trailing window (the suspect/fail window, in seconds) "
                 "stays within the tolerance. A longer window or a tighter tolerance flags fewer "
-                "points, so a stuck sensor is caught but steady water is not.</li>"
+                "points, so a stuck sensor is caught but homogeneous water is not.</li>"
                 "<li><strong>Spike test:</strong> flags a lone point that jumps away from its "
                 "neighbours — the value minus the average of its two adjacent samples exceeds the "
                 "threshold, catching a single outlier rather than a sustained offset.</li>"
