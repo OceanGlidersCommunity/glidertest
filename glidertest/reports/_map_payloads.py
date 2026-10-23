@@ -1,7 +1,7 @@
 """glidertest-specific map payloads for the vendored Leaflet layer.
 
 Owned (not vendored): this turns mission manifests into the generic payload the package-neutral
-:mod:`glidertest.reports._vendored.leaflet` and ``templates/_map.html`` consume — a list of tracks, each with
+:mod:`glidertest.reports._vendored.leaflet` and ``_vendored/templates/_map.html`` consume — a list of tracks, each with
 a colour, a link and an info-panel HTML string. The vendored side knows nothing about missions.
 
 Original Author: Eleanor Frajka-Williams (glidertest).
