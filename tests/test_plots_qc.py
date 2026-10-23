@@ -30,6 +30,9 @@ def test_test_colors_are_distinct_okabe_ito():
     # One colour per test (gross/spike/flat), all different, and distinct from the flag-level colours.
     assert len(set(plots_qc.TEST_COLORS.values())) == 3
     assert set(plots_qc.TEST_MARKER) == set(plots_qc.TEST_COLORS)  # every test has a marker
+    # The delivered-QC overlay draws suspect (3) and fail (4) on the same axes as the test hits, so no
+    # test colour may equal those flag colours — else a test hit reads as a delivered flag.
+    assert not set(plots_qc.TEST_COLORS.values()) & {plots_qc.QC_COLORS[3], plots_qc.QC_COLORS[4]}
 
 
 # --- plot_test_hits ------------------------------------------------------------------------------

@@ -46,9 +46,10 @@ QC_MARKER: dict[int, dict] = {
     4: {"marker": "+", "color": QC_COLORS[4], "s": 15, "linewidths": 0.8, "zorder": 4, "rasterized": True},
 }
 
-# Per-*test* colours — Okabe–Ito (colour-blind safe), distinct from the flag-level QC_COLORS because
-# here the question is which test fired, not at what level.
-TEST_COLORS: dict[str, str] = {"gross_range": "#0072B2", "spike": "#E69F00", "flat_line": "#009E73"}
+# Per-*test* colours — Okabe–Ito (colour-blind safe); the question here is which test fired, not at
+# what level. Chosen to avoid the suspect/fail flag colours (QC_COLORS[3]/[4], #E69F00/#D55E00) that
+# the delivered-QC overlay draws on the same axes, so a test hit never reads as a delivered flag.
+TEST_COLORS: dict[str, str] = {"gross_range": "#0072B2", "spike": "#CC79A7", "flat_line": "#56B4E9"}
 
 #: Per-test hit markers for the "where it fires" overlay. A multi-sample flat run is drawn as a
 #: shaded span (an interval); a lone flat sample has no width, so it uses this square marker.
