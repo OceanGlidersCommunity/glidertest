@@ -61,7 +61,7 @@ TEST_MARKER: dict[str, dict] = {
 
 #: Flat-line thresholds used when a variable has no ``flat_line_test`` entry in the thresholds (a
 #: safety fallback; the four report variables carry one). Seconds, seconds, tolerance.
-_FLAT_FALLBACK: dict[str, float] = {"suspect_threshold": 1.0, "fail_threshold": 3.0, "tolerance": 0.001}
+_FLAT_FALLBACK: dict[str, float] = {"suspect_threshold": 2.0, "fail_threshold": 4.0, "tolerance": 0.001}
 
 
 def _config(config: Mapping | None) -> Mapping:

@@ -14,7 +14,7 @@ from pathlib import Path
 
 from jinja2 import ChoiceLoader, Environment, FileSystemLoader, Template
 
-from . import _figdebug
+from . import _components, _figdebug
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
 _VENDORED_TEMPLATES_DIR = Path(__file__).parent / "_vendored" / "templates"
@@ -34,6 +34,8 @@ _env: Environment = Environment(
 _env.globals["figdbg"] = _figdebug.figdbg
 # Always-on per-figure source line: the glidertest plotter function that produced the figure.
 _env.globals["figsource"] = _figdebug.figsource
+# Reusable "copy into your config" YAML box (also callable directly from Python-built notes).
+_env.globals["yaml_box"] = _components.yaml_box
 
 
 def get_template(name: str) -> Template:

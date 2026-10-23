@@ -18,31 +18,37 @@ from glidertest import tools, utilities
 #: deep-merged over this by :func:`glidertest.config.loader.resolve_qc`; the resolved mapping, not this
 #: dict, is what the checks and plots read when a config is in play. The location test is driven by a
 #: configured ``region.bbox`` (no built-in default), so no ``location_test`` entry lives here.
+#: ``flat_line_test`` windows and tolerances are set per variable. CHLA takes a long window (suspect
+#: 10 s, fail 30 s): chlorophyll is sampled off-phase at a coarser cadence, so a short window flags
+#: nearly every point (#346). TEMP/PSAL/DOXY take a short window (suspect 2 s, fail 4 s) with a
+#: tolerance near each sensor's resolution (TEMP 0.003 °C, PSAL 0.005, DOXY 0.5), so stable water is
+#: not read as a stuck sensor. The per-mission :func:`suggest_flat_line` (2–3× the sampling interval)
+#: and a ``qc:`` override remain the way to tune any variable to a specific deployment.
 configs = {
     "TEMP": {"gross_range_test": {
         "suspect_span": [0, 30],
         "fail_span": [-2.5, 40],
     },
         "spike_test": {"suspect_threshold": 2.0, "fail_threshold": 6.0},
-        "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
+        "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.003},
     },
     "PSAL": {"gross_range_test": {"suspect_span": [5, 38], "fail_span": [2, 41]},
              "spike_test": {"suspect_threshold": 0.3, "fail_threshold": 0.9},
-             "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
+             "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.005},
              },
     "DOXY": {"gross_range_test": {
         "suspect_span": [0, 350],
         "fail_span": [0, 500],
     },
         "spike_test": {"suspect_threshold": 10, "fail_threshold": 50},
-        "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
+        "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.5},
     },
     "CHLA": {"gross_range_test": {
         "suspect_span": [0, 15],
         "fail_span": [-1, 20],
     },
         "spike_test": {"suspect_threshold": 1, "fail_threshold": 5},
-        "flat_line_test": {"suspect_threshold": 1, "fail_threshold": 3, "tolerance": 0.001},
+        "flat_line_test": {"suspect_threshold": 10, "fail_threshold": 30, "tolerance": 0.001},
     },
 }
 

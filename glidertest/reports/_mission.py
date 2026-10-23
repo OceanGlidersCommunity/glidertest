@@ -664,7 +664,7 @@ CTD = Profile(
                 panels=("ctd_updown_temp", "ctd_updown_psal", "ctd_hyst_temp", "ctd_hyst_psal")),
         Section(id="offset", title="Day/night offset", panels=("ctd_daynight_psal",)),
         Section(id="mld", title="Mixed layer", panels=("ctd_cr",)),
-        Section(id="qc", title="QC checks", panels=("ctd_global_temp", "ctd_global_psal")),
+        Section(id="qc", title="QC checks", panels=("ctd_global_temp", "ctd_global_psal", "full_qc_link")),
         Section(id="sample_rate", title="Sample rate",
                 panels=("ctd_sampling_temp", "ctd_sampling_psal")),
     ),
@@ -676,7 +676,7 @@ OXYGEN = Profile(
         Section(id="sections", title="Sections", panels=("section_doxy",)),
         Section(id="drift", title="Drift", panels=("oxy_drift",)),
         Section(id="bias", title="Dive–climb bias", panels=("oxy_updown", "oxy_hysteresis")),
-        Section(id="qc", title="QC checks", panels=("oxy_global_range",)),
+        Section(id="qc", title="QC checks", panels=("oxy_global_range", "full_qc_link")),
         Section(id="sample_rate", title="Sample rate", panels=("oxy_sampling",)),
     ),
 )

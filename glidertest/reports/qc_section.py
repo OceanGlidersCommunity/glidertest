@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from .. import qc
+from ._components import yaml_box
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -169,6 +170,28 @@ def _fmt_span(span: list | None) -> str:
     return f"[{span[0]}, {span[1]}]" if span else "—"
 
 
+def _qc_config_yaml(entries: list[tuple[str, dict | None, dict | None]]) -> str:
+    """Return a ``qc:`` YAML snippet (report-config shape) from suggested limits.
+
+    *entries* is ``[(var, gross, flat), ...]`` where *gross* is a
+    :func:`glidertest.qc.suggest_gross_range` result (or ``None``) and *flat* a
+    :func:`glidertest.qc.suggest_flat_line` result (or ``None``). Only the suggested fields are
+    emitted; the loader deep-merges them over the defaults, so a partial block is valid to paste.
+    """
+    lines = ["qc:"]
+    for var, gross, flat in entries:
+        lines.append(f"  {var}:")
+        if gross is not None:
+            lines.append("    gross_range_test:")
+            lines.append(f"      suspect_span: [{gross['suspect'][0]:g}, {gross['suspect'][1]:g}]")
+            lines.append(f"      fail_span: [{gross['fail'][0]:g}, {gross['fail'][1]:g}]")
+        if flat is not None:
+            lines.append("    flat_line_test:")
+            lines.append(f"      suspect_threshold: {flat['suspect']:g}")
+            lines.append(f"      fail_threshold: {flat['fail']:g}")
+    return "\n".join(lines)
+
+
 def gross_range_ts_note(ds: xr.Dataset, config: dict | None = None) -> str | None:
     """Return an HTML note of the suggested gross-range spans for TEMP and PSAL (beside the T–S plot).
 
@@ -188,16 +211,14 @@ def gross_range_ts_note(ds: xr.Dataset, config: dict | None = None) -> str | Non
         if (gc := cfg.get(v, {}).get("gross_range_test", {})).get("suspect_span")
         and gc.get("fail_span")
     )
-    items = "".join(
-        f'<li><strong>{v}</strong> — suspect {_fmt_span(g["suspect"])}, '
-        f'fail {_fmt_span(g["fail"])}</li>'
-        for v, g in rows
+    suggested = yaml_box(
+        _qc_config_yaml([(v, g, None) for v, g in rows]),
+        label="Suggested gross-range limits (this deployment) — copy into your config",
     )
     return (
         '<p class="note"><strong>Current gross-range limits (applied)</strong></p>'
         f'<ul class="note">{cur}</ul>'
-        '<p class="note"><strong>Suggested gross-range limits (this deployment)</strong></p>'
-        f'<ul class="note">{items}</ul>'
+        f'{suggested}'
         f'<p class="note">Each span is the central {pct:g}% of the finite values padded by 1% '
         "(suspect) and 5% (fail) of that span. Descriptive of this mission, not a physical range.</p>"
     )
@@ -215,10 +236,10 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
         return None  # no finite data for this variable: no mission-descriptive limits to suggest
     fl = qc.suggest_flat_line(ds, var)  # the variable's own sampling interval, not the whole record's
     cfg = (config if config is not None else qc.configs).get(var, {})
-    cur, items, explain = [], [], []
+    cur, explain, gr = [], [], None
     # TEMP/PSAL gross range is shown jointly beside the T–S plot (gross_range_ts_note), so it is
     # omitted here to avoid duplication; DOXY/CHLA (no T–S) carry their gross suggestion here. Current
-    # (applied) limits are shown with brackets, suggested with parentheses, as the diagnostics table does.
+    # (applied) limits are listed as prose; the suggested limits go in a copy-into-config YAML box.
     if var not in ("TEMP", "PSAL"):
         gr = qc.suggest_gross_range(ds, var)
         if gr is None:
@@ -231,10 +252,6 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
                 f'suspect {_fmt_span(gc["suspect_span"])}, '
                 f'fail {_fmt_span(gc["fail_span"])}</li>'
             )
-        items.append(
-            f'<li><strong>{var}</strong> gross range — suspect {_fmt_span(gr["suspect"])}, '
-            f'fail {_fmt_span(gr["fail"])}</li>'
-        )
         explain.append(
             f'The gross span is the central {gr["inner_pct"]:g}% of the finite values '
             f'([{gr["lo"]}, {gr["hi"]}]) padded by {gr["suspect_pad"] * 100:g}% (suspect) and '
@@ -246,10 +263,6 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
             f'<li><strong>{var}</strong> flat line — suspect ≥ {fc["suspect_threshold"]:g} s, '
             f'fail ≥ {fc["fail_threshold"]:g} s (tol ±{fc["tolerance"]:g})</li>'
         )
-    items.append(
-        f'<li><strong>{var}</strong> flat line — suspect ≥ {fl["suspect"]:g} s, '
-        f'fail ≥ {fl["fail"]:g} s</li>'
-    )
     explain.append(
         f'{var} is sampled about every {fl["dt"]:g} s; a flat-line window needs to span a couple of its '
         f'samples, so use suspect ≥ {fl["suspect_factor"]}× and fail ≥ {fl["fail_factor"]}× that '
@@ -258,8 +271,7 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
     return (
         '<p class="note"><strong>Current limits (applied)</strong></p>'
         f'<ul class="note">{"".join(cur)}</ul>'
-        '<p class="note"><strong>Suggested limits (this deployment)</strong></p>'
-        f'<ul class="note">{"".join(items)}</ul>'
+        f'{yaml_box(_qc_config_yaml([(var, gr, fl)]), label="Suggested limits (this deployment) — copy into your config")}'
         f'<p class="note">{" ".join(explain)} Descriptive of this mission, not a physical range.</p>'
     )
 
