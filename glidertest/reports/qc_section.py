@@ -170,13 +170,33 @@ def _fmt_span(span: list | None) -> str:
     return f"[{span[0]}, {span[1]}]" if span else "—"
 
 
+def _usable_gross(g: dict | None) -> bool:
+    """True when a :func:`glidertest.qc.suggest_gross_range` result is finite and non-degenerate.
+
+    A variable with too few finite samples yields a zero-width span (``min == max``) or NaN bounds;
+    such a span is not a usable suggestion and must not reach the copy-into-config box.
+    """
+    return (
+        g is not None
+        and bool(np.all(np.isfinite(g["suspect"])) and np.all(np.isfinite(g["fail"])))
+        and g["suspect"][0] < g["suspect"][1]
+        and g["fail"][0] < g["fail"][1]
+    )
+
+
+def _usable_flat(fl: dict) -> bool:
+    """True when a :func:`glidertest.qc.suggest_flat_line` result has finite windows (≥2 finite samples)."""
+    return bool(np.isfinite(fl["suspect"]) and np.isfinite(fl["fail"]))
+
+
 def _qc_config_yaml(entries: list[tuple[str, dict | None, dict | None]]) -> str:
     """Return a ``qc:`` YAML snippet (report-config shape) from suggested limits.
 
     *entries* is ``[(var, gross, flat), ...]`` where *gross* is a
     :func:`glidertest.qc.suggest_gross_range` result (or ``None``) and *flat* a
-    :func:`glidertest.qc.suggest_flat_line` result (or ``None``). Only the suggested fields are
-    emitted; the loader deep-merges them over the defaults, so a partial block is valid to paste.
+    :func:`glidertest.qc.suggest_flat_line` result augmented with the applied ``tolerance`` (or
+    ``None``). A pasted block has to be complete, so the ``flat_line_test`` block carries the applied
+    tolerance alongside the suggested windows; the loader deep-merges it over the defaults.
     """
     lines = ["qc:"]
     for var, gross, flat in entries:
@@ -189,6 +209,8 @@ def _qc_config_yaml(entries: list[tuple[str, dict | None, dict | None]]) -> str:
             lines.append("    flat_line_test:")
             lines.append(f"      suspect_threshold: {flat['suspect']:g}")
             lines.append(f"      fail_threshold: {flat['fail']:g}")
+            if flat.get("tolerance") is not None:
+                lines.append(f"      tolerance: {flat['tolerance']:g}")
     return "\n".join(lines)
 
 
@@ -203,7 +225,9 @@ def gross_range_ts_note(ds: xr.Dataset, config: dict | None = None) -> str | Non
     rows = [(v, g) for v, g in rows if g]
     if not rows:
         return None
-    pct = rows[0][1]["inner_pct"]
+    usable = [(v, g) for v, g in rows if _usable_gross(g)]
+    too_few = [v for v, g in rows if not _usable_gross(g)]
+    pct = usable[0][1]["inner_pct"] if usable else rows[0][1]["inner_pct"]
     cur = "".join(
         f'<li><strong>{v}</strong> — suspect {_fmt_span(gc["suspect_span"])}, '
         f'fail {_fmt_span(gc["fail_span"])}</li>'
@@ -211,14 +235,25 @@ def gross_range_ts_note(ds: xr.Dataset, config: dict | None = None) -> str | Non
         if (gc := cfg.get(v, {}).get("gross_range_test", {})).get("suspect_span")
         and gc.get("fail_span")
     )
-    suggested = yaml_box(
-        _qc_config_yaml([(v, g, None) for v, g in rows]),
-        label="Suggested gross-range limits (this deployment) — copy into your config",
+    # A variable with too few finite samples gets no block in the box but a line saying why, so the
+    # reader sees what is missing rather than a quietly shorter box.
+    box = (
+        str(yaml_box(
+            _qc_config_yaml([(v, g, None) for v, g in usable]),
+            label="Suggested gross-range limits (this deployment) — copy into your config",
+        ))
+        if usable
+        else ""
+    )
+    few = (
+        f'<p class="note">{", ".join(too_few)}: too few finite samples to suggest a gross-range span.</p>'
+        if too_few
+        else ""
     )
     return (
         '<p class="note"><strong>Current gross-range limits (applied)</strong></p>'
         f'<ul class="note">{cur}</ul>'
-        f'{suggested}'
+        f'{box}{few}'
         f'<p class="note">Each span is the central {pct:g}% of the finite values padded by 1% '
         "(suspect) and 5% (fail) of that span. Descriptive of this mission, not a physical range.</p>"
     )
@@ -232,19 +267,23 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
     not a physical range. ``None`` when the variable has no finite values. *config* supplies the
     applied (current) thresholds shown alongside; ``None`` uses the built-in defaults.
     """
-    if not np.isfinite(np.asarray(ds[var].values, dtype=float)).any():
+    vals = np.asarray(ds[var].values, dtype=float)
+    n_finite = int(np.isfinite(vals).sum())
+    if n_finite == 0:
         return None  # no finite data for this variable: no mission-descriptive limits to suggest
     fl = qc.suggest_flat_line(ds, var)  # the variable's own sampling interval, not the whole record's
     cfg = (config if config is not None else qc.configs).get(var, {})
-    cur, explain, gr = [], [], None
+    cur, explain = [], []
+    gross_entry, flat_entry = None, None
     # TEMP/PSAL gross range is shown jointly beside the T–S plot (gross_range_ts_note), so it is
     # omitted here to avoid duplication; DOXY/CHLA (no T–S) carry their gross suggestion here. Current
     # (applied) limits are listed as prose; the suggested limits go in a copy-into-config YAML box.
+    # A variable with too few finite samples gets no block in the box but a line in the note saying
+    # why, so the reader sees what is missing rather than a quietly shorter box.
     if var not in ("TEMP", "PSAL"):
         gr = qc.suggest_gross_range(ds, var)
         if gr is None:
             return None
-        clamp = " (lower bound clamped at 0)" if var in qc._NONNEGATIVE_VARS else ""
         gc = cfg.get("gross_range_test", {})
         if gc.get("suspect_span") and gc.get("fail_span"):
             cur.append(
@@ -252,26 +291,41 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
                 f'suspect {_fmt_span(gc["suspect_span"])}, '
                 f'fail {_fmt_span(gc["fail_span"])}</li>'
             )
-        explain.append(
-            f'The gross span is the central {gr["inner_pct"]:g}% of the finite values '
-            f'([{gr["lo"]}, {gr["hi"]}]) padded by {gr["suspect_pad"] * 100:g}% (suspect) and '
-            f'{gr["fail_pad"] * 100:g}% (fail) of that span{clamp}.'
-        )
+        if _usable_gross(gr):
+            gross_entry = gr
+            clamp = " (lower bound clamped at 0)" if var in qc._NONNEGATIVE_VARS else ""
+            explain.append(
+                f'The gross span is the central {gr["inner_pct"]:g}% of the finite values '
+                f'([{gr["lo"]}, {gr["hi"]}]) padded by {gr["suspect_pad"] * 100:g}% (suspect) and '
+                f'{gr["fail_pad"] * 100:g}% (fail) of that span{clamp}.'
+            )
+        else:
+            explain.append(f'{var} gross range — too few finite samples ({n_finite}) to suggest a span.')
     fc = cfg.get("flat_line_test", {})
     if fc:
         cur.append(
             f'<li><strong>{var}</strong> flat line — suspect ≥ {fc["suspect_threshold"]:g} s, '
             f'fail ≥ {fc["fail_threshold"]:g} s (tol ±{fc["tolerance"]:g})</li>'
         )
-    explain.append(
-        f'{var} is sampled about every {fl["dt"]:g} s; a flat-line window needs to span a couple of its '
-        f'samples, so use suspect ≥ {fl["suspect_factor"]}× and fail ≥ {fl["fail_factor"]}× that '
-        f'interval (a window shorter than the sampling flags every point).'
-    )
+    if _usable_flat(fl):
+        flat_entry = {**fl, "tolerance": fc.get("tolerance")}  # carry the applied tolerance into the box
+        explain.append(
+            f'{var} is sampled about every {fl["dt"]:g} s; a flat-line window needs to span a couple of its '
+            f'samples, so use suspect ≥ {fl["suspect_factor"]}× and fail ≥ {fl["fail_factor"]}× that '
+            f'interval (a window shorter than the sampling flags every point).'
+        )
+    else:
+        explain.append(f'{var} flat line — too few finite samples ({n_finite}) to suggest a window.')
+    box = ""
+    if gross_entry is not None or flat_entry is not None:
+        box = str(yaml_box(
+            _qc_config_yaml([(var, gross_entry, flat_entry)]),
+            label="Suggested limits (this deployment) — copy into your config",
+        ))
     return (
         '<p class="note"><strong>Current limits (applied)</strong></p>'
         f'<ul class="note">{"".join(cur)}</ul>'
-        f'{yaml_box(_qc_config_yaml([(var, gr, fl)]), label="Suggested limits (this deployment) — copy into your config")}'
+        f'{box}'
         f'<p class="note">{" ".join(explain)} Descriptive of this mission, not a physical range.</p>'
     )
 

@@ -20,10 +20,12 @@ from glidertest import tools, utilities
 #: configured ``region.bbox`` (no built-in default), so no ``location_test`` entry lives here.
 #: ``flat_line_test`` windows and tolerances are set per variable. CHLA takes a long window (suspect
 #: 10 s, fail 30 s): chlorophyll is sampled off-phase at a coarser cadence, so a short window flags
-#: nearly every point (#346). TEMP/PSAL/DOXY take a short window (suspect 2 s, fail 4 s) with a
-#: tolerance near each sensor's resolution (TEMP 0.003 °C, PSAL 0.005, DOXY 0.5), so stable water is
-#: not read as a stuck sensor. The per-mission :func:`suggest_flat_line` (2–3× the sampling interval)
-#: and a ``qc:`` override remain the way to tune any variable to a specific deployment.
+#: nearly every point (#346). TEMP/PSAL/DOXY take a short window (suspect 2 s, fail 4 s). The
+#: tolerance is a flat-line value difference in each variable's own stored units — TEMP 0.003 Celsius,
+#: PSAL 0.005 (practical salinity), DOXY 0.5 mmol m-3, CHLA 0.001 mg m-3. These tolerances are defaults
+#: chosen for the report, of the order of the sensor resolution; no instrument datasheet was consulted,
+#: so adjust per instrument with a ``qc:`` override. The per-mission :func:`suggest_flat_line` (2–3× the
+#: sampling interval) suggests the windows for a specific deployment.
 configs = {
     "TEMP": {"gross_range_test": {
         "suspect_span": [0, 30],

@@ -155,6 +155,28 @@ def test_yaml_box_is_a_selectable_escaped_textarea():
     assert "<script>" not in str(yaml_box("note: <script>"))
 
 
+def test_suggested_limits_box_carries_tolerance(subset_ds):
+    # A pasteable block has to be complete: the flat_line_test box includes the applied tolerance.
+    note = qc_section.suggested_limits_note(subset_ds, "CHLA")
+    assert "tolerance:" in note
+
+
+def test_suggested_limits_note_reports_too_few_samples_not_a_nan_box():
+    # A variable with <2 finite samples cannot yield a window/span: the note says so and emits no YAML
+    # box, so a reader never copies a `nan` threshold into their config (review finding).
+    import xarray as xr
+
+    n = 40
+    ds = xr.Dataset({
+        "CHLA": ("N_MEASUREMENTS", np.r_[1.0, np.full(n - 1, np.nan)]),
+        "TIME": ("N_MEASUREMENTS", np.arange(n).astype("datetime64[s]")),
+    })
+    note = qc_section.suggested_limits_note(ds, "CHLA")
+    assert "too few finite samples" in note
+    assert 'class="yaml-box"' not in note
+    assert "nan" not in note
+
+
 # --- shared gross mask: matrix count == plotted count --------------------------------------------
 
 
