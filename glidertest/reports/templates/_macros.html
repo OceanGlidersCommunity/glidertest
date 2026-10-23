@@ -52,7 +52,7 @@
 
 {% for s in report.sections %}
 <h2 id="{{ s.id }}">{{ heading_text(s.number, s.title) }}</h2>
-{% if s.intro %}<p class="caption">{{ s.intro }}</p>{% endif %}
+{% if s.intro %}<div class="caption">{{ s.intro | safe }}</div>{% endif %}
 {% set split = section_columns.get(s.id) %}
 <div class="fig-row{% if s.id in center_sections %} center{% endif %}">
   {# split only takes the fig-col path when the section actually has a panel at

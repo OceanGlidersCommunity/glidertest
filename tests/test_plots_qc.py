@@ -49,12 +49,14 @@ def test_plot_test_hits_draws_data_as_markers_not_line(subset_ds):
 
 
 def test_plot_test_hits_overlays_most_frequent_first(subset_ds):
-    # Overlays are drawn most-frequent first so a rarer test's symbols land on top. The scatter
-    # collections (after the base data markers) therefore have non-increasing point counts.
+    # The glidertest *test* overlays are drawn most-frequent first so a rarer test's symbols land on
+    # top. Filter to those by label: the delivered-QC markers ("delivered: …") are a separate overlay
+    # drawn afterwards and do not participate in that ordering.
     _fig, ax = plots_qc.plot_test_hits(subset_ds, "CHLA")
-    sizes = [len(c.get_offsets()) for c in ax.collections]
+    test_labels = {"gross range", "spike", "flat line (sample)"}
+    sizes = [len(c.get_offsets()) for c in ax.collections if c.get_label() in test_labels]
     assert sizes == sorted(sizes, reverse=True)
-    assert len(sizes) >= 2  # at least one test overlay beyond nothing
+    assert len(sizes) >= 1  # at least one test overlay fired
 
 
 # --- plot_flag_profile ---------------------------------------------------------------------------
@@ -117,14 +119,63 @@ def test_suggest_gross_range_clamps_nonnegative_and_pads(subset_ds):
 def test_suggested_limits_note_shows_current_then_suggested(subset_ds):
     html = qc_section.suggested_limits_note(subset_ds, "TEMP")
     assert html.index("Current limits (applied)") < html.index("Suggested limits (this deployment)")
-    assert "≥ 1 s" in html  # current flat-line suspect window (applied)
-    assert "≥ 2 s" in html  # suggested flat-line suspect window
+    assert "≥ 2 s" in html  # current flat-line suspect window (applied) — TEMP's short-window default
+    # The suggestion is a copy-into-config YAML box, not prose: a flat_line_test block in a yaml-box.
+    assert 'class="yaml-box"' in html
+    assert "flat_line_test:" in html and "suspect_threshold:" in html
+
+
+def test_flat_line_defaults_are_per_variable(subset_ds):
+    # #346: chlorophyll (off-phase, coarse cadence) takes a long window (10/30 s); TEMP/PSAL/DOXY take a
+    # short window (2/4 s). Tolerances are tight (only a near-constant signal is flat) and per variable.
+    chla = qc.configs["CHLA"]["flat_line_test"]
+    assert (chla["suspect_threshold"], chla["fail_threshold"]) == (10, 30)
+    for v in ("TEMP", "PSAL", "DOXY"):
+        fl = qc.configs[v]["flat_line_test"]
+        assert (fl["suspect_threshold"], fl["fail_threshold"]) == (2, 4)
+    assert qc.configs["TEMP"]["flat_line_test"]["tolerance"] == 0.0005
+    assert qc.configs["PSAL"]["flat_line_test"]["tolerance"] == 0.0005
+    assert qc.configs["DOXY"]["flat_line_test"]["tolerance"] == 0.01
+    assert qc.configs["CHLA"]["flat_line_test"]["tolerance"] == 0.01
 
 
 def test_gross_range_ts_note_shows_current_then_suggested(subset_ds):
     html = qc_section.gross_range_ts_note(subset_ds)
     assert html.index("Current gross-range limits (applied)") < html.index("Suggested gross-range limits")
     assert "[0, 30]" in html  # current TEMP gross suspect span, in brackets
+
+
+def test_yaml_box_is_a_selectable_escaped_textarea():
+    from glidertest.reports._components import yaml_box
+
+    out = str(yaml_box("qc:\n  TEMP:\n    flat_line_test:\n      suspect_threshold: 10", label="L"))
+    assert 'class="yaml-box"' in out and 'onclick="this.select()"' in out and "readonly" in out
+    assert 'rows="4"' in out  # one row per YAML line, so the box needs no scroll
+    assert ">L</p>" in out  # the caption
+    # Content is HTML-escaped so a value can never inject markup into the page.
+    assert "<script>" not in str(yaml_box("note: <script>"))
+
+
+def test_suggested_limits_box_carries_tolerance(subset_ds):
+    # A pasteable block has to be complete: the flat_line_test box includes the applied tolerance.
+    note = qc_section.suggested_limits_note(subset_ds, "CHLA")
+    assert "tolerance:" in note
+
+
+def test_suggested_limits_note_reports_too_few_samples_not_a_nan_box():
+    # A variable with <2 finite samples cannot yield a window/span: the note says so and emits no YAML
+    # box, so a reader never copies a `nan` threshold into their config (review finding).
+    import xarray as xr
+
+    n = 40
+    ds = xr.Dataset({
+        "CHLA": ("N_MEASUREMENTS", np.r_[1.0, np.full(n - 1, np.nan)]),
+        "TIME": ("N_MEASUREMENTS", np.arange(n).astype("datetime64[s]")),
+    })
+    note = qc_section.suggested_limits_note(ds, "CHLA")
+    assert "too few finite samples" in note
+    assert 'class="yaml-box"' not in note
+    assert "nan" not in note
 
 
 # --- shared gross mask: matrix count == plotted count --------------------------------------------
