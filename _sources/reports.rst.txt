@@ -72,6 +72,10 @@ tools can read without opening the netCDF:
    * - ``qc``
      - Whether the file carries ``*_QC`` flags, and the variable with the largest
        suspect-plus-fail fraction.
+   * - ``qc_thresholds``, ``qc_config``, ``qc_config_source``, ``region``
+     - The QC thresholds that ran (effective), the report-config overrides exactly as given (or
+       ``null``), the config's ``source:`` string, and the region box (or ``null``). See
+       :ref:`config_reference`.
    * - ``pages``
      - The pages written, with their labels.
    * - ``track``
@@ -271,8 +275,10 @@ QC) reads the same way, not as a clean bill of health.
 and flat-line tests per variable, the dive–climb hysteresis verdict — and shows the result
 with the thresholds that were applied printed next to it, so a reader can judge whether a
 "suspect" means anything for their region. The per-variable detail — where each test fires and
-whether its thresholds suit the sampling — is on the dedicated QC page (``qc.html``). Today the
-thresholds are the package defaults; a per-mission configuration file is planned.
+whether its thresholds suit the sampling — is on the dedicated QC page (``qc.html``). The
+thresholds are the package defaults unless a report config overrides them; the table marks each
+row **default** or **config**, and a configured ``region.bbox`` adds a region-test row. See
+:ref:`config_reference`.
 
 The two are never merged: a value the provider flagged good and glidertest finds suspect is
 shown as both.

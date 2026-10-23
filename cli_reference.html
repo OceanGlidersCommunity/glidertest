@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CLI reference &mdash; glidertest 0.1.1.dev57+g1e0ae686c documentation</title>
+  <title>CLI reference &mdash; glidertest 0.1.1.dev58+gd50b4c3c0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=85c82bb0"></script>
+      <script src="_static/documentation_options.js?v=9b8507c7"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -71,9 +71,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#glidertest-navigator-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#glidertest-init">glidertest init</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest-init-positional-arguments">Positional Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest-init-named-arguments">Named Arguments</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reports.html">The HTML report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config_reference.html">Report config (<code class="docutils literal notranslate"><span class="pre">-c</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glidertest.html">API reference</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Links</span></p>
@@ -128,7 +134,7 @@ present, a flight page when the data supports it, an inventory page, and a <code
 manifest. The dataset is read, never modified.</p>
 <div class="highlight-default notranslate" id="id0"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">glidertest</span> <span class="n">report</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">mission</span><span class="o">-</span><span class="nb">id</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">title</span> <span class="n">TEXT</span><span class="p">]</span>
                          <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">navigator</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">skip</span><span class="o">-</span><span class="n">existing</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">pattern</span> <span class="n">GLOB</span><span class="p">]</span>
-                         <span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">]</span> <span class="p">(</span><span class="o">--</span><span class="n">report</span><span class="o">-</span><span class="nb">dir</span> <span class="n">ROOT</span> <span class="o">|</span> <span class="o">-</span><span class="n">o</span> <span class="n">DIR</span><span class="p">)</span>
+                         <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">]</span> <span class="p">(</span><span class="o">--</span><span class="n">report</span><span class="o">-</span><span class="nb">dir</span> <span class="n">ROOT</span> <span class="o">|</span> <span class="o">-</span><span class="n">o</span> <span class="n">DIR</span><span class="p">)</span>
                          <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -160,6 +166,9 @@ manifest. The dataset is read, never modified.</p>
 <dt><kbd>--pattern</kbd></dt>
 <dd><p>Filename glob applied inside each directory given as FILE (default: ‘<a href="#id1"><span class="problematic" id="id2">*</span></a>.nc’; not recursive).</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">'*.nc'</span></code></p>
+</dd>
+<dt><kbd>-c, --config</kbd></dt>
+<dd><p>Report config (YAML) overriding QC thresholds per variable and test. Validated before anything is written; applies to every FILE in the run.</p>
 </dd>
 <dt><kbd>-n, --dry-run</kbd></dt>
 <dd><p>Print what would be written without writing anything.</p>
@@ -209,6 +218,9 @@ glidertest<span class="w"> </span>report<span class="w"> </span>data/<span class
 
 <span class="c1"># One mission's pages straight into a folder, no tree and no fleet page:</span>
 glidertest<span class="w"> </span>report<span class="w"> </span>sea045_20230604T1253_delayed.nc<span class="w"> </span>-o<span class="w"> </span>sea045_report/
+
+<span class="c1"># Override the QC thresholds from a report config (see :ref:`config_reference`):</span>
+glidertest<span class="w"> </span>report<span class="w"> </span>sea045_20230604T1253_delayed.nc<span class="w"> </span>--report-dir<span class="w"> </span>reports/<span class="w"> </span>-c<span class="w"> </span>report.yaml
 </pre></div>
 </div>
 <p>Notes:</p>
@@ -246,6 +258,38 @@ renaming mission directories.</p>
 </dd>
 </dl>
 </section>
+</section>
+<hr class="docutils" />
+<section id="glidertest-init">
+<h2>glidertest init<a class="headerlink" href="#glidertest-init" title="Link to this heading"></a></h2>
+<p>Read an OG1 netCDF file and write a commented report-config template, seeded with glidertest’s
+suggested QC thresholds for that mission and the built-in default beside each. Edit it and pass it
+back with <code class="docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">report</span> <span class="pre">-c</span></code>. See <a class="reference internal" href="config_reference.html#config-reference"><span class="std std-ref">Report config (-c)</span></a>.</p>
+<div class="highlight-default notranslate" id="id3"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">glidertest</span> <span class="n">init</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUT</span><span class="p">]</span> <span class="n">FILE</span>
+</pre></div>
+</div>
+<section id="glidertest-init-positional-arguments">
+<span id="glidertest.cli-build_parser-positional-arguments"></span><h3>Positional Arguments<a class="headerlink" href="#glidertest-init-positional-arguments" title="Link to this heading"></a></h3>
+<dl class="option-list">
+<dt><kbd>FILE</kbd></dt>
+<dd><p>OG1 netCDF file to seed the template from.</p>
+</dd>
+</dl>
+</section>
+<section id="glidertest-init-named-arguments">
+<span id="glidertest.cli-build_parser-named-arguments"></span><h3>Named Arguments<a class="headerlink" href="#glidertest-init-named-arguments" title="Link to this heading"></a></h3>
+<dl class="option-list">
+<dt><kbd>-o, --output</kbd></dt>
+<dd><p>Write the template to OUT instead of standard output.</p>
+</dd>
+</dl>
+</section>
+<p>Example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>glidertest<span class="w"> </span>init<span class="w"> </span>sea045_20230604T1253_delayed.nc<span class="w"> </span>-o<span class="w"> </span>report.yaml
+<span class="c1"># edit report.yaml, then:</span>
+glidertest<span class="w"> </span>report<span class="w"> </span>sea045_20230604T1253_delayed.nc<span class="w"> </span>--report-dir<span class="w"> </span>reports/<span class="w"> </span>-c<span class="w"> </span>report.yaml
+</pre></div>
+</div>
 </section>
 </section>
 

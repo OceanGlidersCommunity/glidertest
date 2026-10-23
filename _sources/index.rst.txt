@@ -50,6 +50,7 @@ The report is the library run in a fixed order; nothing in it is unavailable as 
 
    cli_reference
    reports
+   config_reference
    glidertest
 
 .. toctree::

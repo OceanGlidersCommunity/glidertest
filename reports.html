@@ -6,21 +6,21 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The HTML report &mdash; glidertest 0.1.1.dev57+g1e0ae686c documentation</title>
+  <title>The HTML report &mdash; glidertest 0.1.1.dev58+gd50b4c3c0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=85c82bb0"></script>
+      <script src="_static/documentation_options.js?v=9b8507c7"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API reference" href="glidertest.html" />
+    <link rel="next" title="Report config (-c)" href="config_reference.html" />
     <link rel="prev" title="CLI reference" href="cli_reference.html" /> 
 </head>
 
@@ -79,6 +79,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#many-missions">Many missions</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="config_reference.html">Report config (<code class="docutils literal notranslate"><span class="pre">-c</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glidertest.html">API reference</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Links</span></p>
@@ -190,13 +191,18 @@ tools can read without opening the netCDF:</p>
 <td><p>Whether the file carries <code class="docutils literal notranslate"><span class="pre">*_QC</span></code> flags, and the variable with the largest
 suspect-plus-fail fraction.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pages</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">qc_thresholds</span></code>, <code class="docutils literal notranslate"><span class="pre">qc_config</span></code>, <code class="docutils literal notranslate"><span class="pre">qc_config_source</span></code>, <code class="docutils literal notranslate"><span class="pre">region</span></code></p></td>
+<td><p>The QC thresholds that ran (effective), the report-config overrides exactly as given (or
+<code class="docutils literal notranslate"><span class="pre">null</span></code>), the config’s <code class="docutils literal notranslate"><span class="pre">source:</span></code> string, and the region box (or <code class="docutils literal notranslate"><span class="pre">null</span></code>). See
+<a class="reference internal" href="config_reference.html#config-reference"><span class="std std-ref">Report config (-c)</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pages</span></code></p></td>
 <td><p>The pages written, with their labels.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">track</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">track</span></code></p></td>
 <td><p>The glider track, decimated to at most 200 points, for the fleet map.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">glidertest_version</span></code>, <code class="docutils literal notranslate"><span class="pre">generated_at</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">glidertest_version</span></code>, <code class="docutils literal notranslate"><span class="pre">generated_at</span></code></p></td>
 <td><p>Provenance.</p></td>
 </tr>
 </tbody>
@@ -399,8 +405,10 @@ QC) reads the same way, not as a clean bill of health.</p>
 and flat-line tests per variable, the dive–climb hysteresis verdict — and shows the result
 with the thresholds that were applied printed next to it, so a reader can judge whether a
 “suspect” means anything for their region. The per-variable detail — where each test fires and
-whether its thresholds suit the sampling — is on the dedicated QC page (<code class="docutils literal notranslate"><span class="pre">qc.html</span></code>). Today the
-thresholds are the package defaults; a per-mission configuration file is planned.</p>
+whether its thresholds suit the sampling — is on the dedicated QC page (<code class="docutils literal notranslate"><span class="pre">qc.html</span></code>). The
+thresholds are the package defaults unless a report config overrides them; the table marks each
+row <strong>default</strong> or <strong>config</strong>, and a configured <code class="docutils literal notranslate"><span class="pre">region.bbox</span></code> adds a region-test row. See
+<a class="reference internal" href="config_reference.html#config-reference"><span class="std std-ref">Report config (-c)</span></a>.</p>
 <p>The two are never merged: a value the provider flagged good and glidertest finds suspect is
 shown as both.</p>
 </section>
@@ -442,7 +450,7 @@ mission with <code class="docutils literal notranslate"><span class="pre">naviga
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="cli_reference.html" class="btn btn-neutral float-left" title="CLI reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="glidertest.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="config_reference.html" class="btn btn-neutral float-right" title="Report config (-c)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

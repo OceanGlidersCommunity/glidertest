@@ -35,6 +35,96 @@
     "worst_var": null,
     "worst_bad_pct": null
   },
+  "qc_thresholds": {
+    "TEMP": {
+      "gross_range_test": {
+        "suspect_span": [
+          0,
+          30
+        ],
+        "fail_span": [
+          -2.5,
+          40
+        ]
+      },
+      "spike_test": {
+        "suspect_threshold": 2.0,
+        "fail_threshold": 6.0
+      },
+      "flat_line_test": {
+        "suspect_threshold": 1,
+        "fail_threshold": 3,
+        "tolerance": 0.001
+      }
+    },
+    "PSAL": {
+      "gross_range_test": {
+        "suspect_span": [
+          5,
+          38
+        ],
+        "fail_span": [
+          2,
+          41
+        ]
+      },
+      "spike_test": {
+        "suspect_threshold": 0.3,
+        "fail_threshold": 0.9
+      },
+      "flat_line_test": {
+        "suspect_threshold": 1,
+        "fail_threshold": 3,
+        "tolerance": 0.001
+      }
+    },
+    "DOXY": {
+      "gross_range_test": {
+        "suspect_span": [
+          0,
+          350
+        ],
+        "fail_span": [
+          0,
+          500
+        ]
+      },
+      "spike_test": {
+        "suspect_threshold": 10,
+        "fail_threshold": 50
+      },
+      "flat_line_test": {
+        "suspect_threshold": 1,
+        "fail_threshold": 3,
+        "tolerance": 0.001
+      }
+    },
+    "CHLA": {
+      "gross_range_test": {
+        "suspect_span": [
+          0,
+          15
+        ],
+        "fail_span": [
+          -1,
+          20
+        ]
+      },
+      "spike_test": {
+        "suspect_threshold": 1,
+        "fail_threshold": 5
+      },
+      "flat_line_test": {
+        "suspect_threshold": 1,
+        "fail_threshold": 3,
+        "tolerance": 0.001
+      }
+    }
+  },
+  "qc_config": null,
+  "qc_config_source": null,
+  "config_file": null,
+  "region": null,
   "pages": [
     {
       "file": "index.html",
@@ -859,6 +949,6 @@
       63.9343
     ]
   ],
-  "glidertest_version": "0.1.1.dev57+g1e0ae686c",
-  "generated_at": "2026-10-22 12:46 UTC"
+  "glidertest_version": "0.1.1.dev58+gd50b4c3c0",
+  "generated_at": "2026-10-23 10:42 UTC"
 }

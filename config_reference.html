@@ -1,0 +1,231 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report config (-c) &mdash; glidertest 0.1.1.dev58+gd50b4c3c0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9b8507c7"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API reference" href="glidertest.html" />
+    <link rel="prev" title="The HTML report" href="reports.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            glidertest
+              <img src="_static/glider.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demo-output.html">Glidertest demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo-output.html#1.-Load-dataset">1. Load dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo-output.html#2.-General-mission-overview">2. General mission overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo-output.html#3.-Sensors-data-overview">3. Sensors data overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo-output.html#CTD">CTD</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://oceangliderscommunity.github.io/glidertest/_static/demo/index.html">Example HTML report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli_reference.html">CLI reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">The HTML report</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Report config (<code class="docutils literal notranslate"><span class="pre">-c</span></code>)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#generating-a-starting-template">Generating a starting template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-file">The file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-region-test">The region test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validation">Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#provenance-what-the-report-records">Provenance — what the report records</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="glidertest.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/glidertest/issues/new">Report a problem</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/OceanGlidersCommunity/OG-format-user-manual">OG1 format manual</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">glidertest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Report config (<code class="docutils literal notranslate"><span class="pre">-c</span></code>)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_reference.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="report-config-c">
+<span id="config-reference"></span><h1>Report config (<code class="docutils literal notranslate"><span class="pre">-c</span></code>)<a class="headerlink" href="#report-config-c" title="Link to this heading"></a></h1>
+<p>The QC thresholds glidertest applies — gross range, spike and flat-line per variable — are
+built-in defaults tuned for one region. A <strong>report config</strong> overrides them per variable and per
+test, and adds a region test, for one mission or a whole run. It is optional: with no config the
+report uses the defaults and its output is unchanged.</p>
+<p>Pass it to the command line or the Python API:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">glidertest</span> <span class="n">report</span> <span class="n">mission</span><span class="o">.</span><span class="n">nc</span> <span class="o">--</span><span class="n">report</span><span class="o">-</span><span class="nb">dir</span> <span class="n">reports</span><span class="o">/</span> <span class="o">-</span><span class="n">c</span> <span class="n">report</span><span class="o">.</span><span class="n">yaml</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">glidertest</span><span class="w"> </span><span class="kn">import</span> <span class="n">reports</span>
+<span class="n">reports</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">"reports/"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="s2">"report.yaml"</span><span class="p">)</span>   <span class="c1"># or config=&lt;dict&gt;</span>
+</pre></div>
+</div>
+<p>The config only changes which thresholds the diagnostics use and what the report records. It
+never modifies the data.</p>
+<section id="generating-a-starting-template">
+<h2>Generating a starting template<a class="headerlink" href="#generating-a-starting-template" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">glidertest</span> <span class="pre">init</span></code> reads a mission file and writes a commented template seeded with glidertest’s
+suggested thresholds for <em>that</em> mission (from its own data distribution), with the built-in
+default shown beside each so you see both:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">glidertest</span> <span class="n">init</span> <span class="n">mission</span><span class="o">.</span><span class="n">nc</span> <span class="o">-</span><span class="n">o</span> <span class="n">report</span><span class="o">.</span><span class="n">yaml</span>
+</pre></div>
+</div>
+<p>Edit the values you want, then pass the file back with <code class="docutils literal notranslate"><span class="pre">-c</span></code>. The region box is left commented
+out: a box drawn from the mission’s own track cannot fail its own region test, so you set it
+deliberately. The categories the loader recognises but does not yet apply (<code class="docutils literal notranslate"><span class="pre">qc.hysteresis</span></code> and
+the top-level <code class="docutils literal notranslate"><span class="pre">display</span></code>, <code class="docutils literal notranslate"><span class="pre">mission</span></code> and <code class="docutils literal notranslate"><span class="pre">pages</span></code> blocks) are written out commented, so the
+template shows the whole menu without triggering their not-applied warnings.</p>
+</section>
+<section id="the-file">
+<h2>The file<a class="headerlink" href="#the-file" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">config_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="s">"sea045</span><span class="nv"> </span><span class="s">QC</span><span class="nv"> </span><span class="s">pass,</span><span class="nv"> </span><span class="s">2026-10"</span><span class="w">      </span><span class="c1"># free text, recorded in report.json (qc_config_source)</span>
+
+<span class="nt">region</span><span class="p">:</span><span class="w">                                </span><span class="c1"># optional; absent → the region test is not run</span>
+<span class="w">  </span><span class="nt">bbox</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">50</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">25</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">70</span><span class="p p-Indicator">]</span><span class="w">               </span><span class="c1"># [west, south, east, north] = lon_min, lat_min, lon_max, lat_max</span>
+
+<span class="nt">qc</span><span class="p">:</span><span class="w">                                    </span><span class="c1"># variable-first; ioos_qc test and field names</span>
+<span class="w">  </span><span class="nt">TEMP</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">gross_range_test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">suspect_span</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">30</span><span class="p p-Indicator">],</span><span class="nt"> fail_span</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-2.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">40</span><span class="p p-Indicator">]}</span>
+<span class="w">    </span><span class="nt">spike_test</span><span class="p">:</span><span class="w">       </span><span class="p p-Indicator">{</span><span class="nt">suspect_threshold</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> fail_threshold</span><span class="p">:</span><span class="w"> </span><span class="nv">6.0</span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">flat_line_test</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">{</span><span class="nt">suspect_threshold</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> fail_threshold</span><span class="p">:</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="nt"> tolerance</span><span class="p">:</span><span class="w"> </span><span class="nv">0.001</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">PSAL</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">gross_range_test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">suspect_span</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">38</span><span class="p p-Indicator">]}</span><span class="w">   </span><span class="c1"># partial: only the fields you set change</span>
+</pre></div>
+</div>
+<p>Each block is a deep-merge over the defaults: a variable, test or field you do not mention keeps
+its built-in value. Thresholds are in each variable’s OG1 units. The test and field names are
+ioos_qc’s own vocabulary (<code class="docutils literal notranslate"><span class="pre">gross_range_test.suspect_span</span></code> / <code class="docutils literal notranslate"><span class="pre">fail_span</span></code>,
+<code class="docutils literal notranslate"><span class="pre">spike_test.suspect_threshold</span></code> / <code class="docutils literal notranslate"><span class="pre">fail_threshold</span></code>, <code class="docutils literal notranslate"><span class="pre">flat_line_test</span></code> windows in seconds plus
+<code class="docutils literal notranslate"><span class="pre">tolerance</span></code>); the same keys read the same across the OG1 toolchain.</p>
+<p>A config may also ride inside another tool’s YAML under a top-level <code class="docutils literal notranslate"><span class="pre">glidertest:</span></code> key — then
+only that block is read.</p>
+</section>
+<section id="the-region-test">
+<h2>The region test<a class="headerlink" href="#the-region-test" title="Link to this heading"></a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">region.bbox</span></code> set, glidertest flags every sample by position: inside or on the box is good,
+outside is <strong>fail</strong> (a glider outside the region you declared is a finding, not a “maybe”), and a
+sample with no position (<code class="docutils literal notranslate"><span class="pre">LONGITUDE</span></code>/<code class="docutils literal notranslate"><span class="pre">LATITUDE</span></code> missing or NaN) is “not evaluated”. The box is
+<code class="docutils literal notranslate"><span class="pre">[west,</span> <span class="pre">south,</span> <span class="pre">east,</span> <span class="pre">north]</span></code>. There is no built-in region — it runs only when you configure one.
+This is glidertest’s own test, not ioos_qc’s <code class="docutils literal notranslate"><span class="pre">location_test</span></code> (which has no bounding box).</p>
+</section>
+<section id="validation">
+<h2>Validation<a class="headerlink" href="#validation" title="Link to this heading"></a></h2>
+<p>The file is checked at load, before any figure is drawn; an error names the allowed set and stops
+the run (exit code 2 from the CLI). Errors:</p>
+<ul class="simple">
+<li><p>an unknown top-level key, variable, test, or field name;</p></li>
+<li><p>a span that is not a two-element increasing numeric list;</p></li>
+<li><p>a suspect span not contained in its fail span;</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">region.bbox</span></code> that is not four increasing numbers.</p></li>
+</ul>
+<p>A threshold set for a variable the file does not contain is a <strong>warning</strong>, not an error. The
+<code class="docutils literal notranslate"><span class="pre">display:</span></code>, <code class="docutils literal notranslate"><span class="pre">mission:</span></code> and <code class="docutils literal notranslate"><span class="pre">pages:</span></code> blocks are recognised but not yet applied (a later
+release); their presence warns rather than being silently ignored.</p>
+</section>
+<section id="provenance-what-the-report-records">
+<h2>Provenance — what the report records<a class="headerlink" href="#provenance-what-the-report-records" title="Link to this heading"></a></h2>
+<p>So a reader can tell a configured threshold from a default and reproduce the run:</p>
+<ul class="simple">
+<li><p>the QC page’s threshold table marks each row <strong>default</strong> or <strong>config</strong> (by comparing the applied
+value to the built-in), and the region row shows the box and how many samples fell outside it;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">report.json</span></code> carries <code class="docutils literal notranslate"><span class="pre">qc_thresholds</span></code> (the effective thresholds that ran), <code class="docutils literal notranslate"><span class="pre">qc_config</span></code> (the
+overrides exactly as given, or <code class="docutils literal notranslate"><span class="pre">null</span></code>), <code class="docutils literal notranslate"><span class="pre">qc_config_source</span></code> (the <code class="docutils literal notranslate"><span class="pre">source:</span></code> string),
+<code class="docutils literal notranslate"><span class="pre">config_file</span></code> (the path you passed, or <code class="docutils literal notranslate"><span class="pre">null</span></code> for a dict) and <code class="docutils literal notranslate"><span class="pre">region</span></code> (the box, or <code class="docutils literal notranslate"><span class="pre">null</span></code>);</p></li>
+<li><p>the config itself is saved beside <code class="docutils literal notranslate"><span class="pre">report.json</span></code> as <code class="docutils literal notranslate"><span class="pre">report-config.yaml</span></code>, so a re-run can read
+it back: <code class="docutils literal notranslate"><span class="pre">report(ds,</span> <span class="pre">outdir,</span> <span class="pre">config=&quot;&lt;report-dir&gt;/report-config.yaml&quot;)</span></code>. A file is copied
+verbatim (comments and the not-yet-applied <code class="docutils literal notranslate"><span class="pre">display:</span></code>/<code class="docutils literal notranslate"><span class="pre">mission:</span></code>/<code class="docutils literal notranslate"><span class="pre">pages:</span></code> blocks are kept); a
+config given as a Python <code class="docutils literal notranslate"><span class="pre">dict</span></code> is written out from its <code class="docutils literal notranslate"><span class="pre">qc</span></code>/<code class="docutils literal notranslate"><span class="pre">region</span></code>/<code class="docutils literal notranslate"><span class="pre">source</span></code> blocks only,
+so it carries no comments and drops any <code class="docutils literal notranslate"><span class="pre">display:</span></code>/<code class="docutils literal notranslate"><span class="pre">mission:</span></code>/<code class="docutils literal notranslate"><span class="pre">pages:</span></code> the dict held.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="reports.html" class="btn btn-neutral float-left" title="The HTML report" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="glidertest.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Eleanor Frajka-Williams, Chiara Monforte, Callum Rollo, Till Moritz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
