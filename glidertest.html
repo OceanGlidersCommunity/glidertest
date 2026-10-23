@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API reference &mdash; glidertest 0.1.1.dev58+gd50b4c3c0 documentation</title>
+  <title>API reference &mdash; glidertest 0.1.1.dev59+g52eccd8fd documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=9b8507c7"></script>
+      <script src="_static/documentation_options.js?v=d6d5d5be"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -1431,7 +1431,7 @@ uses); pass them in via <code class="docutils literal notranslate"><span class="
 <p>Original Author: Eleanor Frajka-Williams (glidertest).</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="glidertest.plots_qc.QC_MARKER">
-<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">QC_MARKER</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{3:</span> <span class="pre">{'color':</span> <span class="pre">'#f39c12',</span> <span class="pre">'linewidths':</span> <span class="pre">0.8,</span> <span class="pre">'marker':</span> <span class="pre">'+',</span> <span class="pre">'rasterized':</span> <span class="pre">True,</span> <span class="pre">'s':</span> <span class="pre">15,</span> <span class="pre">'zorder':</span> <span class="pre">3},</span> <span class="pre">4:</span> <span class="pre">{'color':</span> <span class="pre">'#e74c3c',</span> <span class="pre">'linewidths':</span> <span class="pre">0.8,</span> <span class="pre">'marker':</span> <span class="pre">'+',</span> <span class="pre">'rasterized':</span> <span class="pre">True,</span> <span class="pre">'s':</span> <span class="pre">15,</span> <span class="pre">'zorder':</span> <span class="pre">4}}</span></em><a class="headerlink" href="#glidertest.plots_qc.QC_MARKER" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.plots_qc.</span></span><span class="sig-name descname"><span class="pre">QC_MARKER</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{3:</span> <span class="pre">{'color':</span> <span class="pre">'#E69F00',</span> <span class="pre">'linewidths':</span> <span class="pre">0.8,</span> <span class="pre">'marker':</span> <span class="pre">'+',</span> <span class="pre">'rasterized':</span> <span class="pre">True,</span> <span class="pre">'s':</span> <span class="pre">15,</span> <span class="pre">'zorder':</span> <span class="pre">3},</span> <span class="pre">4:</span> <span class="pre">{'color':</span> <span class="pre">'#D55E00',</span> <span class="pre">'linewidths':</span> <span class="pre">0.8,</span> <span class="pre">'marker':</span> <span class="pre">'+',</span> <span class="pre">'rasterized':</span> <span class="pre">True,</span> <span class="pre">'s':</span> <span class="pre">15,</span> <span class="pre">'zorder':</span> <span class="pre">4}}</span></em><a class="headerlink" href="#glidertest.plots_qc.QC_MARKER" title="Link to this definition"></a></dt>
 <dd><p>Delivered-flag overlay markers (suspect/fail only), keyed by flag value — small “+” in the flag
 colour, rasterized so the overlay is cheap even at 10^6 samples.</p>
 </dd></dl>
@@ -1460,7 +1460,7 @@ a depth-structured sensor (optics, oxygen). The base is grey, not value-coloured
 demand when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>config</strong> (<em>Mapping</em><em>, </em><em>optional</em>) – Resolved per-variable thresholds (<code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.config.loader.resolve_qc()</span></code>); <code class="docutils literal notranslate"><span class="pre">None</span></code> uses
 the built-in defaults.</p></li>
-<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches; the height is derived from it.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.reports._vendored.design_tokens.W_HALF</span></code>) – Figure width in inches; the height is derived from it.</p></li>
 <li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
 </ul>
 </dd>
@@ -1493,7 +1493,7 @@ flat: left of the line, stuck-like; right of it, the data moved.</p>
 <li><p><strong>flags</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The <code class="docutils literal notranslate"><span class="pre">(gross,</span> <span class="pre">spike,</span> <span class="pre">flat)</span></code> flag arrays; computed on demand when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>config</strong> (<em>Mapping</em><em>, </em><em>optional</em>) – Resolved per-variable thresholds (<code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.config.loader.resolve_qc()</span></code>); <code class="docutils literal notranslate"><span class="pre">None</span></code> uses
 the built-in defaults.</p></li>
-<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.reports._vendored.design_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
 <li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
 </ul>
 </dd>
@@ -1526,7 +1526,7 @@ water or low signal, not a stuck sensor.</p>
 <li><p><strong>flags</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The <code class="docutils literal notranslate"><span class="pre">(gross,</span> <span class="pre">spike,</span> <span class="pre">flat)</span></code> flag arrays; computed on demand when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>config</strong> (<em>Mapping</em><em>, </em><em>optional</em>) – Resolved per-variable thresholds (<code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.config.loader.resolve_qc()</span></code>); <code class="docutils literal notranslate"><span class="pre">None</span></code> uses
 the built-in defaults.</p></li>
-<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.reports._vendored.design_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
 <li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
 </ul>
 </dd>
@@ -1556,7 +1556,7 @@ counts are meaningless.</p>
 <li><p><strong>flags</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The <code class="docutils literal notranslate"><span class="pre">(gross,</span> <span class="pre">spike,</span> <span class="pre">flat)</span></code> flag arrays; computed on demand when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>config</strong> (<em>Mapping</em><em>, </em><em>optional</em>) – Resolved per-variable thresholds (<code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.config.loader.resolve_qc()</span></code>); <code class="docutils literal notranslate"><span class="pre">None</span></code> uses
 the built-in defaults.</p></li>
-<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.reports._vendored.design_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
 <li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
 </ul>
 </dd>
@@ -1585,7 +1585,7 @@ job. The median sampling interval is printed, since a spike threshold assumes a 
 <li><p><strong>var</strong> (<em>str</em>) – The variable to assess.</p></li>
 <li><p><strong>config</strong> (<em>Mapping</em><em>, </em><em>optional</em>) – Resolved per-variable thresholds (<code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.config.loader.resolve_qc()</span></code>); <code class="docutils literal notranslate"><span class="pre">None</span></code> uses
 the built-in defaults.</p></li>
-<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.reports._vendored.design_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
 <li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
 </ul>
 </dd>
@@ -1617,7 +1617,7 @@ is cheap even at 10^6 samples.</p>
 demand when <code class="docutils literal notranslate"><span class="pre">None</span></code> (so a notebook call needs nothing extra; the report passes them in once).</p></li>
 <li><p><strong>config</strong> (<em>Mapping</em><em>, </em><em>optional</em>) – Resolved per-variable thresholds (<code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.config.loader.resolve_qc()</span></code>); <code class="docutils literal notranslate"><span class="pre">None</span></code> uses
 the built-in defaults.</p></li>
-<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_FULL</span></code>) – Figure width in inches; the height is derived from it.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.reports._vendored.design_tokens.W_FULL</span></code>) – Figure width in inches; the height is derived from it.</p></li>
 <li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
 </ul>
 </dd>
@@ -1644,7 +1644,7 @@ outside are genuine outliers. Requires TEMP and PSAL.</p>
 <li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – An OG1 glider dataset carrying TEMP and PSAL.</p></li>
 <li><p><strong>config</strong> (<em>Mapping</em><em>, </em><em>optional</em>) – Resolved per-variable thresholds (<code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.config.loader.resolve_qc()</span></code>); <code class="docutils literal notranslate"><span class="pre">None</span></code> uses
 the built-in defaults.</p></li>
-<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.config.report_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
+<li><p><strong>width_in</strong> (float, default <code class="xref py py-data docutils literal notranslate"><span class="pre">glidertest.reports._vendored.design_tokens.W_HALF</span></code>) – Figure width in inches.</p></li>
 <li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – Draw into this axis instead of creating a figure.</p></li>
 </ul>
 </dd>

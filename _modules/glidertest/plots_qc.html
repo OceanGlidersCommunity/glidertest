@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>glidertest.plots_qc &mdash; glidertest 0.1.1.dev58+gd50b4c3c0 documentation</title>
+  <title>glidertest.plots_qc &mdash; glidertest 0.1.1.dev59+g52eccd8fd documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=9b8507c7"></script>
+      <script src="../../_static/documentation_options.js?v=d6d5d5be"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -127,11 +127,12 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.axes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Axes</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.figure</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">report_tokens</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.reports._vendored</span><span class="w"> </span><span class="kn">import</span> <span class="n">design_tokens</span> <span class="k">as</span> <span class="n">report_tokens</span>
 
-<span class="c1"># Flag-level colours — the matplotlib twin of base.html's --qc-good / --qc-suspect / --qc-fail, same</span>
-<span class="c1"># hex as the sibling packages use for QARTOD 1/3/4 (a test asserts they match the CSS).</span>
-<span class="n">QC_COLORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"#27ae60"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">"#f39c12"</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="s2">"#e74c3c"</span><span class="p">}</span>
+<span class="c1"># Flag-level colours — the matplotlib twin of base.html's --qc-good / --qc-suspect / --qc-fail.</span>
+<span class="c1"># Sourced from the shared vendored palette (:data:`design_tokens.QC_COLORS`, Okabe–Ito, colour-blind</span>
+<span class="c1"># safe) so the family's packages cannot drift; a test asserts base.html's --qc-* equal these.</span>
+<span class="n">QC_COLORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">report_tokens</span><span class="o">.</span><span class="n">QC_COLORS</span>
 
 <span class="c1">#: Delivered-flag overlay markers (suspect/fail only), keyed by flag value — small "+" in the flag</span>
 <span class="c1">#: colour, rasterized so the overlay is cheap even at 10^6 samples.</span>
@@ -140,9 +141,10 @@
     <span class="mi">4</span><span class="p">:</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"+"</span><span class="p">,</span> <span class="s2">"color"</span><span class="p">:</span> <span class="n">QC_COLORS</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="s2">"s"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s2">"linewidths"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span> <span class="s2">"zorder"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"rasterized"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
 <span class="p">}</span>
 
-<span class="c1"># Per-*test* colours — Okabe–Ito (colour-blind safe), distinct from the flag-level QC_COLORS because</span>
-<span class="c1"># here the question is which test fired, not at what level.</span>
-<span class="n">TEST_COLORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"gross_range"</span><span class="p">:</span> <span class="s2">"#0072B2"</span><span class="p">,</span> <span class="s2">"spike"</span><span class="p">:</span> <span class="s2">"#E69F00"</span><span class="p">,</span> <span class="s2">"flat_line"</span><span class="p">:</span> <span class="s2">"#009E73"</span><span class="p">}</span>
+<span class="c1"># Per-*test* colours — Okabe–Ito (colour-blind safe); the question here is which test fired, not at</span>
+<span class="c1"># what level. Chosen to avoid the suspect/fail flag colours (QC_COLORS[3]/[4], #E69F00/#D55E00) that</span>
+<span class="c1"># the delivered-QC overlay draws on the same axes, so a test hit never reads as a delivered flag.</span>
+<span class="n">TEST_COLORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"gross_range"</span><span class="p">:</span> <span class="s2">"#0072B2"</span><span class="p">,</span> <span class="s2">"spike"</span><span class="p">:</span> <span class="s2">"#CC79A7"</span><span class="p">,</span> <span class="s2">"flat_line"</span><span class="p">:</span> <span class="s2">"#56B4E9"</span><span class="p">}</span>
 
 <span class="c1">#: Per-test hit markers for the "where it fires" overlay. A multi-sample flat run is drawn as a</span>
 <span class="c1">#: shaded span (an interval); a lone flat sample has no width, so it uses this square marker.</span>
@@ -230,7 +232,7 @@
 <span class="sd">    config : Mapping, optional</span>
 <span class="sd">        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses</span>
 <span class="sd">        the built-in defaults.</span>
-<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_FULL`</span>
+<span class="sd">    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_FULL`</span>
 <span class="sd">        Figure width in inches; the height is derived from it.</span>
 <span class="sd">    ax : matplotlib.axes.Axes, optional</span>
 <span class="sd">        Draw into this axis instead of creating a figure.</span>
@@ -321,7 +323,7 @@
 <span class="sd">    config : Mapping, optional</span>
 <span class="sd">        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses</span>
 <span class="sd">        the built-in defaults.</span>
-<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`</span>
 <span class="sd">        Figure width in inches; the height is derived from it.</span>
 <span class="sd">    ax : matplotlib.axes.Axes, optional</span>
 <span class="sd">        Draw into this axis instead of creating a figure.</span>
@@ -386,7 +388,7 @@
 <span class="sd">    config : Mapping, optional</span>
 <span class="sd">        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses</span>
 <span class="sd">        the built-in defaults.</span>
-<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`</span>
 <span class="sd">        Figure width in inches.</span>
 <span class="sd">    ax : matplotlib.axes.Axes, optional</span>
 <span class="sd">        Draw into this axis instead of creating a figure.</span>
@@ -440,7 +442,7 @@
 <span class="sd">    config : Mapping, optional</span>
 <span class="sd">        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses</span>
 <span class="sd">        the built-in defaults.</span>
-<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`</span>
 <span class="sd">        Figure width in inches.</span>
 <span class="sd">    ax : matplotlib.axes.Axes, optional</span>
 <span class="sd">        Draw into this axis instead of creating a figure.</span>
@@ -504,7 +506,7 @@
 <span class="sd">    config : Mapping, optional</span>
 <span class="sd">        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses</span>
 <span class="sd">        the built-in defaults.</span>
-<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`</span>
 <span class="sd">        Figure width in inches.</span>
 <span class="sd">    ax : matplotlib.axes.Axes, optional</span>
 <span class="sd">        Draw into this axis instead of creating a figure.</span>
@@ -581,7 +583,7 @@
 <span class="sd">    config : Mapping, optional</span>
 <span class="sd">        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses</span>
 <span class="sd">        the built-in defaults.</span>
-<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`</span>
 <span class="sd">        Figure width in inches.</span>
 <span class="sd">    ax : matplotlib.axes.Axes, optional</span>
 <span class="sd">        Draw into this axis instead of creating a figure.</span>
@@ -648,7 +650,7 @@
 <span class="sd">    config : Mapping, optional</span>
 <span class="sd">        Resolved per-variable thresholds (:func:`glidertest.config.loader.resolve_qc`); ``None`` uses</span>
 <span class="sd">        the built-in defaults.</span>
-<span class="sd">    width_in : float, default :data:`glidertest.config.report_tokens.W_HALF`</span>
+<span class="sd">    width_in : float, default :data:`glidertest.reports._vendored.design_tokens.W_HALF`</span>
 <span class="sd">        Figure width in inches.</span>
 <span class="sd">    ax : matplotlib.axes.Axes, optional</span>
 <span class="sd">        Draw into this axis instead of creating a figure.</span>
