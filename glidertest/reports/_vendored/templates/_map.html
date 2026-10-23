@@ -1,0 +1,259 @@
+{# Vendored map partial (authored in glidertest first; part of the vendored set, see MANIFEST.txt;
+   byte-identical across the family, ctdcast main the source of truth). Package-neutral: it knows only a generic
+   payload of coloured tracks, each with an `href` and info-panel HTML, plus optional coastline
+   GeoJSON. Rows elsewhere on the page opt into hover-linking by carrying `data-track-id="<id>"`
+   matching a payload `id`; nothing here mentions missions, casts or dives. #}
+
+{# Styles for the map; call from the page's head_extra block. `leaflet_css` is the inlined Leaflet
+   stylesheet so the map needs no network at view time. #}
+{% macro map_styles(leaflet_css, map_height) %}
+<style>{{ leaflet_css | safe }}</style>
+<style>
+  /* Map height is set once, by the caller, as a CSS variable (the re-vendor can lift it into the
+     shared tokens with one edit); the coastline aspect is derived from the same value Python-side. */
+  :root { --map-height: {{ map_height }}px; }
+  #track-map-wrap { position: relative; margin: 0 0 1rem; }
+  /* Ocean is the map background (everything the land polygons do not cover); a soft blue, close to
+     the cartopy OCEAN of the static fallback so screen and print agree. Bathymetry (#307) will later
+     draw depth bands over this. */
+  #track-map { width: 100%; height: var(--map-height); border-radius: var(--radius-btn); overflow: hidden; background: #d4e7f2; }
+  #track-map-fallback { width: 100%; height: auto; display: block; border-radius: var(--radius-btn); }
+  #track-info {
+    position: absolute; bottom: 12px; left: 12px; z-index: 1500;
+    background: #fff; border-radius: 8px; padding: 0.6rem 0.8rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2); max-width: 240px; min-width: 150px;
+    font-size: 0.8rem; line-height: 1.5; color: var(--text); pointer-events: all;
+  }
+  #track-info.empty { color: var(--muted); font-style: italic; }
+  #track-info a { display: block; margin-top: 0.3rem; color: var(--ocean); font-weight: 600; text-decoration: none; }
+  #track-info a:hover { text-decoration: underline; }
+  .leaflet-container { font: inherit; }
+  /* Graticule edge labels: a bare degree string, not a Leaflet tooltip bubble — strip the
+     background, border, arrow and shadow so only the text shows against the map. */
+  .leaflet-tooltip.grat-label {
+    background: transparent; border: none; box-shadow: none; padding: 0;
+    color: #6b7680; font-size: var(--fs-xs); font-weight: 600; white-space: nowrap;
+  }
+  .leaflet-tooltip.grat-label::before { display: none; }
+  /* One-point marker id label (F8b): bare text in the marker's colour (set inline), no bubble. */
+  .leaflet-tooltip.track-id-label {
+    background: transparent; border: none; box-shadow: none; padding: 0;
+    font-size: var(--fs-xs); font-weight: 600; white-space: nowrap;
+  }
+  .leaflet-tooltip.track-id-label::before { display: none; }
+  /* Print / no-JavaScript: show the static PNG, hide the live map and its floating info panel (a
+     sibling of the map, so it is not hidden with the map). The map script unhides the live map and
+     hides the <img> once Leaflet starts, so on screen (with JS) only the live map shows. */
+  @media print {
+    #track-map { display: none !important; }
+    #track-map-fallback { display: block !important; }
+    #track-info { display: none !important; }
+  }
+</style>
+{% endmacro %}
+
+{# The map itself; call from the page content. `payload_json`, `coastline_json` and `bounds_json`
+   are pre-serialised JSON strings (coastline/bounds may be the literal "null"); `fallback_png` is a
+   base64 PNG shown before Leaflet starts, in print, and with no JavaScript; `leaflet_js` is the
+   inlined Leaflet library. #}
+{% macro track_map(payload_json, coastline_json, bounds_json, fallback_png, leaflet_js) %}
+<div id="track-map-wrap">
+  <div id="track-map" hidden></div>
+  {% if fallback_png %}<img id="track-map-fallback" src="data:image/png;base64,{{ fallback_png }}" alt="Mission tracks">{% endif %}
+  <div id="track-info" class="empty">Hover a track or a row.</div>
+  <noscript><p class="caption">The interactive map needs JavaScript; the static map above shows the same tracks.</p></noscript>
+</div>
+<script>{{ leaflet_js | safe }}</script>
+<script>
+(function () {
+  var TRACKS = {{ payload_json | safe }};
+  var COAST  = {{ coastline_json | safe }};
+  var BOUNDS = {{ bounds_json | safe }};   // [[latMin, lonMin], [latMax, lonMax]] or null
+
+  var mapEl = document.getElementById('track-map');
+  var img = document.getElementById('track-map-fallback');
+  if (!mapEl || typeof L === 'undefined' || !TRACKS.length) {
+    // No interactive map (empty payload, or Leaflet absent) — the static PNG stands alone, so
+    // the "Hover a track or a row." info box is meaningless; hide it rather than leave it dangling.
+    var infoEl = document.getElementById('track-info');
+    if (infoEl) { infoEl.style.display = 'none'; }
+    return;
+  }
+  mapEl.hidden = false;                 // Leaflet cannot size a hidden element
+  if (img) { img.style.display = 'none'; }
+
+  var map = L.map('track-map', { preferCanvas: true, zoomSnap: 0.25, zoomControl: false });
+  L.control.zoom({ position: 'topright' }).addTo(map);
+
+  // Set the view before adding any layer: with the canvas renderer (preferCanvas), adding a layer
+  // reads the map's pixel bounds, which do not exist until the map has a view — fitting first avoids
+  // a "reading 'min' of undefined" crash that otherwise leaves the map blank.
+  var fitTarget = BOUNDS;
+  if (!fitTarget) {
+    fitTarget = [];
+    TRACKS.forEach(function (t) { fitTarget = fitTarget.concat(t.track); });
+  }
+  // One place for the fit padding and the zoom cap; maxZoom keeps a zero-size extent (a one-point
+  // track, or coincident points) from making fitBounds compute an infinite zoom and blank the map.
+  var FIT_OPTS = { padding: [16, 16], maxZoom: 12 };
+  function resetView() {
+    if (fitTarget && fitTarget.length) { map.fitBounds(fitTarget, FIT_OPTS); }
+  }
+  if (fitTarget && fitTarget.length) { resetView(); }
+  else { map.setView([0, 0], 1); }
+
+  // Reset-view control: a home button stacked under the zoom control that re-fits to the data extent
+  // (not the wider coastline). Reuses Leaflet's control styling so it matches the zoom buttons.
+  var ResetControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function () {
+      var bar = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+      var btn = L.DomUtil.create('a', '', bar);
+      btn.href = '#';
+      btn.title = 'Reset view';
+      btn.setAttribute('role', 'button');
+      btn.setAttribute('aria-label', 'Reset view');
+      btn.innerHTML = '⌂';
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop).on(btn, 'click', resetView);
+      L.DomEvent.disableClickPropagation(bar);
+      return bar;
+    },
+  });
+  map.addControl(new ResetControl());
+
+  if (COAST) {
+    L.geoJSON(COAST, {
+      interactive: false,
+      style: { color: '#9aa6ad', weight: 0.6, fillColor: '#eceadf', fillOpacity: 1 }
+    }).addTo(map);
+  }
+
+  // lat/lon graticule + scale bar: the only spatial reference when no coastline is near (an
+  // open-ocean track).  Lines and edge labels are recomputed from the visible span on each
+  // zoom/pan; the step is the first that yields 3–8 lines, so the grid stays legible at any zoom.
+  // bottomright: #track-info is absolute bottom-left (z-index 1500), so a bottom-left scale bar
+  // sits under it. The right corner is clear.
+  L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+  // Coarse → fine. Must span wide-ocean extents too: a basin-scale track opens at tens of degrees,
+  // so without the coarse steps every entry would overflow the 3–8 window and the grid would fall
+  // to the finest step, drawing thousands of lines and freezing the tab.
+  var GRID_STEPS = [30, 20, 10, 5, 2, 1, 0.5, 0.25, 0.1, 0.05, 0.02, 0.01];
+  var graticule = L.layerGroup().addTo(map);
+  function gridStep(span) {
+    var s = Math.abs(span);  // getBounds can give west > east across the antimeridian
+    for (var i = 0; i < GRID_STEPS.length; i++) {
+      var n = Math.floor(s / GRID_STEPS[i]);
+      if (n >= 3 && n <= 8) { return GRID_STEPS[i]; }
+    }
+    // Nothing lands in 3–8: a span wider than the coarsest 8-line grid takes the coarsest step
+    // (line count stays bounded, never thousands); a narrower one takes the finest.
+    return s > GRID_STEPS[0] * 8 ? GRID_STEPS[0] : GRID_STEPS[GRID_STEPS.length - 1];
+  }
+  function fmtDeg(v, axis) {
+    var hemi = (axis === 'lat') ? (v >= 0 ? 'N' : 'S') : (v >= 0 ? 'E' : 'W');
+    return Math.abs(v).toFixed(2) + '°' + hemi;
+  }
+  function gridLabel(latlng, text, dir, off) {
+    graticule.addLayer(
+      L.tooltip({ permanent: true, direction: dir || 'center', offset: off || [0, 0], className: 'grat-label', opacity: 1 })
+        .setLatLng(latlng).setContent(text)
+    );
+  }
+  function drawGraticule() {
+    graticule.clearLayers();
+    var b = map.getBounds(), s = b.getSouth(), n = b.getNorth(), w = b.getWest(), e = b.getEast();
+    // Across the antimeridian getBounds gives west > east; unwrap the east edge to e + 360 so the
+    // meridian loop runs and the parallels draw the short way. Each meridian is drawn at its raw
+    // longitude (Leaflet renders past 180° with worldCopyJump off) and labelled with the wrapped
+    // value ((lon + 540) % 360) - 180, so 190 reads as 170°W; the wrap is the identity on [-180, 180].
+    var eastEdge = e < w ? e + 360 : e;
+    var dLat = gridStep(n - s), dLon = gridStep(eastEdge - w);
+    var lineStyle = { interactive: false, color: '#9aa6ad', weight: 0.6, dashArray: '3,4' };
+    for (var lat = Math.ceil(s / dLat) * dLat; lat <= n; lat += dLat) {
+      L.polyline([[lat, w], [lat, eastEdge]], lineStyle).addTo(graticule);
+      gridLabel([lat, w], fmtDeg(lat, 'lat'), 'right', [6, 0]);  // inside the west edge
+    }
+    for (var lon = Math.ceil(w / dLon) * dLon; lon <= eastEdge; lon += dLon) {
+      var wrapped = ((lon + 540) % 360) - 180;
+      L.polyline([[s, lon], [n, lon]], lineStyle).addTo(graticule);
+      gridLabel([s, lon], fmtDeg(wrapped, 'lon'), 'top', [0, -6]);  // inside the south edge
+    }
+  }
+  drawGraticule();
+  map.on('zoomend moveend', drawGraticule);
+
+  var info = document.getElementById('track-info');
+  function show(html) { info.className = ''; info.innerHTML = html; }
+  function clear() { info.className = 'empty'; info.innerHTML = 'Hover a track or a row.'; }
+
+  function cssEscape(s) { return (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/"/g, '\\"'); }
+
+  var lineById = {}, dataById = {};
+  TRACKS.forEach(function (t) {
+    dataById[t.id] = t;
+    // A one-point track (a single station, or a mooring) has no polyline to draw, so it would be
+    // invisible; render it as a circle marker instead. highlight() keys on setRadius to tell them apart.
+    var line = (t.track.length === 1)
+      ? L.circleMarker(t.track[0], { radius: 6, color: t.color, fillColor: t.color, fillOpacity: 0.9 })
+      : L.polyline(t.track, { color: t.color, weight: 3, opacity: 0.85 });
+    line.on('mouseover', function () { highlight(t.id, true); });
+    line.on('mouseout', function () { highlight(t.id, false); });
+    line.on('click', function () { window.location.href = t.href; });
+    line.addTo(map);
+    if (t.track.length === 1) {
+      // A one-point marker has no line to read; label it with its id (the station / mooring name),
+      // upper-right, non-interactive, in the marker's colour. Polylines stay unlabelled (one id, and
+      // their hover info is enough). The id goes in as a text node, never a string — a string would
+      // be set through Leaflet's innerHTML, so an id carrying markup could inject (ctdcast ids are
+      // cast numbers, but a sibling's id may come from a filename or file metadata).
+      var ttSpan = document.createElement('span');
+      ttSpan.textContent = t.id;
+      line.bindTooltip(ttSpan, { permanent: true, direction: 'right', offset: [8, -8], className: 'track-id-label', interactive: false });
+      var ttEl = line.getTooltip() && line.getTooltip().getElement();
+      if (ttEl) { ttEl.style.color = t.color; }
+    }
+    lineById[t.id] = line;
+  });
+
+  function highlight(id, on) {
+    var line = lineById[id];
+    if (line) {
+      if (line.setRadius) { line.setRadius(on ? 9 : 6); }  // circle marker (one-point track)
+      else { line.setStyle({ weight: on ? 6 : 3 }); }      // polyline
+      if (on) { line.bringToFront(); }
+    }
+    var row = document.querySelector('tr[data-track-id="' + cssEscape(id) + '"]');
+    if (row) { row.classList.toggle('track-hover', on); }
+    var t = dataById[id];
+    if (on && t) {
+      show(t.info);  // t.info is pre-escaped HTML (see _info_html)
+      var report = document.createElement('a');
+      report.href = t.href;  // set as a property, never concatenated into innerHTML, so a quoted id cannot inject markup
+      report.textContent = '→ Mission report';
+      info.appendChild(report);
+    } else {
+      clear();
+    }
+  }
+
+  // This script runs where it is emitted — above the table — so defer row wiring until the table
+  // rows exist, otherwise the query finds nothing and row hover never links to the map.
+  function wireRows() {
+    document.querySelectorAll('tr[data-track-id]').forEach(function (row) {
+      var id = row.getAttribute('data-track-id');
+      row.addEventListener('mouseenter', function () { highlight(id, true); });
+      row.addEventListener('mouseleave', function () { highlight(id, false); });
+    });
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', wireRows); }
+  else { wireRows(); }
+
+  // The map lives in the normal page column; a late size read re-fits once the final container
+  // size is known, so vectors are not clipped.
+  setTimeout(function () {
+    map.invalidateSize();
+    resetView();
+  }, 0);
+})();
+</script>
+{% endmacro %}

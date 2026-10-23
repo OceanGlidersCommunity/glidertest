@@ -1,0 +1,29 @@
+{# Vendored masthead-nav macros: the row of role pills and the "Data inventory:"
+   file strip, both rendered from the plain nav mapping built per page.  No colour
+   or package name lives here — a pill's class is nav-<role>, styled by emit_css. #}
+
+{% macro _pill(p) %}{% if p.state == "link" %}<a class="nav-pill nav-{{ p.role }}" href="{{ p.href }}">{{ p.label }}</a>{% else %}<span class="nav-pill nav-{{ p.role }} nav-{{ p.state }}"{% if p.state == "missing" %} title="not yet generated"{% elif p.state == "current" %} title="current page"{% endif %}>{{ p.label }}</span>{% endif %}{% endmacro %}
+
+{% macro page_nav(nav) %}
+{% for row in nav.rows %}
+<nav class="page-nav">
+  <span class="page-nav-label">{{ row.label }}</span>
+  {% if loop.first and nav.back %}{{ _pill(nav.back) }}{% endif %}
+  {% for p in row.pills %}{{ _pill(p) }}{% endfor %}
+</nav>
+{% endfor %}
+{% if not nav.rows and nav.back %}
+<nav class="page-nav">
+  {{ _pill(nav.back) }}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro inventory_strip(nav) %}
+{% if nav.inventory %}
+<nav class="inventory-strip">
+  <span class="label">Data inventory:</span>
+  {% for p in nav.inventory %}{% if p.state == "link" %}<a class="file-pill" href="{{ p.href }}">{{ p.label }}</a>{% else %}<span class="file-pill file-pill-active">{{ p.label }}</span>{% endif %}{% endfor %}
+</nav>
+{% endif %}
+{% endmacro %}

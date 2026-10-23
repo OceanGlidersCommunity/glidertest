@@ -1,0 +1,26 @@
+axes.titlesize : 10
+axes.labelsize : 10
+date.autoformatter.day: %Y-%m-%d
+date.converter: auto
+figure.figsize: 8, 4
+figure.dpi: 100
+figure.titlesize: 10
+savefig.dpi: 150
+font.family:  sans-serif
+font.sans-serif: Helvetica Neue, Helvetica, Arial, Liberation Sans, DejaVu Sans
+font.style:   normal
+font.size: 10
+legend.fontsize: 9
+lines.linewidth : 1
+lines.linestyle: -
+lines.markersize : 10
+xtick.labelsize : 10
+xtick.alignment: center
+ytick.labelsize : 10
+axes.grid : False
+axes.linewidth : 0.6
+grid.alpha : 0.5
+grid.color : 0.5
+grid.linestyle : :
+grid.linewidth : 0.6
+contour.linewidth : 0.8
