@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>glidertest.qc &mdash; glidertest 0.1.1.dev60+g14dc2905f documentation</title>
+  <title>glidertest.qc &mdash; glidertest 0.1.1.dev67+g2cd202c93 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=de078f6d"></script>
+      <script src="../../_static/documentation_options.js?v=8e77cd50"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -109,31 +109,40 @@
 <span class="c1">#: deep-merged over this by :func:`glidertest.config.loader.resolve_qc`; the resolved mapping, not this</span>
 <span class="c1">#: dict, is what the checks and plots read when a config is in play. The location test is driven by a</span>
 <span class="c1">#: configured ``region.bbox`` (no built-in default), so no ``location_test`` entry lives here.</span>
+<span class="c1">#: ``flat_line_test`` windows and tolerances are set per variable. The test flags a point when the</span>
+<span class="c1">#: value's range (max − min) over the trailing window stays below ``tolerance`` — so a *tighter*</span>
+<span class="c1">#: tolerance flags fewer points (only a near-constant, genuinely-stuck sensor), and a *longer* window</span>
+<span class="c1">#: flags fewer points (the value must stay flat for longer). The tolerance is in each variable's own</span>
+<span class="c1">#: stored units, chosen small so real variation is not read as flat: TEMP 0.0005 Celsius, PSAL 0.0005</span>
+<span class="c1">#: (practical salinity), DOXY 0.01 mmol m-3, CHLA 0.01 mg m-3. Windows: CHLA 10 s / 30 s (chlorophyll</span>
+<span class="c1">#: is sampled off-phase at a coarser cadence, so a short window flags nearly every point, #346);</span>
+<span class="c1">#: TEMP/PSAL/DOXY 2 s / 4 s. These are report defaults, not instrument specifications — adjust per</span>
+<span class="c1">#: deployment with a ``qc:`` override; :func:`suggest_flat_line` suggests windows from the sampling.</span>
 <span class="n">configs</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"TEMP"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"gross_range_test"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"suspect_span"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">],</span>
         <span class="s2">"fail_span"</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span>
     <span class="p">},</span>
         <span class="s2">"spike_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">},</span>
-        <span class="s2">"flat_line_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"tolerance"</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">},</span>
+        <span class="s2">"flat_line_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"tolerance"</span><span class="p">:</span> <span class="mf">0.0005</span><span class="p">},</span>
     <span class="p">},</span>
     <span class="s2">"PSAL"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"gross_range_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_span"</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">38</span><span class="p">],</span> <span class="s2">"fail_span"</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">41</span><span class="p">]},</span>
              <span class="s2">"spike_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">},</span>
-             <span class="s2">"flat_line_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"tolerance"</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">},</span>
+             <span class="s2">"flat_line_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"tolerance"</span><span class="p">:</span> <span class="mf">0.0005</span><span class="p">},</span>
              <span class="p">},</span>
     <span class="s2">"DOXY"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"gross_range_test"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"suspect_span"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">350</span><span class="p">],</span>
         <span class="s2">"fail_span"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">500</span><span class="p">],</span>
     <span class="p">},</span>
         <span class="s2">"spike_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
-        <span class="s2">"flat_line_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"tolerance"</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">},</span>
+        <span class="s2">"flat_line_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"tolerance"</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">},</span>
     <span class="p">},</span>
     <span class="s2">"CHLA"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"gross_range_test"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"suspect_span"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">],</span>
         <span class="s2">"fail_span"</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span>
     <span class="p">},</span>
         <span class="s2">"spike_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
-        <span class="s2">"flat_line_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"tolerance"</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">},</span>
+        <span class="s2">"flat_line_test"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"suspect_threshold"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"fail_threshold"</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">"tolerance"</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">},</span>
     <span class="p">},</span>
 <span class="p">}</span>
 

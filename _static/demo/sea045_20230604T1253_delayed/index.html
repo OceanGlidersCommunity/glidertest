@@ -397,6 +397,11 @@ td.nav-cell { white-space: nowrap; }
 td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-right: 0.15rem; }
 /* The mission id gets room for a normal id on one line (~29 chars); a longer "_subset" id wraps. */
 td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wrap: anywhere; max-width: 15rem; }
+/* Reusable "copy into your config" YAML box (glidertest.reports._components.yaml_box). */
+.yaml-box-label { font-size: var(--fs-xs); color: var(--gray-5); font-weight: 600; margin: 0.6rem 0 0.2rem; }
+.yaml-box { width: 100%; box-sizing: border-box; font-family: var(--font-mono); font-size: 0.85rem;
+  padding: 0.5rem 0.6rem; border: 1px solid var(--rule); border-radius: 4px;
+  background: var(--bg-sunken); color: var(--text); resize: vertical; white-space: pre; }
 </style>
 
 </head>
@@ -410,7 +415,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
     <h1>sea045_20230604T1253_delayed</h1>
     <span class="masthead-type">Mission report</span>
   </div>
-  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sea045_20230604T1253_delayed.nc</span><span>generated 2026-10-26 07:50 UTC</span></p>
+  <p class="sub" style="margin:0 0 0.6rem; display:flex; justify-content:space-between; gap:1rem;"><span>sea045_20230604T1253_delayed.nc</span><span>generated 2026-10-26 10:47 UTC</span></p>
   
 
 <nav class="page-nav">
@@ -623,19 +628,19 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 <tbody>
 <tr><td>TEMP</td><td>gross-range</td><td class="mono qc-susp">[0, 30]</td><td class="mono qc-fail">[-2.5, 40] (not applied)</td><td>default</td></tr>
 <tr><td>TEMP</td><td>spike</td><td class="mono qc-susp">|Δ| &gt; 2.0</td><td class="mono qc-fail">|Δ| &gt; 6.0</td><td>default</td></tr>
-<tr><td>TEMP</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 1 s (tol ±0.001)</td><td class="mono qc-fail">flat ≥ 3 s (tol ±0.001)</td><td>default</td></tr>
+<tr><td>TEMP</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 2 s (tol ±0.0005)</td><td class="mono qc-fail">flat ≥ 4 s (tol ±0.0005)</td><td>default</td></tr>
 <tr><td>TEMP</td><td>hysteresis</td><td class="mono qc-susp">&gt; 5% dive–climb error per depth bin</td><td class="mono qc-fail">&gt; 5 bins exceed</td><td>default</td></tr>
 <tr><td>PSAL</td><td>gross-range</td><td class="mono qc-susp">[5, 38]</td><td class="mono qc-fail">[2, 41] (not applied)</td><td>default</td></tr>
 <tr><td>PSAL</td><td>spike</td><td class="mono qc-susp">|Δ| &gt; 0.3</td><td class="mono qc-fail">|Δ| &gt; 0.9</td><td>default</td></tr>
-<tr><td>PSAL</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 1 s (tol ±0.001)</td><td class="mono qc-fail">flat ≥ 3 s (tol ±0.001)</td><td>default</td></tr>
+<tr><td>PSAL</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 2 s (tol ±0.0005)</td><td class="mono qc-fail">flat ≥ 4 s (tol ±0.0005)</td><td>default</td></tr>
 <tr><td>PSAL</td><td>hysteresis</td><td class="mono qc-susp">&gt; 5% dive–climb error per depth bin</td><td class="mono qc-fail">&gt; 5 bins exceed</td><td>default</td></tr>
 <tr><td>DOXY</td><td>gross-range</td><td class="mono qc-susp">[0, 350]</td><td class="mono qc-fail">[0, 500] (not applied)</td><td>default</td></tr>
 <tr><td>DOXY</td><td>spike</td><td class="mono qc-susp">|Δ| &gt; 10</td><td class="mono qc-fail">|Δ| &gt; 50</td><td>default</td></tr>
-<tr><td>DOXY</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 1 s (tol ±0.001)</td><td class="mono qc-fail">flat ≥ 3 s (tol ±0.001)</td><td>default</td></tr>
+<tr><td>DOXY</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 2 s (tol ±0.01)</td><td class="mono qc-fail">flat ≥ 4 s (tol ±0.01)</td><td>default</td></tr>
 <tr><td>DOXY</td><td>hysteresis</td><td class="mono qc-susp">&gt; 5% dive–climb error per depth bin</td><td class="mono qc-fail">&gt; 5 bins exceed</td><td>default</td></tr>
 <tr><td>CHLA</td><td>gross-range</td><td class="mono qc-susp">[0, 15]</td><td class="mono qc-fail">[-1, 20] (not applied)</td><td>default</td></tr>
 <tr><td>CHLA</td><td>spike</td><td class="mono qc-susp">|Δ| &gt; 1</td><td class="mono qc-fail">|Δ| &gt; 5</td><td>default</td></tr>
-<tr><td>CHLA</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 1 s (tol ±0.001)</td><td class="mono qc-fail">flat ≥ 3 s (tol ±0.001)</td><td>default</td></tr>
+<tr><td>CHLA</td><td>flat-line</td><td class="mono qc-susp">flat ≥ 10 s (tol ±0.01)</td><td class="mono qc-fail">flat ≥ 30 s (tol ±0.01)</td><td>default</td></tr>
 <tr><td>CHLA</td><td>hysteresis</td><td class="mono qc-susp">&gt; 5% dive–climb error per depth bin</td><td class="mono qc-fail">&gt; 5 bins exceed</td><td>default</td></tr>
 
 </tbody>
@@ -649,7 +654,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 <tbody>
 <tr><td>Gross range</td><td class="qc-good">clean</td><td><span class="qc-susp">4 out of range</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:100.0%" title="Good: 100.0%"></div><div class="qc-seg-suspect" style="width:0.0%" title="Suspect: 0.0%"></div></div></td><td><span class="qc-susp">14,579 out of range</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:53.3%" title="Good: 53.3%"></div><div class="qc-seg-suspect" style="width:46.7%" title="Suspect: 46.7%"></div></div></td><td><span class="qc-susp">385 out of range</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:98.8%" title="Good: 98.8%"></div><div class="qc-seg-suspect" style="width:1.2%" title="Suspect: 1.2%"></div></div></td></tr>
 <tr><td>Spike</td><td class="qc-good">clean</td><td><span class="qc-susp">6 susp</span> <span class="qc-fail">15 fail</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:99.9%" title="Good: 99.9%"></div><div class="qc-seg-suspect" style="width:0.0%" title="Suspect: 0.0%"></div><div class="qc-seg-fail" style="width:0.0%" title="Fail: 0.0%"></div><div class="qc-seg-not_eval" style="width:0.0%" title="Not evaluated: 0.0%"></div><div class="qc-seg-missing" style="width:0.0%" title="Missing: 0.0%"></div></div></td><td><span class="qc-susp">21 susp</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:99.8%" title="Good: 99.8%"></div><div class="qc-seg-suspect" style="width:0.1%" title="Suspect: 0.1%"></div><div class="qc-seg-not_eval" style="width:0.1%" title="Not evaluated: 0.1%"></div><div class="qc-seg-missing" style="width:0.0%" title="Missing: 0.0%"></div></div></td><td class="qc-good">clean</td></tr>
-<tr><td>Flat line</td><td><span class="qc-susp">2,757 susp</span> <span class="qc-fail">1,178 fail</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:87.4%" title="Good: 87.4%"></div><div class="qc-seg-suspect" style="width:8.8%" title="Suspect: 8.8%"></div><div class="qc-seg-fail" style="width:3.8%" title="Fail: 3.8%"></div><div class="qc-seg-missing" style="width:0.0%" title="Missing: 0.0%"></div></div></td><td><span class="qc-susp">6,728 susp</span> <span class="qc-fail">2,249 fail</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:71.2%" title="Good: 71.2%"></div><div class="qc-seg-suspect" style="width:21.5%" title="Suspect: 21.5%"></div><div class="qc-seg-fail" style="width:7.2%" title="Fail: 7.2%"></div><div class="qc-seg-missing" style="width:0.0%" title="Missing: 0.0%"></div></div></td><td><span class="qc-susp">306 susp</span> <span class="qc-fail">390 fail</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:97.7%" title="Good: 97.7%"></div><div class="qc-seg-suspect" style="width:1.0%" title="Suspect: 1.0%"></div><div class="qc-seg-fail" style="width:1.2%" title="Fail: 1.2%"></div><div class="qc-seg-missing" style="width:0.0%" title="Missing: 0.0%"></div></div></td><td><span class="qc-susp">537 susp</span> <span class="qc-fail">7,413 fail</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-suspect" style="width:1.7%" title="Suspect: 1.7%"></div><div class="qc-seg-fail" style="width:23.7%" title="Fail: 23.7%"></div><div class="qc-seg-missing" style="width:74.5%" title="Missing: 74.5%"></div></div></td></tr>
+<tr><td>Flat line</td><td><span class="qc-susp">622 susp</span> <span class="qc-fail">287 fail</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:97.1%" title="Good: 97.1%"></div><div class="qc-seg-suspect" style="width:2.0%" title="Suspect: 2.0%"></div><div class="qc-seg-fail" style="width:0.9%" title="Fail: 0.9%"></div><div class="qc-seg-missing" style="width:0.0%" title="Missing: 0.0%"></div></div></td><td><span class="qc-susp">1,256 susp</span> <span class="qc-fail">133 fail</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:95.5%" title="Good: 95.5%"></div><div class="qc-seg-suspect" style="width:4.0%" title="Suspect: 4.0%"></div><div class="qc-seg-fail" style="width:0.4%" title="Fail: 0.4%"></div><div class="qc-seg-missing" style="width:0.0%" title="Missing: 0.0%"></div></div></td><td><span class="qc-susp">68 susp</span> <span class="qc-fail">378 fail</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:98.5%" title="Good: 98.5%"></div><div class="qc-seg-suspect" style="width:0.2%" title="Suspect: 0.2%"></div><div class="qc-seg-fail" style="width:1.2%" title="Fail: 1.2%"></div><div class="qc-seg-missing" style="width:0.0%" title="Missing: 0.0%"></div></div></td><td><span class="qc-susp">405 susp</span><br><div class="qc-bar qc-bar-sm"><div class="qc-seg-good" style="width:24.2%" title="Good: 24.2%"></div><div class="qc-seg-suspect" style="width:1.3%" title="Suspect: 1.3%"></div><div class="qc-seg-missing" style="width:74.5%" title="Missing: 74.5%"></div></div></td></tr>
 <tr><td>Hysteresis (mean)</td><td class="qc-good">0/82 bins</td><td class="qc-good">0/82 bins</td><td class="qc-fail">20/82 bins</td><td class="qc-fail">68/82 bins</td></tr>
 <tr><td>Hysteresis (range)</td><td class="qc-good">0/82 bins</td><td class="qc-good">0/82 bins</td><td class="qc-fail">6/82 bins</td><td class="qc-fail">9/82 bins</td></tr>
 
@@ -670,7 +675,7 @@ td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wr
 </main>
 
 
-<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev60 &nbsp;·&nbsp; sea045_20230604T1253_delayed &nbsp;·&nbsp; 2026-10-26 07:50 UTC</footer>
+<footer>Generated by <a href="https://github.com/OceanGlidersCommunity/glidertest">glidertest</a> v0.1.1.dev67 &nbsp;·&nbsp; sea045_20230604T1253_delayed &nbsp;·&nbsp; 2026-10-26 10:47 UTC</footer>
 <script>
 document.querySelectorAll('h2').forEach(h => {
   const a = document.createElement('a');

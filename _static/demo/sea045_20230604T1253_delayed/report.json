@@ -50,9 +50,9 @@
         "fail_threshold": 6.0
       },
       "flat_line_test": {
-        "suspect_threshold": 1,
-        "fail_threshold": 3,
-        "tolerance": 0.001
+        "suspect_threshold": 2,
+        "fail_threshold": 4,
+        "tolerance": 0.0005
       }
     },
     "PSAL": {
@@ -71,9 +71,9 @@
         "fail_threshold": 0.9
       },
       "flat_line_test": {
-        "suspect_threshold": 1,
-        "fail_threshold": 3,
-        "tolerance": 0.001
+        "suspect_threshold": 2,
+        "fail_threshold": 4,
+        "tolerance": 0.0005
       }
     },
     "DOXY": {
@@ -92,9 +92,9 @@
         "fail_threshold": 50
       },
       "flat_line_test": {
-        "suspect_threshold": 1,
-        "fail_threshold": 3,
-        "tolerance": 0.001
+        "suspect_threshold": 2,
+        "fail_threshold": 4,
+        "tolerance": 0.01
       }
     },
     "CHLA": {
@@ -113,9 +113,9 @@
         "fail_threshold": 5
       },
       "flat_line_test": {
-        "suspect_threshold": 1,
-        "fail_threshold": 3,
-        "tolerance": 0.001
+        "suspect_threshold": 10,
+        "fail_threshold": 30,
+        "tolerance": 0.01
       }
     }
   },
@@ -951,6 +951,6 @@
       55.3412
     ]
   ],
-  "glidertest_version": "0.1.1.dev60+g14dc2905f",
-  "generated_at": "2026-10-26 07:50 UTC"
+  "glidertest_version": "0.1.1.dev67+g2cd202c93",
+  "generated_at": "2026-10-26 10:47 UTC"
 }
