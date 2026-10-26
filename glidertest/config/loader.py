@@ -257,13 +257,23 @@ def _is_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
+def _is_finite_number(value: Any) -> bool:
+    """Return True when *value* is a finite real number — rejects NaN, ±inf, and non-numbers.
+
+    A YAML ``nan`` parses as the string ``"nan"`` (not a float), and ``.nan`` as a float NaN; both
+    are rejected here so a threshold that is not a usable number is an error at load time rather than
+    a value that silently breaks the QARTOD test at QC time.
+    """
+    return _is_number(value) and math.isfinite(value)
+
+
 def _span_issue(span: Any) -> str | None:
     """Return why *span* is not a valid ``[min, max]`` span, or None when it is valid."""
     if not isinstance(span, (list, tuple)) or len(span) != 2:
         return "must be a two-element list [min, max]"
     lo, hi = span
-    if not (_is_number(lo) and _is_number(hi)):
-        return "both bounds must be numbers"
+    if not (_is_finite_number(lo) and _is_finite_number(hi)):
+        return "both bounds must be finite numbers"
     if lo >= hi:
         return f"min must be less than max, got [{lo}, {hi}]"
     return None
@@ -297,6 +307,10 @@ def _validate_test(
             issues.append(
                 ValidationIssue(ERROR, f"method {value!r} not supported; allowed: {_fmt(_SPIKE_METHODS)}", fpath)
             )
+        # Scalar thresholds (suspect_threshold, fail_threshold, tolerance) must be finite numbers: a
+        # pasted `nan` (parsed as the string "nan") or ±inf would otherwise reach the QARTOD test.
+        if field not in _SPAN_FIELDS and field != "method" and not _is_finite_number(value):
+            issues.append(ValidationIssue(ERROR, f"{field} must be a finite number, got {value!r}", fpath))
     # The suspect-inside-fail cross-check is done on the *merged* spans in validate(), not here: a
     # partial override that sets only one span must be checked against the default it merges with.
     return issues

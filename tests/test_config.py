@@ -107,6 +107,22 @@ def test_validate_rejects_unknown_spike_method():
         assert not any(i.severity == loader.ERROR for i in loader.validate(clean))
 
 
+def test_validate_rejects_non_finite_threshold():
+    # A non-finite threshold must be an ERROR naming the key, not silently accepted: a pasted `nan`
+    # (YAML parses it as the string "nan"), a float NaN, or ±inf would otherwise reach the QARTOD test.
+    for bad in ("nan", float("nan"), float("inf")):
+        issues = loader.validate(loader.load({"qc": {"TEMP": {"flat_line_test": {"suspect_threshold": bad}}}}))
+        assert any(
+            i.severity == loader.ERROR and i.path.endswith("suspect_threshold") and "finite number" in i.message
+            for i in issues
+        ), bad
+    # a finite number passes, and a non-finite span bound is likewise an ERROR
+    ok = loader.load({"qc": {"TEMP": {"flat_line_test": {"suspect_threshold": 5}}}})
+    assert not any(i.severity == loader.ERROR for i in loader.validate(ok))
+    span = loader.validate(loader.load({"qc": {"TEMP": {"gross_range_test": {"suspect_span": [float("nan"), 30]}}}}))
+    assert any(i.severity == loader.ERROR and i.path.endswith("suspect_span") for i in span)
+
+
 def test_validate_warns_on_nonbuiltin_variable_without_dataset():
     # Review round finding 2: without a dataset, a variable name outside the built-ins is a WARNING
     # (likely typo), surfaced by the CLI pre-check — not silently clean — but not an error that blocks.

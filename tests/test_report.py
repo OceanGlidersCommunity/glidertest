@@ -53,6 +53,13 @@ def test_sensor_pages_rendered(subset_report):
         assert len(figs) >= 3  # page-prefixed figures, sharing figures/
 
 
+def test_sensor_qc_sections_link_to_full_qc(subset_report):
+    # The CTD and Oxygen QC-check sections carry a "Full QC →" link to the per-variable QC page.
+    for page in ("ctd.html", "oxygen.html"):
+        html = (subset_report / page).read_text(encoding="utf-8")
+        assert 'href="qc.html">Full QC' in html
+
+
 def test_sensor_page_panels_in_canonical_order():
     from glidertest.reports import _mission as m
 

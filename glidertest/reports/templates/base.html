@@ -82,6 +82,11 @@ td.nav-cell { white-space: nowrap; }
 td.nav-cell .nav-pill { font-size: var(--fs-xs); padding: 0.1em 0.5em; margin-right: 0.15rem; }
 /* The mission id gets room for a normal id on one line (~29 chars); a longer "_subset" id wraps. */
 td.nav-mission { font-family: var(--font-mono); white-space: normal; overflow-wrap: anywhere; max-width: 15rem; }
+/* Reusable "copy into your config" YAML box (glidertest.reports._components.yaml_box). */
+.yaml-box-label { font-size: var(--fs-xs); color: var(--gray-5); font-weight: 600; margin: 0.6rem 0 0.2rem; }
+.yaml-box { width: 100%; box-sizing: border-box; font-family: var(--font-mono); font-size: 0.85rem;
+  padding: 0.5rem 0.6rem; border: 1px solid var(--rule); border-radius: 4px;
+  background: var(--bg-sunken); color: var(--text); resize: vertical; white-space: pre; }
 </style>
 {% block head_extra %}{% endblock %}
 </head>
