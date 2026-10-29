@@ -8,11 +8,11 @@ authors:
 - family-names: Frajka-Williams
   given-names: Eleanor
   orcid: https://orcid.org/0000-0001-8773-7838
-  affiliation: Institute of Oceanography, University of Hamburg, Bundesstraße 53, 20146 Hamburg, Germany
+  affiliation: Institute of Oceanography, University of Hamburg, Bundesstraße 57, 20146 Hamburg, Germany
 - family-names: Monforte
   given-names: Chiara
   orcid: https://orcid.org/0009-0003-5019-3410
-  affiliation: Institute of Oceanography, University of Hamburg, Bundesstraße 53, 20146 Hamburg, Germany
+  affiliation: Institute of Oceanography, University of Hamburg, Bundesstraße 57, 20146 Hamburg, Germany
 - family-names: Clement
   given-names: Louis
   orcid: https://orcid.org/0000-0002-6935-9455
@@ -20,7 +20,7 @@ authors:
 - family-names: Moritz
   given-names: Till
   orcid: https://orcid.org/0000-0002-7056-355X
-  affiliation: Institute of Oceanography, University of Hamburg, Bundesstraße 53, 20146 Hamburg, Germany
+  affiliation: Institute of Oceanography, University of Hamburg, Bundesstraße 57, 20146 Hamburg, Germany
 title: glidertest
 version: 0.1.0
 date-released: 2026-08-19
