@@ -92,7 +92,12 @@ def test_plot_flat_change_raises_without_multisample_runs(subset_ds):
 
 
 def test_plot_flat_change_title_reports_fraction_above_tolerance(subset_ds):
-    _fig, ax = plots_qc.plot_flat_change(subset_ds, "TEMP")
+    from glidertest.config import loader
+
+    # Force a short flat-line window so the subset has multi-sample flat runs to histogram, independent
+    # of the longer built-in default (30/60 s), which leaves this subset with no TEMP flat runs.
+    cfg = loader.resolve_qc(loader.load({"qc": {"TEMP": {"flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4}}}}))
+    _fig, ax = plots_qc.plot_flat_change(subset_ds, "TEMP", config=cfg)
     assert "% above tolerance" in ax.get_title()
 
 
@@ -119,20 +124,19 @@ def test_suggest_gross_range_clamps_nonnegative_and_pads(subset_ds):
 def test_suggested_limits_note_shows_current_then_suggested(subset_ds):
     html = qc_section.suggested_limits_note(subset_ds, "TEMP")
     assert html.index("Current limits (applied)") < html.index("Suggested limits (this deployment)")
-    assert "≥ 2 s" in html  # current flat-line suspect window (applied) — TEMP's short-window default
+    assert "≥ 30 s" in html  # current flat-line suspect window (applied) — the default window
     # The suggestion is a copy-into-config YAML box, not prose: a flat_line_test block in a yaml-box.
     assert 'class="yaml-box"' in html
     assert "flat_line_test:" in html and "suspect_threshold:" in html
 
 
 def test_flat_line_defaults_are_per_variable(subset_ds):
-    # #346: chlorophyll (off-phase, coarse cadence) takes a long window (10/30 s); TEMP/PSAL/DOXY take a
-    # short window (2/4 s). Tolerances are tight (only a near-constant signal is flat) and per variable.
-    chla = qc.configs["CHLA"]["flat_line_test"]
-    assert (chla["suspect_threshold"], chla["fail_threshold"]) == (10, 30)
-    for v in ("TEMP", "PSAL", "DOXY"):
+    # The default flat-line window is 30 s / 60 s for every variable — long enough to span several
+    # samples at a typical glider cadence, so real uniform water (and an off-phase sensor, #346) is not
+    # read as flat. Tolerances stay tight and per variable (only a near-constant signal is flat).
+    for v in ("TEMP", "PSAL", "DOXY", "CHLA"):
         fl = qc.configs[v]["flat_line_test"]
-        assert (fl["suspect_threshold"], fl["fail_threshold"]) == (2, 4)
+        assert (fl["suspect_threshold"], fl["fail_threshold"]) == (30, 60)
     assert qc.configs["TEMP"]["flat_line_test"]["tolerance"] == 0.0005
     assert qc.configs["PSAL"]["flat_line_test"]["tolerance"] == 0.0005
     assert qc.configs["DOXY"]["flat_line_test"]["tolerance"] == 0.01
@@ -190,7 +194,9 @@ def test_gross_mask_count_matches_matrix_and_plot(subset_ds):
             continue
         n = int(qc.gross_range_mask(subset_ds, var).sum())
         cell = qc_section._gross_cell(subset_ds, var)
-        matrix_n = 0 if "spans" not in cell else int(cell["spans"][0]["text"].split()[0].replace(",", ""))
+        # The cell now grades suspect vs fail (like spike/flat), so the out-of-range total is the sum
+        # of its spans — which must still equal the shared mask count and the plotted hits.
+        matrix_n = sum(int(s["text"].split()[0].replace(",", "")) for s in cell.get("spans", []))
         assert matrix_n == n
         _fig, ax = plots_qc.plot_test_hits(subset_ds, var)
         gross = [c for c in ax.collections if c.get_label() == "gross range"]

@@ -128,19 +128,14 @@ def _delivered(ds: xr.Dataset) -> dict[str, Any]:
 
 
 def _gross_cell(ds: xr.Dataset, v: str, config: dict | None = None) -> dict[str, Any]:
-    """Diagnostics matrix cell for the gross-range test: out-of-range count + a small bar.
+    """Diagnostics matrix cell for the gross-range test: suspect and fail counts + a small bar.
 
-    The count comes from :func:`glidertest.qc.gross_range_mask` — the same per-sample mask the QC
-    plots draw — so the table figure and the plotted hits cannot diverge.
+    Graded from :func:`glidertest.qc.gross_range_flags` and rendered like the spike/flat cells
+    (:func:`_sample_cell`), so the gross-range row shows suspect and fail separately and its bar
+    separates data points with no sample (missing) from good — the same flags the QC plots and the
+    delivered-vs-glidertest matrix read.
     """
-    n = ds.sizes["N_MEASUREMENTS"] if "N_MEASUREMENTS" in ds.sizes else int(ds[v].size)
-    nv = int(qc.gross_range_mask(ds, v, config=config).sum())
-    if nv == 0:
-        return {"text": "clean", "cls": "qc-good"}
-    return {
-        "spans": [{"cls": "qc-susp", "text": f"{nv:,} out of range"}],
-        "bar": _bar_segments({"good": n - nv, "suspect": nv}, n),
-    }
+    return _sample_cell(qc.gross_range_flags(ds, v, config=config))
 
 
 def _sample_cell(flags: np.ndarray) -> dict[str, Any]:
@@ -189,22 +184,30 @@ def _usable_flat(fl: dict) -> bool:
     return bool(np.isfinite(fl["suspect"]) and np.isfinite(fl["fail"]))
 
 
-def _qc_config_yaml(entries: list[tuple[str, dict | None, dict | None]]) -> str:
-    """Return a ``qc:`` YAML snippet (report-config shape) from suggested limits.
+def _qc_config_yaml(entries: list[tuple[str, dict | None, dict | None, dict | None]]) -> str:
+    """Return a ``qc:`` YAML snippet (report-config shape) from suggested/applied limits.
 
-    *entries* is ``[(var, gross, flat), ...]`` where *gross* is a
-    :func:`glidertest.qc.suggest_gross_range` result (or ``None``) and *flat* a
+    *entries* is ``[(var, gross, flat, spike), ...]`` where *gross* is a
+    :func:`glidertest.qc.suggest_gross_range` result (or ``None``), *flat* a
     :func:`glidertest.qc.suggest_flat_line` result augmented with the applied ``tolerance`` (or
-    ``None``). A pasted block has to be complete, so the ``flat_line_test`` block carries the applied
-    tolerance alongside the suggested windows; the loader deep-merges it over the defaults.
+    ``None``), and *spike* the applied ``spike_test`` thresholds (or ``None``). A pasted block has to be
+    complete, so the ``flat_line_test`` block carries the applied tolerance alongside the suggested
+    windows; spike has no mission-derived suggestion, so its applied values are emitted unchanged (so a
+    user can loosen them). The loader deep-merges the block over the defaults.
     """
     lines = ["qc:"]
-    for var, gross, flat in entries:
+    for var, gross, flat, spike in entries:
         lines.append(f"  {var}:")
         if gross is not None:
             lines.append("    gross_range_test:")
             lines.append(f"      suspect_span: [{gross['suspect'][0]:g}, {gross['suspect'][1]:g}]")
             lines.append(f"      fail_span: [{gross['fail'][0]:g}, {gross['fail'][1]:g}]")
+        if spike is not None:
+            lines.append("    spike_test:")
+            lines.append(f"      suspect_threshold: {spike['suspect_threshold']:g}")
+            lines.append(f"      fail_threshold: {spike['fail_threshold']:g}")
+            if spike.get("method"):
+                lines.append(f"      method: {spike['method']}")
         if flat is not None:
             lines.append("    flat_line_test:")
             lines.append(f"      suspect_threshold: {flat['suspect']:g}")
@@ -239,7 +242,7 @@ def gross_range_ts_note(ds: xr.Dataset, config: dict | None = None) -> str | Non
     # reader sees what is missing rather than a quietly shorter box.
     box = (
         str(yaml_box(
-            _qc_config_yaml([(v, g, None) for v, g in usable]),
+            _qc_config_yaml([(v, g, None, None) for v, g in usable]),
             label="Suggested gross-range limits (this deployment) — copy into your config",
         ))
         if usable
@@ -318,10 +321,27 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
         )
     else:
         explain.append(f'{var} flat line — too few finite samples ({n_finite}) to suggest a window.')
+    # Spike has no mission-derived suggestion: show the applied thresholds and carry them into the box
+    # (editable) so a user can loosen them when real features (e.g. a chlorophyll layer) read as spikes.
+    sc = cfg.get("spike_test", {})
+    spike_entry = None
+    if sc.get("suspect_threshold") is not None and sc.get("fail_threshold") is not None:
+        cur.append(
+            f'<li><strong>{var}</strong> spike — suspect Δ &gt; {sc["suspect_threshold"]:g}, '
+            f'fail Δ &gt; {sc["fail_threshold"]:g}</li>'
+        )
+        spike_entry = {"suspect_threshold": sc["suspect_threshold"],
+                       "fail_threshold": sc["fail_threshold"], "method": sc.get("method")}
+        explain.append(
+            f'The {var} spike thresholds are not mission-derived; the applied values are shown so you '
+            f'can loosen them (raise suspect_threshold / fail_threshold) if real features are flagged.'
+        )
+    # The box appears only when there is a real suggestion (gross or flat); spike rides along (editable)
+    # but never brings a box on its own, so a variable with too few samples stays box-free.
     box = ""
     if gross_entry is not None or flat_entry is not None:
         box = str(yaml_box(
-            _qc_config_yaml([(var, gross_entry, flat_entry)]),
+            _qc_config_yaml([(var, gross_entry, flat_entry, spike_entry)]),
             label="Suggested limits (this deployment) — copy into your config",
         ))
     return (
@@ -400,7 +420,7 @@ def _diagnostics(
                 "var": v,
                 "test": "gross-range",
                 "suspect": _span_display(g, "suspect_span"),
-                "fail": f"{_span_display(g, 'fail_span')} (not applied)",
+                "fail": _span_display(g, 'fail_span'),
                 "src": _src(config, v, "gross_range_test"),
             }
         )

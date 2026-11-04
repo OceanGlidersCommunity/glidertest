@@ -352,9 +352,12 @@ def plot_spike_stat(
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
+        # The spike statistic on the variable's OWN finite samples (ioos_qc's "average" method), not the
+        # merged axis: an off-phase sensor (CHLA finite only every ~Nth row) has NaN neighbours on the
+        # full axis, so the statistic would be empty — the same reason the sample tests run per variable.
         v = np.asarray(ds[var].values, dtype=float)
-        stat = np.abs(v[1:-1] - 0.5 * (v[:-2] + v[2:]))
-        stat = stat[np.isfinite(stat)]
+        vf = v[np.isfinite(v)]
+        stat = np.abs(vf[1:-1] - 0.5 * (vf[:-2] + vf[2:])) if vf.size >= 3 else np.array([])
         if stat.size:
             ax.hist(stat, bins=60, color="0.6")
         cfg = _config(config)[var]["spike_test"]
@@ -414,6 +417,9 @@ def plot_flat_runs(
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
         _gr, _spike, flat = _flags(ds, var, flags, config)
+        runs = _runs(flat, ds.TIME.values)
+        if not runs:
+            raise ValueError(f"{var}: no flat-line flag to plot")
         # The variable's own sampling interval (finite samples), not the whole record's: an off-phase
         # sensor's windows must be judged against its real cadence (CHLA finite only every ~Nth cycle).
         finite = np.isfinite(np.asarray(ds[var].values, dtype=float))
@@ -424,7 +430,7 @@ def plot_flat_runs(
             dt = 1.0
         # Durations span seconds to hours and a single-sample run is 0 s; floor at one sampling interval and
         # use a log axis so the bulk and the 1–3 s window lines are both legible.
-        durations = np.array([max(dur, dt) for _i0, _i1, dur in _runs(flat, ds.TIME.values)])
+        durations = np.array([max(dur, dt) for _i0, _i1, dur in runs])
         fl = _flat_config(var, config)
         # Range spans every mark on the axis — the two config windows, the sampling interval and the
         # run durations — so a window line never falls off the edge when the interval is coarse.
@@ -553,18 +559,19 @@ def plot_flat_excerpt(
         fig, ax = plots._ax(width_in, 0.45 * width_in, ax)
         _gr, _spike, flat = _flags(ds, var, flags, config)
         runs = _runs(flat, ds.TIME.values)
+        if not runs:
+            raise ValueError(f"{var}: no flat-line flag to plot")
         t = np.asarray(ds.TIME.values)
         v = np.asarray(ds[var].values, dtype=float)
-        if runs:
-            i0, i1, _dur = max(runs, key=lambda r: r[2])
-            pad = max(5, (i1 - i0))
-            lo, hi = max(0, i0 - pad), min(v.size, i1 + pad + 1)
-            ax.plot(t[lo:hi], v[lo:hi], color="0.5", lw=0.6, marker=".", ms=3)
-            ax.scatter(t[i0:i1 + 1], v[i0:i1 + 1], color=QC_COLORS[4], s=10, zorder=3, label="flagged run")
-            tol = _flat_config(var, config)["tolerance"]
-            ax.axhspan(v[i0] - tol, v[i0] + tol, color=QC_COLORS[3], alpha=0.2, lw=0,
-                       label=f"±tolerance ({tol:g})")
-            ax.legend(loc="best", framealpha=0.85)
+        i0, i1, _dur = max(runs, key=lambda r: r[2])
+        pad = max(5, (i1 - i0))
+        lo, hi = max(0, i0 - pad), min(v.size, i1 + pad + 1)
+        ax.plot(t[lo:hi], v[lo:hi], color="0.5", lw=0.6, marker=".", ms=3)
+        ax.scatter(t[i0:i1 + 1], v[i0:i1 + 1], color=QC_COLORS[4], s=10, zorder=3, label="flagged run")
+        tol = _flat_config(var, config)["tolerance"]
+        ax.axhspan(v[i0] - tol, v[i0] + tol, color=QC_COLORS[3], alpha=0.2, lw=0,
+                   label=f"±tolerance ({tol:g})")
+        ax.legend(loc="best", framealpha=0.85)
         ax.set_xlabel("Time")
         _time_xaxis(ax)
         ax.set_ylabel(_axis_label(ds, var))
