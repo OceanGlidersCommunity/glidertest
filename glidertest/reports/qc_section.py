@@ -255,7 +255,7 @@ def gross_range_ts_note(ds: xr.Dataset, config: dict | None = None) -> str | Non
         f'<ul class="note">{cur}</ul>'
         f'{box}{few}'
         f'<p class="note">Each span is the central {pct:g}% of the finite values padded by 1% '
-        "(suspect) and 5% (fail) of that span. Descriptive of this mission, not a physical range.</p>"
+        "(suspect) and 5% (fail) of that span. Users should verify that the recommended choices are appropriate for their dataset.</p>"
     )
 
 
@@ -328,7 +328,7 @@ def suggested_limits_note(ds: xr.Dataset, var: str, config: dict | None = None) 
         '<p class="note"><strong>Current limits (applied)</strong></p>'
         f'<ul class="note">{"".join(cur)}</ul>'
         f'{box}'
-        f'<p class="note">{" ".join(explain)} Descriptive of this mission, not a physical range.</p>'
+        f'<p class="note">{" ".join(explain)} Users should verify that the recommended choices are appropriate for their dataset.</p>'
     )
 
 
