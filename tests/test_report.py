@@ -741,10 +741,13 @@ def test_subset_renders_every_panel_except_daynight(subset_ds):
                 if panel.kind == "figure":
                     (stubbed if panel.is_stub else rendered).append(panel.id)
     assert rendered  # the subset exercises the diagnostic panels
-    # Two intrinsic stubs, not keep-list drift: day/night needs night profiles the 12-profile subset
-    # lacks; qc_CHLA_change needs a multi-sample flat run, which an off-phase sensor never has — every
-    # finite CHLA sample is isolated among NaNs, so its flat flags are all single samples.
-    assert stubbed and all("daynight" in pid or pid == "qc_CHLA_change" for pid in stubbed)
+    # Intrinsic stubs, not keep-list drift: day/night needs night profiles the 12-profile subset lacks;
+    # the flat-line panels (runs / change / excerpt) need a flat run, and at the default 30 s/60 s window
+    # this clean subset has none — so they omit rather than draw an empty figure (flat-panel rendering is
+    # covered by tests that force a short window).
+    assert stubbed and all(
+        "daynight" in pid or pid.endswith(("_flat", "_change", "_excerpt")) for pid in stubbed
+    )
 
 
 @pytest.mark.slow

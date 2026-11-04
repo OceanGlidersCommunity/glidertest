@@ -563,28 +563,29 @@ def find_outlier_duration(df: pd.DataFrame, rolling=20, std=2):
 
 def compute_global_range(ds: xr.Dataset, variable='DOXY', min_val=-5, max_val=600):
     """
-    Applies a gross filter to the dataset by removing observations outside the specified global range.
+    Return the values of *variable* that fall outside the range `[min_val, max_val]`.
 
-    This function checks if any values of the specified variable (`var`) fall outside the provided
-    range `[min_val, max_val]`. If a value is out of the specified range, it is excluded from the
-    output. The function returns the filtered dataset with the out-of-range values removed.
+    This keeps the observations below `min_val` or above `max_val` and drops the in-range ones, so the
+    returned DataArray holds only the out-of-range (gross-range failing) values — its length is the
+    number of failures. Not used internally (the report grades gross range via
+    :func:`glidertest.qc.gross_range_flags`); kept as a public helper.
 
     Parameters
     ----------
-    ds : xarray.Dataset 
+    ds : xarray.Dataset
         Dataset containing the variable to be filtered.
     variable : str, optional, default='DOXY'
         The name of the variable to apply the range filter on.
     min_val : float, default = -5
-        The minimum allowable value for the variable.
+        The lower bound of the in-range interval.
     max_val : float, default = 600
-        The maximum allowable value for the variable.
+        The upper bound of the in-range interval.
 
     Returns
     -------
-    xarray.DataArray : 
-        A filtered DataArray containing only the values of the specified variable
-        within the range `[min_val, max_val]`. Values outside this range are dropped.
+    xarray.DataArray :
+        The values of *variable* outside `[min_val, max_val]` (below `min_val` or above `max_val`),
+        with the in-range values dropped.
 
     Notes
     ------
