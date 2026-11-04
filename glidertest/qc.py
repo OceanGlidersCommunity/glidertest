@@ -11,6 +11,8 @@ Original Author: Chiara Monforte.
 
 import numpy as np
 from ioos_qc import qartod
+from ioos_qc.qartod import QartodFlags
+from ioos_qc.utils import mapdates
 
 from glidertest import tools, utilities
 
@@ -273,13 +275,66 @@ def sample_tests(ds, var='TEMP', *, config=None):
     gr_cfg = cfg[var]['gross_range_test']
     gr = tools.compute_global_range(ds, variable=var, min_val=gr_cfg['suspect_span'][0],
                                     max_val=gr_cfg['suspect_span'][1])
-    sp_cfg = cfg[var]['spike_test']
-    spike = qartod.spike_test(ds[var], suspect_threshold=sp_cfg['suspect_threshold'],
-                              fail_threshold=sp_cfg['fail_threshold'], method=sp_cfg.get('method', "average"))
-    fl = cfg[var]['flat_line_test']
-    flat = qartod.flat_line_test(ds[var], ds.TIME, fl['suspect_threshold'],
-                                 fl['fail_threshold'], fl['tolerance'])
+    values = np.asarray(ds[var].values, dtype=float)
+    spike = np.full(values.size, QartodFlags.MISSING, dtype='uint8')
+    flat = np.full(values.size, QartodFlags.MISSING, dtype='uint8')
+    ok = np.flatnonzero(np.isfinite(values))
+    if ok.size:
+        sp_cfg = cfg[var]['spike_test']
+        fl = cfg[var]['flat_line_test']
+        pv, pt = values[ok], ds.TIME.values[ok]
+        spike[ok] = qartod.spike_test(pv, suspect_threshold=sp_cfg['suspect_threshold'],
+                                      fail_threshold=sp_cfg['fail_threshold'],
+                                      method=sp_cfg.get('method', "average"))
+        flat[ok] = _flat_line_or_unknown(pv, pt, fl)
     return gr, spike, flat
+
+
+def _flat_line_or_unknown(vals, times, fl):
+    """Return flat-line flags for a variable's finite samples, or UNKNOWN where the test cannot run.
+
+    Returns ``UNKNOWN`` (2) for every sample in three cases the flat-line test cannot evaluate: fewer
+    than three samples (``ioos_qc`` would return ``GOOD``, claiming untested data is good); a median
+    step that truncates to zero seconds; or a suspect window shorter than two samples. The step is
+    computed the way ``ioos_qc`` computes its ``time_interval`` — via :func:`ioos_qc.utils.mapdates`
+    then truncation to whole seconds — so the zero-step guard fires exactly in the case that makes
+    ``flat_line_test`` divide by zero, and does not misfire on ``TIME`` stored as undecoded float
+    seconds. The short-window guard matches ``ioos_qc``'s own ``count = threshold // interval``: when
+    the suspect window holds fewer than two samples its value range is taken over a single point, so
+    every sample reads flat and the verdict is meaningless — not-evaluated is the honest result. (The
+    zero-step truncation is upstream: ``ioos_qc`` truncates a sub-second median to zero; see
+    https://github.com/ioos/ioos_qc. Choosing windows that suit a variable's cadence is a separate
+    follow-up.)
+
+    Parameters
+    ----------
+    vals : numpy.ndarray
+        The variable's finite values.
+    times : numpy.ndarray
+        ``TIME`` values of the same samples.
+    fl : Mapping
+        The variable's ``flat_line_test`` thresholds (``suspect_threshold``, ``fail_threshold``,
+        ``tolerance``).
+
+    Returns
+    -------
+    numpy.ndarray
+        Flat-line flags, one per sample.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams.
+    """
+    if vals.size < 3:
+        return np.full(vals.size, QartodFlags.UNKNOWN, dtype='uint8')
+    step = np.median(np.diff(mapdates(times))).astype("timedelta64[s]")
+    if step == np.timedelta64(0, "s"):
+        return np.full(vals.size, QartodFlags.UNKNOWN, dtype='uint8')
+    window_samples = int(fl['suspect_threshold'] / (step / np.timedelta64(1, "s"))) + 1
+    if window_samples < 2:
+        return np.full(vals.size, QartodFlags.UNKNOWN, dtype='uint8')
+    return qartod.flat_line_test(vals, times, fl['suspect_threshold'],
+                                 fl['fail_threshold'], fl['tolerance'])
 
 
 def gross_range_mask(ds, var='TEMP', *, config=None):

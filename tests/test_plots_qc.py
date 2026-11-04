@@ -334,7 +334,8 @@ def test_spike_method_from_config_is_applied(fresh_subset, monkeypatch):
 
     def spy(*args, **kwargs):
         captured["method"] = kwargs.get("method")
-        return np.zeros(fresh_subset.sizes["N_MEASUREMENTS"], dtype="uint8")
+        # sample_tests runs the test per finite piece, so return an array sized to this call's input.
+        return np.zeros(np.asarray(args[0]).size, dtype="uint8")
 
     monkeypatch.setattr(qc.qartod, "spike_test", spy)
     cfg = loader.resolve_qc(loader.load({"qc": {"TEMP": {"spike_test": {"method": "differential"}}}}))
