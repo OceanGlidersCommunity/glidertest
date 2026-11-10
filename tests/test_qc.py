@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import xarray as xr
 
 from glidertest import qc
@@ -138,12 +139,25 @@ def test_gross_range_flags_grade_good_suspect_fail_missing():
     assert flags.tolist() == [1, 3, 4, 9, 1]
 
 
-def test_gross_range_flags_no_fail_span_is_all_good():
-    # Config validation requires both spans; with only a suspect span there is nothing to grade
-    # against, so finite samples are good and NaN is missing (never a spurious flag).
+def test_gross_range_flags_no_fail_span_warns_and_marks_not_evaluated():
+    # Without a fail span the gross-range test cannot be graded: finite samples are NOT_EVALUATED (2),
+    # NaN is MISSING (9), and a warning is raised -- never a silent GOOD that hides a config gap.
     cfg = {"TEMP": {"gross_range_test": {"suspect_span": [0, 30]}}}
-    flags = qc.gross_range_flags(_ds(np.array([10.0, 999.0, np.nan]), _times(1.0, 3)), "TEMP", config=cfg)
-    assert flags.tolist() == [1, 1, 9]
+    ds = _ds(np.array([10.0, 999.0, np.nan]), _times(1.0, 3))
+    with pytest.warns(UserWarning, match="no 'fail_span'"):
+        flags = qc.gross_range_flags(ds, "TEMP", config=cfg)
+    assert flags.tolist() == [2, 2, 9]
+
+
+def test_gross_range_flags_suspect_not_nested_warns_and_grades_on_fail():
+    # A suspect span wider than the fail span makes ioos_qc raise; gross_range_flags warns, drops the
+    # suspect span and grades on the fail span alone rather than crashing the caller.
+    cfg = {"TEMP": {"gross_range_test": {"fail_span": [0, 30], "suspect_span": [-5, 40]}}}
+    ds = _ds(np.array([10.0, 50.0, np.nan]), _times(1.0, 3))
+    with pytest.warns(UserWarning, match="not nested within fail_span"):
+        flags = qc.gross_range_flags(ds, "TEMP", config=cfg)
+    # 10 inside fail -> good(1); 50 outside fail -> fail(4); NaN -> missing(9); no suspect grade.
+    assert flags.tolist() == [1, 4, 9]
 
 
 def test_gross_range_mask_wraps_flags_suspect_or_fail():

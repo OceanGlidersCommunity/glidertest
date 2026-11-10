@@ -60,8 +60,10 @@ TEST_MARKER: dict[str, dict] = {
 }
 
 #: Flat-line thresholds used when a variable has no ``flat_line_test`` entry in the thresholds (a
-#: safety fallback; the four report variables carry one). Seconds, seconds, tolerance.
-_FLAT_FALLBACK: dict[str, float] = {"suspect_threshold": 2.0, "fail_threshold": 4.0, "tolerance": 0.001}
+#: safety fallback; the four report variables carry one). Seconds, seconds, tolerance. The windows
+#: track the built-in :data:`glidertest.qc.configs` default (30 s / 60 s) so a variable without a
+#: config entry is not flat-tested at a shorter window than every configured one (which over-flags).
+_FLAT_FALLBACK: dict[str, float] = {"suspect_threshold": 30.0, "fail_threshold": 60.0, "tolerance": 0.001}
 
 
 def _config(config: Mapping | None) -> Mapping:

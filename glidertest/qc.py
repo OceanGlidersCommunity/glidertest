@@ -9,6 +9,8 @@ RST/PDF stack (``rstcloth``/``pypandoc``) so the HTML report can use it without 
 Original Author: Chiara Monforte.
 """
 
+import warnings
+
 import numpy as np
 from ioos_qc import qartod
 from ioos_qc.qartod import QartodFlags
@@ -342,9 +344,14 @@ def gross_range_flags(ds, var='TEMP', *, config=None):
     Wraps :func:`ioos_qc.qartod.gross_range_test` so the gross-range verdict grades the same way the
     spike and flat-line tests do — all three go through ``ioos_qc``. A value inside the suspect span is
     GOOD (1), outside the suspect span but inside the fail span is SUSPECT (3), outside the fail span is
-    FAIL (4), and NaN is MISSING (9). When *var* has no ``fail_span`` in the thresholds there is nothing
-    to grade against, so every finite sample is GOOD (NaN still MISSING); config validation requires
-    both spans, so this guard only bites on a bare built-in or hand-built config.
+    FAIL (4), and NaN is MISSING (9).
+
+    Two config problems are handled loudly rather than silently, both via :mod:`warnings`. When *var*
+    has no ``fail_span`` there is nothing to grade against, so the test cannot be evaluated: finite
+    samples are flagged NOT_EVALUATED (2), not GOOD, so a missing span never reads as a passing verdict.
+    When the ``suspect_span`` is not nested inside the ``fail_span`` (which :func:`ioos_qc.qartod.gross_range_test`
+    rejects with a ``ValueError``) the suspect span is dropped and grading proceeds on the fail span
+    alone, rather than crashing the caller on one misconfigured variable.
 
     Parameters
     ----------
@@ -359,7 +366,8 @@ def gross_range_flags(ds, var='TEMP', *, config=None):
     Returns
     -------
     numpy.ndarray
-        QARTOD flags per sample, length ``N_MEASUREMENTS``: 1 good, 3 suspect, 4 fail, 9 missing.
+        QARTOD flags per sample, length ``N_MEASUREMENTS``: 1 good, 2 not evaluated (no fail span),
+        3 suspect, 4 fail, 9 missing.
 
     Notes
     -----
@@ -369,12 +377,24 @@ def gross_range_flags(ds, var='TEMP', *, config=None):
     gr = cfg.get(var, {}).get('gross_range_test', {})
     v = np.asarray(ds[var].values, dtype=float)
     fail = gr.get('fail_span')
+    suspect = gr.get('suspect_span')
     if not fail:
-        flags = np.full(v.size, QartodFlags.GOOD, dtype='uint8')
+        warnings.warn(
+            f"gross_range_flags: {var!r} has no 'fail_span' in its gross_range_test config; "
+            "the gross-range test cannot be graded, so finite samples are flagged NOT_EVALUATED (2).",
+            stacklevel=2,
+        )
+        flags = np.full(v.size, QartodFlags.UNKNOWN, dtype='uint8')
         flags[~np.isfinite(v)] = QartodFlags.MISSING
         return flags
-    return np.asarray(qartod.gross_range_test(v, fail_span=fail, suspect_span=gr.get('suspect_span')),
-                      dtype='uint8')
+    if suspect is not None and not (fail[0] <= suspect[0] and suspect[1] <= fail[1]):
+        warnings.warn(
+            f"gross_range_flags: {var!r} suspect_span {suspect} is not nested within fail_span {fail}; "
+            "ignoring suspect_span and grading on the fail span alone.",
+            stacklevel=2,
+        )
+        suspect = None
+    return np.asarray(qartod.gross_range_test(v, fail_span=fail, suspect_span=suspect), dtype='uint8')
 
 
 def gross_range_mask(ds, var='TEMP', *, config=None):
