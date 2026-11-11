@@ -60,8 +60,10 @@ TEST_MARKER: dict[str, dict] = {
 }
 
 #: Flat-line thresholds used when a variable has no ``flat_line_test`` entry in the thresholds (a
-#: safety fallback; the four report variables carry one). Seconds, seconds, tolerance.
-_FLAT_FALLBACK: dict[str, float] = {"suspect_threshold": 2.0, "fail_threshold": 4.0, "tolerance": 0.001}
+#: safety fallback; the four report variables carry one). Seconds, seconds, tolerance. The windows
+#: track the built-in :data:`glidertest.qc.configs` default (30 s / 60 s) so a variable without a
+#: config entry is not flat-tested at a shorter window than every configured one (which over-flags).
+_FLAT_FALLBACK: dict[str, float] = {"suspect_threshold": 30.0, "fail_threshold": 60.0, "tolerance": 0.001}
 
 
 def _config(config: Mapping | None) -> Mapping:
@@ -327,6 +329,12 @@ def plot_spike_stat(
     past a line the threshold is wrong for this platform, if only a tail does the test is doing its
     job. The median sampling interval is printed, since a spike threshold assumes a sampling interval.
 
+    The statistic shown is :func:`ioos_qc.qartod.spike_test`'s ``average`` method (|value − neighbour
+    average|). When a variable's ``spike_test`` is configured with ``method='differential'`` the test
+    flags by a sign reversal between successive differences instead, which this magnitude histogram
+    cannot represent — so the x-axis label names the configured method and the panel is then a
+    reference distribution, not the applied test.
+
     Parameters
     ----------
     ds : xarray.Dataset
@@ -352,18 +360,25 @@ def plot_spike_stat(
     """
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
+        # The spike statistic on the variable's OWN finite samples (ioos_qc's "average" method), not the
+        # merged axis: an off-phase sensor (CHLA finite only every ~Nth row) has NaN neighbours on the
+        # full axis, so the statistic would be empty — the same reason the sample tests run per variable.
         v = np.asarray(ds[var].values, dtype=float)
-        stat = np.abs(v[1:-1] - 0.5 * (v[:-2] + v[2:]))
-        stat = stat[np.isfinite(stat)]
+        vf = v[np.isfinite(v)]
+        stat = np.abs(vf[1:-1] - 0.5 * (vf[:-2] + vf[2:])) if vf.size >= 3 else np.array([])
         if stat.size:
             ax.hist(stat, bins=60, color="0.6")
         cfg = _config(config)[var]["spike_test"]
+        method = cfg.get("method", "average")
         for key, flag in (("suspect_threshold", 3), ("fail_threshold", 4)):
             ax.axvline(cfg[key], color=QC_COLORS[flag], lw=1.3,
                        label=f"{'suspect' if flag == 3 else 'fail'} ({cfg[key]:g})")
         ax.set_yscale("log")
         unit = utilities.plotting_units(ds, var)
-        ax.set_xlabel(f"spike statistic |Δ{var}| ({unit})" if unit else f"spike statistic |Δ{var}|")
+        # The statistic and its threshold lines are the 'average' method; name the configured method
+        # when it is not 'average' so the panel is not read as the applied 'differential' test.
+        base = f"spike statistic |Δ{var}| ({unit})" if unit else f"spike statistic |Δ{var}|"
+        ax.set_xlabel(base if method == "average" else f"{base} — 'average' statistic (test method: {method})")
         ax.set_ylabel("count")
         # The variable's own sampling interval (finite samples), falling back to the whole record if
         # the variable has none; a spike threshold is read against the sensor's real cadence.
@@ -414,6 +429,9 @@ def plot_flat_runs(
     with plt.style.context(plots._style()):
         fig, ax = plots._ax(width_in, 0.6 * width_in, ax)
         _gr, _spike, flat = _flags(ds, var, flags, config)
+        runs = _runs(flat, ds.TIME.values)
+        if not runs:
+            raise ValueError(f"{var}: no flat-line flag to plot")
         # The variable's own sampling interval (finite samples), not the whole record's: an off-phase
         # sensor's windows must be judged against its real cadence (CHLA finite only every ~Nth cycle).
         finite = np.isfinite(np.asarray(ds[var].values, dtype=float))
@@ -424,7 +442,7 @@ def plot_flat_runs(
             dt = 1.0
         # Durations span seconds to hours and a single-sample run is 0 s; floor at one sampling interval and
         # use a log axis so the bulk and the 1–3 s window lines are both legible.
-        durations = np.array([max(dur, dt) for _i0, _i1, dur in _runs(flat, ds.TIME.values)])
+        durations = np.array([max(dur, dt) for _i0, _i1, dur in runs])
         fl = _flat_config(var, config)
         # Range spans every mark on the axis — the two config windows, the sampling interval and the
         # run durations — so a window line never falls off the edge when the interval is coarse.
@@ -553,18 +571,19 @@ def plot_flat_excerpt(
         fig, ax = plots._ax(width_in, 0.45 * width_in, ax)
         _gr, _spike, flat = _flags(ds, var, flags, config)
         runs = _runs(flat, ds.TIME.values)
+        if not runs:
+            raise ValueError(f"{var}: no flat-line flag to plot")
         t = np.asarray(ds.TIME.values)
         v = np.asarray(ds[var].values, dtype=float)
-        if runs:
-            i0, i1, _dur = max(runs, key=lambda r: r[2])
-            pad = max(5, (i1 - i0))
-            lo, hi = max(0, i0 - pad), min(v.size, i1 + pad + 1)
-            ax.plot(t[lo:hi], v[lo:hi], color="0.5", lw=0.6, marker=".", ms=3)
-            ax.scatter(t[i0:i1 + 1], v[i0:i1 + 1], color=QC_COLORS[4], s=10, zorder=3, label="flagged run")
-            tol = _flat_config(var, config)["tolerance"]
-            ax.axhspan(v[i0] - tol, v[i0] + tol, color=QC_COLORS[3], alpha=0.2, lw=0,
-                       label=f"±tolerance ({tol:g})")
-            ax.legend(loc="best", framealpha=0.85)
+        i0, i1, _dur = max(runs, key=lambda r: r[2])
+        pad = max(5, (i1 - i0))
+        lo, hi = max(0, i0 - pad), min(v.size, i1 + pad + 1)
+        ax.plot(t[lo:hi], v[lo:hi], color="0.5", lw=0.6, marker=".", ms=3)
+        ax.scatter(t[i0:i1 + 1], v[i0:i1 + 1], color=QC_COLORS[4], s=10, zorder=3, label="flagged run")
+        tol = _flat_config(var, config)["tolerance"]
+        ax.axhspan(v[i0] - tol, v[i0] + tol, color=QC_COLORS[3], alpha=0.2, lw=0,
+                   label=f"±tolerance ({tol:g})")
+        ax.legend(loc="best", framealpha=0.85)
         ax.set_xlabel("Time")
         _time_xaxis(ax)
         ax.set_ylabel(_axis_label(ds, var))

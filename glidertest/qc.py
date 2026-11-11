@@ -9,6 +9,8 @@ RST/PDF stack (``rstcloth``/``pypandoc``) so the HTML report can use it without 
 Original Author: Chiara Monforte.
 """
 
+import warnings
+
 import numpy as np
 from ioos_qc import qartod
 from ioos_qc.qartod import QartodFlags
@@ -25,35 +27,36 @@ from glidertest import tools, utilities
 #: tolerance flags fewer points (only a near-constant, genuinely-stuck sensor), and a *longer* window
 #: flags fewer points (the value must stay flat for longer). The tolerance is in each variable's own
 #: stored units, chosen small so real variation is not read as flat: TEMP 0.0005 Celsius, PSAL 0.0005
-#: (practical salinity), DOXY 0.01 mmol m-3, CHLA 0.01 mg m-3. Windows: CHLA 10 s / 30 s (chlorophyll
-#: is sampled off-phase at a coarser cadence, so a short window flags nearly every point, #346);
-#: TEMP/PSAL/DOXY 2 s / 4 s. These are report defaults, not instrument specifications — adjust per
-#: deployment with a ``qc:`` override; :func:`suggest_flat_line` suggests windows from the sampling.
+#: (practical salinity), DOXY 0.01 mmol m-3, CHLA 0.01 mg m-3. Windows: 30 s / 60 s for every variable —
+#: long enough to span several samples at a typical glider cadence (a few seconds), so a short uniform
+#: stretch is not read as flat, and an off-phase sensor is not flagged at nearly every point (#346).
+#: These are report defaults, not instrument specifications — adjust per deployment with a ``qc:``
+#: override; :func:`suggest_flat_line` suggests windows from the sampling.
 configs = {
     "TEMP": {"gross_range_test": {
         "suspect_span": [0, 30],
         "fail_span": [-2.5, 40],
     },
         "spike_test": {"suspect_threshold": 2.0, "fail_threshold": 6.0},
-        "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.0005},
+        "flat_line_test": {"suspect_threshold": 30, "fail_threshold": 60, "tolerance": 0.0005},
     },
     "PSAL": {"gross_range_test": {"suspect_span": [5, 38], "fail_span": [2, 41]},
              "spike_test": {"suspect_threshold": 0.3, "fail_threshold": 0.9},
-             "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.0005},
+             "flat_line_test": {"suspect_threshold": 30, "fail_threshold": 60, "tolerance": 0.0005},
              },
     "DOXY": {"gross_range_test": {
         "suspect_span": [0, 350],
         "fail_span": [0, 500],
     },
         "spike_test": {"suspect_threshold": 10, "fail_threshold": 50},
-        "flat_line_test": {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.01},
+        "flat_line_test": {"suspect_threshold": 30, "fail_threshold": 60, "tolerance": 0.01},
     },
     "CHLA": {"gross_range_test": {
         "suspect_span": [0, 15],
         "fail_span": [-1, 20],
     },
         "spike_test": {"suspect_threshold": 1, "fail_threshold": 5},
-        "flat_line_test": {"suspect_threshold": 10, "fail_threshold": 30, "tolerance": 0.01},
+        "flat_line_test": {"suspect_threshold": 30, "fail_threshold": 60, "tolerance": 0.01},
     },
 }
 
@@ -272,9 +275,7 @@ def sample_tests(ds, var='TEMP', *, config=None):
     """
     utilities._check_necessary_variables(ds, [var, 'TIME'])
     cfg = config if config is not None else configs
-    gr_cfg = cfg[var]['gross_range_test']
-    gr = tools.compute_global_range(ds, variable=var, min_val=gr_cfg['suspect_span'][0],
-                                    max_val=gr_cfg['suspect_span'][1])
+    gr = gross_range_flags(ds, var, config=cfg)
     values = np.asarray(ds[var].values, dtype=float)
     spike = np.full(values.size, QartodFlags.MISSING, dtype='uint8')
     flat = np.full(values.size, QartodFlags.MISSING, dtype='uint8')
@@ -337,13 +338,20 @@ def _flat_line_or_unknown(vals, times, fl):
                                  fl['fail_threshold'], fl['tolerance'])
 
 
-def gross_range_mask(ds, var='TEMP', *, config=None):
-    """Return a boolean per-sample mask of *var* values outside the gross-range suspect span.
+def gross_range_flags(ds, var='TEMP', *, config=None):
+    """Return graded gross-range QARTOD flags for *var* (1 good, 3 suspect, 4 fail, 9 missing).
 
-    The one definition of "out of range" shared by the diagnostics-matrix count and the QC plots, so
-    the table and the plotted hits cannot diverge. NaN samples are not flagged (the comparison is
-    False for NaN). Returns an all-False mask when *var* has no ``gross_range_test`` suspect span in
-    the thresholds.
+    Wraps :func:`ioos_qc.qartod.gross_range_test` so the gross-range verdict grades the same way the
+    spike and flat-line tests do — all three go through ``ioos_qc``. A value inside the suspect span is
+    GOOD (1), outside the suspect span but inside the fail span is SUSPECT (3), outside the fail span is
+    FAIL (4), and NaN is MISSING (9).
+
+    Two config problems are handled loudly rather than silently, both via :mod:`warnings`. When *var*
+    has no ``fail_span`` there is nothing to grade against, so the test cannot be evaluated: finite
+    samples are flagged NOT_EVALUATED (2), not GOOD, so a missing span never reads as a passing verdict.
+    When the ``suspect_span`` is not nested inside the ``fail_span`` (which :func:`ioos_qc.qartod.gross_range_test`
+    rejects with a ``ValueError``) the suspect span is dropped and grading proceeds on the fail span
+    alone, rather than crashing the caller on one misconfigured variable.
 
     Parameters
     ----------
@@ -358,18 +366,66 @@ def gross_range_mask(ds, var='TEMP', *, config=None):
     Returns
     -------
     numpy.ndarray
-        Boolean mask, True where the value is below the span minimum or above its maximum.
+        QARTOD flags per sample, length ``N_MEASUREMENTS``: 1 good, 2 not evaluated (no fail span),
+        3 suspect, 4 fail, 9 missing.
+
+    Notes
+    -----
+    Original Author: Eleanor Frajka-Williams.
+    """
+    cfg = config if config is not None else configs
+    gr = cfg.get(var, {}).get('gross_range_test', {})
+    v = np.asarray(ds[var].values, dtype=float)
+    fail = gr.get('fail_span')
+    suspect = gr.get('suspect_span')
+    if not fail:
+        warnings.warn(
+            f"gross_range_flags: {var!r} has no 'fail_span' in its gross_range_test config; "
+            "the gross-range test cannot be graded, so finite samples are flagged NOT_EVALUATED (2).",
+            stacklevel=2,
+        )
+        flags = np.full(v.size, QartodFlags.UNKNOWN, dtype='uint8')
+        flags[~np.isfinite(v)] = QartodFlags.MISSING
+        return flags
+    if suspect is not None and not (fail[0] <= suspect[0] and suspect[1] <= fail[1]):
+        warnings.warn(
+            f"gross_range_flags: {var!r} suspect_span {suspect} is not nested within fail_span {fail}; "
+            "ignoring suspect_span and grading on the fail span alone.",
+            stacklevel=2,
+        )
+        suspect = None
+    return np.asarray(qartod.gross_range_test(v, fail_span=fail, suspect_span=suspect), dtype='uint8')
+
+
+def gross_range_mask(ds, var='TEMP', *, config=None):
+    """Return a boolean per-sample mask of *var* values outside the gross-range **suspect** span.
+
+    The one definition of "out of range" shared by the diagnostics-matrix count and the QC plots, so
+    the table and the plotted hits cannot diverge. A thin wrapper over :func:`gross_range_flags`: True
+    where the graded flag is suspect (3) or fail (4). NaN samples (flag 9) are not flagged, and a
+    variable with no ``fail_span`` in the thresholds is all-False (finite samples are flag 2, not
+    evaluated; missing samples are flag 9) — a missing span never reads as an out-of-range hit.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset in **OG1 format**, containing *var*.
+    var : str, optional, default='TEMP'
+        Variable to test.
+    config : Mapping, optional
+        Resolved per-variable thresholds (see :func:`sample_tests`); ``None`` uses the built-in
+        :data:`configs`.
+
+    Returns
+    -------
+    numpy.ndarray
+        Boolean mask, True where the value is outside the suspect span (graded flag 3 or 4).
 
     Notes
     -----
     Original Author: Eleanor Frajka-Williams
     """
-    cfg = config if config is not None else configs
-    span = cfg.get(var, {}).get('gross_range_test', {}).get('suspect_span')
-    v = np.asarray(ds[var].values, dtype=float)
-    if not span:
-        return np.zeros(v.shape, dtype=bool)
-    return (v < span[0]) | (v > span[1])
+    return np.isin(gross_range_flags(ds, var, config=config), (3, 4))
 
 
 def region_test(ds, bbox):
@@ -466,15 +522,16 @@ def suggest_gross_range(ds, var='TEMP', inner_pct=99.9, suspect_pad=0.01, fail_p
     }
 
 
-def suggest_flat_line(ds, var=None, suspect_factor=2, fail_factor=3):
+def suggest_flat_line(ds, var=None, suspect_factor=10, fail_factor=20):
     """Suggest flat-line windows (seconds) from the sampling interval of *var* (or the whole record).
 
     A flat-line window set in seconds must span at least a couple of the sensor's *own* samples to say
     anything about flatness. For a sensor sampled off-phase (optics, oxygen — finite only every Nth
     cycle) the per-variable interval is coarser than the record's, so basing the window on the record
     would suggest one too short. Pass *var* to use that variable's finite-sample interval; omit it for
-    the whole-record interval. The suggestion is ``suspect_factor``× (default 2) and ``fail_factor``×
-    (default 3) that interval.
+    the whole-record interval. The suggestion is ``suspect_factor``× (default 10) and ``fail_factor``×
+    (default 20) that interval — a window spanning ~10–20 of the sensor's own samples, so only a
+    genuinely stuck sensor (not a short real-uniform stretch) trips it.
 
     Parameters
     ----------
@@ -483,7 +540,7 @@ def suggest_flat_line(ds, var=None, suspect_factor=2, fail_factor=3):
     var : str, optional
         Variable whose finite-sample interval to use; when ``None`` the whole-record interval is used.
     suspect_factor, fail_factor : int, optional
-        Multiples of the sampling interval for the suspect (2) and fail (3) windows.
+        Multiples of the sampling interval for the suspect (10) and fail (20) windows.
 
     Returns
     -------
@@ -614,7 +671,7 @@ def fill_str(strgr, strst, strft, strhy, strdr, ds, var='TEMP'):
         strdr[i] = 'No data'
     else:
         gr, spike, flat, err_mean, err_range = qc_checks(ds, var=var)
-        if len(gr) > 0:
+        if np.isin(gr, (3, 4)).any():
             strgr[i] = 'X'
         if len(np.where((spike == 3) | (spike == 4))[0]) > 0:
             strst[i] = 'X'

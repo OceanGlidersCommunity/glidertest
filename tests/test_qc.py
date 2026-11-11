@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import xarray as xr
 
 from glidertest import qc
@@ -81,7 +82,8 @@ def test_subsecond_single_sensor_does_not_crash_and_skips_flat():
 
 
 def test_flat_line_or_unknown_guards():
-    fl = qc.configs["TEMP"]["flat_line_test"]
+    # Explicit short windows so the guards are exercised independently of the (longer) built-in default.
+    fl = {"suspect_threshold": 2, "fail_threshold": 4, "tolerance": 0.0005}
     # Fewer than three points: data present but untestable -> UNKNOWN (2), not GOOD.
     short = qc._flat_line_or_unknown(np.array([12.0, 12.1]), _times(2.0, 2), fl)
     assert (short == 2).all()
@@ -109,7 +111,10 @@ def test_uniform_single_sensor_matches_direct_qartod():
     direct_spike = np.asarray(
         qc.qartod.spike_test(values, suspect_threshold=2.0, fail_threshold=6.0, method="average")
     )
-    direct_flat = np.asarray(qc.qartod.flat_line_test(values, times, 2, 4, 0.0005))
+    fl = qc.configs["TEMP"]["flat_line_test"]
+    direct_flat = np.asarray(
+        qc.qartod.flat_line_test(values, times, fl["suspect_threshold"], fl["fail_threshold"], fl["tolerance"])
+    )
     assert np.array_equal(spike, direct_spike)
     assert np.array_equal(flat, direct_flat)
 
@@ -121,3 +126,76 @@ def test_flag_counts_sum_and_missing_bucket():
     counts = qc.flag_counts(spike)
     assert sum(counts.values()) == spike.size
     assert counts["missing"] == int((~finite).sum()) == int((spike == 9).sum())
+
+
+# --- gross-range grading (fail span applied) ------------------------------------------------------
+
+
+def test_gross_range_flags_grade_good_suspect_fail_missing():
+    # Default TEMP spans: suspect [0, 30], fail [-2.5, 40]. A value inside suspect is good (1), between
+    # suspect and fail is suspect (3), outside fail is fail (4), NaN is missing (9).
+    vals = np.array([10.0, -1.0, 50.0, np.nan, 20.0])
+    flags = qc.gross_range_flags(_ds(vals, _times(1.0, 5)), "TEMP")
+    assert flags.tolist() == [1, 3, 4, 9, 1]
+
+
+def test_gross_range_flags_no_fail_span_warns_and_marks_not_evaluated():
+    # Without a fail span the gross-range test cannot be graded: finite samples are NOT_EVALUATED (2),
+    # NaN is MISSING (9), and a warning is raised -- never a silent GOOD that hides a config gap.
+    cfg = {"TEMP": {"gross_range_test": {"suspect_span": [0, 30]}}}
+    ds = _ds(np.array([10.0, 999.0, np.nan]), _times(1.0, 3))
+    with pytest.warns(UserWarning, match="no 'fail_span'"):
+        flags = qc.gross_range_flags(ds, "TEMP", config=cfg)
+    assert flags.tolist() == [2, 2, 9]
+
+
+def test_gross_range_flags_suspect_not_nested_warns_and_grades_on_fail():
+    # A suspect span wider than the fail span makes ioos_qc raise; gross_range_flags warns, drops the
+    # suspect span and grades on the fail span alone rather than crashing the caller.
+    cfg = {"TEMP": {"gross_range_test": {"fail_span": [0, 30], "suspect_span": [-5, 40]}}}
+    ds = _ds(np.array([10.0, 50.0, np.nan]), _times(1.0, 3))
+    with pytest.warns(UserWarning, match="not nested within fail_span"):
+        flags = qc.gross_range_flags(ds, "TEMP", config=cfg)
+    # 10 inside fail -> good(1); 50 outside fail -> fail(4); NaN -> missing(9); no suspect grade.
+    assert flags.tolist() == [1, 4, 9]
+
+
+def test_gross_range_mask_wraps_flags_suspect_or_fail():
+    ds = _ds(np.array([10.0, -1.0, 50.0, np.nan]), _times(1.0, 4))
+    flags = qc.gross_range_flags(ds, "TEMP")
+    mask = qc.gross_range_mask(ds, "TEMP")
+    assert mask.tolist() == np.isin(flags, (3, 4)).tolist()
+    assert mask.tolist() == [False, True, True, False]  # good, suspect, fail, missing
+
+
+def test_sample_tests_gross_is_graded_flag_array():
+    # gr is now a full-length QARTOD flag array (not a filtered DataArray), consistent with spike/flat.
+    ds = _interleaved()
+    n = ds.sizes["N_MEASUREMENTS"]
+    gr, _spike, _flat = qc.sample_tests(ds, "TEMP")
+    assert gr.size == n
+    assert set(np.unique(gr)).issubset({1, 3, 4, 9})
+    assert sum(qc.flag_counts(gr).values()) == n
+
+
+def test_gross_cell_shows_suspect_and_fail():
+    from glidertest.reports import qc_section
+
+    # good / suspect / fail / missing, repeated, so the matrix cell must show both susp and fail spans.
+    vals = np.array([10.0, -1.0, 50.0, np.nan] * 5)
+    cell = qc_section._gross_cell(_ds(vals, _times(1.0, 20)), "TEMP")
+    texts = " ".join(s["text"] for s in cell.get("spans", []))
+    assert "susp" in texts and "fail" in texts
+
+
+def test_fill_str_marks_gross_only_on_suspect_or_fail(monkeypatch):
+    # Regression for the flag-array switch: gr is now length N_MEASUREMENTS, so `len(gr) > 0` would mark
+    # every variable failed. The gross row must be 'X' only when a sample is suspect/fail, not merely
+    # because the array is non-empty.
+    ds = _ds(np.ones(10), _times(1.0, 10))
+    good = np.ones(10, dtype="uint8")
+    for gr, expected in ((good, "✓"), (np.where(np.arange(10) == 3, 4, 1).astype("uint8"), "X")):
+        monkeypatch.setattr(qc, "qc_checks", lambda ds, var, config=None, _gr=gr: (_gr, good, good, np.zeros(1), np.zeros(1)))
+        rows = [["Gross", "✓", "✓", "✓", "✓"] for _ in range(5)]
+        out = qc.fill_str(*rows, ds, var="TEMP")
+        assert out[0][1] == expected
