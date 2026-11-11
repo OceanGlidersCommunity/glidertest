@@ -403,7 +403,8 @@ def gross_range_mask(ds, var='TEMP', *, config=None):
     The one definition of "out of range" shared by the diagnostics-matrix count and the QC plots, so
     the table and the plotted hits cannot diverge. A thin wrapper over :func:`gross_range_flags`: True
     where the graded flag is suspect (3) or fail (4). NaN samples (flag 9) are not flagged, and a
-    variable with no gross-range span in the thresholds is all-False (all flag 1).
+    variable with no ``fail_span`` in the thresholds is all-False (finite samples are flag 2, not
+    evaluated; missing samples are flag 9) — a missing span never reads as an out-of-range hit.
 
     Parameters
     ----------
@@ -539,7 +540,7 @@ def suggest_flat_line(ds, var=None, suspect_factor=10, fail_factor=20):
     var : str, optional
         Variable whose finite-sample interval to use; when ``None`` the whole-record interval is used.
     suspect_factor, fail_factor : int, optional
-        Multiples of the sampling interval for the suspect (2) and fail (3) windows.
+        Multiples of the sampling interval for the suspect (10) and fail (20) windows.
 
     Returns
     -------

@@ -329,6 +329,12 @@ def plot_spike_stat(
     past a line the threshold is wrong for this platform, if only a tail does the test is doing its
     job. The median sampling interval is printed, since a spike threshold assumes a sampling interval.
 
+    The statistic shown is :func:`ioos_qc.qartod.spike_test`'s ``average`` method (|value − neighbour
+    average|). When a variable's ``spike_test`` is configured with ``method='differential'`` the test
+    flags by a sign reversal between successive differences instead, which this magnitude histogram
+    cannot represent — so the x-axis label names the configured method and the panel is then a
+    reference distribution, not the applied test.
+
     Parameters
     ----------
     ds : xarray.Dataset
@@ -363,12 +369,16 @@ def plot_spike_stat(
         if stat.size:
             ax.hist(stat, bins=60, color="0.6")
         cfg = _config(config)[var]["spike_test"]
+        method = cfg.get("method", "average")
         for key, flag in (("suspect_threshold", 3), ("fail_threshold", 4)):
             ax.axvline(cfg[key], color=QC_COLORS[flag], lw=1.3,
                        label=f"{'suspect' if flag == 3 else 'fail'} ({cfg[key]:g})")
         ax.set_yscale("log")
         unit = utilities.plotting_units(ds, var)
-        ax.set_xlabel(f"spike statistic |Δ{var}| ({unit})" if unit else f"spike statistic |Δ{var}|")
+        # The statistic and its threshold lines are the 'average' method; name the configured method
+        # when it is not 'average' so the panel is not read as the applied 'differential' test.
+        base = f"spike statistic |Δ{var}| ({unit})" if unit else f"spike statistic |Δ{var}|"
+        ax.set_xlabel(base if method == "average" else f"{base} — 'average' statistic (test method: {method})")
         ax.set_ylabel("count")
         # The variable's own sampling interval (finite samples), falling back to the whole record if
         # the variable has none; a spike threshold is read against the sensor's real cadence.
