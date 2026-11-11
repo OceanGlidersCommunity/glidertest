@@ -52,8 +52,8 @@
         "fail_threshold": 6.0
       },
       "flat_line_test": {
-        "suspect_threshold": 2,
-        "fail_threshold": 4,
+        "suspect_threshold": 30,
+        "fail_threshold": 60,
         "tolerance": 0.0005
       }
     },
@@ -73,8 +73,8 @@
         "fail_threshold": 0.9
       },
       "flat_line_test": {
-        "suspect_threshold": 2,
-        "fail_threshold": 4,
+        "suspect_threshold": 30,
+        "fail_threshold": 60,
         "tolerance": 0.0005
       }
     },
@@ -94,8 +94,8 @@
         "fail_threshold": 50
       },
       "flat_line_test": {
-        "suspect_threshold": 2,
-        "fail_threshold": 4,
+        "suspect_threshold": 30,
+        "fail_threshold": 60,
         "tolerance": 0.01
       }
     },
@@ -115,8 +115,8 @@
         "fail_threshold": 5
       },
       "flat_line_test": {
-        "suspect_threshold": 10,
-        "fail_threshold": 30,
+        "suspect_threshold": 30,
+        "fail_threshold": 60,
         "tolerance": 0.01
       }
     }
@@ -949,6 +949,6 @@
       63.9343
     ]
   ],
-  "glidertest_version": "0.1.1.dev71+gc36d29712",
-  "generated_at": "2026-11-10 20:33 UTC"
+  "glidertest_version": "0.1.1.dev72+gad603b7a8",
+  "generated_at": "2026-11-11 17:23 UTC"
 }

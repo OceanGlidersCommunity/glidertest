@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API reference &mdash; glidertest 0.1.1.dev71+gc36d29712 documentation</title>
+  <title>API reference &mdash; glidertest 0.1.1.dev72+gad603b7a8 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=07f29e02"></script>
+      <script src="_static/documentation_options.js?v=adfec6eb"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -122,6 +122,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.flag_counts"><code class="docutils literal notranslate"><span class="pre">flag_counts()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.flag_labels"><code class="docutils literal notranslate"><span class="pre">flag_labels()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.flag_scale_mismatch"><code class="docutils literal notranslate"><span class="pre">flag_scale_mismatch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.gross_range_flags"><code class="docutils literal notranslate"><span class="pre">gross_range_flags()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.gross_range_mask"><code class="docutils literal notranslate"><span class="pre">gross_range_mask()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.hysteresis_verdict"><code class="docutils literal notranslate"><span class="pre">hysteresis_verdict()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#glidertest.qc.phrase_duration_check"><code class="docutils literal notranslate"><span class="pre">phrase_duration_check()</span></code></a></li>
@@ -462,22 +463,23 @@ Data should <strong>not</strong> be gridded.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.tools.compute_global_range">
 <span class="sig-prename descclassname"><span class="pre">glidertest.tools.</span></span><span class="sig-name descname"><span class="pre">compute_global_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DOXY'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/tools.html#compute_global_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.tools.compute_global_range" title="Link to this definition"></a></dt>
-<dd><p>Applies a gross filter to the dataset by removing observations outside the specified global range.</p>
-<p>This function checks if any values of the specified variable (<cite>var</cite>) fall outside the provided
-range <cite>[min_val, max_val]</cite>. If a value is out of the specified range, it is excluded from the
-output. The function returns the filtered dataset with the out-of-range values removed.</p>
+<dd><p>Return the values of <em>variable</em> that fall outside the range <cite>[min_val, max_val]</cite>.</p>
+<p>This keeps the observations below <cite>min_val</cite> or above <cite>max_val</cite> and drops the in-range ones, so the
+returned DataArray holds only the out-of-range (gross-range failing) values — its length is the
+number of failures. Not used internally (the report grades gross range via
+<a class="reference internal" href="#glidertest.qc.gross_range_flags" title="glidertest.qc.gross_range_flags"><code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.qc.gross_range_flags()</span></code></a>); kept as a public helper.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset containing the variable to be filtered.</p></li>
 <li><p><strong>variable</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='DOXY'</em>) – The name of the variable to apply the range filter on.</p></li>
-<li><p><strong>min_val</strong> (<em>float</em><em>, </em><em>default = -5</em>) – The minimum allowable value for the variable.</p></li>
-<li><p><strong>max_val</strong> (<em>float</em><em>, </em><em>default = 600</em>) – The maximum allowable value for the variable.</p></li>
+<li><p><strong>min_val</strong> (<em>float</em><em>, </em><em>default = -5</em>) – The lower bound of the in-range interval.</p></li>
+<li><p><strong>max_val</strong> (<em>float</em><em>, </em><em>default = 600</em>) – The upper bound of the in-range interval.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A filtered DataArray containing only the values of the specified variable
-within the range <cite>[min_val, max_val]</cite>. Values outside this range are dropped.</p>
+<dd class="field-even"><p>The values of <em>variable</em> outside <cite>[min_val, max_val]</cite> (below <cite>min_val</cite> or above <cite>max_val</cite>),
+with the in-range values dropped.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xarray.DataArray</p>
@@ -1574,6 +1576,11 @@ the built-in defaults.</p></li>
 <p>The suspect and fail thresholds are drawn as vertical lines; if the bulk of the distribution sits
 past a line the threshold is wrong for this platform, if only a tail does the test is doing its
 job. The median sampling interval is printed, since a spike threshold assumes a sampling interval.</p>
+<p>The statistic shown is <code class="xref py py-func docutils literal notranslate"><span class="pre">ioos_qc.qartod.spike_test()</span></code>’s <code class="docutils literal notranslate"><span class="pre">average</span></code> method (<a href="#id7"><span class="problematic" id="id8">|value − neighbour
+average|</span></a>). When a variable’s <code class="docutils literal notranslate"><span class="pre">spike_test</span></code> is configured with <code class="docutils literal notranslate"><span class="pre">method='differential'</span></code> the test
+flags by a sign reversal between successive differences instead, which this magnitude histogram
+cannot represent — so the x-axis label names the configured method and the panel is then a
+reference distribution, not the applied test.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1680,7 +1687,7 @@ then the non-graded categories). Covers every flag value so counts sum to the ar
 
 <dl class="py data">
 <dt class="sig sig-object py" id="glidertest.qc.configs">
-<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">configs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CHLA':</span> <span class="pre">{'flat_line_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">30,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">10,</span> <span class="pre">'tolerance':</span> <span class="pre">0.01},</span> <span class="pre">'gross_range_test':</span> <span class="pre">{'fail_span':</span> <span class="pre">[-1,</span> <span class="pre">20],</span> <span class="pre">'suspect_span':</span> <span class="pre">[0,</span> <span class="pre">15]},</span> <span class="pre">'spike_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">5,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">1}},</span> <span class="pre">'DOXY':</span> <span class="pre">{'flat_line_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">4,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">2,</span> <span class="pre">'tolerance':</span> <span class="pre">0.01},</span> <span class="pre">'gross_range_test':</span> <span class="pre">{'fail_span':</span> <span class="pre">[0,</span> <span class="pre">500],</span> <span class="pre">'suspect_span':</span> <span class="pre">[0,</span> <span class="pre">350]},</span> <span class="pre">'spike_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">50,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">10}},</span> <span class="pre">'PSAL':</span> <span class="pre">{'flat_line_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">4,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">2,</span> <span class="pre">'tolerance':</span> <span class="pre">0.0005},</span> <span class="pre">'gross_range_test':</span> <span class="pre">{'fail_span':</span> <span class="pre">[2,</span> <span class="pre">41],</span> <span class="pre">'suspect_span':</span> <span class="pre">[5,</span> <span class="pre">38]},</span> <span class="pre">'spike_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">0.9,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">0.3}},</span> <span class="pre">'TEMP':</span> <span class="pre">{'flat_line_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">4,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">2,</span> <span class="pre">'tolerance':</span> <span class="pre">0.0005},</span> <span class="pre">'gross_range_test':</span> <span class="pre">{'fail_span':</span> <span class="pre">[-2.5,</span> <span class="pre">40],</span> <span class="pre">'suspect_span':</span> <span class="pre">[0,</span> <span class="pre">30]},</span> <span class="pre">'spike_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">6.0,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">2.0}}}</span></em><a class="headerlink" href="#glidertest.qc.configs" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">configs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CHLA':</span> <span class="pre">{'flat_line_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">60,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">30,</span> <span class="pre">'tolerance':</span> <span class="pre">0.01},</span> <span class="pre">'gross_range_test':</span> <span class="pre">{'fail_span':</span> <span class="pre">[-1,</span> <span class="pre">20],</span> <span class="pre">'suspect_span':</span> <span class="pre">[0,</span> <span class="pre">15]},</span> <span class="pre">'spike_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">5,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">1}},</span> <span class="pre">'DOXY':</span> <span class="pre">{'flat_line_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">60,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">30,</span> <span class="pre">'tolerance':</span> <span class="pre">0.01},</span> <span class="pre">'gross_range_test':</span> <span class="pre">{'fail_span':</span> <span class="pre">[0,</span> <span class="pre">500],</span> <span class="pre">'suspect_span':</span> <span class="pre">[0,</span> <span class="pre">350]},</span> <span class="pre">'spike_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">50,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">10}},</span> <span class="pre">'PSAL':</span> <span class="pre">{'flat_line_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">60,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">30,</span> <span class="pre">'tolerance':</span> <span class="pre">0.0005},</span> <span class="pre">'gross_range_test':</span> <span class="pre">{'fail_span':</span> <span class="pre">[2,</span> <span class="pre">41],</span> <span class="pre">'suspect_span':</span> <span class="pre">[5,</span> <span class="pre">38]},</span> <span class="pre">'spike_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">0.9,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">0.3}},</span> <span class="pre">'TEMP':</span> <span class="pre">{'flat_line_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">60,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">30,</span> <span class="pre">'tolerance':</span> <span class="pre">0.0005},</span> <span class="pre">'gross_range_test':</span> <span class="pre">{'fail_span':</span> <span class="pre">[-2.5,</span> <span class="pre">40],</span> <span class="pre">'suspect_span':</span> <span class="pre">[0,</span> <span class="pre">30]},</span> <span class="pre">'spike_test':</span> <span class="pre">{'fail_threshold':</span> <span class="pre">6.0,</span> <span class="pre">'suspect_threshold':</span> <span class="pre">2.0}}}</span></em><a class="headerlink" href="#glidertest.qc.configs" title="Link to this definition"></a></dt>
 <dd><p>Built-in QARTOD thresholds per variable (the layer-1 defaults). A report config’s <code class="docutils literal notranslate"><span class="pre">qc:</span></code> block is
 deep-merged over this by <code class="xref py py-func docutils literal notranslate"><span class="pre">glidertest.config.loader.resolve_qc()</span></code>; the resolved mapping, not this
 dict, is what the checks and plots read when a config is in play. The location test is driven by a
@@ -1690,10 +1697,11 @@ value’s range (max − min) over the trailing window stays below <code class="
 tolerance flags fewer points (only a near-constant, genuinely-stuck sensor), and a <em>longer</em> window
 flags fewer points (the value must stay flat for longer). The tolerance is in each variable’s own
 stored units, chosen small so real variation is not read as flat: TEMP 0.0005 Celsius, PSAL 0.0005
-(practical salinity), DOXY 0.01 mmol m-3, CHLA 0.01 mg m-3. Windows: CHLA 10 s / 30 s (chlorophyll
-is sampled off-phase at a coarser cadence, so a short window flags nearly every point, #346);
-TEMP/PSAL/DOXY 2 s / 4 s. These are report defaults, not instrument specifications — adjust per
-deployment with a <code class="docutils literal notranslate"><span class="pre">qc:</span></code> override; <a class="reference internal" href="#glidertest.qc.suggest_flat_line" title="glidertest.qc.suggest_flat_line"><code class="xref py py-func docutils literal notranslate"><span class="pre">suggest_flat_line()</span></code></a> suggests windows from the sampling.</p>
+(practical salinity), DOXY 0.01 mmol m-3, CHLA 0.01 mg m-3. Windows: 30 s / 60 s for every variable —
+long enough to span several samples at a typical glider cadence (a few seconds), so a short uniform
+stretch is not read as flat, and an off-phase sensor is not flagged at nearly every point (#346).
+These are report defaults, not instrument specifications — adjust per deployment with a <code class="docutils literal notranslate"><span class="pre">qc:</span></code>
+override; <a class="reference internal" href="#glidertest.qc.suggest_flat_line" title="glidertest.qc.suggest_flat_line"><code class="xref py py-func docutils literal notranslate"><span class="pre">suggest_flat_line()</span></code></a> suggests windows from the sampling.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1805,13 +1813,19 @@ or one/both attributes absent).</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="glidertest.qc.gross_range_mask">
-<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">gross_range_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TEMP'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#gross_range_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.gross_range_mask" title="Link to this definition"></a></dt>
-<dd><p>Return a boolean per-sample mask of <em>var</em> values outside the gross-range suspect span.</p>
-<p>The one definition of “out of range” shared by the diagnostics-matrix count and the QC plots, so
-the table and the plotted hits cannot diverge. NaN samples are not flagged (the comparison is
-False for NaN). Returns an all-False mask when <em>var</em> has no <code class="docutils literal notranslate"><span class="pre">gross_range_test</span></code> suspect span in
-the thresholds.</p>
+<dt class="sig sig-object py" id="glidertest.qc.gross_range_flags">
+<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">gross_range_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TEMP'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#gross_range_flags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.gross_range_flags" title="Link to this definition"></a></dt>
+<dd><p>Return graded gross-range QARTOD flags for <em>var</em> (1 good, 3 suspect, 4 fail, 9 missing).</p>
+<p>Wraps <code class="xref py py-func docutils literal notranslate"><span class="pre">ioos_qc.qartod.gross_range_test()</span></code> so the gross-range verdict grades the same way the
+spike and flat-line tests do — all three go through <code class="docutils literal notranslate"><span class="pre">ioos_qc</span></code>. A value inside the suspect span is
+GOOD (1), outside the suspect span but inside the fail span is SUSPECT (3), outside the fail span is
+FAIL (4), and NaN is MISSING (9).</p>
+<p>Two config problems are handled loudly rather than silently, both via <code class="xref py py-mod docutils literal notranslate"><span class="pre">warnings</span></code>. When <em>var</em>
+has no <code class="docutils literal notranslate"><span class="pre">fail_span</span></code> there is nothing to grade against, so the test cannot be evaluated: finite
+samples are flagged NOT_EVALUATED (2), not GOOD, so a missing span never reads as a passing verdict.
+When the <code class="docutils literal notranslate"><span class="pre">suspect_span</span></code> is not nested inside the <code class="docutils literal notranslate"><span class="pre">fail_span</span></code> (which <code class="xref py py-func docutils literal notranslate"><span class="pre">ioos_qc.qartod.gross_range_test()</span></code>
+rejects with a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>) the suspect span is dropped and grading proceeds on the fail span
+alone, rather than crashing the caller on one misconfigured variable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1822,7 +1836,37 @@ the thresholds.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Boolean mask, True where the value is below the span minimum or above its maximum.</p>
+<dd class="field-even"><p>QARTOD flags per sample, length <code class="docutils literal notranslate"><span class="pre">N_MEASUREMENTS</span></code>: 1 good, 2 not evaluated (no fail span),
+3 suspect, 4 fail, 9 missing.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Original Author: Eleanor Frajka-Williams.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="glidertest.qc.gross_range_mask">
+<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">gross_range_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TEMP'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#gross_range_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.gross_range_mask" title="Link to this definition"></a></dt>
+<dd><p>Return a boolean per-sample mask of <em>var</em> values outside the gross-range <strong>suspect</strong> span.</p>
+<p>The one definition of “out of range” shared by the diagnostics-matrix count and the QC plots, so
+the table and the plotted hits cannot diverge. A thin wrapper over <a class="reference internal" href="#glidertest.qc.gross_range_flags" title="glidertest.qc.gross_range_flags"><code class="xref py py-func docutils literal notranslate"><span class="pre">gross_range_flags()</span></code></a>: True
+where the graded flag is suspect (3) or fail (4). NaN samples (flag 9) are not flagged, and a
+variable with no <code class="docutils literal notranslate"><span class="pre">fail_span</span></code> in the thresholds is all-False (finite samples are flag 2, not
+evaluated; missing samples are flag 9) — a missing span never reads as an out-of-range hit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, containing <em>var</em>.</p></li>
+<li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em><em>, </em><em>default='TEMP'</em>) – Variable to test.</p></li>
+<li><p><strong>config</strong> (<em>Mapping</em><em>, </em><em>optional</em>) – Resolved per-variable thresholds (see <a class="reference internal" href="#glidertest.qc.sample_tests" title="glidertest.qc.sample_tests"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_tests()</span></code></a>); <code class="docutils literal notranslate"><span class="pre">None</span></code> uses the built-in
+<a class="reference internal" href="#glidertest.qc.configs" title="glidertest.qc.configs"><code class="xref py py-data docutils literal notranslate"><span class="pre">configs</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Boolean mask, True where the value is outside the suspect span (graded flag 3 or 4).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray</p>
@@ -1992,21 +2036,22 @@ plots and the delivered-vs-glidertest matrix share one computation and one set o
 
 <dl class="py function">
 <dt class="sig sig-object py" id="glidertest.qc.suggest_flat_line">
-<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">suggest_flat_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suspect_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fail_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#suggest_flat_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.suggest_flat_line" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">glidertest.qc.</span></span><span class="sig-name descname"><span class="pre">suggest_flat_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suspect_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fail_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glidertest/qc.html#suggest_flat_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#glidertest.qc.suggest_flat_line" title="Link to this definition"></a></dt>
 <dd><p>Suggest flat-line windows (seconds) from the sampling interval of <em>var</em> (or the whole record).</p>
 <p>A flat-line window set in seconds must span at least a couple of the sensor’s <em>own</em> samples to say
 anything about flatness. For a sensor sampled off-phase (optics, oxygen — finite only every Nth
 cycle) the per-variable interval is coarser than the record’s, so basing the window on the record
 would suggest one too short. Pass <em>var</em> to use that variable’s finite-sample interval; omit it for
-the whole-record interval. The suggestion is <a href="#id1"><span class="problematic" id="id2">``</span></a>suspect_factor``× (default 2) and <a href="#id3"><span class="problematic" id="id4">``</span></a>fail_factor``×
-(default 3) that interval.</p>
+the whole-record interval. The suggestion is <a href="#id1"><span class="problematic" id="id2">``</span></a>suspect_factor``× (default 10) and <a href="#id3"><span class="problematic" id="id4">``</span></a>fail_factor``×
+(default 20) that interval — a window spanning ~10–20 of the sensor’s own samples, so only a
+genuinely stuck sensor (not a short real-uniform stretch) trips it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ds</strong> (<em>xarray.Dataset</em>) – Dataset in <strong>OG1 format</strong>, with <code class="docutils literal notranslate"><span class="pre">TIME</span></code> (and <em>var</em> when given).</p></li>
 <li><p><strong>var</strong> (<em>str</em><em>, </em><em>optional</em>) – Variable whose finite-sample interval to use; when <code class="docutils literal notranslate"><span class="pre">None</span></code> the whole-record interval is used.</p></li>
-<li><p><strong>suspect_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Multiples of the sampling interval for the suspect (2) and fail (3) windows.</p></li>
-<li><p><strong>fail_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Multiples of the sampling interval for the suspect (2) and fail (3) windows.</p></li>
+<li><p><strong>suspect_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Multiples of the sampling interval for the suspect (10) and fail (20) windows.</p></li>
+<li><p><strong>fail_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Multiples of the sampling interval for the suspect (10) and fail (20) windows.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
