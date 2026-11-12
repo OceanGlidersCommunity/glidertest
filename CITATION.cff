@@ -22,6 +22,6 @@ authors:
   orcid: https://orcid.org/0000-0002-7056-355X
   affiliation: Institute of Oceanography, University of Hamburg, Bundesstraße 57, 20146 Hamburg, Germany
 title: glidertest
-version: 0.1.0
-date-released: 2026-08-19
+version: 1.0.0
+date-released: 2026-11-12
 url: https://github.com/OceanGlidersCommunity/glidertest
